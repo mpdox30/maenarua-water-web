@@ -1,0 +1,161 @@
+{
+  "exported_at": "2026-07-07T09:31:35.662662",
+  "target_reservoir": "ระบุชื่ออ่างเก็บน้ำที่ train ด้วยตรงนี้",
+  "feature_cols": [
+    "Q_in_t (m3/day)",
+    "Water_Level_t (m)",
+    "Storage_S_t (m3)",
+    "DeltaS_t (m3/day)",
+    "%Full_t",
+    "Rain_obs_t (mm)",
+    "API_t (mm)"
+  ],
+  "targets": [
+    "y1=Q_in_t+1 (m3/day)",
+    "y2=Q_in_t+2 (m3/day)",
+    "y3=Q_in_t+3 (m3/day)",
+    "y4=Q_in_t+4 (m3/day)",
+    "y5=Q_in_t+5 (m3/day)",
+    "y6=Q_in_t+6 (m3/day)",
+    "y7=Q_in_t+7 (m3/day)"
+  ],
+  "date_col_raw": "Date",
+  "qin_col": "Q_in_t (m3/day)",
+  "rain_col": "Rain_obs_t (mm)",
+  "api_col": "API_t (mm)",
+  "zero_threshold": 1e-06,
+  "horizons": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "model_structure": {
+    "stage1": "CatBoostClassifier ทำนาย P(Q_in_t+h = 0), threshold ต่อ horizon ใน stage1_thresholds.pkl",
+    "stage2": "Regressor ทำนาย DELTA = Q_in_t+h(actual) - Q_in_t(ปัจจุบัน) ไม่ใช่ค่าจริงตรงๆ",
+    "final_prediction_logic": "ถ้า stage1_classifier.predict_proba(X)[:,1] >= stage1_thresholds[h] => prediction = 0 มิฉะนั้น => prediction = clip(Q_in_t(ปัจจุบัน) + stage2_regressor.predict(X), 0, None)",
+    "stage2_trained_on": "เฉพาะแถวที่ Q_in_actual > ZERO_THRESHOLD ใน train เท่านั้น"
+  },
+  "deployment_model_per_horizon": {
+    "1": {
+      "model_name": "CatBoost",
+      "hurdle_nse_on_test": 0.7338984757410334,
+      "target_column": "y1=Q_in_t+1 (m3/day)"
+    },
+    "2": {
+      "model_name": "CatBoost",
+      "hurdle_nse_on_test": 0.34454807979728475,
+      "target_column": "y2=Q_in_t+2 (m3/day)"
+    },
+    "3": {
+      "model_name": "CatBoost",
+      "hurdle_nse_on_test": -2.8450243065744956,
+      "target_column": "y3=Q_in_t+3 (m3/day)"
+    },
+    "4": {
+      "model_name": "CatBoost",
+      "hurdle_nse_on_test": -0.6729781001229029,
+      "target_column": "y4=Q_in_t+4 (m3/day)"
+    },
+    "5": {
+      "model_name": "CatBoost",
+      "hurdle_nse_on_test": -1.0014987095671315,
+      "target_column": "y5=Q_in_t+5 (m3/day)"
+    },
+    "6": {
+      "model_name": "CatBoost",
+      "hurdle_nse_on_test": -0.09492939701651837,
+      "target_column": "y6=Q_in_t+6 (m3/day)"
+    },
+    "7": {
+      "model_name": "CatBoost",
+      "hurdle_nse_on_test": 0.2530401333380593,
+      "target_column": "y7=Q_in_t+7 (m3/day)"
+    }
+  },
+  "training_data_source": "Training_Values_Nofct_7day_CORRECTED.csv",
+  "training_date_range": {
+    "start": "2025-06-27 00:00:00",
+    "end": "2026-06-20 00:00:00"
+  },
+  "split_method": "stratified season-balanced split (70/15/15), ไม่ใช่ chronological split ตรงๆ",
+  "known_limitations": [
+    "Test set นี้ไม่สามารถเทียบ RMSE ข้าม notebook อื่นได้โดยตรง (scale/composition ต่างกัน)",
+    "Stage 1 มีตัวอย่าง zero-inflow ใน train แค่ 6-10 แถวต่อ horizon ทำให้ threshold มี noise สูง",
+    "Horizon 3-7 มี Hurdle_NSE ติดลบสำหรับบางโมเดล ควรระวังเป็นพิเศษเมื่อนำไปใช้จริง (ดู deployment_model_choice.json ค่า hurdle_nse_on_test ประกอบก่อนเชื่อผลทำนาย)"
+  ],
+  "library_versions": {
+    "python": "3.14.4 (tags/v3.14.4:23116f9, Apr  7 2026, 14:10:54) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "catboost": "1.2.10",
+    "xgboost": "3.3.0",
+    "lightgbm": "4.6.0",
+    "scikit_learn": "1.8.0"
+  },
+  "known_deviations_from_original_template": [
+    {
+      "issue": "evap_days_in_month_bug",
+      "description": "ไฟล์ raw ต้นทาง (บัญชีน้ำรายเดือน) เดิมใช้ค่าคงที่จำนวนวันในเดือนผิดตอนคำนวณ evaporation บางเดือน (เช่นเดือนที่มี 30/31 วัน) ทำให้ evaporation loss คลาดเคลื่อน แก้ไขแล้วในไฟล์ raw ต้นทางในรอบก่อนหน้า (ไม่ใช่การแก้ที่ training CSV แต่แก้ที่ต้นตอ)",
+      "status": "fixed_at_source_raw_files"
+    },
+    {
+      "issue": "infiltration_missing_bug",
+      "description": "การคำนวณ Q_in_t เดิมไม่ได้รวม/รวมผิดพจน์ infiltration loss ในบางเดือน ทำให้ Q_in_t ที่คำนวณได้คลาดเคลื่อนจากสมดุลน้ำจริง แก้ไขแล้วในไฟล์ raw ต้นทาง ก่อนนำมาสร้าง Training_Values_Nofct_7day_CORRECTED.csv",
+      "status": "fixed_at_source_raw_files"
+    },
+    {
+      "issue": "manual_copy_paste_error_2026-01-08",
+      "description": "แถว 2026-01-08 ใน training CSV เดิมมี Q_in_t=3600.882467 ซึ่งพิสูจน์ได้ว่าเป็นค่า duplicate ตรงตัวอักษรกับค่าของ 2026-01-09 (ไม่ใช่ค่าจริงของวันที่ 08) แก้เป็น 0 และปรับ y1-y7 ของ 7 แถวก่อนหน้าที่อ้างอิงถึงวันนี้เป็น target ตามไปด้วย ย้ายจาก lineage_group C ไป A (resolved duplicate)",
+      "status": "corrected_in_training_csv"
+    },
+    {
+      "issue": "no_duplicate_evidence_rows_02-06_to_12_and_02-21_to_24",
+      "description": "9 แถว (2026-02-07, 08, 09, 11, 12, 21, 22, 23, 24) ใน training CSV เดิมมี Q_in_t ที่ไม่ตรงกับ raw file แม้ Level/DeltaS/Rain จะตรงกับ raw วันเดียวกันทุกตัว (ไม่มีหลักฐาน duplicate ชัดเจนแบบ 01-08 แต่ raw น่าเชื่อถือกว่าเพราะ evap/infiltration bug ถูกแก้แล้ว) แทนที่ด้วยค่า raw ที่แก้ไข evap/infiltration แล้ว พร้อม flag training_value_replaced_no_duplicate_evidence=True ย้ายจาก lineage_group C ไป A (resolved-by-raw-trust — หลักฐานอ่อนกว่า 01-08 เล็กน้อย ควรทราบไว้)",
+      "status": "corrected_in_training_csv"
+    }
+  ],
+  "threshold_instability_from_correction": {
+    "description": "การแก้ label จาก training-data-correction ทำให้ stage-1 threshold ขยับ 6-20% ต่อ horizon เนื่องจาก zero-inflow sample size ในชุดทดสอบมีแค่ 4-5 แถวจาก 53 แถวต่อ horizon (น้อยเกินกว่าจะให้ threshold เสถียร)",
+    "implication": "Hurdle_NSE อาจแกว่งได้มากในอนาคตแม้ training data เปลี่ยนแปลงเพียงเล็กน้อย ควรพิจารณาเพิ่มขนาด test set หรือใช้ cross-validation แทน single split ในการ evaluate ครั้งถัดไป",
+    "observed_threshold_shift_this_retrain": {
+      "1": {
+        "old": 0.459931,
+        "new": 0.56628,
+        "delta_pct": 23.1
+      },
+      "2": {
+        "old": 0.645772,
+        "new": 0.703928,
+        "delta_pct": 9.0
+      },
+      "3": {
+        "old": 0.603795,
+        "new": 0.536321,
+        "delta_pct": -11.2
+      },
+      "4": {
+        "old": 0.795955,
+        "new": 0.69693,
+        "delta_pct": -12.4
+      },
+      "5": {
+        "old": 0.349395,
+        "new": 0.359991,
+        "delta_pct": 3.0
+      },
+      "6": {
+        "old": 0.357506,
+        "new": 0.319231,
+        "delta_pct": -10.7
+      },
+      "7": {
+        "old": 0.48076,
+        "new": 0.569049,
+        "delta_pct": 18.4
+      }
+    }
+  }
+}

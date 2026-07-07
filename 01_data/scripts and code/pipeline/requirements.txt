@@ -1,0 +1,45 @@
+# requirements.txt สำหรับ data_pipeline.py
+# อ้างอิงจาก TODO ในตัว script (fetch_telemetry_from_api, load_latest_model, build_feature_vector)
+# และชนิดโมเดลที่ใช้จริงในโปรเจกต์ (ตรวจสอบด้วยการ joblib.load() ไฟล์ .pkl จริงทุกไฟล์แล้วดู
+# type ของ object ข้างในตรงๆ ไม่ได้เดาจากชื่อไฟล์):
+#   Water_demand/active/catboost_models.pkl        -> catboost.core.CatBoostRegressor
+#   Water_demand/active/lightgbm_models.pkl        -> lightgbm.sklearn.LGBMRegressor
+#   Water_demand/active/stage1_classifiers.pkl     -> lightgbm.sklearn.LGBMClassifier (มี sklearn LabelEncoder ฝังอยู่)
+#   Reservoir_inflow/active/stage1_classifiers.pkl          -> catboost.core.CatBoostClassifier
+#   Reservoir_inflow/active/deployment_stage2_regressors.pkl -> catboost.core.CatBoostRegressor
+#
+# หมายเหตุ: ไม่รวม library เฉพาะตอนเทรนโมเดล (optuna, shap, geopandas, rasterio, cdsapi, xarray ฯลฯ)
+# เพราะ pipeline นี้ใช้สำหรับรัน inference/ดึงข้อมูลจริงเท่านั้น ไม่ใช่ retrain โมเดล
+#
+# ไม่ต้องติดตั้ง xgboost: มีอยู่แค่ใน Reservoir_inflow/active/stage2_regressors_all_models.pkl
+# ซึ่งเป็นไฟล์เปรียบเทียบทุกโมเดลตอนเทรน ไม่ใช่ไฟล์ deployment จริง (ดู deployment_model_choice.json
+# ที่เลือก CatBoost ชนะทุก horizon แล้ว) ถ้า pipeline โหลดเฉพาะ deployment_stage2_regressors.pkl
+# ตามที่ควรจะเป็น จะไม่ต้องแตะไฟล์นั้นเลย
+
+# เวอร์ชันด้านล่างนี้คือสิ่งที่ "ติดตั้งจริง" ใน D:\maenaruea-water-web\.venv (ตรวจสอบด้วยการเปิด
+# .dist-info/METADATA ของแต่ละ package ตรงๆ ณ วันที่ 2026-07-04) ล็อกด้วย == แทน >= เพื่อกันปัญหา
+# "ขาด package แล้วเจอทีละตัว" ซ้ำอีกในอนาคต — ถ้าจะอัปเดตเวอร์ชันใดให้ทดสอบรัน pipeline ก่อนทุกครั้ง
+# โดยเฉพาะ pandas 3.0.3 ซึ่งเป็น major version ใหม่ที่มี breaking change เยอะกว่า 2.x
+
+requests==2.34.2       # Step 1: เรียก telemetry API จริง (fetch_telemetry_from_api) - ยังไม่ได้ import ใช้จริงในโค้ดตอนนี้ เตรียมไว้ล่วงหน้า
+pandas==3.0.3          # Step 3: build_feature_vector - จัดการข้อมูลเป็น DataFrame (major version ใหม่ ทดสอบ pipeline ให้ครบก่อนอัปเดต)
+numpy==2.5.0           # Step 3: คำนวณ/จัดการ array ที่ pandas และโมเดลต้องใช้ (stage1_thresholds.pkl ของ Water Demand เป็น numpy.float64 โดยตรง)
+joblib==1.5.3          # Step 3: load_latest_model - โหลดไฟล์โมเดล .pkl ทุกไฟล์
+scikit-learn==1.9.0    # Step 3: LGBMClassifier ของ Water Demand มี sklearn LabelEncoder ฝังอยู่ข้างใน .pkl (ตอนเทรนใช้ 1.8.0 - อาจเจอ InconsistentVersionWarning ตอนโหลด ไม่ใช่ error)
+lightgbm==4.6.0        # Step 3: Water Demand ใช้ LGBMRegressor + LGBMClassifier จริงทั้ง stage1/stage2 (24 คู่ zone x horizon) - ตรงกับเวอร์ชันที่ระบุใน Reservoir_inflow/active/model_metadata.json ตอนเทรน (ยังไม่ได้ติดตั้งใน .venv ณ ตอนตรวจสอบ - เป็น package ที่ขาด)
+catboost==1.2.10       # Step 3: Water Demand (stage2) และ Reservoir Inflow (stage1 + stage2) ใช้ CatBoost ทั้งคู่ - ตรงกับ model_metadata.json พอดี
+openpyxl==3.1.5         # Step 3: _ri_load_raw_monthly_data() อ่านไฟล์ .xlsx รายเดือนจริง (01_data/Reservoirs/inflow/<year>/*_MNR.xlsx) ผ่าน pandas.read_excel - เพิ่มใหม่ ต้องรัน pip install เพิ่มใน .venv
+
+# เพิ่มเข้ามาพร้อม pipeline/mei_feature.py และ pipeline/chirps_feature.py (ดึง feature MEI/CHIRPS
+# แบบ real-time แทนที่จะต้องพึ่งไฟล์ mei_monthly.csv/climate_weekly_*.csv ที่ archive notebook สร้าง
+# ไว้ครั้งเดียวตอน train) - เป็น dependency จริงตอน inference แล้ว ไม่ใช่แค่ตอนเทรนโมเดลอีกต่อไป
+scipy>=1.11              # chirps_feature.py: scipy.stats.zscore สำหรับคำนวณ SPI_4 (สูตรตรงจาก feature_schema.md)
+earthengine-api>=1.0     # chirps_feature.py: ee.ImageCollection ดึง CHIRPS ผ่าน GEE (ต้องตั้งค่า
+                         # Earth Engine credentials + Cloud Project ไว้ก่อนแล้ว - ดู docstring ของ
+                         # _fetch_chirps_daily_from_gee() ใน chirps_feature.py - ยืนยันแล้วว่าเครื่องนี้
+                         # ตั้งค่าไว้แล้วด้วย project 'maenaruea-water-pipeline')
+                         # TODO ก่อน deploy จริง: ตอนนี้ auth เป็น personal credential
+                         # (ee.Authenticate() แบบ interactive) เท่านั้น ไม่เหมาะกับ scheduled run
+                         # ผ่าน run_pipeline.bat (token อาจหมดอายุ) ต้องเปลี่ยนเป็น Service Account
+                         # ก่อน wire chirps_feature.py เข้ากับ data_pipeline.py จริง (ดู TODO เต็ม
+                         # ใน chirps_feature.py ที่ DEFAULT_GEE_PROJECT และ _fetch_chirps_daily_from_gee())

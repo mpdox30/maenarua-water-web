@@ -1,0 +1,7 @@
+{
+  "spillway_level_msl": 489.545,
+  "weir_coefficient_C": 1.82,
+  "weir_length_L": 30,
+  "note": "Q(m3/s) = C * L * H^1.5, H = max(0, water_level - spillway_level_msl); Volume(m3/h) = Q(m3/s) * 3600",
+  "source_file": "Spillway_Overflow_calculation.xlsx (RES002 (Adj) sheet)"
+}

@@ -1,0 +1,1 @@
+https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5?username=mae_na_ruea&password=REDACTED_ROTATE_ME

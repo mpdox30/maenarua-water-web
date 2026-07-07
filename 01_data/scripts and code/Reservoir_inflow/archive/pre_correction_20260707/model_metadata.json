@@ -1,0 +1,98 @@
+{
+  "exported_at": "2026-07-06T14:21:10.604886",
+  "target_reservoir": "ระบุชื่ออ่างเก็บน้ำที่ train ด้วยตรงนี้",
+  "feature_cols": [
+    "Q_in_t (m3/day)",
+    "Water_Level_t (m)",
+    "Storage_S_t (m3)",
+    "DeltaS_t (m3/day)",
+    "%Full_t",
+    "Rain_obs_t (mm)",
+    "API_t (mm)"
+  ],
+  "targets": [
+    "y1=Q_in_t+1 (m3/day)",
+    "y2=Q_in_t+2 (m3/day)",
+    "y3=Q_in_t+3 (m3/day)",
+    "y4=Q_in_t+4 (m3/day)",
+    "y5=Q_in_t+5 (m3/day)",
+    "y6=Q_in_t+6 (m3/day)",
+    "y7=Q_in_t+7 (m3/day)"
+  ],
+  "date_col_raw": "Date",
+  "qin_col": "Q_in_t (m3/day)",
+  "rain_col": "Rain_obs_t (mm)",
+  "api_col": "API_t (mm)",
+  "zero_threshold": 1e-06,
+  "horizons": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "model_structure": {
+    "stage1": "CatBoostClassifier ทำนาย P(Q_in_t+h = 0), threshold ต่อ horizon ใน stage1_thresholds.pkl",
+    "stage2": "Regressor ทำนาย DELTA = Q_in_t+h(actual) - Q_in_t(ปัจจุบัน) ไม่ใช่ค่าจริงตรงๆ",
+    "final_prediction_logic": "ถ้า stage1_classifier.predict_proba(X)[:,1] >= stage1_thresholds[h] => prediction = 0 มิฉะนั้น => prediction = clip(Q_in_t(ปัจจุบัน) + stage2_regressor.predict(X), 0, None)",
+    "stage2_trained_on": "เฉพาะแถวที่ Q_in_actual > ZERO_THRESHOLD ใน train เท่านั้น"
+  },
+  "deployment_model_per_horizon": {
+    "1": {
+      "model_name": "CatBoost",
+      "hurdle_nse_on_test": 0.7338984757410334,
+      "target_column": "y1=Q_in_t+1 (m3/day)"
+    },
+    "2": {
+      "model_name": "CatBoost",
+      "hurdle_nse_on_test": 0.34454807979728475,
+      "target_column": "y2=Q_in_t+2 (m3/day)"
+    },
+    "3": {
+      "model_name": "CatBoost",
+      "hurdle_nse_on_test": -2.8450243065744956,
+      "target_column": "y3=Q_in_t+3 (m3/day)"
+    },
+    "4": {
+      "model_name": "CatBoost",
+      "hurdle_nse_on_test": -0.6729781001229029,
+      "target_column": "y4=Q_in_t+4 (m3/day)"
+    },
+    "5": {
+      "model_name": "CatBoost",
+      "hurdle_nse_on_test": -1.0014987095671315,
+      "target_column": "y5=Q_in_t+5 (m3/day)"
+    },
+    "6": {
+      "model_name": "CatBoost",
+      "hurdle_nse_on_test": -0.09492939701651837,
+      "target_column": "y6=Q_in_t+6 (m3/day)"
+    },
+    "7": {
+      "model_name": "CatBoost",
+      "hurdle_nse_on_test": 0.2530401333380593,
+      "target_column": "y7=Q_in_t+7 (m3/day)"
+    }
+  },
+  "training_data_source": "Training_Values_Nofct_7day_Final.csv",
+  "training_date_range": {
+    "start": "2025-06-27 00:00:00",
+    "end": "2026-06-20 00:00:00"
+  },
+  "split_method": "stratified season-balanced split (70/15/15), ไม่ใช่ chronological split ตรงๆ",
+  "known_limitations": [
+    "Test set นี้ไม่สามารถเทียบ RMSE ข้าม notebook อื่นได้โดยตรง (scale/composition ต่างกัน)",
+    "Stage 1 มีตัวอย่าง zero-inflow ใน train แค่ 6-10 แถวต่อ horizon ทำให้ threshold มี noise สูง",
+    "Horizon 3-7 มี Hurdle_NSE ติดลบสำหรับบางโมเดล ควรระวังเป็นพิเศษเมื่อนำไปใช้จริง (ดู deployment_model_choice.json ค่า hurdle_nse_on_test ประกอบก่อนเชื่อผลทำนาย)"
+  ],
+  "library_versions": {
+    "python": "3.14.4 (tags/v3.14.4:23116f9, Apr  7 2026, 14:10:54) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "catboost": "1.2.10",
+    "xgboost": "3.3.0",
+    "lightgbm": "4.6.0",
+    "scikit_learn": "1.8.0"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "meta": {
+    "source": "01_data/forecasting_results/Reservoir_inflow/all_models_test_performance.csv, shap_importance_all_models.csv",
+    "updated": "Test set (validation mode)"
+  },
+  "kpi": {
+    "nse_h1": 0.852,
+    "mae_h1": 8364,
+    "mae_h1_note": "ลดลงจาก Baseline 1.5%",
+    "kge_h1": 0.859,
+    "nse_h7": -0.41
+  },
+  "comparison_table": [
+    { "horizon": 1, "model": "CatBoost", "mae": 8364.3,  "rmse": 13880.9, "nse": 0.852,  "kge": 0.859 },
+    { "horizon": 2, "model": "CatBoost", "mae": 12421.9, "rmse": 20290.4, "nse": 0.544,  "kge": 0.600 },
+    { "horizon": 3, "model": "CatBoost", "mae": 15590.4, "rmse": 25731.4, "nse": 0.238,  "kge": 0.587 },
+    { "horizon": 4, "model": "CatBoost", "mae": 20232.2, "rmse": 32088.6, "nse": -0.273, "kge": 0.418 },
+    { "horizon": 5, "model": "CatBoost", "mae": 26046.9, "rmse": 41781.6, "nse": -0.608, "kge": 0.309 },
+    { "horizon": 6, "model": "CatBoost", "mae": 30672.7, "rmse": 50522.0, "nse": -0.588, "kge": 0.243 },
+    { "horizon": 7, "model": "CatBoost", "mae": 33882.5, "rmse": 59603.8, "nse": -0.411, "kge": 0.134 }
+  ],
+  "chart": {
+    "horizons": [1,2,3,4,5,6,7],
+    "nse": [0.852,0.544,0.238,-0.273,-0.608,-0.588,-0.411],
+    "kge": [0.859,0.600,0.587,0.418,0.309,0.243,0.134],
+    "shap_features": ["Water_Level_t","%Full_t","Storage_S_t","DeltaS_t","Q_in_t","API_t","Rain_obs_t"],
+    "shap_values": [4174.9, 3063.9, 2934.6, 2705.9, 2526.9, 2402.0, 1827.2]
+  }
+}
