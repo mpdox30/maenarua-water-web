@@ -8,8 +8,15 @@
 #   Reservoir_inflow/active/stage1_classifiers.pkl          -> catboost.core.CatBoostClassifier
 #   Reservoir_inflow/active/deployment_stage2_regressors.pkl -> catboost.core.CatBoostRegressor
 #
-# หมายเหตุ: ไม่รวม library เฉพาะตอนเทรนโมเดล (optuna, shap, geopandas, rasterio, cdsapi, xarray ฯลฯ)
+# หมายเหตุ: ไม่รวม library เฉพาะตอนเทรนโมเดล (optuna, shap, cdsapi, xarray ฯลฯ)
 # เพราะ pipeline นี้ใช้สำหรับรัน inference/ดึงข้อมูลจริงเท่านั้น ไม่ใช่ retrain โมเดล
+#
+# แก้ไข 2026-07-11: geopandas และ rasterio ย้ายออกจากลิสต์ "training-only" ข้างบนแล้ว —
+# sar_classification.py (load_zone_boundaries() ใช้ geopandas อ่าน zone shapefile มาหลายรอบแล้ว;
+# _classify_raster_local()/_download_ee_image_geotiff() ที่เพิ่งเพิ่มใหม่ใช้ rasterio อ่าน/เขียน
+# GeoTIFF ที่ export มาจาก GEE) ทั้งคู่เป็น dependency จริงตอน inference ของ SAR crop classification
+# แล้ว ไม่ใช่แค่ตอนเทรนโมเดลอีกต่อไป (geopandas เป็น gap ที่ค้างมาหลายรอบ — ไฟล์นี้เคยระบุผิดว่าไม่ต้อง
+# ติดตั้งทั้งที่โค้ด import จริงอยู่แล้ว)
 #
 # ไม่ต้องติดตั้ง xgboost: มีอยู่แค่ใน Reservoir_inflow/active/stage2_regressors_all_models.pkl
 # ซึ่งเป็นไฟล์เปรียบเทียบทุกโมเดลตอนเทรน ไม่ใช่ไฟล์ deployment จริง (ดู deployment_model_choice.json
@@ -43,3 +50,16 @@ earthengine-api>=1.0     # chirps_feature.py: ee.ImageCollection ดึง CHIRP
                          # ผ่าน run_pipeline.bat (token อาจหมดอายุ) ต้องเปลี่ยนเป็น Service Account
                          # ก่อน wire chirps_feature.py เข้ากับ data_pipeline.py จริง (ดู TODO เต็ม
                          # ใน chirps_feature.py ที่ DEFAULT_GEE_PROJECT และ _fetch_chirps_daily_from_gee())
+
+# เพิ่ม 2026-07-11 พร้อม sar_classification.py/sar_background_job.py — export+local-classify
+# แทน sampleRegions() แบบ synchronous เดิม (แก้ปัญหา GEE 5,000-element limit บน full-scene raster)
+geopandas>=0.14           # sar_classification.py: load_zone_boundaries() อ่าน zone A/B shapefile จริง
+                          # (ใช้มาหลายรอบแล้วก่อนหน้านี้ แต่ตกหล่นไม่เคยอยู่ใน requirements.txt — แก้ไขรอบนี้)
+rasterio>=1.3             # sar_classification.py: _download_ee_image_geotiff()/_classify_raster_local()
+                          # อ่าน/เขียน GeoTIFF ที่ getDownloadURL() จาก GEE มา แล้ว classify ทุก pixel local
+                          # ด้วย rf.predict() (ตาม pattern เดียวกับ Retrain3.ipynb cell 16) — ทดสอบ offline
+                          # แล้วด้วย synthetic GeoTIFF (pip install rasterio==1.3.x ในสภาพแวดล้อมทดสอบ)
+                          # หมายเหตุ: >= ไม่ใช่ == เพราะยังไม่ได้ตรวจสอบเวอร์ชันที่ "ติดตั้งจริง" ใน
+                          # D:\maenaruea-water-web\.venv (ต่างจาก package อื่นด้านบนที่ล็อกด้วย == หลัง
+                          # เปิด .dist-info/METADATA ตรวจสอบแล้ว) — ควรรัน pip install แล้วเช็คเวอร์ชันจริง
+                          # ก่อน pin เป็น == ตาม convention เดียวกับ package อื่นในไฟล์นี้

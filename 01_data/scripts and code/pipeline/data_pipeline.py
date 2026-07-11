@@ -239,21 +239,34 @@ def get_telemetry_data() -> tuple[list[TelemetryReading], str]:
     return generate_mock_telemetry(), "mock"
 
 
-def check_new_sar_image(
-    watch_dir: Path = SAR_WATCH_DIR,
-    marker_path: Path = SAR_LAST_PROCESSED_MARKER,
-) -> Optional[Path]:
-    """เช็คว่ามีไฟล์ภาพ SAR ใหม่หรือไม่ (ยัง skeleton)"""
-    logger.info("Checking for new SAR imagery in %s", watch_dir)
-    new_image_path: Optional[Path] = None
-    return new_image_path
+def get_sar_crop_classification() -> Optional[dict]:
+    """
+    2026-07-11 เปลี่ยนจากเรียก check_new_sar_image()/trigger_crop_classification() ตรงๆ ในทุกรอบ
+    pipeline หลัก เป็นอ่านผลลัพธ์ล่าสุดที่ sar_background_job.py เขียนไว้แทน — เดิม
+    trigger_crop_classification() ใช้เวลาไม่กี่วินาที (sampleRegions() แบบ synchronous) แต่หลังแก้
+    ให้ export+download GeoTIFF จาก GEE แล้ว classify ทุก pixel local (แก้ปัญหา GEE 5,000-element
+    limit — ดู docstring ของ sar_classification.trigger_crop_classification()) ใช้เวลานานขึ้นมาก
+    (นาทีถึงหลายนาทีต่อ zone) ไม่เหมาะรันตรงในทุกรอบ pipeline หลักที่ต้องจบเร็วทุกสัปดาห์อีกต่อไป
 
+    SAR ควรอัปเดตแค่ ~ทุก 7-10 วันตาม revisit cycle ของ Sentinel-1 อยู่แล้ว (check_new_sar_image()
+    เองก็มี min_days_between_runs=30 gate อยู่แล้วด้วย) จึงแยกไปรันเป็น background job ต่างหาก
+    (sar_background_job.py ผ่าน Task Scheduler ของตัวเอง) เขียนผลลง
+    01_data/gis/sar_output/sar_result_latest.json — ฟังก์ชันนี้แค่อ่านไฟล์นั้น (เร็ว ไม่ต้องรอ GEE)
 
-def trigger_crop_classification(sar_image_path: Path) -> dict:
-    """เรียกกระบวนการจำแนกพืชใหม่ (ยัง skeleton)"""
-    logger.info("Triggering crop classification for %s", sar_image_path)
-    classification_result: dict = {}
-    return classification_result
+    คืน dict (payload เต็มจาก background job รอบล่าสุด รวม "is_stale"/"age_days") หรือ None ถ้ายังไม่
+    เคยมีผลลัพธ์เลย (background job ยังไม่เคยรันสำเร็จ) — ไม่ raise (import sar_background_job
+    แบบ lazy เพื่อไม่ให้ทั้ง pipeline พังถ้า geopandas/earthengine-api/rasterio ยังไม่ได้ติดตั้ง)
+    """
+    logger.info("Reading latest cached SAR crop classification result (from sar_background_job.py)")
+    try:
+        import sar_background_job as sbj
+        return sbj.read_latest_sar_result()
+    except Exception:
+        logger.exception(
+            "read_latest_sar_result() ล้มเหลวไม่คาดคิด (ควร \"ไม่ raise\" อยู่แล้วปกติในตัว "
+            "sar_background_job.py เอง — ถ้าเห็น error นี้แปลว่าพังตั้งแต่ import/โหลด dependency)"
+        )
+        return None
 
 
 def _wd_get_feature_cols(df, df_zone) -> list[str]:
@@ -1570,19 +1583,32 @@ def run_pipeline() -> PipelineResult:
         step_status["climate_features"] = "failed"
         errors.append("climate_features: " + str(exc))
 
-    logger.info("Step 3/5: ตรวจสอบภาพ SAR ใหม่ + จำแนกพืช")
+    logger.info("Step 3/5: อ่านผล SAR crop classification ล่าสุด (sar_background_job.py แยกต่างหาก)")
     sar_triggered = False
     crop_classification: Optional[dict] = None
     try:
-        new_sar_image = check_new_sar_image()
-        if new_sar_image is not None:
-            crop_classification = trigger_crop_classification(new_sar_image)
+        cached_sar_result = get_sar_crop_classification()
+        if cached_sar_result is not None:
+            crop_classification = cached_sar_result
             sar_triggered = True
+            if cached_sar_result.get("is_stale"):
+                step_status["sar_classification"] = "stale"
+                logger.warning(
+                    "ผล SAR classification ล่าสุด stale (age=%s วัน) -- ยังใช้ค่าเดิมต่อไปได้ "
+                    "(ไม่ block pipeline หลัก) แต่ควรเช็คว่า sar_background_job.py Task Scheduler "
+                    "ยังรันอยู่จริง",
+                    cached_sar_result.get("age_days"),
+                )
+            else:
+                step_status["sar_classification"] = "ok"
         else:
-            logger.info("ไม่พบภาพ SAR ใหม่ในรอบนี้ ข้ามการจำแนกพืช")
-        step_status["sar_classification"] = "ok"
+            logger.info(
+                "ยังไม่มีผล SAR classification เลย (sar_background_job.py ยังไม่เคยรันสำเร็จ) — ข้าม "
+                "(ไม่ใช่ error ของรอบ pipeline นี้)"
+            )
+            step_status["sar_classification"] = "no_data_yet"
     except Exception as exc:
-        logger.exception("Step 3/5 ล้มเหลว (SAR check / crop classification)")
+        logger.exception("Step 3/5 ล้มเหลว (อ่านผล SAR ที่แคชไว้)")
         step_status["sar_classification"] = "failed"
         errors.append("sar_pipeline: " + str(exc))
 

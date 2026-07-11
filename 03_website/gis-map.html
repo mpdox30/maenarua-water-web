@@ -109,6 +109,18 @@
   .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 8px 20px; overflow-x: auto; }
   .table-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
 
+  /* 2026-07-14 เพิ่ม — badge/disclaimer-box (คัดลอกจาก inflow-forecast.html เพื่อความสอดคล้อง)
+     สำหรับแสดงสถานะ + คำเตือนคุณภาพข้อมูลของผล SAR crop classification */
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
+  .badge-ok { background: rgba(69,194,173,0.14); color: var(--teal-300); border: 1px solid rgba(69,194,173,0.35); }
+  .badge-low { background: rgba(224,169,79,0.16); color: var(--amber-300); border: 1px solid rgba(224,169,79,0.42); }
+  .badge-blocked { background: rgba(226,102,90,0.16); color: #f3a89f; border: 1px solid rgba(226,102,90,0.42); }
+  .disclaimer-box { margin-top: 22px; padding: 18px 22px; border-radius: var(--radius-md); background: rgba(224,169,79,0.06); border: 1px solid rgba(224,169,79,0.26); }
+  .disclaimer-box h4 { font-size: 13px; color: var(--amber-300); margin-bottom: 10px; font-family: "IBM Plex Sans Thai", sans-serif; font-weight: 600; }
+  .disclaimer-box ul { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--text-500); }
+  .disclaimer-box li { margin-bottom: 6px; }
+  .disclaimer-box li:last-child { margin-bottom: 0; }
+
   .access-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
   .access-card { border-radius: var(--radius-md); padding: 20px; border: 1px solid var(--border); background: var(--surface); border-top: 3px solid var(--teal-400); }
   .access-card.restricted { border-top-color: var(--amber-400); }
@@ -265,6 +277,50 @@
           <label class="layer-toggle"><input type="checkbox" id="toggle-a" checked><span class="legend-dot" style="background:#e0a94f"></span>Zone A — Rainfed</label>
           <label class="layer-toggle"><input type="checkbox" id="toggle-b" checked><span class="legend-dot" style="background:#45c2ad"></span>Zone B — พื้นที่ใช้น้ำ</label>
           <label class="layer-toggle"><input type="checkbox" id="toggle-res" checked><span class="legend-dot" style="background:#7fe0d1"></span>อ่างเก็บน้ำ (5 แห่ง)</label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2026-07-14 เพิ่ม — ผล SAR crop classification (sar_classification.py/sar_background_job.py)
+       อ่านจาก latest.json -> crop_classification (payload เต็มจาก sar_background_job.py รวม
+       sar_data_quality) แสดง warning เด่นชัดเมื่อ weeks_diverging_from_training ไม่ว่าง ตาม
+       pattern เดียวกับ .disclaimer-box ที่ inflow-forecast.html ใช้กับ known_limitations -->
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">SAR Crop Classification</div>
+          <h2>ผลจำแนกชนิดพืชจากภาพ Sentinel-1/2 (RF v3b)</h2>
+        </div>
+        <p id="sarStatusNote">กำลังโหลดข้อมูล…</p>
+      </div>
+      <div id="sarNoDataBox" class="table-card" style="display:none; padding:20px;">
+        <p style="margin:0; color:var(--text-500); font-size:13px;">
+          ยังไม่มีผลจำแนกพืชจาก SAR background job เลย (sar_background_job.py ยังไม่เคยรันสำเร็จบนเครื่องนี้ —
+          ดู run_sar_background_job.bat/Windows Task Scheduler)
+        </p>
+      </div>
+      <div id="sarLoadErrorBox" class="table-card" style="display:none; padding:20px;">
+        <p style="margin:0; color:var(--text-500); font-size:13px;">ไม่สามารถโหลดข้อมูลได้</p>
+      </div>
+      <div id="sarResultBox" style="display:none;">
+        <div class="table-card">
+          <div class="table-grid-2">
+            <table class="data-table">
+              <thead><tr><th colspan="2">Zone A — พื้นที่พืชผล (เฮกตาร์)</th></tr></thead>
+              <tbody id="sarZoneATableBody"></tbody>
+            </table>
+            <table class="data-table">
+              <thead><tr><th colspan="2">Zone B — พื้นที่พืชผล (เฮกตาร์)</th></tr></thead>
+              <tbody id="sarZoneBTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="disclaimer-box" id="sarQualityBox" style="display:none;">
+          <h4>⚠ คุณภาพข้อมูล SAR ของรอบนี้ — ควรตรวจสอบก่อนเชื่อผลจำแนกพืช</h4>
+          <p id="sarQualityNote" style="font-size:12.5px; color:var(--text-500); margin:0 0 10px;"></p>
+          <ul id="sarQualityWeeksList"></ul>
         </div>
       </div>
     </div>
@@ -466,6 +522,99 @@ document.getElementById('toggle-b').addEventListener('change', e => {
 document.getElementById('toggle-res').addEventListener('change', e => {
   if (e.target.checked) map.addLayer(reservoirLayer); else map.removeLayer(reservoirLayer);
 });
+</script>
+
+<script>
+// 2026-07-14 เพิ่ม — โหลดผล SAR crop classification จาก latest.json (crop_classification field,
+// เขียนโดย sar_background_job.py ผ่าน data_pipeline.py::save_results() -- ดู
+// get_sar_crop_classification()/PipelineResult.crop_classification ใน data_pipeline.py) แยก
+// <script> block ต่างหากจาก script ด้านบน (ที่มี GeoJSON เต็มของแผนที่) เพื่อไม่ให้ปนกัน
+const SAR_DATA_ENDPOINT = 'assets/data/latest.json';
+
+const SAR_CROP_TH = {rice: 'ข้าว', corn: 'ข้าวโพด', cassava: 'มันสำปะหลัง', longan: 'ลำไย', etc: 'อื่นๆ (ยางพารา/ปาล์ม/ยาสูบ ฯลฯ)'};
+
+function _sarFmtHa(v) {
+  return (v === null || v === undefined) ? '—' : Number(v).toFixed(2) + ' ha';
+}
+
+function renderSarZoneTable(tbodyId, cropAreaHa) {
+  const tbody = document.getElementById(tbodyId);
+  if (!cropAreaHa || Object.keys(cropAreaHa).length === 0) {
+    tbody.innerHTML = '<tr><td colspan="2">ไม่มีข้อมูล</td></tr>';
+    return;
+  }
+  const order = ['rice', 'corn', 'cassava', 'longan', 'etc'];
+  const crops = order.filter(c => c in cropAreaHa).concat(Object.keys(cropAreaHa).filter(c => !order.includes(c)));
+  tbody.innerHTML = crops.map(crop =>
+    '<tr><td>' + (SAR_CROP_TH[crop] || crop) + '</td><td class="hl">' + _sarFmtHa(cropAreaHa[crop]) + '</td></tr>'
+  ).join('');
+}
+
+function renderSarSection(json) {
+  const cc = json.crop_classification;
+  const statusNote = document.getElementById('sarStatusNote');
+  const noDataBox = document.getElementById('sarNoDataBox');
+  const resultBox = document.getElementById('sarResultBox');
+
+  if (!cc) {
+    noDataBox.style.display = '';
+    resultBox.style.display = 'none';
+    statusNote.innerHTML = '<span class="badge badge-low">ยังไม่มีข้อมูล</span>';
+    return;
+  }
+
+  noDataBox.style.display = 'none';
+  resultBox.style.display = '';
+
+  const zones = cc.zone_crop_area_ha || {};
+  renderSarZoneTable('sarZoneATableBody', zones.zone_A);
+  renderSarZoneTable('sarZoneBTableBody', zones.zone_B);
+
+  // สถานะบนหัวข้อ: ok (เขียว) / stale (เหลือง) / อื่นๆ (แดง)
+  let statusBadge;
+  if (cc.is_stale) {
+    statusBadge = '<span class="badge badge-low">⚠ ข้อมูลเก่า ' + (cc.age_days ?? '?') + ' วัน</span>';
+  } else if (cc.status === 'ok') {
+    statusBadge = '<span class="badge badge-ok">✓ อัปเดตล่าสุด</span>';
+  } else {
+    statusBadge = '<span class="badge badge-blocked">status: ' + (cc.status ?? 'unknown') + '</span>';
+  }
+  statusNote.innerHTML = 'ปีที่จำแนก ' + (cc.year ?? '—') + ' &nbsp;' + statusBadge;
+
+  // คำเตือนคุณภาพข้อมูล SAR (sar_data_quality.weeks_diverging_from_training) — ดู
+  // _assess_sar_data_quality() ใน sar_classification.py: สัปดาห์ว่างที่ตอน train มี median จริง
+  // (ไม่ null) แต่ตอนนี้ถูกเซ็ตเป็น 0 แทน เสี่ยงกระทบคุณภาพ classify มากกว่าสัปดาห์ที่ null ตั้งแต่ train
+  const dq = cc.sar_data_quality;
+  const qualityBox = document.getElementById('sarQualityBox');
+  const divergingWeeks = (dq && dq.weeks_diverging_from_training) || [];
+  if (dq && !dq.error && divergingWeeks.length > 0) {
+    qualityBox.style.display = '';
+    document.getElementById('sarQualityNote').textContent = dq.risk_note || '';
+    document.getElementById('sarQualityWeeksList').innerHTML =
+      '<li>' + divergingWeeks.length + ' สัปดาห์ diverge จาก training baseline (สัปดาห์ที่: ' +
+        divergingWeeks.join(', ') + ')</li>' +
+      '<li>สัปดาห์ว่างทั้งหมด: ' + (dq.n_empty_weeks ?? '?') + '/' + (dq.n_total_weeks ?? '?') +
+        ' (' + (dq.empty_week_pct ?? '?') + '%) เทียบกับสัดส่วนที่โมเดลเคยเจอตอน train (' +
+        (dq.training_baseline_null_band_pct ?? '?') + '%)</li>' +
+      '<li>ตัวเลขพื้นที่พืชด้านบนของรอบนี้ควรตีความอย่างระมัดระวัง — โปรดดูรายละเอียดเต็มที่ทีมข้อมูลก่อนใช้อ้างอิงเชิงนโยบาย</li>';
+  } else {
+    qualityBox.style.display = 'none';
+  }
+}
+
+fetch(SAR_DATA_ENDPOINT)
+  .then(res => {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  })
+  .then(renderSarSection)
+  .catch(err => {
+    console.error('โหลดข้อมูล SAR crop classification ไม่สำเร็จ:', err);
+    document.getElementById('sarStatusNote').innerHTML = '<span class="badge badge-blocked">โหลดไม่สำเร็จ</span>';
+    document.getElementById('sarLoadErrorBox').style.display = '';
+    document.getElementById('sarLoadErrorBox').querySelector('p').textContent =
+      'ไม่สามารถโหลดข้อมูลจาก ' + SAR_DATA_ENDPOINT + ' ได้';
+  });
 </script>
 
 </body>

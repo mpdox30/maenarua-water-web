@@ -1,0 +1,24 @@
+# 2026-07-14 เพิ่ม — ก่อนหน้านี้ repo นี้ไม่มี .gitignore เลย (ยืนยันจาก git status ที่ track ไฟล์
+# runtime-generated จำนวนมาก) เพิ่มไฟล์นี้ตอนต่อ SAR crop classification pipeline เข้ากับ git
+# เพราะมีไฟล์ runtime state/credential ที่ห้าม commit เกิดขึ้นใหม่จากงานนี้โดยเฉพาะ
+
+# --- SAR crop classification: runtime artifacts (regenerable, ไม่ควร commit) ---
+01_data/gis/sar_rasters/
+01_data/gis/sar_output/
+01_data/gis/.sar_last_classified
+01_data/gis/.sar_last_classified_test
+
+# --- GEE Service Account credentials (ห้าม commit เด็ดขาด — ดู gee_auth.py) ---
+# แนะนำให้เก็บ key file ไว้นอกโฟลเดอร์ repo นี้ตั้งแต่แรกอยู่แล้ว (ดู docstring gee_auth.py) แต่กัน
+# ไว้อีกชั้นเผื่อมีใครวางไว้ในนี้โดยไม่ตั้งใจ
+*service-account*.json
+*-key.json
+gee-credentials*.json
+
+# --- Python ---
+__pycache__/
+*.pyc
+.venv/
+
+# --- Logs (regenerable) ---
+01_data/scripts and code/pipeline/logs/*.txt

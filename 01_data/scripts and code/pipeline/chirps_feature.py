@@ -48,19 +48,17 @@ fallback เพราะเปราะบางกว่ามาก: ต้อ
       Final : ล่าช้า ~20 วันหลังจากสิ้นเดือน (รอ station gauge data มา unbias ให้เสร็จก่อน)
     ค่าของสัปดาห์ล่าสุด (as_of week) แทบทุกครั้งจะเป็น prelim หรือยังไม่มีเลย ไม่ใช่ final
 
-สถานะการทดสอบ / TODO ก่อน deploy จริง (อัปเดตล่าสุด 2026-07-05):
+สถานะการทดสอบ / TODO ก่อน deploy จริง (อัปเดตล่าสุด 2026-07-14):
   - ทดสอบกับ GEE จริงแล้วสำเร็จทั้ง CHIRPS Final และ CHIRPS-Prelim (รวมถึงแก้บั๊ก pentad-vs-daily
     ที่เจอระหว่างเทสแล้ว — ดู _expand_pentad_to_daily()) ด้วย project 'maenaruea-water-pipeline'
-  - ⚠️ TODO (สำคัญ ต้องทำก่อน deploy จริงผ่าน scheduled task/run_pipeline.bat): การทดสอบข้างต้นใช้
-    "personal credential" (ee.Authenticate() แบบ interactive, เปิด browser login เอง) ซึ่ง**ไม่
-    เหมาะกับการรันแบบ scheduled/unattended** เพราะ token ส่วนตัวอาจหมดอายุ/ต้อง re-authenticate
-    เป็นระยะ ทำให้ pipeline ที่รันอัตโนมัติ (เช่นผ่าน Windows Task Scheduler) พังกลางทางได้โดยไม่มี
-    คนคอย login ซ้ำให้ ก่อน wire โมดูลนี้เข้ากับ data_pipeline.py จริงต้องเปลี่ยนไปใช้ **Service
-    Account** แทน (สร้าง service account ใน GCP project 'maenaruea-water-pipeline' + ออก JSON key
-    + ใช้ ee.ServiceAccountCredentials() แทน ee.Initialize(project=...) เฉยๆ ใน
-    _fetch_chirps_daily_from_gee() — ดู https://developers.google.com/earth-engine/guides/service_account)
-    ตามที่ตกลงกันไว้ว่ายังไม่ต้องตั้งค่าตอนนี้ (รอให้ครบทุกแหล่งข้อมูล ERA5/CHIRPS/MEI พิสูจน์เสร็จ
-    ก่อน) — แต่ **ห้ามลืมขั้นตอนนี้ก่อน deploy จริง**
+  - ✅ 2026-07-14: _fetch_chirps_daily_from_gee() เปลี่ยนจากเรียก ee.Initialize(project=...) ตรงๆ
+    เป็นเรียกผ่าน gee_auth.init_ee(gee_project) แล้ว (ดู gee_auth.py) — ฟังก์ชันนี้จะใช้ Service
+    Account อัตโนมัติถ้าตั้ง env var GEE_SERVICE_ACCOUNT_EMAIL/GEE_SERVICE_ACCOUNT_KEY ไว้ครบ
+    (ดูขั้นตอนสร้าง Service Account เต็มใน docstring หัวไฟล์ gee_auth.py) ไม่งั้น fallback ไปใช้
+    personal credential (ee.Authenticate()) เหมือนเดิมอัตโนมัติ ไม่ error — **โค้ดพร้อมรองรับแล้ว
+    แต่ผู้ใช้ยังต้องไปสร้าง Service Account จริงใน GCP Console เองก่อน ถึงจะเปลี่ยนโหมดจริง**
+    (ยังไม่ได้ทำขั้นตอนนั้น ณ วันที่เขียนนี้ — ตรวจสอบได้จาก log "GEE auth: ใช้ personal
+    credential" ตอนรัน pipeline จริง ถ้ายังเห็นข้อความนี้แปลว่ายังไม่ได้ตั้งค่า)
 """
 
 from __future__ import annotations
@@ -268,8 +266,9 @@ def _fetch_chirps_daily_from_gee(
     เพื่อให้ผู้เรียกรู้ได้ว่าดึง final/prelim อันไหนไม่สำเร็จบ้าง
     """
     import ee
+    import gee_auth
 
-    ee.Initialize(project=gee_project)
+    gee_auth.init_ee(gee_project)
 
     point = ee.Geometry.Point([lon, lat])
     collection = (
