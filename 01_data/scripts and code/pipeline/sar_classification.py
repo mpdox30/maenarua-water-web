@@ -161,6 +161,17 @@ def load_rf_classifier() -> dict:
     }
 
 
+# 2026-07-16 ย้ายจาก local variable ในตัว trigger_crop_classification() มาเป็น module-level
+# constant -- เหตุผล: data_pipeline.py (Water Demand FAO-56 live-wiring, เฟส 3) ต้องใช้ dict
+# เดียวกันนี้เป็นค่า default/fallback ตอนที่ยังไม่มีผล SAR classification ใหม่ (หรือผลเก่าเกินไป)
+# เดิมถ้าปล่อยเป็น local variable จะต้อง hardcode ซ้ำเป็นชุดที่ 3 ใน data_pipeline.py (ชุดที่ 1 คือ
+# feature_schema.md เอกสาร, ชุดที่ 2 คือที่นี่) เสี่ยงหลุด sync กันถ้าแก้ที่เดียวแล้วลืมอีกที่ -- ย้าย
+# มาเป็น constant เดียวที่ data_pipeline.py import ได้ตรงๆ (lazy import sar_classification) แทน
+AREA_2020_HA_BY_ZONE = {
+    "zone_A": {"rice": 1510.72, "corn": 621.36, "longan": 461.36, "cassava": 0.16, "etc": 156.68},
+    "zone_B": {"rice": 282.88, "corn": 215.52, "longan": 170.64, "cassava": 0.32, "etc": 57.88},
+}
+
 SAR_MASK_SENTINEL = -9999.0
 # 2026-07-11 เปลี่ยนกลยุทธ์: เดิมพยายามใช้ sampleRegions(..., dropNulls=False) แต่ยืนยันแล้วด้วย
 # `help(ee.Image.sampleRegions)` จริง (import ee ได้โดยไม่ต้อง ee.Initialize()/credential เลย —
@@ -1012,10 +1023,9 @@ def trigger_crop_classification(sar_trigger: dict, marker_path: Path = SAR_LAST_
     }
 
     # พื้นที่ hardcode ปี 2020 จาก feature_schema.md หัวข้อ 2 (AREA_ZONE_A/AREA_ZONE_B, หน่วย ha)
-    area_2020_ha = {
-        "zone_A": {"rice": 1510.72, "corn": 621.36, "longan": 461.36, "cassava": 0.16, "etc": 156.68},
-        "zone_B": {"rice": 282.88, "corn": 215.52, "longan": 170.64, "cassava": 0.32, "etc": 57.88},
-    }
+    # 2026-07-16: ย้ายเป็น module-level constant AREA_2020_HA_BY_ZONE แล้ว (ดู comment ที่จุด define
+    # ด้านบนไฟล์) -- ใช้ alias ชื่อเดิมตรงนี้เพื่อไม่ต้องแก้โค้ดข้างล่างที่อ้างอิงชื่อ area_2020_ha
+    area_2020_ha = AREA_2020_HA_BY_ZONE
 
     try:
         import ee

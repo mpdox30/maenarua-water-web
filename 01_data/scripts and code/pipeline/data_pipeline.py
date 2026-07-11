@@ -21,9 +21,17 @@ data_pipeline.py
   - save_results(): ทำงานได้จริง เขียน latest.json overwrite ทุกรอบ
   - Water Demand (_wd_* helpers): ทำงานได้จริงแล้ว รัน two-stage prediction
     (stage1 classifier x stage2 CatBoost/LightGBM stack) ตาม
-    01_data/scripts and code/Water_demand/feature_schema.md — ใช้ feature ที่คำนวณไว้ล่วงหน้า
-    ใน ml_features_phase4.csv (static snapshot, ยังไม่ได้ต่อ ERA5/CHIRPS/MEI/crop-area
-    แบบ real-time)
+    01_data/scripts and code/Water_demand/feature_schema.md
+    2026-07-16 เพิ่ม (เฟส 3): ต่อ live NIR_A_m3/GIR_B_m3 เข้ามาแล้ว — _fetch_climate_features_step()
+    คำนวณ FAO-56 NIR/GIR สดทุกสัปดาห์ (ดู _wd_compute_live_nir_gir()) โดยใช้พื้นที่ต่อ crop จากผล
+    SAR classification ล่าสุดถ้าใช้ได้ (ดู _wd_get_area_zone_ha()) ไม่งั้น fallback ไปใช้ hardcode
+    ปี 2020 (sar_classification.AREA_2020_HA_BY_ZONE) แล้ว append เข้า ml_features_live.csv
+    _wd_build_feature_vector() ลอง reconstruct feature vector สดจากไฟล์นี้ก่อนเสมอต่อ zone (ดู
+    _wd_build_live_df()) โดยตรวจสอบว่าชุด/ลำดับ feature ตรงกับที่โมเดล train ไว้เป๊ะก่อนเชื่อ (กัน
+    กรณีประวัติสดสั้นเกินไปจนบาง lag/rolling column หลุดออกจาก feature set ไปเงียบๆ) ถ้ายังไม่พร้อม
+    (ต้องการ 12 สัปดาห์ต่อเนื่องกันจริงสำหรับ lag12/roll8) จะ fallback ไปใช้ ml_features_phase4.csv
+    (static snapshot เดิม) แยกอิสระต่อ zone — ผลลัพธ์มี data_source ("live_reconstructed" |
+    "static_snapshot") บอกความโปร่งใสเสมอ ไม่แตะ/backfill ประวัติเก่าที่ผูกกับ area basis ปี 2020
   - Reservoir Inflow (_ri_* helpers): ทำงานได้จริงแล้ว รัน hurdle prediction (stage1
     classifier กรอง zero-inflow -> stage2 CatBoost regressor ทำนาย delta) ตาม
     01_data/scripts and code/Reservoir_inflow/active/model_metadata.json ("final_prediction_logic")
@@ -87,6 +95,14 @@ WD_CLASSIFIER_FEATURES = [
 ]
 WD_TARGET_LAGS = [1, 2, 3, 4]
 
+# 2026-07-16 เพิ่ม (เฟส 3 -- live-wiring FAO-56 NIR/GIR เข้า Water Demand) ดู
+# feature_schema.md หัวข้อ 2 + combined_final_pipeline.py บรรทัด 2294-2418/2591-2728 สำหรับที่มา
+# ของค่าคงที่ชุดนี้ (ยืนยันกับ user แล้วก่อนเริ่ม implement — ดู task #46 ในบทสนทนา)
+WD_TARGET_LAG_WINDOWS_REG = [1, 2, 3, 4, 8, 12]  # LAG_WINDOWS เดิมใน build_feature_matrix()
+WD_ROLL_WINDOWS = [4, 8]  # ROLL_WINDOWS เดิมใน build_feature_matrix()
+WD_KC_LOOKUP_CSV = WATER_DEMAND_MODEL_DIR / "kc_weekly_lookup_all_crops.csv"
+WD_IRRIGATION_EFFICIENCY = 0.90  # IE เฉพาะ zone_B (irrigated) เท่านั้น -- zone_A (rainfed) ไม่มี term นี้
+
 RESERVOIR_INFLOW_MODEL_DIR = PROJECT_ROOT / "01_data" / "scripts and code" / "Reservoir_inflow" / "active"
 RESERVOIR_INFLOW_METADATA_PATH = RESERVOIR_INFLOW_MODEL_DIR / "model_metadata.json"
 RESERVOIR_INFLOW_TRAINING_CSV = RESERVOIR_INFLOW_MODEL_DIR / "Training_Values_Nofct_7day_Final.csv"
@@ -132,6 +148,10 @@ ML_FEATURES_LIVE_COLUMNS = [
     "ET0_mm_week", "T_mean", "RH_pct", "VPD_kPa", "u2_ms", "Rn_MJ",
     "era5t_n_days_in_week", "era5t_fetch_error",
     "AI_week", "AI_week_status",
+    # 2026-07-16 เพิ่ม (เฟส 3) -- NIR_A_m3/GIR_B_m3 สดต่อ zone (None ถ้าไม่ใช่ zone ของตัวเอง หรือ
+    # คำนวณไม่ได้สัปดาห์นี้ -- ดู wd_nir_gir_status) + wd_area_basis บอกความโปร่งใสว่าใช้พื้นที่จาก
+    # SAR classification ล่าสุด ("sar_live") หรือ fallback ไปใช้ hardcode ปี 2020 ("hardcoded_2020")
+    "NIR_A_m3", "GIR_B_m3", "wd_area_basis", "wd_nir_gir_status",
 ]
 
 
@@ -308,6 +328,175 @@ def _wd_load_models(model_dir: Path = WATER_DEMAND_MODEL_DIR) -> dict:
         len(models["stage1_classifiers"]), len(models["stack_weights"]),
     )
     return models
+
+
+# ---------------------------------------------------------------------------
+# Water Demand -- เฟส 3: live FAO-56 NIR/GIR (แทนที่ static hardcode ปี 2020)
+# ---------------------------------------------------------------------------
+# ยืนยันสูตรกับ user แล้วก่อน implement (ดู feature_schema.md หัวข้อ 2 +
+# combined_final_pipeline.py บรรทัด 2294-2418): ETc = Kc x ET0_mm_week ต่อ crop, deficit =
+# max(0, ETc - P_eff) floor ต่อ "crop" ก่อน sum ข้าม crop, zone_B (irrigated) หารด้วย IE=0.90
+# เพิ่ม zone_A (rainfed) ไม่มี term นี้, 'etc' ถูก skip เสมอ (ไม่มี Kc นิยามไว้)
+
+_wd_kc_lookup_cache: Optional[dict] = None
+
+
+def _wd_load_kc_lookup(csv_path: Path = WD_KC_LOOKUP_CSV) -> dict:
+    """
+    โหลด kc_weekly_lookup_all_crops.csv (สร้างไว้แล้วจาก task ก่อนหน้า -- week 1-52 x crop -> Kc)
+    เป็น dict {(crop, week): Kc} cache ไว้ใน module-level variable (ไฟล์นี้ static ไม่เปลี่ยนระหว่าง
+    รัน pipeline หนึ่งรอบ ไม่ต้องอ่านซ้ำทุก zone/ทุกครั้งที่เรียก)
+    """
+    global _wd_kc_lookup_cache
+    if _wd_kc_lookup_cache is not None:
+        return _wd_kc_lookup_cache
+
+    import csv as csv_module
+
+    csv_path = Path(csv_path)
+    lookup: dict = {}
+    with open(csv_path, newline="", encoding="utf-8") as f:
+        for r in csv_module.DictReader(f):
+            lookup[(r["crop"], int(r["week"]))] = float(r["Kc"])
+
+    _wd_kc_lookup_cache = lookup
+    logger.info("โหลด Kc lookup จาก %s สำเร็จ (%d รายการ)", csv_path, len(lookup))
+    return lookup
+
+
+def _wd_season_enc(iso_week: int) -> int:
+    """
+    เข้ารหัสฤดูกาลจากสัปดาห์ปฏิทิน (ISO week) -- ไม่ได้เดา สูตรนี้ reverse-engineer จาก season_enc
+    ตัวจริงใน ml_features_phase4.csv (ยืนยันด้วย df.groupby('week')['season_enc'].unique() --
+    ทุก week มีค่า season_enc เดียวไม่มี ambiguity เลยตลอดทั้งไฟล์ 2020-2024): week 10-18 -> 1
+    (ตรงกับ "Dry-hot" ที่เห็นในคอมเมนต์ diagnostic ของ combined_final_pipeline.py), week 19-44 -> 2
+    ("Wet"), week อื่น (1-9, 45-53) -> 0 ("Dry-cool") -- คงที่ทุกปี ไม่ขึ้นกับปี/เดือนเพิ่มเติม
+    """
+    if 10 <= iso_week <= 18:
+        return 1
+    if 19 <= iso_week <= 44:
+        return 2
+    return 0
+
+
+def _wd_get_area_zone_ha(zone: str, sar_result: Optional[dict]) -> dict:
+    """
+    เลือกพื้นที่ (ha) ต่อ crop ของ zone ที่จะใช้คำนวณ NIR/GIR สด -- ใช้ผล SAR crop classification
+    ล่าสุด (จาก get_sar_crop_classification()) ถ้ามีและใช้ได้ (status ok/partial และมีข้อมูล zone
+    นี้จริง) ไม่งั้น fallback ไปใช้ AREA_2020_HA_BY_ZONE (import จาก sar_classification.py --
+    2026-07-16 ย้ายเป็น module-level constant แล้วเพื่อไม่ต้อง hardcode ซ้ำเป็นชุดที่ 3 ที่นี่)
+
+    หมายเหตุ (ยืนยันแนวทางกับ user แล้ว "ไม่แตะประวัติเก่า"): ฟังก์ชันนี้ใช้เฉพาะกับแถวใหม่ที่กำลัง
+    จะ append เข้า ml_features_live.csv เท่านั้น ไม่ retroactive แก้ประวัติเก่าที่ผูกกับ area ปี 2020
+    เดิม -- ยอมรับ transient period ~12 สัปดาห์ที่ lag window คาบเกี่ยวระหว่าง area basis 2 ชุด
+    (ตามที่ตกลงไว้)
+
+    ยอมรับผล SAR ที่ "stale" (is_stale=True, เกิน 45 วันตาม SAR_RESULT_STALE_AFTER_DAYS) ด้วย --
+    ยังแม่นกว่า baseline ปี 2020 ที่แข็งอยู่กับที่มาก แต่ log ให้เห็นชัดเจนเสมอว่าใช้แหล่งไหน
+
+    คืน dict {"area_ha_by_crop": dict, "basis": "sar_live"|"hardcoded_2020", "sar_status": ...,
+    "sar_is_stale": ..., "sar_age_days": ..., "note": str}
+    """
+    import sar_classification as sc
+
+    fallback_area = sc.AREA_2020_HA_BY_ZONE.get(zone, {})
+
+    if not sar_result:
+        return {
+            "area_ha_by_crop": fallback_area, "basis": "hardcoded_2020",
+            "sar_status": None, "sar_is_stale": None, "sar_age_days": None,
+            "note": "ยังไม่มีผล SAR classification เลย (background job ยังไม่เคยรันสำเร็จ) -- ใช้พื้นที่ hardcode ปี 2020",
+        }
+
+    zone_area = (sar_result.get("zone_crop_area_ha") or {}).get(zone)
+    sar_status = sar_result.get("status")
+    if not zone_area or sar_status not in ("ok", "partial"):
+        return {
+            "area_ha_by_crop": fallback_area, "basis": "hardcoded_2020",
+            "sar_status": sar_status, "sar_is_stale": sar_result.get("is_stale"),
+            "sar_age_days": sar_result.get("age_days"),
+            "note": (
+                "ผล SAR classification ล่าสุดใช้ไม่ได้ (status=" + str(sar_status) + ", zone_crop_area_ha["
+                + zone + "]=" + ("ว่าง" if not zone_area else "มี") + ") -- fallback ไปใช้พื้นที่ hardcode ปี 2020"
+            ),
+        }
+
+    return {
+        "area_ha_by_crop": zone_area, "basis": "sar_live",
+        "sar_status": sar_status, "sar_is_stale": sar_result.get("is_stale"),
+        "sar_age_days": sar_result.get("age_days"),
+        "note": (
+            "ใช้ผล SAR classification ล่าสุด" +
+            (" (stale เกิน 45 วัน แต่ยังแม่นกว่า baseline ปี 2020)" if sar_result.get("is_stale") else "")
+        ),
+    }
+
+
+def _wd_compute_live_nir_gir(
+    zone: str, iso_week: int,
+    et0_mm_week: Optional[float], p_eff_mm: Optional[float],
+    area_ha_by_crop: dict,
+) -> Optional[dict]:
+    """
+    คำนวณ NIR_A_m3 (zone_A)/GIR_B_m3 (zone_B) สดจากสูตร FAO-56 ที่ยืนยันแล้วกับต้นฉบับ (ดู
+    feature_schema.md หัวข้อ 2 + combined_final_pipeline.py บรรทัด 2294-2418):
+
+        ETc(crop, week)     = Kc(crop, week) x ET0_mm_week
+        deficit(crop, week) = max(0, ETc - P_eff(zone, week))    <- floor ต่อ "crop" ก่อน sum
+        mm(crop, week)      = deficit                             (zone_A, rainfed -- ไม่มี IE)
+                             = deficit / IE   (IE = WD_IRRIGATION_EFFICIENCY = 0.90)  (zone_B, irrigated)
+        total_m3            = sum(crop != 'etc') mm(crop) x (area_ha(crop) x 10000) / 1000
+
+    'etc' ถูก skip เสมอ (catch-all พืชอื่นที่ไม่ใช่ target crop -- ไม่มี Kc นิยามไว้ใน
+    kc_weekly_lookup_all_crops.csv)
+
+    iso_week > 52 (สัปดาห์ที่ 53 ที่เกิดขึ้นบางปีตาม ISO calendar) จะ clamp ลงเหลือ 52 (ตาราง Kc มี
+    แค่ 52 สัปดาห์ตาม calendar-week granularity ตอน train -- สัปดาห์ 53 ใกล้เคียงปลายปีที่สุดคือ 52)
+
+    คืน None ทั้งชุดถ้า et0_mm_week/p_eff_mm เป็น None (climate สัปดาห์นี้ยังไม่พร้อม) หรือไม่มีพื้นที่
+    ให้คำนวณเลย -- ไม่ raise ตาม convention เดียวกับฟังก์ชันอื่นในไฟล์นี้
+    """
+    if et0_mm_week is None or p_eff_mm is None or not area_ha_by_crop:
+        return None
+
+    lookup_week = min(iso_week, 52) if iso_week else None
+    if not lookup_week:
+        return None
+
+    kc_lookup = _wd_load_kc_lookup()
+    is_zone_b = (zone == "zone_B")
+
+    total_m3 = 0.0
+    per_crop: dict = {}
+    skipped_no_kc = []
+    for crop, area_ha in area_ha_by_crop.items():
+        if crop == "etc":
+            continue
+        kc = kc_lookup.get((crop, lookup_week))
+        if kc is None:
+            skipped_no_kc.append(crop)
+            continue
+
+        etc_mm = kc * et0_mm_week
+        deficit_mm = max(0.0, etc_mm - p_eff_mm)
+        mm = (deficit_mm / WD_IRRIGATION_EFFICIENCY) if is_zone_b else deficit_mm
+        area_m2 = area_ha * 10000.0
+        crop_m3 = mm * area_m2 / 1000.0
+        total_m3 += crop_m3
+
+        per_crop[crop] = {
+            "kc": kc, "etc_mm": round(etc_mm, 4), "deficit_mm": round(deficit_mm, 4),
+            "mm_after_ie": round(mm, 4), "area_ha": area_ha, "m3": round(crop_m3, 2),
+        }
+
+    return {
+        "total_m3": round(total_m3, 2),
+        "zone": zone, "iso_week": iso_week, "lookup_week": lookup_week,
+        "iso_week_clamped": lookup_week != iso_week,
+        "irrigation_efficiency_applied": is_zone_b,
+        "per_crop": per_crop,
+        "skipped_crops_no_kc": skipped_no_kc,
+    }
 
 
 def _fetch_era5t_via_subprocess(
@@ -506,12 +695,120 @@ def _fetch_era5t_via_subprocess(
     return result
 
 
+def _migrate_ml_features_live_schema(csv_path: Path, current_columns: list) -> bool:
+    """
+    2026-07-16 เพิ่ม -- แก้บั๊กจริงที่ user เจอ: ตอน task #50 เพิ่ม NIR_A_m3/GIR_B_m3/wd_area_basis/
+    wd_nir_gir_status เข้า ML_FEATURES_LIVE_COLUMNS แล้ว _append_ml_features_live() เขียนแถวใหม่
+    ตาม fieldnames ปัจจุบันต่อท้ายไฟล์เดิมทันที โดยไม่เคยเช็คว่า header ที่เขียนไว้บรรทัดแรกของไฟล์
+    (ตอน "write_header ครั้งแรก" นานมาแล้ว ก่อนมีคอลัมน์ใหม่พวกนี้) ยังตรงกับ ML_FEATURES_LIVE_COLUMNS
+    ปัจจุบันหรือไม่ -- ผลคือแถวเก่า (schema เดิม 30 คอลัมน์) กับแถวใหม่ (schema ใหม่ 34 คอลัมน์) อยู่ใน
+    ไฟล์เดียวกันคนละจำนวนคอลัมน์ ทำให้ pandas.read_csv()/_wd_build_live_df() parse ไม่ได้เลย
+
+    เลือก migrate-in-place (เติมค่าว่างในแถวเก่าให้มีคอลัมน์ใหม่ครบ) แทนการย้ายไฟล์เดิมไปเก็บเป็น
+    archive แล้วเริ่มไฟล์ใหม่ -- เพราะ live path ต้องการประวัติต่อเนื่อง 12 สัปดาห์เต็มสำหรับ lag12/
+    roll8 การทิ้งประวัติทุกครั้งที่ schema เปลี่ยนจะทำให้ live path ไม่มีทางสะสมพอสักที (ระยะยาวสำคัญ
+    กว่าความสะดวกตอนนี้ที่มีแค่ไม่กี่แถว)
+
+    รองรับทั้ง 2 กรณีต่อแถว: (1) แถว schema เก่า (จำนวนคอลัมน์ตรงกับ header เดิม) -> map ตามชื่อคอลัมน์
+    เดิม เติมคอลัมน์ใหม่เป็นค่าว่าง (2) แถวที่ดันเขียนด้วย schema ใหม่ไปแล้วก่อนไฟล์จะถูก migrate จริง
+    (เหมือนที่เกิดขึ้นจริง 2 แถวสุดท้ายตอนเจอบั๊กนี้ -- จำนวนคอลัมน์ตรงกับ current_columns พอดี) ->
+    map ตาม current_columns ตรงๆ ไม่ต้องเติมอะไร แถวที่ยาวไม่ตรงทั้งคู่ (ไม่ควรเกิดแต่กันไว้) จะ
+    best-effort map กับ header เดิมแล้ว log คำเตือนไว้ ไม่ raise/ไม่ทิ้งแถว
+
+    สำรองไฟล์เดิมไว้เป็น .pre_migration_<timestamp> เสมอก่อนเขียนทับ (กู้คืนได้ถ้า migrate ผิดพลาด)
+
+    คืน True ถ้า migrate จริง (schema ไม่ตรงและแก้แล้ว), False ถ้าไม่ต้องทำอะไร (ไฟล์ไม่มี/ว่างเปล่า/
+    schema ตรงอยู่แล้ว)
+    """
+    import csv as csv_module
+
+    csv_path = Path(csv_path)
+    if not csv_path.exists():
+        return False
+
+    with open(csv_path, newline="", encoding="utf-8") as f:
+        raw_rows = list(csv_module.reader(f))
+
+    if not raw_rows:
+        return False
+
+    existing_header = raw_rows[0]
+    data_rows = [r for r in raw_rows[1:] if r]
+
+    if existing_header == current_columns:
+        return False
+
+    n_old_len = len(existing_header)
+    n_new_len = len(current_columns)
+    logger.warning(
+        "ml_features_live.csv schema ไม่ตรงกับ ML_FEATURES_LIVE_COLUMNS ปัจจุบัน (header เดิม %d "
+        "คอลัมน์, ปัจจุบัน %d คอลัมน์) -- migrate ไฟล์เดิมทั้งหมดให้มีคอลัมน์ใหม่ครบ (เติมค่าว่างใน "
+        "แถวเก่า) ก่อน append ต่อ ไม่ทิ้งประวัติเดิม",
+        n_old_len, n_new_len,
+    )
+
+    migrated_rows = []
+    n_old_schema = n_already_new = n_unexpected = 0
+    for row in data_rows:
+        if len(row) == n_old_len:
+            src = dict(zip(existing_header, row))
+            n_old_schema += 1
+        elif len(row) == n_new_len:
+            src = dict(zip(current_columns, row))
+            n_already_new += 1
+        else:
+            src = dict(zip(existing_header, row))
+            n_unexpected += 1
+            logger.warning(
+                "แถวความยาวไม่ตรงทั้ง schema เก่า (%d คอลัมน์) และใหม่ (%d คอลัมน์) เจอ %d ค่า -- "
+                "best-effort map กับ header เดิม (แถว: %s)",
+                n_old_len, n_new_len, len(row), row,
+            )
+        migrated_rows.append({col: src.get(col, "") for col in current_columns})
+
+    backup_path = csv_path.with_name(
+        csv_path.stem + "_pre_migration_" + datetime.now().strftime("%Y%m%dT%H%M%S") + csv_path.suffix
+    )
+    csv_path.replace(backup_path)
+    logger.info(
+        "สำรองไฟล์เดิมไว้ที่ %s ก่อน migrate (%d แถว: schema เก่า=%d, schema ใหม่แล้ว=%d, ไม่คาดคิด=%d)",
+        backup_path, len(migrated_rows), n_old_schema, n_already_new, n_unexpected,
+    )
+
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv_module.DictWriter(f, fieldnames=current_columns)
+        writer.writeheader()
+        for r in migrated_rows:
+            writer.writerow(r)
+
+    logger.info(
+        "Migrate ml_features_live.csv สำเร็จ: %d แถว -> schema ใหม่ %d คอลัมน์ (%s)",
+        len(migrated_rows), n_new_len, csv_path,
+    )
+    return True
+
+
 def _append_ml_features_live(rows: list, csv_path: Path = ML_FEATURES_LIVE_CSV) -> None:
-    """Append แถวใหม่เข้า ml_features_live.csv (เขียน header เฉพาะครั้งแรก)"""
+    """
+    Append แถวใหม่เข้า ml_features_live.csv (เขียน header เฉพาะครั้งแรก)
+
+    2026-07-16 เพิ่ม schema migration check ก่อน append ทุกครั้ง (ดู _migrate_ml_features_live_schema()
+    ด้านบน) -- ป้องกันบั๊กที่เกิดขึ้นจริง (เพิ่มคอลัมน์ใหม่ใน ML_FEATURES_LIVE_COLUMNS กลางทางแล้วไฟล์
+    เดิมมี header เก่าค้างอยู่ ทำให้แถวเก่า/ใหม่มีจำนวนคอลัมน์ไม่เท่ากันในไฟล์เดียวกัน -> parse ไม่ได้เลย)
+    """
     import csv
 
     csv_path = Path(csv_path)
     csv_path.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        _migrate_ml_features_live_schema(csv_path, ML_FEATURES_LIVE_COLUMNS)
+    except Exception:
+        logger.exception(
+            "_migrate_ml_features_live_schema() ล้มเหลวไม่คาดคิด -- จะพยายาม append ต่อไปตามเดิม "
+            "(เสี่ยง schema ไม่ตรงกันถ้าไฟล์เดิมยังมี header เก่าอยู่ -- ตรวจสอบ log ก่อนหน้านี้)"
+        )
+
     write_header = not csv_path.exists()
 
     with open(csv_path, "a", newline="", encoding="utf-8") as f:
@@ -624,6 +921,18 @@ def _fetch_climate_features_step(as_of_date: Optional[Any] = None) -> dict:
     result["ai_week"] = ai_week_results
 
     as_of_year, as_of_week, _ = as_of.isocalendar() if hasattr(as_of, "isocalendar") else (None, None, None)
+
+    # 2026-07-16 เพิ่ม (เฟส 3) -- อ่านผล SAR crop classification ล่าสุด (แค่ครั้งเดียว ใช้ร่วมกันทั้ง
+    # 2 zone ในลูปด้านล่าง ไม่ใช่คนละครั้งต่อ zone) เพื่อเลือกพื้นที่ต่อ crop ที่จะใช้คำนวณ NIR/GIR สด
+    # -- get_sar_crop_classification() ออกแบบไว้แล้วว่า "ไม่ raise" (อ่านไฟล์ cache เร็ว ไม่ต้องรอ GEE)
+    # แต่ยังห่อ try/except ไว้อีกชั้นกันพลาดไม่คาดคิด (เช่น sar_background_job.py import ไม่สำเร็จ)
+    sar_result = None
+    try:
+        sar_result = get_sar_crop_classification()
+    except Exception as exc:
+        logger.exception("get_sar_crop_classification() raise ออกมาโดยไม่คาดคิด (ควรไม่ raise ปกติ)")
+        result["errors"].append("get_sar_crop_classification: " + str(exc))
+
     rows_to_append = []
     for zone in ("zone_A", "zone_B"):
         chirps_z = chirps_results.get(zone) or {}
@@ -660,6 +969,34 @@ def _fetch_climate_features_step(as_of_date: Optional[Any] = None) -> dict:
             "AI_week": ai_week_z.get("value"),
             "AI_week_status": ai_week_z.get("status"),
         }
+
+        # 2026-07-16 เพิ่ม (เฟส 3) -- คำนวณ NIR_A_m3/GIR_B_m3 สดต่อ zone จากสูตร FAO-56 ที่ยืนยัน
+        # แล้ว (ดู _wd_compute_live_nir_gir()) ใช้พื้นที่จาก SAR classification ล่าสุดถ้าใช้ได้ ไม่งั้น
+        # fallback ไปใช้ hardcode ปี 2020 (ดู _wd_get_area_zone_ha()) -- เขียนแค่คอลัมน์ของ zone
+        # ตัวเอง (NIR_A_m3 สำหรับ zone_A, GIR_B_m3 สำหรับ zone_B) อีก target หนึ่งเป็น None เสมอ
+        # เหมือน convention เดิมของ ml_features_phase4.csv (target ของอีก zone เป็นค่าว่าง)
+        area_info = _wd_get_area_zone_ha(zone, sar_result)
+        nir_gir = _wd_compute_live_nir_gir(
+            zone=zone, iso_week=as_of_week,
+            et0_mm_week=et0_mm_week, p_eff_mm=chirps_z.get("p_eff_mm"),
+            area_ha_by_crop=area_info["area_ha_by_crop"],
+        )
+        row["wd_area_basis"] = area_info["basis"]
+        row["NIR_A_m3"] = None
+        row["GIR_B_m3"] = None
+        if nir_gir is not None:
+            row["wd_nir_gir_status"] = "ok"
+            if zone == "zone_A":
+                row["NIR_A_m3"] = nir_gir["total_m3"]
+            else:
+                row["GIR_B_m3"] = nir_gir["total_m3"]
+        else:
+            row["wd_nir_gir_status"] = "blocked (ET0_mm_week หรือ P_eff_mm ยังไม่พร้อมใช้ในสัปดาห์นี้ หรือไม่มีพื้นที่ crop ให้คำนวณ)"
+            logger.warning(
+                "NIR/GIR (%s) คำนวณไม่ได้สัปดาห์นี้: %s (area_basis=%s: %s)",
+                zone, row["wd_nir_gir_status"], area_info["basis"], area_info["note"],
+            )
+
         rows_to_append.append(row)
 
     try:
@@ -801,55 +1138,263 @@ def _wd_select_climate_features_for_prediction(zone: str, as_of_date: Optional[A
     }
 
 
+def _wd_extract_feature_row_for_zone(df, zone: str, target_col: str) -> Optional[dict]:
+    """
+    ดึงแถวล่าสุดที่ feature ครบ (ไม่มี NaN ใน reg_feats) ของ zone จาก DataFrame ที่กำหนด -- ใช้ได้ทั้ง
+    static ml_features_phase4.csv และ live-reconstructed DataFrame จาก _wd_build_live_df() (ต้องมี
+    คอลัมน์ตรงกันแบบเดียวกันเท่านั้น) reg_feats/clf_feats คำนวณผ่าน _wd_get_feature_cols()/
+    _wd_get_clf_features() เดิม (ไม่แก้ logic ที่ผ่านการใช้งานจริงมาแล้ว) เพื่อรับประกันว่าชุด/ลำดับ
+    feature ที่ป้อนเข้าโมเดลจะตรงกับตอน train เสมอไม่ว่าจะมาจากแหล่งไหน (คอลัมน์ของ DataFrame ที่ส่ง
+    เข้ามาต้องเรียงเหมือนกับ ml_features_phase4.csv เป๊ะ -- เป็นหน้าที่ของ caller ที่ต้อง reindex ตาม
+    นั้นก่อนเสมอ ดู _wd_build_live_df())
+
+    คืน None ถ้าไม่มีแถวไหน feature ครบเลย (ให้ caller ตัดสินใจว่าจะ fallback ไปแหล่งอื่นหรือ raise)
+    """
+    df_zone = df[df["zone"] == zone]
+    if df_zone.empty:
+        return None
+
+    df_zone = df_zone.sort_values(["year", "week"])
+    reg_feats = _wd_get_feature_cols(df, df_zone)
+    clf_feats = _wd_get_clf_features(df_zone, target_col)
+
+    subset = df_zone.dropna(subset=reg_feats)
+    if subset.empty:
+        return None
+
+    latest_row = subset.iloc[-1]
+    as_of_year = int(latest_row["year"])
+    as_of_week = int(latest_row["week"])
+
+    X_reg = latest_row[reg_feats].to_numpy(dtype=float).reshape(1, -1)
+    X_clf = latest_row[clf_feats].to_numpy(dtype=float).reshape(1, -1)
+
+    return {
+        "target_col": target_col,
+        "as_of_year": as_of_year,
+        "as_of_week": as_of_week,
+        "X_reg": X_reg,
+        "X_clf": X_clf,
+        "reg_feature_count": len(reg_feats),
+        "clf_feature_count": len(clf_feats),
+    }
+
+
+def _wd_build_live_df():
+    """
+    2026-07-16 เพิ่ม (เฟส 3) -- สร้าง DataFrame จาก ml_features_live.csv ให้มีคอลัมน์/ลำดับตรงกับ
+    ml_features_phase4.csv (static training file) เป๊ะ โดยอ่านลำดับคอลัมน์จริงจากไฟล์ static มาเป็น
+    ต้นแบบตรงๆ (ไม่เดา/hand-code ลำดับเอง) เพื่อรับประกันว่า _wd_get_feature_cols()/
+    _wd_get_clf_features() (โค้ดเดิมที่ผ่านการใช้งานจริงแล้ว ไม่ได้แก้) จะเลือก/เรียง feature ตรงกับ
+    ตอน train เป๊ะไม่ว่าจะประมวลผลจาก DataFrame นี้หรือไฟล์ static ก็ตาม -- จุดนี้สำคัญมาก: ถ้าลำดับ
+    ไม่ตรง โมเดล (predict บน numpy array เปล่าๆ ไม่เช็คชื่อ column) จะทำนายผิดแบบเงียบๆ (ค่า feature
+    ไปตกที่ตำแหน่งผิด) เหมือนบั๊ก band-order ที่เจอใน SAR classification (ดู task #38-40)
+
+    lag/rolling ของ target (NIR_A_m3/GIR_B_m3) และของ ET0_mm_week/VPD_kPa คำนวณแบบ "calendar-based"
+    (เทียบ ISO week จริงผ่าน date.fromisocalendar() ไม่ใช่ shift() ตามตำแหน่งแถว) -- ถ้าขาดสัปดาห์ไหน
+    ไปเลย (pipeline ไม่ได้รันสัปดาห์นั้น) lag/roll ที่ต้องพึ่งสัปดาห์นั้นจะเป็น NaN แทนที่จะคำนวณผิด
+    เงียบๆ จากแถวที่ไม่ใช่ lag ที่ต้องการจริง (ป้องกัน silent corruption แบบเดียวกับที่ระวังมาตลอด
+    โปรเจกต์นี้) ส่วน P_mm_week_lag1/2/4 และ MEI_lag4/8 ใช้ค่าที่ chirps_feature.py/mei_feature.py
+    คำนวณมาให้ตรงๆ อยู่แล้วในไฟล์ (เชื่อ calendar-correctness ของ module เฉพาะทางเหล่านั้น ไม่คำนวณซ้ำ)
+
+    คืน None ถ้าไฟล์ยังไม่มีเลย หรือไม่มีข้อมูล zone ไหนเลย (ให้ caller fallback ไปใช้ static ทุก zone)
+    """
+    import numpy as np
+    import pandas as pd
+    from datetime import date, timedelta
+
+    if not ML_FEATURES_LIVE_CSV.exists() or not WATER_DEMAND_FEATURES_CSV.exists():
+        return None
+
+    canonical_cols = pd.read_csv(WATER_DEMAND_FEATURES_CSV, nrows=0).columns.tolist()
+
+    raw = pd.read_csv(ML_FEATURES_LIVE_CSV)
+    if raw.empty:
+        return None
+
+    # กันแถวซ้ำ (pipeline อาจรันมากกว่า 1 ครั้งต่อสัปดาห์ เช่น รัน manual ซ้ำตอน debug) -- เก็บแค่ run
+    # ล่าสุดต่อ (zone, year, week)
+    raw = raw.sort_values("run_timestamp")
+    raw = raw.drop_duplicates(subset=["zone", "year", "week"], keep="last")
+
+    def _calendar_lag(date_to_row: dict, week_start, col: str, lag_weeks: int):
+        r = date_to_row.get(week_start - timedelta(weeks=lag_weeks))
+        if r is None:
+            return np.nan
+        v = r.get(col)
+        return v if pd.notna(v) else np.nan
+
+    def _calendar_roll(date_to_row: dict, week_start, col: str, window: int, stat: str):
+        vals = []
+        for k in range(1, window + 1):
+            v = _calendar_lag(date_to_row, week_start, col, k)
+            if pd.isna(v):
+                return np.nan
+            vals.append(v)
+        return float(np.mean(vals)) if stat == "mean" else float(np.std(vals, ddof=1))
+
+    zone_frames = []
+    for zone, target_col in WD_ZONES.items():
+        zdf = raw[raw["zone"] == zone].copy()
+        if zdf.empty:
+            continue
+
+        zdf["year"] = zdf["year"].astype(int)
+        zdf["week"] = zdf["week"].astype(int)
+        # date.fromisocalendar() รองรับ week=53 เองอยู่แล้วถ้าปีนั้นมีจริงตาม ISO calendar (จะ error
+        # ถ้า year/week ไม่ valid จริง ซึ่งควร surface ออกมาเป็น exception ไม่ควร silently ข้าม)
+        zdf["_week_start"] = zdf.apply(lambda r: date.fromisocalendar(r["year"], r["week"], 1), axis=1)
+        zdf = zdf.sort_values("_week_start").reset_index(drop=True)
+
+        date_to_row = {r["_week_start"]: r for _, r in zdf.iterrows()}
+
+        for lag in WD_TARGET_LAG_WINDOWS_REG:
+            zdf[f"{target_col}_lag{lag}"] = zdf["_week_start"].apply(
+                lambda ws: _calendar_lag(date_to_row, ws, target_col, lag)
+            )
+        for w in WD_ROLL_WINDOWS:
+            zdf[f"{target_col}_roll{w}_mean"] = zdf["_week_start"].apply(
+                lambda ws: _calendar_roll(date_to_row, ws, target_col, w, "mean")
+            )
+            zdf[f"{target_col}_roll{w}_std"] = zdf["_week_start"].apply(
+                lambda ws: _calendar_roll(date_to_row, ws, target_col, w, "std")
+            )
+
+        # ET0_mm_week_lag*/VPD_kPa_lag* ไม่มีสดจาก module อื่น (ไม่เหมือน P_mm_week_lag*/MEI_lag*
+        # ที่ chirps_feature.py/mei_feature.py คำนวณมาให้แล้ว) -- คำนวณเองแบบ calendar-based เดียวกัน
+        for lag in (1, 2, 4):
+            zdf[f"ET0_mm_week_lag{lag}"] = zdf["_week_start"].apply(
+                lambda ws: _calendar_lag(date_to_row, ws, "ET0_mm_week", lag)
+            )
+        for lag in (1, 2):
+            zdf[f"VPD_kPa_lag{lag}"] = zdf["_week_start"].apply(
+                lambda ws: _calendar_lag(date_to_row, ws, "VPD_kPa", lag)
+            )
+
+        zdf["season_enc"] = zdf["week"].apply(_wd_season_enc)
+        zdf["WoY_sin"] = np.sin(2 * np.pi * zdf["week"] / 52)
+        zdf["WoY_cos"] = np.cos(2 * np.pi * zdf["week"] / 52)
+        zdf["month"] = zdf["_week_start"].apply(lambda d: d.month)
+        zdf["MoY_sin"] = np.sin(2 * np.pi * zdf["month"] / 12)
+        zdf["MoY_cos"] = np.cos(2 * np.pi * zdf["month"] / 12)
+        zdf["date"] = zdf["_week_start"].apply(lambda d: d.isoformat())
+        zdf["zone"] = zone
+        zdf["target_col"] = target_col
+        # P_eff_mm ชื่อคอลัมน์เดียวกันอยู่แล้วใน ml_features_live.csv (chirps_feature.py เขียนชื่อนี้
+        # ตรงๆ ต่างจาก build_feature_matrix() เดิมที่ต้อง rename จาก P_eff_upland/P_eff_paddy)
+
+        # reindex ตาม canonical_cols เป๊ะ -- คอลัมน์ที่ไม่มีใน zdf (เช่น target_col ของอีก zone หนึ่ง)
+        # จะกลายเป็น NaN อัตโนมัติ, คอลัมน์ที่เราสร้างเองไว้คำนวณ (_week_start) จะถูกตัดทิ้งเพราะไม่อยู่
+        # ใน canonical_cols
+        zdf = zdf.reindex(columns=canonical_cols)
+        zone_frames.append(zdf)
+
+    if not zone_frames:
+        return None
+
+    return pd.concat(zone_frames, ignore_index=True)
+
+
 def _wd_build_feature_vector() -> dict:
     """
-    เตรียม feature vector สำหรับ Water Demand โดยใช้ feature_schema.md เป็นอ้างอิงเดียว ใช้ค่าที่
-    คำนวณไว้ล่วงหน้าแล้วใน ml_features_phase4.csv โดยดึงแถวล่าสุดที่มี feature ครบต่อ zone มาใช้
-    (static snapshot ไม่ใช่ live — MEI/CHIRPS/ERA5T ทดสอบสำเร็จแล้วทั้ง 3 แหล่งแต่ยังไม่ wire เข้ามา)
+    เตรียม feature vector สำหรับ Water Demand ต่อ zone
+
+    2026-07-16 แก้ (เฟส 3) -- เดิมอ่านจาก ml_features_phase4.csv (static snapshot) เสมอ ตอนนี้ลอง
+    live path ก่อนต่อ zone: สร้าง DataFrame จาก ml_features_live.csv (climate สด + NIR/GIR ที่คำนวณ
+    สดจากพื้นที่ SAR ล่าสุด -- ดู _wd_compute_live_nir_gir()/_wd_get_area_zone_ha() ใน
+    _fetch_climate_features_step()) ผ่าน _wd_build_live_df() ถ้ายังไม่มีประวัติสดพอ (lag12/roll8
+    ต้องการ 12 สัปดาห์ต่อเนื่องกันจริง -- ตอนนี้มีแค่ ~12 สัปดาห์เป็นส่วนใหญ่ยังไม่ครบ) จะ fallback
+    ไปใช้ ml_features_phase4.csv (static, เหมือนเดิมทุกประการ) แยกอิสระต่อ zone (ไม่ใช่ all-or-
+    nothing ทั้งสอง zone พร้อมกัน -- zone หนึ่งอาจมี live history ครบก่อนอีก zone หนึ่งได้ เพราะ SAR/
+    climate data พร้อมไม่พร้อมกันได้)
+
+    ผลลัพธ์แต่ละ zone มี key "data_source" เพิ่มเข้ามา ("live_reconstructed" | "static_snapshot")
+    ให้ downstream (save_results -> latest.json) โชว์ความโปร่งใสได้ เหมือน pattern ของ Reservoir
+    Inflow's data_source field
+
+    2026-07-16 พบและแก้บั๊กระหว่างทดสอบด้วยตัวเอง (ก่อนส่งให้ user รัน): _wd_get_feature_cols() ตัด
+    คอลัมน์ที่ all-NaN ทั้งคอลัมน์ต่อ zone ออกจาก reg_feats ไปเลย (ไม่ใช่แค่ทำให้แถวนั้น NaN แล้วถูก
+    dropna กรองทิ้ง) -- แปลว่าถ้า live_df มีประวัติสั้นเกินไป (เช่น 3 สัปดาห์) จน lag8/lag12 เป็น NaN
+    ทั้งคอลัมน์ reg_feats ที่คำนวณได้จาก live_df จะ "หด" เหลือน้อยกว่า 37 ตัวโดยไม่ error เลย ถ้าเอา
+    X_reg ที่ shape ผิดนี้ไปเข้าโมเดลตรงๆ จะพังแบบ shape mismatch หรือแย่กว่านั้นคือ values หลุด
+    ตำแหน่งแบบเงียบๆ (เหมือนบั๊ก band-order ของ SAR classification) จึงต้องตรวจสอบเพิ่มว่า reg_feats/
+    clf_feats ที่ได้จาก live_df ตรงกับชุดที่โมเดล train ไว้จริง (คำนวณจาก static_df ต่อ zone เดียวกัน
+    ด้วยฟังก์ชันเดิมเป๊ะ) ก่อนจะเชื่อ live path -- ถ้าไม่ตรง (ไม่ว่าจะเซ็ตต่างหรือลำดับต่าง) fallback
+    ไปใช้ static ทันที ไม่เสี่ยงป้อน feature vector ที่ไม่ตรงสเปกเข้าโมเดล
     """
     import pandas as pd
 
-    logger.info("Building feature vector from %s", WATER_DEMAND_FEATURES_CSV)
     if not WATER_DEMAND_FEATURES_CSV.exists():
         raise FileNotFoundError("ไม่พบไฟล์ feature: " + str(WATER_DEMAND_FEATURES_CSV))
+    # โหลด static เสมอ (ไม่ใช่แค่ lazy fallback) -- ใช้เป็นทั้ง fallback และเป็น "ground truth" ของ
+    # ชุด/ลำดับ feature ที่โมเดล train ไว้จริง สำหรับตรวจสอบ live path ก่อนเชื่อ (ไฟล์เล็ก ~500 แถว
+    # โหลดเร็ว ไม่ใช่ bottleneck)
+    static_df = pd.read_csv(WATER_DEMAND_FEATURES_CSV)
 
-    df = pd.read_csv(WATER_DEMAND_FEATURES_CSV)
+    live_df = None
+    try:
+        live_df = _wd_build_live_df()
+    except Exception:
+        logger.exception("_wd_build_live_df() ล้มเหลวไม่คาดคิด -- จะใช้ static fallback ทุก zone แทน")
 
     results = {}
+
     for zone, target_col in WD_ZONES.items():
-        df_zone = df[df["zone"] == zone]
-        if df_zone.empty:
-            raise ValueError("ไม่พบข้อมูล zone=" + zone + " ใน " + str(WATER_DEMAND_FEATURES_CSV))
+        static_zone_df = static_df[static_df["zone"] == zone].sort_values(["year", "week"])
+        expected_reg_feats = _wd_get_feature_cols(static_df, static_zone_df)
+        expected_clf_feats = _wd_get_clf_features(static_zone_df, target_col)
 
-        df_zone = df_zone.sort_values(["year", "week"])
-        reg_feats = _wd_get_feature_cols(df, df_zone)
-        clf_feats = _wd_get_clf_features(df_zone, target_col)
+        feat = None
+        source = None
 
-        subset = df_zone.dropna(subset=reg_feats)
-        if subset.empty:
-            raise ValueError(
-                "ไม่มีแถวที่feature ครบ (ไม่มี NaN) สำหรับ zone=" + zone + " — ตรวจสอบ warm-up period ของ lag/rolling"
+        if live_df is not None:
+            candidate = None
+            try:
+                candidate = _wd_extract_feature_row_for_zone(live_df, zone, target_col)
+            except Exception:
+                logger.exception("ดึง live feature row ของ %s ล้มเหลวไม่คาดคิด", zone)
+
+            if candidate is not None:
+                live_zone_df = live_df[live_df["zone"] == zone].sort_values(["year", "week"])
+                live_reg_feats = _wd_get_feature_cols(live_df, live_zone_df)
+                live_clf_feats = _wd_get_clf_features(live_zone_df, target_col)
+                if live_reg_feats == expected_reg_feats and live_clf_feats == expected_clf_feats:
+                    feat = candidate
+                    source = "live_reconstructed"
+                else:
+                    logger.warning(
+                        "Zone %s: ชุด/ลำดับ feature จาก live_df ไม่ตรงกับที่โมเดล train ไว้ "
+                        "(reg_feats live=%d ตรงกับ static=%d ตัว: %d ตัว, clf_feats live=%d "
+                        "ตรงกับ static=%d ตัว: %d ตัว) -- มักเกิดตอนประวัติสดยังสั้นเกินไป จนบาง lag/"
+                        "rolling column เป็น NaN ทั้งคอลัมน์แล้วถูกตัดออกจาก reg_feats ไปทั้งดุ้น "
+                        "(ดู docstring ของฟังก์ชันนี้) ยังไม่เชื่อ live path รอบนี้ -- fallback ไปใช้ "
+                        "static แทน",
+                        zone, len(live_reg_feats), len(expected_reg_feats),
+                        len(set(live_reg_feats) & set(expected_reg_feats)),
+                        len(live_clf_feats), len(expected_clf_feats),
+                        len(set(live_clf_feats) & set(expected_clf_feats)),
+                    )
+
+        if feat is None:
+            logger.info(
+                "Zone %s: ใช้ static snapshot (%s) -- live path ยังไม่พร้อม (ไม่มีประวัติพอ หรือ "
+                "feature set ยังไม่ตรงสเปกโมเดล)",
+                zone, WATER_DEMAND_FEATURES_CSV,
             )
+            feat = _wd_extract_feature_row_for_zone(static_df, zone, target_col)
+            if feat is None:
+                raise ValueError(
+                    "ไม่มีแถวที่ feature ครบ (ไม่มี NaN) สำหรับ zone=" + zone +
+                    " ทั้งจาก live และ static — ตรวจสอบ warm-up period ของ lag/rolling"
+                )
+            source = "static_snapshot"
 
-        latest_row = subset.iloc[-1]
-        as_of_year = int(latest_row["year"])
-        as_of_week = int(latest_row["week"])
-
-        X_reg = latest_row[reg_feats].to_numpy(dtype=float).reshape(1, -1)
-        X_clf = latest_row[clf_feats].to_numpy(dtype=float).reshape(1, -1)
-
-        results[zone] = {
-            "target_col": target_col,
-            "as_of_year": as_of_year,
-            "as_of_week": as_of_week,
-            "X_reg": X_reg,
-            "X_clf": X_clf,
-            "reg_feature_count": len(reg_feats),
-            "clf_feature_count": len(clf_feats),
-        }
+        feat["data_source"] = source
+        results[zone] = feat
         logger.info(
-            "Zone %s: as_of=%d-W%02d, reg_features=%d, clf_features=%d",
-            zone, as_of_year, as_of_week, len(reg_feats), len(clf_feats),
+            "Zone %s: as_of=%d-W%02d, source=%s, reg_features=%d, clf_features=%d",
+            zone, feat["as_of_year"], feat["as_of_week"], source,
+            feat["reg_feature_count"], feat["clf_feature_count"],
         )
 
     return results
@@ -895,6 +1440,11 @@ def _wd_run_prediction(model: dict, features: dict) -> tuple[Optional[dict], Opt
         results[zone] = {
             "as_of": {"year": feat["as_of_year"], "week": feat["as_of_week"]},
             "unit": "m3_per_week",
+            # 2026-07-16 เพิ่ม (เฟส 3) -- โชว์ว่า feature ที่ใช้ทำนายรอบนี้มาจาก live-reconstructed
+            # (ml_features_live.csv, NIR/GIR คำนวณสดจากพื้นที่ SAR ล่าสุด) หรือ static_snapshot
+            # (ml_features_phase4.csv เดิม, ยังไม่ครบ 12 สัปดาห์ต่อเนื่องสำหรับ live) เหมือน pattern
+            # data_source ของ Reservoir Inflow
+            "data_source": feat.get("data_source"),
             "horizons": {
                 "h1": {
                     "probability_active": round(prob_active, 4),
