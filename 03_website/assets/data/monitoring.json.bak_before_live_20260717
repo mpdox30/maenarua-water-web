@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "source": "01_data/telemetry (pending connection), 01_data/Reservoirs (rating curves)",
+    "updated": "รอเชื่อมต่อสถานีโทรมาตร"
+  },
+  "kpi": {
+    "weather": null,
+    "water_level": null,
+    "capacity_pct": null,
+    "remote_sensing_last": null
+  },
+  "reservoirs": [
+    { "name_th": "อ่างเก็บน้ำแม่นาเรือ", "name_en": "Mae Na Rua Reservoir", "spillway_msl": 489.54, "area_display": "188.0 ไร่ (0.301 ตร.กม.)", "capacity_display": "1.625 ล้าน ลบ.ม.", "on_map": true },
+    { "name_th": "อ่างเก็บน้ำห้วยถ้ำ", "name_en": "Huai Tham Reservoir", "spillway_msl": 478.10, "area_display": "54.9 ไร่ (0.088 ตร.กม.)", "capacity_display": "0.495 ล้าน ลบ.ม.", "on_map": true },
+    { "name_th": "อ่างเก็บน้ำห้วยโซ้", "name_en": "Huai So Reservoir", "spillway_msl": 508.00, "area_display": "21.4 ไร่ (0.034 ตร.กม.)", "capacity_display": "0.119 ล้าน ลบ.ม.", "on_map": true },
+    { "name_th": "อ่างเก็บน้ำห้วยจำตุ้ม", "name_en": "Huai Cham Tum Reservoir", "spillway_msl": 497.50, "area_display": "38.2 ไร่ (0.061 ตร.กม.)", "capacity_display": "0.314 ล้าน ลบ.ม.", "on_map": true },
+    { "name_th": "อ่างเก็บน้ำวิทยาลัยเกษตร", "name_en": "Phayao C.A.T. Reservoir", "spillway_msl": 457.07, "area_display": "35.4 ไร่ (0.057 ตร.กม.)", "capacity_display": "0.348 ล้าน ลบ.ม.", "on_map": true }
+  ],
+  "cadence_table": [
+    { "source": "สถานีโทรมาตร (อากาศ/ระดับน้ำ)", "frequency": "รายชั่วโมง – รายวัน", "note": "ความถี่สูงสุดในบรรดาแหล่งข้อมูลทั้งหมด" },
+    { "source": "Sentinel-1 SAR", "frequency": "ทุก ~7–10 วัน", "note": "ตาม revisit cycle ของดาวเทียม" },
+    { "source": "MODIS ET", "frequency": "ทุก ~2 สัปดาห์", "note": "ต้องมี gap-filling สำหรับช่วงที่ latency ค้าง" }
+  ]
+}

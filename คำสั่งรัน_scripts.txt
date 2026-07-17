@@ -1,0 +1,91 @@
+============================================================
+ คำสั่งรัน .py ทั้งหมดในโปรเจกต์ Mae Na Rua Water Web (สำหรับรันเอง manual)
+ อัปเดตล่าสุด: 2026-07-17
+============================================================
+
+หมายเหตุทั่วไป:
+- ทุกคำสั่งเปิด Command Prompt (cmd.exe) แล้ววาง cd /d บรรทัดแรกก่อนเสมอ (ใช้ /d เพราะ
+  ต้องข้ามจาก C: ไป D: ถ้าใช้ cd เฉย ๆ จะไม่สลับไดรฟ์ให้ ตัว python จะหาไฟล์ไม่เจอ)
+- ถ้าเคยสร้าง .venv ของโปรเจกต์ไว้แล้ว (D:\maenaruea-water-web\.venv) แนะนำให้ใช้ python จาก
+  .venv แทน python เฉย ๆ เพื่อให้ dependency ครบตามที่ pipeline ต้องการ:
+      D:\maenaruea-water-web\.venv\Scripts\python.exe <ชื่อสคริปต์>.py
+  ถ้ายังไม่ได้สร้าง .venv ใช้ python ปกติไปก่อนได้ (ตามตัวอย่างด้านล่าง)
+
+
+------------------------------------------------------------
+1) data_pipeline.py — pipeline หลัก (พยากรณ์ความต้องการใช้น้ำ + น้ำไหลลงอ่าง + อ่าน SAR ล่าสุด)
+   เขียนผลลง 03_website/assets/data/latest.json ให้ทุกหน้าเว็บอ่าน
+   ความถี่ที่แนะนำ: ทุกสัปดาห์ (หรือเมื่อไรก็ได้ที่อยากรีเฟรชผลพยากรณ์)
+------------------------------------------------------------
+cd /d "D:\maenaruea-water-web\01_data\scripts and code\pipeline"
+python data_pipeline.py
+
+   ทางเลือก (ใช้ launcher ที่ตั้งไว้แล้ว จะเลือก .venv ให้อัตโนมัติ):
+cd /d "D:\maenaruea-water-web\01_data\scripts and code\pipeline"
+run_pipeline.bat
+
+
+------------------------------------------------------------
+2) sar_background_job.py — เช็ค/ประมวลผลภาพ SAR ใหม่ (Sentinel-1) แล้ว classify พืชในโซน A/B
+   มี gate ภายในอยู่แล้ว (min_days_between_runs=30) รันบ่อยก็ไม่เสียหาย แค่จะเช็คแล้วข้ามถ้ายังไม่ถึงรอบ
+   ความถี่ที่แนะนำ: ทุก 7-10 วัน (ปกติตั้งเป็น Task Scheduler อัตโนมัติแล้ว รันมือได้เวลาต้องการบังคับเช็ค)
+------------------------------------------------------------
+cd /d "D:\maenaruea-water-web\01_data\scripts and code\pipeline"
+python sar_background_job.py
+
+   ทางเลือก (launcher):
+cd /d "D:\maenaruea-water-web\01_data\scripts and code\pipeline"
+run_sar_background_job.bat
+
+
+------------------------------------------------------------
+3) reservoir_daily_orchestration.py — คำนวณน้ำไหลลงอ่าง (Inflow) รายวันจากข้อมูลโทรมาตร
+   (โหมด shadow — เขียนผลแยกไว้ที่ 01_data/Reservoirs/inflow_auto/RES002_daily_computed.csv
+   ยังไม่ทับไฟล์ทางการ 2026_MM_MNR.xlsx)
+   ความถี่ที่แนะนำ: ทุกวัน (คำนวณของ "เมื่อวาน" เป็นค่า default ถ้าไม่ระบุ --date)
+------------------------------------------------------------
+cd /d "D:\maenaruea-water-web\01_data\scripts and code\pipeline"
+python reservoir_daily_orchestration.py
+
+   ระบุวันที่เอง (ถ้าอยากคำนวณย้อนหลังวันอื่น):
+cd /d "D:\maenaruea-water-web\01_data\scripts and code\pipeline"
+python reservoir_daily_orchestration.py --date 2026-07-14
+
+
+------------------------------------------------------------
+4) monitoring_data_builder.py — ดึงข้อมูลโทรมาตรสด 4 สถานี (RES002/004/005/006) มาคำนวณ
+   % ความจุ แล้วเขียนทับ 03_website/assets/data/monitoring.json
+   (การ์ดในหน้า monitoring.html และการ์ด % ความจุอ่างเก็บน้ำในหน้า index.html อ่านไฟล์นี้)
+   ความถี่ที่แนะนำ: ทุก 10-15 นาที ถ้าอยากให้หน้าเว็บสดใกล้เคียง real-time (หรือรันมือก่อนเปิดดูก็ได้)
+------------------------------------------------------------
+cd /d "D:\maenaruea-water-web\01_data\scripts and code\pipeline"
+python monitoring_data_builder.py
+
+
+============================================================
+ เปิดดูเว็บไซต์แบบ local (จำเป็นเวลาหน้าเว็บต้อง fetch() ไฟล์ JSON เช่น latest.json /
+ monitoring.json — เปิดไฟล์ .html ตรง ๆ ด้วยดับเบิลคลิกมักโหลดข้อมูลไม่ขึ้นเพราะ browser
+ บล็อกการอ่านไฟล์ local ผ่าน file://)
+============================================================
+cd /d "D:\maenaruea-water-web\03_website"
+python -m http.server 8000
+
+   แล้วเปิดเบราว์เซอร์ไปที่:
+http://localhost:8000/index.html
+http://localhost:8000/monitoring.html
+http://localhost:8000/inflow-forecast.html
+http://localhost:8000/water-demand.html
+http://localhost:8000/gis-map.html
+
+   กด Ctrl+C ใน Command Prompt เพื่อปิด local server เมื่อดูเสร็จ
+
+
+============================================================
+ สคริปต์อื่นในโฟลเดอร์ pipeline ที่ "ไม่ต้อง" รันเอง (เผื่อสงสัยว่าทำไมไม่อยู่ในลิสต์บน)
+============================================================
+- era5t_worker.py, telemetry_feature.py, telemetry_history_store.py,
+  telemetry_hourly_aggregate.py, reservoir_telemetry_client.py, reservoir_water_balance.py,
+  reservoir_reference_data.py, gee_auth.py, sar_classification.py, chirps_feature.py, mei_feature.py
+  -> เป็นโมดูลภายในที่ data_pipeline.py / sar_background_job.py / reservoir_daily_orchestration.py
+     เรียกใช้เองอัตโนมัติ ไม่ได้ออกแบบให้รันตรง ๆ (บางไฟล์ไม่มี __main__ ด้วยซ้ำ)
+- ไฟล์ที่ขึ้นต้นด้วย test_*.py -> เป็นสคริปต์ debug/ทดสอบที่ใช้ระหว่างพัฒนา ไม่ใช่ส่วนของการใช้งานจริง

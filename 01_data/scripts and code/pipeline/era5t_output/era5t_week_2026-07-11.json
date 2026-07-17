@@ -1,0 +1,47 @@
+{
+  "worker_script": "era5t_worker.py",
+  "run_at": "2026-07-11T12:32:30.234583Z",
+  "mode": "weekly",
+  "requested_date": null,
+  "as_of_date": "2026-07-11",
+  "dataset": "reanalysis-era5-single-levels",
+  "time_utc_used": "12:00",
+  "grib_source": "cds_live_week:['D:\\\\maenaruea-water-web\\\\01_data\\\\scripts and code\\\\pipeline\\\\era5t_output\\\\era5t_week_202607_06-10.grib']",
+  "fetch_elapsed_sec": null,
+  "grib_size_bytes": null,
+  "variables": null,
+  "valid_time": null,
+  "latitude": null,
+  "longitude": null,
+  "n_grib_datasets": null,
+  "missing_variables": null,
+  "iso_year": 2026,
+  "iso_week": 28,
+  "candidate_days": [
+    "2026-07-06",
+    "2026-07-07",
+    "2026-07-08",
+    "2026-07-09",
+    "2026-07-10"
+  ],
+  "n_days_in_week": 1,
+  "daily_breakdown": [
+    {
+      "ETo_mm_day": 0.3910880283631116,
+      "T_c": 27.601434326171898,
+      "RH_pct": 84.11578579383864,
+      "VPD_kPa": 0.5866185338166505,
+      "u2_ms": 1.0749844237900303,
+      "Rn_MJ": -0.04224168,
+      "date": "2026-07-06"
+    }
+  ],
+  "ET0_mm_week": 0.3911,
+  "T_mean": 27.6014,
+  "RH_pct": 84.1158,
+  "VPD_kPa": 0.5866,
+  "u2_ms": 1.075,
+  "Rn_MJ": -0.0422,
+  "warnings": [],
+  "fetch_error": null
+}

@@ -1,0 +1,33 @@
+{
+  "worker_script": "era5t_worker.py",
+  "run_at": "2026-07-13T03:00:27.965545Z",
+  "mode": "weekly",
+  "requested_date": null,
+  "as_of_date": "2026-07-13",
+  "dataset": "reanalysis-era5-single-levels",
+  "time_utc_used": null,
+  "grib_source": "cds_live_week:none",
+  "fetch_elapsed_sec": null,
+  "grib_size_bytes": null,
+  "variables": null,
+  "valid_time": null,
+  "latitude": null,
+  "longitude": null,
+  "n_grib_datasets": null,
+  "missing_variables": null,
+  "iso_year": 2026,
+  "iso_week": 29,
+  "candidate_days": [],
+  "n_days_in_week": 0,
+  "daily_breakdown": [],
+  "ET0_mm_week": null,
+  "T_mean": null,
+  "RH_pct": null,
+  "VPD_kPa": null,
+  "u2_ms": null,
+  "Rn_MJ": null,
+  "warnings": [
+    "as_of_date=2026-07-13 เป็นวันจันทร์ของสัปดาห์นี้เอง (หรือก่อนหน้านั้น) — ยังไม่มีวันไหนของสัปดาห์นี้ที่ผ่านไปแล้วเลย ข้ามการยิง CDS รอบนี้"
+  ],
+  "fetch_error": null
+}

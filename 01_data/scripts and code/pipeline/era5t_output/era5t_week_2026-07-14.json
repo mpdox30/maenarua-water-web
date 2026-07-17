@@ -1,0 +1,36 @@
+{
+  "worker_script": "era5t_worker.py",
+  "run_at": "2026-07-14T08:01:03.726560Z",
+  "mode": "weekly",
+  "requested_date": null,
+  "as_of_date": "2026-07-14",
+  "dataset": "reanalysis-era5-single-levels",
+  "time_utc_used": "12:00",
+  "grib_source": "cds_live_week:none",
+  "fetch_elapsed_sec": null,
+  "grib_size_bytes": null,
+  "variables": null,
+  "valid_time": null,
+  "latitude": null,
+  "longitude": null,
+  "n_grib_datasets": null,
+  "missing_variables": null,
+  "iso_year": 2026,
+  "iso_week": 29,
+  "candidate_days": [
+    "2026-07-13"
+  ],
+  "n_days_in_week": 0,
+  "daily_breakdown": [],
+  "ET0_mm_week": null,
+  "T_mean": null,
+  "RH_pct": null,
+  "VPD_kPa": null,
+  "u2_ms": null,
+  "Rn_MJ": null,
+  "warnings": [
+    "ดึงข้อมูลวัน [datetime.date(2026, 7, 13)] ไม่สำเร็จ (HTTPError: 400 Client Error: Bad Request for url: https://cds.climate.copernicus.eu/api/retrieve/v1/processes/reanalysis-era5-single-levels/execution\ninvalid request\nNone of the data you have requested is available yet, please revise the period requested. The latest date available for this dataset is: 2026-07-09 08:00) — ตัดวันล่าสุด (2026-07-13) ออกแล้วลองใหม่ (อาจเป็นเพราะ ERA5T ยังไม่ปล่อยข้อมูล ของวันนั้นจริงๆ)",
+    "ไม่สามารถดึงข้อมูลของกลุ่มวัน [datetime.date(2026, 7, 13)] ได้เลยแม้แต่วันเดียว"
+  ],
+  "fetch_error": null
+}

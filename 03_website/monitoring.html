@@ -3,10 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Water Monitoring | ข้อมูลประกอบการตัดสินใจเพื่อการบริหารจัดการน้ำ ตำบลแม่นาเรือ</title>
+<title>สถานการณ์น้ำ | ข้อมูลประกอบการตัดสินใจเพื่อการบริหารจัดการน้ำ ตำบลแม่นาเรือ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<!-- Chart.js เวอร์ชัน local ที่ vendor ไว้แล้ว (ดู 03_website/README.md) -- ไม่พึ่ง CDN เพื่อให้
+     กราฟทำงานได้แม้ไม่มีอินเทอร์เน็ต เหมือน inflow-forecast.html / water-demand.html -->
+<script src="assets/js/chart.umd.min.js"></script>
 <style>
   :root {
     --bg-950: #06161c; --bg-900: #081e26; --bg-800: #0d2a34; --bg-700: #123643;
@@ -79,6 +82,54 @@
   .kpi-note { font-size: 11.5px; color: var(--text-600); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
   .pending-badge { display:inline-block; font-size:10.5px; padding:2px 9px; border-radius:999px; background: rgba(224,169,79,0.14); border:1px solid rgba(224,169,79,0.35); color: var(--amber-300); font-weight:600; margin-top:8px; }
 
+  /* --- per-station telemetry cards (live, 2026-07-17) --- */
+  .station-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .station-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px 22px 20px; position: relative; }
+  .station-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+  .station-card-title { font-size: 15.5px; color: var(--text-100); font-weight: 600; margin-bottom: 3px; }
+  .station-card-code { font-family: "Space Grotesk", sans-serif; font-size: 11px; color: var(--text-500); letter-spacing: 0.05em; }
+  .freshness-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; padding: 3px 10px 3px 8px; border-radius: 999px; font-weight: 600; white-space: nowrap; }
+  .freshness-badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .freshness-fresh { background: rgba(69,194,173,0.14); border: 1px solid rgba(69,194,173,0.35); color: var(--teal-300); }
+  .freshness-fresh .dot { background: var(--teal-400); }
+  .freshness-stale { background: rgba(224,169,79,0.14); border: 1px solid rgba(224,169,79,0.35); color: var(--amber-300); }
+  .freshness-stale .dot { background: var(--amber-400); }
+  .freshness-verystale { background: rgba(224,120,79,0.14); border: 1px solid rgba(224,120,79,0.35); color: #e0a479; }
+  .freshness-verystale .dot { background: #e0a479; }
+
+  .capacity-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 7px; }
+  .capacity-pct-value { font-family: "Space Grotesk", sans-serif; font-size: 26px; font-weight: 600; color: var(--text-100); }
+  .capacity-level-note { font-size: 11.5px; color: var(--text-500); text-align: right; }
+  .capacity-bar-track { width: 100%; height: 8px; border-radius: 999px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); overflow: hidden; margin-bottom: 18px; }
+  .capacity-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--teal-500), var(--teal-300)); }
+  .capacity-bar-fill.over { background: linear-gradient(90deg, var(--amber-400), var(--amber-300)); }
+
+  .station-metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .metric-chip { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 10px; }
+  .metric-chip .metric-label { font-size: 10px; color: var(--text-500); margin-bottom: 3px; }
+  .metric-chip .metric-value { font-family: "Space Grotesk", sans-serif; font-size: 13.5px; color: var(--text-300); font-weight: 600; }
+  .station-updated { font-size: 11px; color: var(--text-600); margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+  @media (max-width: 720px) {
+    .station-grid { grid-template-columns: 1fr; }
+    .station-metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* --- water-level trend chart (2026-07-17) --- */
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px 24px 18px; }
+  .chart-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+  .station-filter { display: flex; gap: 8px; flex-wrap: wrap; }
+  .station-filter-btn {
+    font-family: "IBM Plex Sans Thai", sans-serif; font-size: 12.5px; font-weight: 600;
+    padding: 7px 15px; border-radius: 999px; border: 1px solid var(--border-strong);
+    background: transparent; color: var(--text-500); cursor: pointer; transition: all .15s;
+  }
+  .station-filter-btn:hover { color: var(--text-100); border-color: var(--teal-400); }
+  .station-filter-btn.active { background: rgba(69,194,173,0.14); border-color: var(--teal-400); color: var(--teal-300); }
+  .chart-range-note { font-size: 11.5px; color: var(--text-600); }
+  .chart-canvas-wrap { height: 320px; position: relative; }
+  .chart-empty-note { color: var(--text-500); font-size: 13px; text-align: center; padding: 60px 20px; }
+
   .empty-panel {
     background: var(--surface);
     border: 1px dashed var(--border-strong);
@@ -143,7 +194,7 @@
       <a href="index.html">หน้าแรก</a>
       <a href="water-demand.html">ความต้องการใช้น้ำ</a>
       <a href="inflow-forecast.html">น้ำไหลลงอ่าง</a>
-      <a href="monitoring.html" class="current">Monitoring</a>
+      <a href="monitoring.html" class="current">สถานการณ์น้ำ</a>
       <a href="gis-map.html">แผนที่ GIS</a>
       <a href="research.html">งานวิจัย</a>
     </nav>
@@ -154,7 +205,7 @@
       <a href="index.html">หน้าแรก</a>
       <a href="water-demand.html">ความต้องการใช้น้ำ</a>
       <a href="inflow-forecast.html">น้ำไหลลงอ่าง</a>
-      <a href="monitoring.html" class="current">Monitoring</a>
+      <a href="monitoring.html" class="current">สถานการณ์น้ำ</a>
       <a href="gis-map.html">แผนที่ GIS</a>
       <a href="research.html">งานวิจัย</a>
     </nav>
@@ -173,12 +224,12 @@
 })();
 </script>
 
-<div class="status-bar">
+<div class="status-bar" id="statusBar">
   <div class="status-bar-inner">
-    <span class="status-dot"></span>
+    <span class="status-dot" id="statusDot"></span>
     <strong>สถานะข้อมูล:</strong>
-    <span>ยังไม่เชื่อมต่อข้อมูลโทรมาตรแบบ live</span>
-    <span class="dim">— หน้านี้แสดงโครงสร้างที่วางแผนไว้สำหรับการพัฒนาต่อ</span>
+    <span id="statusText">กำลังโหลดข้อมูล…</span>
+    <span class="dim" id="statusNote"></span>
   </div>
 </div>
 
@@ -186,14 +237,15 @@
   <section class="page-hero">
     <div class="wrap">
       <div class="eyebrow">สถานีโทรมาตร · Remote Sensing</div>
-      <h1>Water Monitoring</h1>
+      <h1>สถานการณ์น้ำ</h1>
       <p class="lead">
         ข้อมูลตรวจวัดสภาพอากาศและระดับน้ำในอ่างเก็บน้ำจากสถานีโทรมาตร ผสานกับข้อมูลระยะไกล
         (Sentinel-1 SAR, MODIS ET) เพื่อติดตามสถานการณ์น้ำในพื้นที่แบบใกล้เคียงเวลาจริง
       </p>
       <div class="hero-tags">
-        <span class="tag"><span class="dot" style="background:var(--amber-400)"></span>ยังไม่เชื่อมต่อข้อมูล live</span>
-        <span class="tag"><span class="dot" style="background:var(--teal-400)"></span>วางแผนใช้หลัก Best-Available-Input</span>
+        <span class="tag"><span class="dot" style="background:var(--teal-400)"></span>เชื่อมต่อสถานีโทรมาตร 4 จุด (ตำบลแม่นาเรือ)</span>
+        <span class="tag"><span class="dot" style="background:var(--teal-400)"></span>ใช้หลัก Best-Available-Input</span>
+        <span class="tag" id="heroUpdatedTag"><span class="dot" style="background:var(--text-500)"></span>—</span>
       </div>
     </div>
   </section>
@@ -202,35 +254,33 @@
     <div class="wrap">
       <div class="section-head">
         <div>
-          <div class="eyebrow">ภาพรวมสถานะ</div>
-          <h2>ข้อมูลที่จะแสดงในอนาคต</h2>
+          <div class="eyebrow">สถานีโทรมาตร · Live</div>
+          <h2>ข้อมูลรายสถานี (4 จุดในตำบลแม่นาเรือ)</h2>
         </div>
-        <p>ช่องด้านล่างคือโครงสร้างข้อมูลที่วางแผนไว้ — ยังไม่มีการเชื่อมต่อสถานีโทรมาตรจริงในขณะนี้</p>
+        <p>ระดับน้ำ สภาพอากาศ และ % ความจุ จากสถานีที่ติดอยู่สันอ่างเก็บน้ำแต่ละแห่ง อัปเดตทุก ~10 นาทีผ่าน Google Sheet log</p>
       </div>
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-icon">🌡️</div>
-          <div class="kpi-label">สภาพอากาศ (อุณหภูมิ/ฝน)</div>
-          <div class="kpi-value" id="kpiWeather">—</div>
-          <span class="pending-badge" id="kpiWeatherBadge">รอเชื่อมต่อ</span>
+      <div class="station-grid" id="stationGrid">
+        <div class="station-card"><p style="color:var(--text-500); font-size:13px;">กำลังโหลดข้อมูล…</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">แนวโน้มย้อนหลัง</div>
+          <h2>กราฟระดับน้ำรายชั่วโมง</h2>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-icon">📏</div>
-          <div class="kpi-label">ระดับน้ำในอ่าง</div>
-          <div class="kpi-value" id="kpiWaterLevel">—</div>
-          <span class="pending-badge" id="kpiWaterLevelBadge">รอเชื่อมต่อ</span>
+        <p>เลือกอ่างที่ต้องการดู — แกนระดับน้ำของแต่ละอ่างต่างกันมาก จึงแสดงทีละอ่างแทนการซ้อนทุกเส้นในกราฟเดียว</p>
+      </div>
+      <div class="chart-card">
+        <div class="chart-toolbar">
+          <div class="station-filter" id="stationFilter"></div>
+          <span class="chart-range-note" id="chartRangeNote"></span>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-icon">💧</div>
-          <div class="kpi-label">% ความจุอ่างเก็บน้ำ</div>
-          <div class="kpi-value" id="kpiCapacityPct">—</div>
-          <span class="pending-badge" id="kpiCapacityPctBadge">รอเชื่อมต่อ</span>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon">🛰️</div>
-          <div class="kpi-label">ข้อมูลล่าสุดจาก Remote Sensing</div>
-          <div class="kpi-value" id="kpiRemoteSensing">—</div>
-          <span class="pending-badge" id="kpiRemoteSensingBadge">รอเชื่อมต่อ</span>
+        <div class="chart-canvas-wrap" id="chartCanvasWrap">
+          <canvas id="levelTrendChart"></canvas>
         </div>
       </div>
     </div>
@@ -247,9 +297,9 @@
       </div>
       <div class="table-card">
         <table class="data-table">
-          <thead><tr><th>ชื่อ (ไทย)</th><th>ชื่อ (อังกฤษ)</th><th>ระดับ Spillway (ม.รทก.)</th><th>พื้นที่ผิวน้ำที่ spillway</th><th>ความจุที่ spillway</th><th>ขอบเขตบนแผนที่</th></tr></thead>
+          <thead><tr><th>ชื่อ (ไทย)</th><th>ชื่อ (อังกฤษ)</th><th>ระดับ Spillway (ม.รทก.)</th><th>ความจุที่ spillway</th><th>ระดับน้ำปัจจุบัน</th><th>% ความจุ (live)</th><th>ขอบเขตบนแผนที่</th></tr></thead>
           <tbody id="reservoirTableBody">
-            <tr><td colspan="6">กำลังโหลดข้อมูล…</td></tr>
+            <tr><td colspan="7">กำลังโหลดข้อมูล…</td></tr>
           </tbody>
         </table>
       </div>
@@ -265,12 +315,14 @@
   <section class="section">
     <div class="wrap">
       <div class="empty-panel">
-        <div class="icon">📡</div>
-        <h3>ยังไม่มีข้อมูลโทรมาตรเชื่อมต่อ</h3>
+        <div class="icon">ℹ️</div>
+        <h3>หมายเหตุเกี่ยวกับข้อมูลโทรมาตร</h3>
         <p>
-          ขั้นตอนถัดไปของโครงการคือการเชื่อมต่อสถานีโทรมาตรภาคสนามและวาง automated pipeline
-          สำหรับดึงข้อมูลอากาศ ระดับน้ำ และข้อมูลดาวเทียมมาแสดงผลอัตโนมัติ เมื่อเชื่อมต่อสำเร็จ
-          หน้านี้จะแสดงกราฟแนวโน้มและค่าล่าสุดแทนที่สถานะ "รอเชื่อมต่อ" ด้านบน
+          อ่างเก็บน้ำห้วยจำตุ้มยังไม่มีสถานีโทรมาตรติดตั้ง จึงแสดงเฉพาะข้อมูล spillway/ความจุแบบ
+          static ในตารางด้านบน · % ความจุที่แสดงคำนวณจากตาราง rating curve (ระดับน้ำ → พื้นที่ผิวน้ำ →
+          ปริมาตร) ของแต่ละอ่างเทียบกับความจุที่ระดับ spillway ค่าที่เกิน 100% หมายถึงระดับน้ำสูงกว่า
+          สัน spillway (น้ำกำลังล้นทางระบายน้ำล้น) · ข้อมูลสภาพอากาศ/ระดับน้ำจะแสดงเป็น "ข้อมูลไม่สด"
+          หากไม่มีการอัปเดตจากสถานีนานเกิน 30 นาที
         </p>
       </div>
     </div>
@@ -352,40 +404,112 @@
       <div class="brand-text-th">ข้อมูลประกอบการตัดสินใจเพื่อการบริหารจัดการน้ำ ตำบลแม่นาเรือ</div>
       <p style="margin-top:4px;">School of ICT มหาวิทยาลัยพะเยา ร่วมกับ Hydro-Informatics Institute (HII)</p>
     </div>
-    <p>สถานะ: รอการเชื่อมต่อข้อมูลโทรมาตร</p>
+    <p id="footerStatus">สถานะ: กำลังโหลดข้อมูล…</p>
   </div>
 </footer>
 
 <script>
-// เปลี่ยน DATA_ENDPOINT เป็น URL ของ API จริงได้เมื่อพร้อมเชื่อมต่อสถานีโทรมาตร/ระบบ live
+// เปลี่ยน DATA_ENDPOINT เป็น URL ของ API จริงได้ถ้าจะย้ายจาก static JSON ไปเป็น live endpoint
+// ปัจจุบัน: อัปเดตโดย monitoring_data_builder.py (01_data/scripts and code/pipeline) ซึ่งอ่านจาก
+// Google Sheet wide_log (poll ทุก 10 นาทีโดยสถานีโทรมาตร) แล้วเขียนไฟล์นี้ทับ
 const DATA_ENDPOINT = 'assets/data/monitoring.json';
 
-function renderKPI(kpi) {
-  const map = {
-    weather: ['kpiWeather', 'kpiWeatherBadge'],
-    water_level: ['kpiWaterLevel', 'kpiWaterLevelBadge'],
-    capacity_pct: ['kpiCapacityPct', 'kpiCapacityPctBadge'],
-    remote_sensing_last: ['kpiRemoteSensing', 'kpiRemoteSensingBadge']
-  };
-  Object.keys(map).forEach(key => {
-    const [valueId, badgeId] = map[key];
-    const val = kpi[key];
-    document.getElementById(valueId).textContent = (val === null || val === undefined) ? '—' : val;
-    document.getElementById(badgeId).style.display = (val === null || val === undefined) ? '' : 'none';
-  });
+function fmtDatetime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-function renderReservoirTable(rows) {
+function freshnessInfo(iso) {
+  if (!iso) return { cls: 'freshness-verystale', label: 'ไม่มีข้อมูล' };
+  const ageMin = (Date.now() - new Date(iso).getTime()) / 60000;
+  if (ageMin <= 30) return { cls: 'freshness-fresh', label: 'ข้อมูลสด' };
+  if (ageMin <= 120) return { cls: 'freshness-stale', label: 'ข้อมูลล่าช้า' };
+  return { cls: 'freshness-verystale', label: 'ข้อมูลหยุดนิ่ง' };
+}
+
+function renderStatusBar(meta, stations) {
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  const note = document.getElementById('statusNote');
+  const footer = document.getElementById('footerStatus');
+  const heroTag = document.getElementById('heroUpdatedTag');
+
+  if (!meta || !meta.data_connected) {
+    dot.style.background = 'var(--amber-400)';
+    text.textContent = 'ยังไม่เชื่อมต่อข้อมูลโทรมาตรแบบ live';
+    note.textContent = '';
+    footer.textContent = 'สถานะ: รอการเชื่อมต่อข้อมูลโทรมาตร';
+    return;
+  }
+
+  const freshCount = stations.filter(s => freshnessInfo(s.measure_datetime).cls === 'freshness-fresh').length;
+  dot.style.background = freshCount === stations.length ? 'var(--teal-400)' : 'var(--amber-400)';
+  text.textContent = `เชื่อมต่อข้อมูลโทรมาตรแบบ live (${freshCount}/${stations.length} สถานีข้อมูลสด)`;
+  note.textContent = '— อัปเดตล่าสุด: ' + fmtDatetime(meta.updated);
+  footer.textContent = 'สถานะ: เชื่อมต่อข้อมูลโทรมาตร live — อัปเดตล่าสุด ' + fmtDatetime(meta.updated);
+  heroTag.innerHTML = '<span class="dot" style="background:var(--teal-400)"></span>อัปเดตล่าสุด ' + fmtDatetime(meta.updated);
+}
+
+function renderStations(stations) {
+  const grid = document.getElementById('stationGrid');
+  grid.innerHTML = stations.map(s => {
+    const fresh = freshnessInfo(s.measure_datetime);
+    const pct = s.capacity_pct;
+    const pctDisplay = (pct === null || pct === undefined) ? '—' : pct.toFixed(1) + '%';
+    const barWidth = pct === null || pct === undefined ? 0 : Math.min(pct, 100);
+    const barCls = (pct !== null && pct > 100) ? 'capacity-bar-fill over' : 'capacity-bar-fill';
+    const levelNote = (s.water_level === null || s.water_level === undefined)
+      ? 'ไม่มีข้อมูลระดับน้ำ'
+      : `${s.water_level.toFixed(3)} ม.รทก. (spillway ${s.spillway_msl.toFixed(2)})`;
+    const fmt1 = v => (v === null || v === undefined) ? '—' : v.toFixed(1);
+
+    return `
+      <div class="station-card">
+        <div class="station-card-head">
+          <div>
+            <div class="station-card-title">${s.name_th}</div>
+            <div class="station-card-code">${s.station_code} · ${s.name_en}</div>
+          </div>
+          <span class="freshness-badge ${fresh.cls}"><span class="dot"></span>${fresh.label}</span>
+        </div>
+        <div class="capacity-row">
+          <span class="capacity-pct-value">${pctDisplay}</span>
+          <span class="capacity-level-note">${levelNote}</span>
+        </div>
+        <div class="capacity-bar-track"><div class="${barCls}" style="width:${barWidth}%"></div></div>
+        <div class="station-metrics-grid">
+          <div class="metric-chip"><div class="metric-label">ฝน (1 ชม.)</div><div class="metric-value">${fmt1(s.rainfall_1h)} มม.</div></div>
+          <div class="metric-chip"><div class="metric-label">อุณหภูมิ</div><div class="metric-value">${fmt1(s.temperature)} °C</div></div>
+          <div class="metric-chip"><div class="metric-label">ความชื้น</div><div class="metric-value">${fmt1(s.humidity)} %</div></div>
+          <div class="metric-chip"><div class="metric-label">ความกดอากาศ</div><div class="metric-value">${fmt1(s.pressure)} hPa</div></div>
+          <div class="metric-chip"><div class="metric-label">รังสีแสงอาทิตย์</div><div class="metric-value">${fmt1(s.solar)} W/m²</div></div>
+          <div class="metric-chip"><div class="metric-label">ห่างจาก spillway</div><div class="metric-value">${s.distance_to_spillway_m === null || s.distance_to_spillway_m === undefined ? '—' : (s.distance_to_spillway_m >= 0 ? '+' : '') + s.distance_to_spillway_m.toFixed(2) + ' ม.'}</div></div>
+        </div>
+        <div class="station-updated">อัปเดตล่าสุด: ${fmtDatetime(s.measure_datetime)}</div>
+      </div>`;
+  }).join('');
+}
+
+function renderReservoirTable(rows, stations) {
+  const byCode = {};
+  stations.forEach(s => { byCode[s.station_code] = s; });
   const tbody = document.getElementById('reservoirTableBody');
-  tbody.innerHTML = rows.map(r => `
+  tbody.innerHTML = rows.map(r => {
+    const s = r.station_code ? byCode[r.station_code] : null;
+    const levelCell = s && s.water_level !== null && s.water_level !== undefined ? s.water_level.toFixed(3) + ' ม.รทก.' : 'ไม่มีสถานีโทรมาตร';
+    const pctCell = s && s.capacity_pct !== null && s.capacity_pct !== undefined ? s.capacity_pct.toFixed(1) + '%' : '—';
+    return `
     <tr>
       <td class="hl">${r.name_th}</td>
       <td>${r.name_en}</td>
       <td>${r.spillway_msl.toFixed(2)}</td>
-      <td>${r.area_display}</td>
       <td>${r.capacity_display}</td>
+      <td>${levelCell}</td>
+      <td>${pctCell}</td>
       <td>${r.on_map ? '✓ แสดงบนแผนที่' : 'รอปรับปรุงข้อมูล GIS'}</td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
 function renderCadenceTable(rows) {
@@ -398,22 +522,127 @@ function renderCadenceTable(rows) {
     </tr>`).join('');
 }
 
+// --- กราฟแนวโน้มระดับน้ำรายชั่วโมง (2026-07-17) ---
+// แสดงทีละอ่าง (filter ปุ่ม) แทนการซ้อนทั้ง 4 เส้นในกราฟเดียว เพราะช่วงระดับน้ำ (ม.รทก.) ของแต่ละ
+// อ่างต่างกันมาก (เช่น RES002 ~488-490 vs RES006 ~502-509) ถ้าซ้อนแกน Y เดียวกันเส้นจะแบนจนอ่านไม่ออก
+let trendChart = null;
+let chartStations = [];
+let activeStationCode = null;
+
+function renderTrendChart() {
+  const wrap = document.getElementById('chartCanvasWrap');
+  const rangeNote = document.getElementById('chartRangeNote');
+  const station = chartStations.find(s => s.station_code === activeStationCode);
+
+  if (!station || !station.history || !station.history.length) {
+    wrap.innerHTML = '<div class="chart-empty-note">ไม่มีข้อมูลย้อนหลังสำหรับสถานีนี้</div>';
+    rangeNote.textContent = '';
+    return;
+  }
+  if (!document.getElementById('levelTrendChart')) {
+    wrap.innerHTML = '<canvas id="levelTrendChart"></canvas>';
+  }
+  const canvas = document.getElementById('levelTrendChart');
+  const ctx = canvas.getContext('2d');
+
+  const labels = station.history.map(p => {
+    const d = new Date(p.t);
+    return d.toLocaleString('th-TH', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  });
+  const levels = station.history.map(p => p.level);
+  const spillwayLine = station.history.map(() => station.spillway_msl);
+
+  if (trendChart) { trendChart.destroy(); trendChart = null; }
+  trendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'ระดับน้ำ (ม.รทก.)', data: levels,
+          borderColor: '#45c2ad', backgroundColor: 'rgba(69,194,173,0.12)',
+          fill: true, tension: 0.25, pointRadius: 0, borderWidth: 2, spanGaps: true,
+        },
+        {
+          label: 'ระดับ Spillway', data: spillwayLine,
+          borderColor: '#e0a94f', borderDash: [6, 4],
+          pointRadius: 0, borderWidth: 1.5, fill: false,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#c4d6d3', font: { family: 'IBM Plex Sans Thai', size: 11.5 } } },
+        tooltip: { mode: 'index', intersect: false },
+      },
+      scales: {
+        x: {
+          ticks: { color: '#8aa3a0', maxTicksLimit: 9, font: { family: 'IBM Plex Sans Thai', size: 10.5 }, maxRotation: 0 },
+          grid: { color: 'rgba(157,201,201,0.08)' },
+        },
+        y: {
+          ticks: { color: '#8aa3a0', font: { family: 'IBM Plex Sans Thai', size: 10.5 } },
+          grid: { color: 'rgba(157,201,201,0.08)' },
+          title: { display: true, text: 'ระดับน้ำ (ม.รทก.)', color: '#8aa3a0', font: { size: 11 } },
+        },
+      },
+    },
+  });
+
+  const first = new Date(station.history[0].t);
+  const last = new Date(station.history[station.history.length - 1].t);
+  rangeNote.textContent = `${station.history.length} จุด (รายชั่วโมง) · ${first.toLocaleDateString('th-TH')} – ${last.toLocaleDateString('th-TH')}`;
+}
+
+function renderStationFilter(stations) {
+  const filterEl = document.getElementById('stationFilter');
+  filterEl.innerHTML = stations.map(s =>
+    `<button type="button" class="station-filter-btn${s.station_code === activeStationCode ? ' active' : ''}" data-code="${s.station_code}">${s.name_th}</button>`
+  ).join('');
+  filterEl.querySelectorAll('.station-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeStationCode = btn.getAttribute('data-code');
+      filterEl.querySelectorAll('.station-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+      renderTrendChart();
+    });
+  });
+}
+
 fetch(DATA_ENDPOINT)
   .then(res => {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     return res.json();
   })
   .then(json => {
-    renderKPI(json.kpi);
-    renderReservoirTable(json.reservoirs);
+    const stations = json.stations || [];
+    renderStatusBar(json.meta, stations);
+    renderStations(stations);
+    renderReservoirTable(json.reservoirs, stations);
     renderCadenceTable(json.cadence_table);
+
+    chartStations = stations;
+    activeStationCode = stations.length ? stations[0].station_code : null;
+    if (typeof Chart === 'undefined') {
+      document.getElementById('chartCanvasWrap').innerHTML =
+        '<div class="chart-empty-note">โหลด Chart.js ไม่สำเร็จ (assets/js/chart.umd.min.js)</div>';
+    } else {
+      renderStationFilter(stations);
+      renderTrendChart();
+    }
   })
   .catch(err => {
     console.error('โหลดข้อมูลไม่สำเร็จ:', err);
+    document.getElementById('stationGrid').innerHTML =
+      '<div class="station-card"><p style="color:var(--text-500); font-size:13px;">ไม่สามารถโหลดข้อมูลจาก ' + DATA_ENDPOINT + ' ได้</p></div>';
     document.getElementById('reservoirTableBody').innerHTML =
-      '<tr><td colspan="6">ไม่สามารถโหลดข้อมูลจาก ' + DATA_ENDPOINT + ' ได้</td></tr>';
+      '<tr><td colspan="7">ไม่สามารถโหลดข้อมูลจาก ' + DATA_ENDPOINT + ' ได้</td></tr>';
     document.getElementById('cadenceTableBody').innerHTML =
       '<tr><td colspan="3">ไม่สามารถโหลดข้อมูลจาก ' + DATA_ENDPOINT + ' ได้</td></tr>';
+    document.getElementById('chartCanvasWrap').innerHTML =
+      '<div class="chart-empty-note">ไม่สามารถโหลดข้อมูลกราฟจาก ' + DATA_ENDPOINT + ' ได้</div>';
   });
 </script>
 

@@ -47,10 +47,23 @@ for _, row in climate.iterrows():
 
     # --- Zone A: NIR (Net Irrigation Requirement) ---
     nir_a_total = 0.0
-    etc_a_total = 0.0
+    etc_a_total = 0.0   # ETc = crop evapotranspiration (FAO-56 term) — ไม่เกี่ยวกับ crop class 'etc'
     for crop, area_m2 in AREA_ZONE_A.items():
         if area_m2 == 0:
             continue
+
+        # (แก้ไข 2026-07-08) crop class 'etc' จาก RF classifier (v3b) เป็น catch-all ที่รวม
+        # ยางพารา/ปาล์ม/พืชอื่นนอกเป้าหมาย — ไม่มี entry ตรงกันใน kc_weekly_lookup_all_crops.csv
+        # เลย (Kc table มีแค่ rice/corn/cassava/longan/rubber ไม่มี 'etc') เดิมโค้ดปล่อยให้
+        # lookup หาไม่เจอแล้ว fallback เป็น Kc=0 แบบเงียบๆ — เปลี่ยนเป็น explicit skip พร้อม log
+        # เพื่อให้เห็นชัดว่าเป็นการออกแบบตั้งใจ ไม่ใช่บั๊ก/lookup miss โดยไม่ได้ตรวจสอบ
+        if crop == 'etc':
+            log.info(
+                "Zone A: %.2f ha เป็น class 'etc' — ไม่คำนวณ water demand ตามการออกแบบ "
+                "(ไม่ใช่พืชเป้าหมาย)", area_m2 / 10000,
+            )
+            continue  # ข้าม area นี้ไปเลย ไม่รวมเข้า NIR_A_m3
+
         # หา Kc สำหรับ crop นี้ที่ week นี้
         if 'year' in merge_keys:
             kc_val = kc_lookup[(kc_lookup['year']==yr) &
@@ -72,6 +85,15 @@ for _, row in climate.iterrows():
     for crop, area_m2 in AREA_ZONE_B.items():
         if area_m2 == 0:
             continue
+
+        # (แก้ไข 2026-07-08) เหตุผลเดียวกับ Zone A ด้านบน — ดูคอมเมนต์ที่นั่น
+        if crop == 'etc':
+            log.info(
+                "Zone B: %.2f ha เป็น class 'etc' — ไม่คำนวณ water demand ตามการออกแบบ "
+                "(ไม่ใช่พืชเป้าหมาย)", area_m2 / 10000,
+            )
+            continue  # ข้าม area นี้ไปเลย ไม่รวมเข้า GIR_B_m3
+
         if 'year' in merge_keys:
             kc_val = kc_lookup[(kc_lookup['year']==yr) &
                                (kc_lookup['week']==wk) &
@@ -90,6 +112,17 @@ for _, row in climate.iterrows():
 
 โดยที่ `IE = 0.90` (Irrigation efficiency, FAO-56 surface irrigation, บรรทัด 2310 —
 ปรับจากค่าเดิม 0.75 เป็น 0.90)
+
+**หมายเหตุการแก้ไข 2026-07-08 — crop class `'etc'` ไม่ถูกนับเข้า NIR/GIR โดยตั้งใจ:**
+class `'etc'` จาก RF classifier (v3b, catch-all ที่รวมยางพารา/ปาล์มน้ำมัน/ยาสูบ/มะขาม/พืชอื่นนอกเป้าหมาย
+— ดูการ map ชื่อพืชจริงใน `Training Data.ipynb`) ไม่ถูกนับเข้าการคำนวณ NIR/GIR เพราะไม่ใช่พืชที่ต้อง
+บริหารจัดการน้ำในระบบนี้ (ระบบออกแบบมาสำหรับ rice/corn/cassava/longan เท่านั้น ตรงกับ
+`kc_weekly_lookup_all_crops.csv` ที่มี Kc เฉพาะ 4 พืชนี้ + rubber แยกต่างหาก — ไม่มี Kc สำหรับ `'etc'`)
+พื้นที่ 156.68 ha (Zone A) + 57.88 ha (Zone B) จะ**ไม่ปรากฏ**ใน water demand forecast เลย ไม่ใช่บั๊ก
+แต่เป็นขอบเขตของระบบที่ตั้งใจไว้ — ถ้าต้องการรวมยางพาราเข้ามาในอนาคต ควร map พื้นที่ class `'etc'`
+ไปเป็น crop `'rubber'` แทน (มี Kc จริงอยู่แล้วใน `KC_FAO56['rubber']` ของ `combined_final_pipeline.py`
+บรรทัด 917-921: GS_defoliation=0.60, GS_leaf_flush=0.80, GS_mature=1.00) ไม่ใช่ปล่อยให้ตรงกับ `'etc'`
+ที่ไม่มี Kc นิยามไว้เลย
 
 **⚠️ พื้นที่ปลูกพืชต่อ zone เป็นค่าคงที่ hardcode จากปี 2020 ไม่ใช่ค่าที่อัปเดตอัตโนมัติ**
 copy มาจากบรรทัด 2294–2308:
@@ -512,6 +545,16 @@ def inverse_mae_weights(mae_cat: float, mae_lgb: float) -> tuple:
 5. **`mei_monthly.csv`** (Multivariate ENSO Index) เป็น external data source ที่ไม่มีอยู่ใน repo
    ปัจจุบัน (ไม่พบไฟล์นี้ในการสำรวจ `01_data/` ก่อนหน้า) — ต้องหาแหล่งอัปเดตรายเดือนสำหรับใช้งานจริง
    (เช่น NOAA PSL MEI.v2 index)
+6. **`kc_weekly_lookup_all_crops.csv`** (Kc lookup ที่หัวข้อ 4/7 ใช้) **หาไม่พบในโปรเจกต์นี้เลย**
+   (path เดิมใน config ชี้ไป `D:\University of Phayao\...` คนละเครื่อง/โฟลเดอร์กับ repo ปัจจุบัน)
+   — **แต่พบ generator script ต้นฉบับครบถ้วนแล้ว** ใน `archive/combined_final_pipeline.py`
+   บรรทัด 786–973 (สำรวจเมื่อ 2026-07-08): มี `STAGE_WEEKS` (ช่วงสัปดาห์ growth stage ต่อพืช,
+   5 พืช: rice/corn/cassava/longan/rubber), `KC_FAO56` (ค่า Kc ตาม Allen et al. 1998 ต่อ
+   crop+stage พร้อม `CF_LOCAL = 1.05` ปรับค่าตามภูมิอากาศท้องถิ่นสถานีพะเยา), ฟังก์ชัน `get_kc()`
+   และ `build_weekly_stage_lookup()` ที่ expand เป็น week 1–52 แล้ว `.to_csv('kc_weekly_lookup_all_crops.csv')`
+   ตรงบรรทัด 972 — **นี่คือโค้ดต้นฉบับที่สร้างไฟล์ที่หายไปจริง ไม่ใช่แค่ต้องเดาค่า FAO-56 มาใหม่**
+   รันซ้ำได้ทันทีเพื่อ regenerate ไฟล์ (ไม่มี `'etc'` เป็น key ใน `KC_FAO56` เลย — ยืนยันตรงกับ
+   หัวข้อ 2 ว่า class `'etc'` ไม่เคยถูกออกแบบให้มี Kc ตั้งแต่ต้น)
 
 ---
 

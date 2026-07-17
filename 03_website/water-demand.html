@@ -118,6 +118,16 @@
   .disclaimer-box { margin-top: 22px; padding: 18px 22px; border-radius: var(--radius-md); background: rgba(224,169,79,0.06); border: 1px solid rgba(224,169,79,0.26); }
   .disclaimer-box h4 { font-size: 13px; color: var(--amber-300); margin-bottom: 10px; font-family: "IBM Plex Sans Thai", sans-serif; font-weight: 600; }
   .disclaimer-box p { margin: 0; font-size: 12.5px; color: var(--text-500); }
+  .disclaimer-box.ok { background: rgba(69,194,173,0.06); border-color: rgba(69,194,173,0.26); }
+  .disclaimer-box.ok h4 { color: var(--teal-300); }
+
+  /* 2026-07-16 เพิ่ม — badge แสดงแหล่งที่มาของ feature ต่อ zone (data_source จาก latest.json:
+     "live_reconstructed" = สร้างจาก ml_features_live.csv สด, "static_snapshot" = ยังใช้
+     ml_features_phase4.csv เดิม เพราะยังไม่มีประวัติสดครบ 12 สัปดาห์ต่อเนื่อง) ใช้ class เดียวกับ
+     inflow-forecast.html/gis-map.html เพื่อความสม่ำเสมอทั้งเว็บ */
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
+  .badge-ok { background: rgba(69,194,173,0.14); color: var(--teal-300); border: 1px solid rgba(69,194,173,0.35); }
+  .badge-low { background: rgba(224,169,79,0.16); color: var(--amber-300); border: 1px solid rgba(224,169,79,0.42); }
 
   .method-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
   .method-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; }
@@ -166,7 +176,7 @@
       <a href="index.html">หน้าแรก</a>
       <a href="water-demand.html" class="current">ความต้องการใช้น้ำ</a>
       <a href="inflow-forecast.html">น้ำไหลลงอ่าง</a>
-      <a href="monitoring.html">Monitoring</a>
+      <a href="monitoring.html">สถานการณ์น้ำ</a>
       <a href="gis-map.html">แผนที่ GIS</a>
       <a href="research.html">งานวิจัย</a>
     </nav>
@@ -177,7 +187,7 @@
       <a href="index.html">หน้าแรก</a>
       <a href="water-demand.html" class="current">ความต้องการใช้น้ำ</a>
       <a href="inflow-forecast.html">น้ำไหลลงอ่าง</a>
-      <a href="monitoring.html">Monitoring</a>
+      <a href="monitoring.html">สถานการณ์น้ำ</a>
       <a href="gis-map.html">แผนที่ GIS</a>
       <a href="research.html">งานวิจัย</a>
     </nav>
@@ -207,18 +217,19 @@
 <main>
   <section class="page-hero">
     <div class="wrap">
-      <div class="eyebrow">โมเดล 2-Stage · Static Snapshot Forecast</div>
+      <div class="eyebrow">โมเดล 2-Stage · พยากรณ์ความต้องการใช้น้ำ</div>
       <h1>พยากรณ์ความต้องการใช้น้ำเพื่อการเกษตร</h1>
       <p class="lead">
         พยากรณ์ความต้องการใช้น้ำรายสัปดาห์แยกตามโซน — Zone A พื้นที่เกษตรน้ำฝน (NIR_A) และ Zone B
         พื้นที่ชลประทาน (GID_B) ด้วยโมเดลสองขั้นตอน (ทำนายว่ามีความต้องการใช้น้ำหรือไม่ ก่อนประมาณค่าปริมาณ)
-        — ค่าที่แสดงคำนวณจาก feature ชุด static snapshot ล่าสุดที่มี ยังไม่ใช่ live forecast แบบเรียลไทม์
+        — ค่าที่แสดงคำนวณจาก feature ล่าสุดที่มีในแต่ละโซน (สถานะข้อมูล live/static snapshot ต่อโซน
+        แสดงไว้ด้านล่าง เพราะแต่ละโซนอาจสลับเป็น live ไม่พร้อมกัน)
       </p>
       <div class="hero-tags" id="heroTags">
         <span class="tag" id="heroAsOfTag">กำลังโหลดข้อมูล…</span>
         <span class="tag"><span class="dot" style="background:var(--amber-400)"></span>Zone A — Rainfed (NIR_A)</span>
         <span class="tag"><span class="dot" style="background:var(--teal-400)"></span>Zone B — Irrigated (GID_B)</span>
-        <span class="tag"><span class="dot" style="background:#e0a94f"></span>Static Snapshot — ไม่ใช่ live forecast</span>
+        <span class="tag" id="heroDataSourceTag">กำลังโหลดข้อมูล…</span>
       </div>
     </div>
   </section>
@@ -249,12 +260,12 @@
           <div class="kpi-icon">📅</div>
           <div class="kpi-label">สัปดาห์อ้างอิง (as_of)</div>
           <div class="kpi-value" id="kpiAsOf">—</div>
-          <div class="kpi-note">ปี-สัปดาห์ของ feature ล่าสุดที่โมเดลใช้คำนวณ</div>
+          <div class="kpi-note">ปี-สัปดาห์ของ feature ล่าสุดที่โมเดลใช้คำนวณ (แยกต่อโซน ดูรายละเอียดในตาราง)</div>
         </div>
-        <div class="kpi-card accent-amber">
+        <div class="kpi-card accent-amber" id="dataSourceCard">
           <div class="kpi-icon">⚠️</div>
           <div class="kpi-label">สถานะข้อมูล</div>
-          <div class="kpi-value" style="font-size:20px;">Static Snapshot</div>
+          <div class="kpi-value" style="font-size:18px;" id="dataSourceValue">กำลังโหลด…</div>
           <div class="kpi-note" id="snapshotNote">กำลังโหลดข้อมูล…</div>
         </div>
       </div>
@@ -401,6 +412,16 @@ function horizonsArray(zoneObj) {
   return keys.map(k => zoneObj.horizons[k] || { probability_active: null, magnitude_m3: null, final_m3: null });
 }
 
+// 2026-07-16 เพิ่ม — data_source ต่อ zone มาจาก latest.json.forecasts.demand_zone_a/b.data_source
+// ("live_reconstructed" | "static_snapshot" | undefined ถ้าเป็น latest.json รุ่นเก่าก่อนมี field นี้)
+// ดู _wd_build_feature_vector()/_wd_run_prediction() ใน data_pipeline.py — สอง zone อาจมีสถานะ
+// ไม่เท่ากันได้ (โซนหนึ่งอาจสะสมประวัติสดครบ 12 สัปดาห์ก่อนอีกโซนหนึ่ง)
+function dataSourceLabel(src) {
+  if (src === 'live_reconstructed') return { text: 'Live', badgeClass: 'badge-ok', dot: 'var(--teal-400)' };
+  if (src === 'static_snapshot') return { text: 'Static Snapshot', badgeClass: 'badge-low', dot: '#e0a94f' };
+  return { text: 'ไม่ทราบสถานะ', badgeClass: 'badge-low', dot: '#e0a94f' };
+}
+
 function renderKPI(json) {
   const a = json.forecasts && json.forecasts.demand_zone_a;
   const b = json.forecasts && json.forecasts.demand_zone_b;
@@ -410,25 +431,72 @@ function renderKPI(json) {
     if (statusText) statusText.textContent = 'ไม่มีผลพยากรณ์ความต้องการใช้น้ำในขณะนี้';
     return;
   }
-  if (statusText) statusText.textContent = 'โหลดข้อมูลพยากรณ์สำเร็จ — เป็น static snapshot (ไม่ใช่ live forecast)';
+
+  const aSrc = dataSourceLabel(a.data_source);
+  const bSrc = dataSourceLabel(b.data_source);
+  const bothLive = a.data_source === 'live_reconstructed' && b.data_source === 'live_reconstructed';
+  const bothStatic = a.data_source === 'static_snapshot' && b.data_source === 'static_snapshot';
+
+  if (statusText) {
+    statusText.textContent = bothLive
+      ? 'โหลดข้อมูลพยากรณ์สำเร็จ — ทั้ง 2 โซนใช้ feature สด (live_reconstructed)'
+      : bothStatic
+        ? 'โหลดข้อมูลพยากรณ์สำเร็จ — ทั้ง 2 โซนยังใช้ static snapshot (รอสะสมประวัติสดให้ครบ 12 สัปดาห์)'
+        : 'โหลดข้อมูลพยากรณ์สำเร็จ — โซน A และ B มีสถานะข้อมูลต่างกัน (ดูรายละเอียดต่อโซนด้านล่าง)';
+  }
 
   const a1 = a.horizons.h1, b1 = b.horizons.h1;
   document.getElementById('kpiZoneAMae').innerHTML = fmtInt(a1 && a1.final_m3) + '<span class="kpi-unit">ลบ.ม./สัปดาห์</span>';
-  document.getElementById('kpiZoneANote').textContent = 'P(มีความต้องการ) = ' + fmtPct(a1 && a1.probability_active);
+  document.getElementById('kpiZoneANote').innerHTML = 'P(มีความต้องการ) = ' + fmtPct(a1 && a1.probability_active) +
+    ' &nbsp;<span class="badge ' + aSrc.badgeClass + '">' + aSrc.text + '</span>';
   document.getElementById('kpiZoneBMae').innerHTML = fmtInt(b1 && b1.final_m3) + '<span class="kpi-unit">ลบ.ม./สัปดาห์</span>';
-  document.getElementById('kpiZoneBNote').textContent = 'P(มีความต้องการ) = ' + fmtPct(b1 && b1.probability_active);
+  document.getElementById('kpiZoneBNote').innerHTML = 'P(มีความต้องการ) = ' + fmtPct(b1 && b1.probability_active) +
+    ' &nbsp;<span class="badge ' + bSrc.badgeClass + '">' + bSrc.text + '</span>';
 
-  const asOf = a.as_of || b.as_of;
-  const asOfLabel = asOf ? (asOf.year + '-W' + String(asOf.week).padStart(2, '0')) : '—';
+  const asOfA = a.as_of ? (a.as_of.year + '-W' + String(a.as_of.week).padStart(2, '0')) : '—';
+  const asOfB = b.as_of ? (b.as_of.year + '-W' + String(b.as_of.week).padStart(2, '0')) : '—';
+  const asOfLabel = asOfA === asOfB ? asOfA : ('A: ' + asOfA + ' / B: ' + asOfB);
   document.getElementById('kpiAsOf').textContent = asOfLabel;
   document.getElementById('heroAsOfTag').innerHTML =
     '<span class="dot" style="background:var(--teal-400)"></span>ข้อมูล ณ สัปดาห์ ' + asOfLabel;
 
-  const note = 'ค่าพยากรณ์นี้คำนวณจาก feature ชุด static snapshot ณ สัปดาห์ ' + asOfLabel +
-    ' (ยังไม่ใช่ live forecast ที่อัปเดตอัตโนมัติทุกสัปดาห์)';
-  document.getElementById('snapshotNote').textContent = note;
-  document.getElementById('snapshotDisclaimer').textContent = note +
-    ' — เมื่อมีการเชื่อมต่อ real-time ingestion (ERA5/CHIRPS/MEI ฯลฯ) แล้ว หน้านี้จะปรับเป็น live forecast ต่อไป';
+  const heroTag = document.getElementById('heroDataSourceTag');
+  const dataSourceCard = document.getElementById('dataSourceCard');
+  const dataSourceValue = document.getElementById('dataSourceValue');
+  const snapshotNote = document.getElementById('snapshotNote');
+  const snapshotDisclaimer = document.getElementById('snapshotDisclaimer');
+  const disclaimerBox = snapshotDisclaimer ? snapshotDisclaimer.closest('.disclaimer-box') : null;
+
+  if (bothLive) {
+    if (heroTag) heroTag.innerHTML = '<span class="dot" style="background:var(--teal-400)"></span>Live — feature สดจากทั้ง 2 โซน';
+    if (dataSourceCard) dataSourceCard.classList.remove('accent-amber');
+    if (dataSourceValue) dataSourceValue.textContent = 'Live (ทั้ง 2 โซน)';
+    if (snapshotNote) snapshotNote.textContent = 'ทั้ง 2 โซนคำนวณจาก ml_features_live.csv สด (รวม NIR/GIR ที่คำนวณจากพื้นที่เพาะปลูกล่าสุดจาก SAR)';
+    if (disclaimerBox) disclaimerBox.classList.add('ok');
+    if (snapshotDisclaimer) snapshotDisclaimer.innerHTML =
+      'ค่าพยากรณ์นี้คำนวณจาก feature สด ณ สัปดาห์ ' + asOfLabel + ' ทั้ง 2 โซน (data_source = live_reconstructed) ' +
+      'รวมถึงพื้นที่เพาะปลูก (NIR_A_m3/GIR_B_m3) ที่อัปเดตจากผลจำแนกพืชด้วยภาพดาวเทียม SAR ล่าสุด แทนพื้นที่ hardcode ปี 2020 ' +
+      '— ดูรายละเอียดพื้นที่เพาะปลูกที่ <a href="gis-map.html" style="color:var(--teal-300);">หน้าแผนที่ GIS</a>';
+  } else if (bothStatic) {
+    if (heroTag) heroTag.innerHTML = '<span class="dot" style="background:#e0a94f"></span>Static Snapshot — ไม่ใช่ live forecast';
+    if (dataSourceCard) dataSourceCard.classList.add('accent-amber');
+    if (dataSourceValue) dataSourceValue.textContent = 'Static Snapshot';
+    if (disclaimerBox) disclaimerBox.classList.remove('ok');
+    const note = 'ค่าพยากรณ์นี้คำนวณจาก feature ชุด static snapshot ณ สัปดาห์ ' + asOfLabel +
+      ' (ยังไม่ใช่ live forecast แบบเรียลไทม์ — ทั้ง 2 โซนยังไม่มีประวัติข้อมูลสดต่อเนื่องครบ 12 สัปดาห์)';
+    if (snapshotNote) snapshotNote.textContent = note;
+    if (snapshotDisclaimer) snapshotDisclaimer.textContent = note +
+      ' ระบบสะสมข้อมูลสด (climate + พื้นที่เพาะปลูกจาก SAR) อยู่เบื้องหลังทุกสัปดาห์ และจะสลับมาใช้ feature สดเองอัตโนมัติต่อโซน เมื่อสะสมครบ';
+  } else {
+    if (heroTag) heroTag.innerHTML = '<span class="dot" style="background:var(--amber-400)"></span>ผสม — A: ' + aSrc.text + ' / B: ' + bSrc.text;
+    if (dataSourceCard) dataSourceCard.classList.add('accent-amber');
+    if (dataSourceValue) dataSourceValue.textContent = 'A: ' + aSrc.text + ' / B: ' + bSrc.text;
+    if (disclaimerBox) disclaimerBox.classList.remove('ok');
+    const note = 'สถานะข้อมูล ณ สัปดาห์ ' + asOfLabel + ' ไม่เท่ากันระหว่างโซน — Zone A: ' + aSrc.text +
+      ', Zone B: ' + bSrc.text + ' (แต่ละโซนสะสมประวัติสดครบ 12 สัปดาห์ไม่พร้อมกันได้ เพราะข้อมูล climate/SAR พร้อมไม่พร้อมกัน)';
+    if (snapshotNote) snapshotNote.textContent = note;
+    if (snapshotDisclaimer) snapshotDisclaimer.textContent = note;
+  }
 }
 
 function renderTable(zoneObj) {

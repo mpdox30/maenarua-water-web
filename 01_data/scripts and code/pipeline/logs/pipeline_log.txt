@@ -1525,3 +1525,959 @@ in your command line, or ee.Authenticate() in Python, and then retry.
 2026-07-07 15:07:59,501 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
 2026-07-07 15:07:59,502 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-06 19:00:00 water_level=489.404 rainfall_1h=0 temperature=27.33 humidity=82.03 pressure=951.36 solar=3.2
 2026-07-07 15:07:59,511 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-06 19:00:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-06 19:00:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-07 15:12:17,191 [INFO] data_pipeline: ======================================================================
+2026-07-07 15:12:17,193 [INFO] data_pipeline: === Starting data pipeline run (2026-07-07 15:12:17) ===
+2026-07-07 15:12:17,194 [INFO] data_pipeline: Step 1/5: ดึงข้อมูลโทรมาตร
+2026-07-07 15:12:17,195 [WARNING] data_pipeline: ใช้ mock data - ยังไม่ได้เชื่อม API จริง (TELEMETRY_API_URL is None)
+2026-07-07 15:12:17,196 [INFO] data_pipeline: Step 2/5: ดึง MEI + CHIRPS + ERA5T (climate features)
+2026-07-07 15:12:18,019 [INFO] data_pipeline: Downloading ONI (Nino 3.4 cross-check) from https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt ...
+2026-07-07 15:12:18,027 [WARNING] data_pipeline: ดึงข้อมูล ONI (Nino 3.4 cross-check) จาก https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt ไม่สำเร็จ (HTTPSConnectionPool(host='www.cpc.ncep.noaa.gov', port=443): Max retries exceeded with url: /data/indices/oni.ascii.txt (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))) — ข้าม cross-check รอบนี้ (ไม่กระทบ MEI feature หลักซึ่งดึงจาก NOAA PSL คนละแหล่งข้อมูล)
+2026-07-07 15:12:18,029 [INFO] data_pipeline: Downloading MEI v2 from https://psl.noaa.gov/enso/mei/data/meiv2.data ...
+2026-07-07 15:12:18,032 [ERROR] data_pipeline: ดึงข้อมูล MEI จาก https://psl.noaa.gov/enso/mei/data/meiv2.data ไม่สำเร็จ (HTTPSConnectionPool(host='psl.noaa.gov', port=443): Max retries exceeded with url: /enso/mei/data/meiv2.data (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))) — ไม่มีค่า MEI ให้ใช้ในรอบนี้
+2026-07-07 15:12:18,034 [WARNING] data_pipeline: MEI feature ดึงไม่สำเร็จ (fetch_error=HTTPSConnectionPool(host='psl.noaa.gov', port=443): Max retries exceeded with url: /enso/mei/data/meiv2.data (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))) — ค่า MEI จะเป็น None ในแถวที่ append
+2026-07-07 15:12:18,385 [INFO] data_pipeline: โหลดประวัติ P_mm_week จาก /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/Water_demand/active/ml_features_phase4.csv สำเร็จ: 259 สัปดาห์ ครอบคลุมปี [2020, 2021, 2022, 2023, 2024] (นี่คือข้อมูล 'เก็บไว้แล้ว' จากตอน train โมเดล ไม่ใช่ข้อมูลสดจาก GEE — ถ้าปีล่าสุดในนี้ เก่ากว่าปีปัจจุบันมาก SPI_4 baseline จะไม่รวมปีล่าสุดๆ ด้วย ควร backfill CHIRPS ผ่าน GEE เพิ่มเติมเป็นระยะเพื่อให้ baseline นี้ทันสมัยขึ้น)
+2026-07-07 15:12:21,612 [ERROR] data_pipeline: ดึง CHIRPS Final จาก GEE (UCSB-CHG/CHIRPS/DAILY) ไม่สำเร็จ ช่วง 2026-05-11 ถึง 2026-05-18
+Traceback (most recent call last):
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 395, in _fetch_chirps_weekly
+    daily_final = gee_fetch_fn(
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 272, in _fetch_chirps_daily_from_gee
+    ee.Initialize(project=gee_project)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/_utils.py", line 39, in wrapper
+    return func(*args, **kwargs)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/__init__.py", line 230, in Initialize
+    credentials = data.get_persistent_credentials()
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/data.py", line 240, in get_persistent_credentials
+    raise ee_exception.EEException(  # pylint: disable=raise-missing-from
+ee.ee_exception.EEException: Please authorize access to your Earth Engine account by running
+
+earthengine authenticate
+
+in your command line, or ee.Authenticate() in Python, and then retry.
+2026-07-07 15:12:24,769 [ERROR] data_pipeline: ดึง CHIRPS-Prelim จาก GEE (projects/climate-engine-pro/assets/ce-chirps-prelim-pentad) ไม่สำเร็จ ช่วง 2026-05-18 ถึง 2026-07-08 — ตรวจสอบว่า asset ID ยังถูกต้องอยู่หรือไม่ (community catalog อาจย้าย/เปลี่ยน id ได้ ดู comment ที่ CHIRPS_PRELIM_COLLECTION_ID ด้านบนไฟล์)
+Traceback (most recent call last):
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 414, in _fetch_chirps_weekly
+    daily_prelim_raw = gee_fetch_fn(
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 272, in _fetch_chirps_daily_from_gee
+    ee.Initialize(project=gee_project)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/_utils.py", line 39, in wrapper
+    return func(*args, **kwargs)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/__init__.py", line 230, in Initialize
+    credentials = data.get_persistent_credentials()
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/data.py", line 240, in get_persistent_credentials
+    raise ee_exception.EEException(  # pylint: disable=raise-missing-from
+ee.ee_exception.EEException: Please authorize access to your Earth Engine account by running
+
+earthengine authenticate
+
+in your command line, or ee.Authenticate() in Python, and then retry.
+2026-07-07 15:12:24,791 [WARNING] data_pipeline: ไม่มีข้อมูล CHIRPS ของสัปดาห์ as_of เอง (2026-W28) เลย (ทั้งประวัติและสดจาก GEE) — คืนค่า None สำหรับ feature ของสัปดาห์นี้ (ปีก่อนๆ ของสัปดาห์เดียวกันมี 5 ปีในฐาน)
+2026-07-07 15:12:24,793 [WARNING] data_pipeline: CHIRPS feature (zone_A) ดึงไม่สำเร็จ (fetch_error=as_of_week_missing)
+2026-07-07 15:12:24,801 [INFO] data_pipeline: โหลดประวัติ P_mm_week จาก /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/Water_demand/active/ml_features_phase4.csv สำเร็จ: 259 สัปดาห์ ครอบคลุมปี [2020, 2021, 2022, 2023, 2024] (นี่คือข้อมูล 'เก็บไว้แล้ว' จากตอน train โมเดล ไม่ใช่ข้อมูลสดจาก GEE — ถ้าปีล่าสุดในนี้ เก่ากว่าปีปัจจุบันมาก SPI_4 baseline จะไม่รวมปีล่าสุดๆ ด้วย ควร backfill CHIRPS ผ่าน GEE เพิ่มเติมเป็นระยะเพื่อให้ baseline นี้ทันสมัยขึ้น)
+2026-07-07 15:12:27,814 [ERROR] data_pipeline: ดึง CHIRPS Final จาก GEE (UCSB-CHG/CHIRPS/DAILY) ไม่สำเร็จ ช่วง 2026-05-11 ถึง 2026-05-18
+Traceback (most recent call last):
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 395, in _fetch_chirps_weekly
+    daily_final = gee_fetch_fn(
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 272, in _fetch_chirps_daily_from_gee
+    ee.Initialize(project=gee_project)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/_utils.py", line 39, in wrapper
+    return func(*args, **kwargs)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/__init__.py", line 230, in Initialize
+    credentials = data.get_persistent_credentials()
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/data.py", line 240, in get_persistent_credentials
+    raise ee_exception.EEException(  # pylint: disable=raise-missing-from
+ee.ee_exception.EEException: Please authorize access to your Earth Engine account by running
+
+earthengine authenticate
+
+in your command line, or ee.Authenticate() in Python, and then retry.
+2026-07-07 15:12:30,695 [ERROR] data_pipeline: ดึง CHIRPS-Prelim จาก GEE (projects/climate-engine-pro/assets/ce-chirps-prelim-pentad) ไม่สำเร็จ ช่วง 2026-05-18 ถึง 2026-07-08 — ตรวจสอบว่า asset ID ยังถูกต้องอยู่หรือไม่ (community catalog อาจย้าย/เปลี่ยน id ได้ ดู comment ที่ CHIRPS_PRELIM_COLLECTION_ID ด้านบนไฟล์)
+Traceback (most recent call last):
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 414, in _fetch_chirps_weekly
+    daily_prelim_raw = gee_fetch_fn(
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 272, in _fetch_chirps_daily_from_gee
+    ee.Initialize(project=gee_project)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/_utils.py", line 39, in wrapper
+    return func(*args, **kwargs)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/__init__.py", line 230, in Initialize
+    credentials = data.get_persistent_credentials()
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/data.py", line 240, in get_persistent_credentials
+    raise ee_exception.EEException(  # pylint: disable=raise-missing-from
+ee.ee_exception.EEException: Please authorize access to your Earth Engine account by running
+
+earthengine authenticate
+
+in your command line, or ee.Authenticate() in Python, and then retry.
+2026-07-07 15:12:30,716 [WARNING] data_pipeline: ไม่มีข้อมูล CHIRPS ของสัปดาห์ as_of เอง (2026-W28) เลย (ทั้งประวัติและสดจาก GEE) — คืนค่า None สำหรับ feature ของสัปดาห์นี้ (ปีก่อนๆ ของสัปดาห์เดียวกันมี 5 ปีในฐาน)
+2026-07-07 15:12:30,718 [WARNING] data_pipeline: CHIRPS feature (zone_B) ดึงไม่สำเร็จ (fetch_error=as_of_week_missing)
+2026-07-07 15:12:30,720 [ERROR] data_pipeline: ไม่พบ python.exe ของ conda env era5-grib ที่ C:\Program Files\ArcGIS\Pro\bin\Python\envs\era5-grib\python.exe
+2026-07-07 15:12:30,721 [WARNING] data_pipeline: ERA5T feature ดึงไม่สำเร็จ (fetch_error=ไม่พบ python.exe ของ conda env era5-grib ที่ C:\Program Files\ArcGIS\Pro\bin\Python\envs\era5-grib\python.exe)
+2026-07-07 15:12:30,737 [WARNING] data_pipeline: Climate prediction readiness (zone_A): blocked_insufficient_data — ไม่มีสัปดาห์ไหนใน /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/ml_features_live.csv (zone=zone_A) ที่ ERA5T และ CHIRPS ครบ 7/7 วันพร้อมกันเลย แม้แต่สัปดาห์เดียว — block การทำนายไว้ก่อน ไม่ใช้ข้อมูลที่ไม่ครบป้อนเข้าโมเดลไม่ว่ากรณีใด
+2026-07-07 15:12:30,740 [WARNING] data_pipeline: Climate prediction readiness (zone_B): blocked_insufficient_data — ไม่มีสัปดาห์ไหนใน /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/ml_features_live.csv (zone=zone_B) ที่ ERA5T และ CHIRPS ครบ 7/7 วันพร้อมกันเลย แม้แต่สัปดาห์เดียว — block การทำนายไว้ก่อน ไม่ใช้ข้อมูลที่ไม่ครบป้อนเข้าโมเดลไม่ว่ากรณีใด
+2026-07-07 15:12:30,741 [INFO] data_pipeline: Climate features step เสร็จสิ้น (as_of=2026-07-07, data_status=partial): MEI fetch_error=HTTPSConnectionPool(host='psl.noaa.gov', port=443): Max retries exceeded with url: /enso/mei/data/meiv2.data (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden'))), CHIRPS zone_A/B fetch_error=as_of_week_missing/as_of_week_missing, ERA5T n_days_in_week=None fetch_error=ไม่พบ python.exe ของ conda env era5-grib ที่ C:\Program Files\ArcGIS\Pro\bin\Python\envs\era5-grib\python.exe, AI_week zone_A=None (AI_week unavailable (ทั้ง ET0_mm_week และ P_mm_week ไม่พร้อมใช้)), zone_B=None (AI_week unavailable (ทั้ง ET0_mm_week และ P_mm_week ไม่พร้อมใช้)), rows_appended=2
+2026-07-07 15:12:30,742 [INFO] data_pipeline: Step 3/5: ตรวจสอบภาพ SAR ใหม่ + จำแนกพืช
+2026-07-07 15:12:30,743 [INFO] data_pipeline: Checking for new SAR imagery in /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/gis/sar_incoming
+2026-07-07 15:12:30,743 [INFO] data_pipeline: ไม่พบภาพ SAR ใหม่ในรอบนี้ ข้ามการจำแนกพืช
+2026-07-07 15:12:30,744 [INFO] data_pipeline: Step 4/5: โหลดโมเดล และทำนาย
+2026-07-07 15:12:30,778 [INFO] data_pipeline: Loading Water Demand models from /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/Water_demand/active
+2026-07-07 15:12:31,666 [INFO] data_pipeline: Loaded Water Demand models: catboost=24 lightgbm=24 stage1_classifiers=24 stack_weights=24
+2026-07-07 15:12:31,668 [INFO] data_pipeline: Loading Reservoir Inflow models from /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/Reservoir_inflow/active
+2026-07-07 15:12:31,683 [INFO] data_pipeline: Loaded Reservoir Inflow models: stage1_classifiers=7 stage1_thresholds=7 stage2_regressors=7
+2026-07-07 15:12:31,684 [INFO] data_pipeline: Building feature vector from /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/Water_demand/active/ml_features_phase4.csv
+2026-07-07 15:12:31,697 [INFO] data_pipeline: Zone zone_A: as_of=2024-W51, reg_features=37, clf_features=17
+2026-07-07 15:12:31,703 [INFO] data_pipeline: Zone zone_B: as_of=2024-W51, reg_features=37, clf_features=17
+2026-07-07 15:12:32,682 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-01T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,684 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-02T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,687 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-03T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,689 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-04T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,691 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-05T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,693 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-06T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,694 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-07T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,696 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-08T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,697 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-09T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,699 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-10T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,700 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-11T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,701 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-12T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,702 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-13T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,703 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-14T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,706 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-15T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,707 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-16T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,708 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-17T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,709 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-18T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,710 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-19T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,711 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-20T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,713 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-21T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,714 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-22T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,716 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-23T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,717 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-24T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,718 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-25T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,719 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-26T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-07 15:12:32,735 [INFO] data_pipeline: Reservoir Inflow (live): as_of=2026-06-27, current_qin=49653.74, n_valid_days=350/395 (data_source=live_monthly_account_files, gap_days=10, staleness_status=stale_data_warning)
+2026-07-07 15:12:32,736 [WARNING] data_pipeline: Reservoir Inflow (live) staleness: ข้อมูลที่ใช้ทำนาย (as_of=2026-06-27) เก่ากว่าวันที่รันจริง (2026-07-07) อยู่ 10 วัน — มักเกิดเพราะยังไม่มีการอัปโหลด ไฟล์ 'บัญชีน้ำ' ของเดือนใหม่ (ดู ARCHITECTURE.md > Manual Dependencies) ยังคำนวณผลทำนายให้ตามปกติ แต่ควรพิจารณาด้วยความระมัดระวังเพิ่มขึ้น
+2026-07-07 15:12:32,737 [INFO] data_pipeline: Running prediction with latest features
+2026-07-07 15:12:32,749 [WARNING] data_pipeline: Reservoir Inflow: staleness_status=stale_data_warning (gap_days=10) — ข้อมูลที่ใช้ทำนาย (as_of=2026-06-27) เก่ากว่าวันที่รันจริง (2026-07-07) อยู่ 10 วัน — มักเกิดเพราะยังไม่มีการอัปโหลด ไฟล์ 'บัญชีน้ำ' ของเดือนใหม่ (ดู ARCHITECTURE.md > Manual Dependencies) ยังคำนวณผลทำนายให้ตามปกติ แต่ควรพิจารณาด้วยความระมัดระวังเพิ่มขึ้น (ยังคำนวณผลทำนายต่อ เพราะยังไม่เกินเกณฑ์ blocked)
+2026-07-07 15:12:32,751 [INFO] data_pipeline: Step 5/5: บันทึกผลลัพธ์เป็น JSON
+2026-07-07 15:12:32,752 [INFO] data_pipeline: Saving pipeline results to /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/forecasting_results/latest.json
+2026-07-07 15:12:32,763 [INFO] data_pipeline: Copied pipeline results to website data folder: /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/03_website/assets/data/latest.json
+2026-07-07 15:12:32,769 [INFO] data_pipeline: === Pipeline finished with status: ok ===
+2026-07-07 15:18:26,693 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-07 15:18:26,694 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-07 15:18:26,696 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-06 19:00:00 water_level=489.404 rainfall_1h=0 temperature=27.33 humidity=82.03 pressure=951.36 solar=3.2
+2026-07-07 15:18:26,700 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-06 19:00:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-06 19:00:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-07 15:27:43,418 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-07 15:27:43,419 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-07 15:27:43,422 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-06 19:00:00 water_level=489.404 rainfall_1h=0 temperature=27.33 humidity=82.03 pressure=951.36 solar=3.2
+2026-07-07 15:27:43,425 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-06 19:00:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-06 19:00:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-07 15:38:03,181 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-07 15:38:03,183 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-07 15:38:03,185 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-06 19:00:00 water_level=489.404 rainfall_1h=0 temperature=27.33 humidity=82.03 pressure=951.36 solar=3.2
+2026-07-07 15:38:03,189 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-06 19:00:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-06 19:00:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-07 15:48:28,716 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-07 15:48:28,718 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-07 15:48:28,721 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-06 19:00:00 water_level=489.404 rainfall_1h=0 temperature=27.33 humidity=82.03 pressure=951.36 solar=3.2
+2026-07-07 15:48:28,724 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-06 19:00:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-06 19:00:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-08 08:42:29,480 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-08 08:42:29,482 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-08 08:42:29,484 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-08 08:30:00 water_level=489.322 rainfall_1h=0 temperature=26.36 humidity=80.08 pressure=954.02 solar=139.1
+2026-07-08 08:42:29,489 [WARNING] data_pipeline: [TELEMETRY_DATA_GAP] สถานี RES002: ช่องว่างระหว่างข้อมูล 37.50 ชม. (เกณฑ์ 1.00 ชม.) ระหว่าง 2026-07-06 19:00:00 -> 2026-07-08 08:30:00 — สถานีอาจหายไปจาก response หลายรอบติดกัน (เช่นซ่อมบำรุง) ต้องถือว่า 'ไม่มีข้อมูลช่วงนี้จริง' ไม่ใช่ 'ค่าเดิมไม่เปลี่ยน' เมื่อคำนวณ feature ต่อ (Spill/API_t ฯลฯ)
+2026-07-08 08:46:22,506 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-08 08:46:22,507 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-08 08:46:22,508 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-08 08:30:00 water_level=489.322 rainfall_1h=0 temperature=26.36 humidity=80.08 pressure=954.02 solar=139.1
+2026-07-08 08:46:22,511 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-08 08:30:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-08 08:30:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-08 08:56:30,472 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-08 08:56:30,473 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-08 08:56:30,474 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-08 08:30:00 water_level=489.322 rainfall_1h=0 temperature=26.36 humidity=80.08 pressure=954.02 solar=139.1
+2026-07-08 08:56:30,483 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-08 08:30:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-08 08:30:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-08 09:07:58,137 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-08 09:07:58,138 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-08 09:07:58,139 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-08 08:30:00 water_level=489.322 rainfall_1h=0 temperature=26.36 humidity=80.08 pressure=954.02 solar=139.1
+2026-07-08 09:07:58,142 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-08 08:30:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-08 08:30:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-08 09:26:44,628 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-08 09:26:44,630 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-08 09:26:44,631 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-08 08:30:00 water_level=489.322 rainfall_1h=0 temperature=26.36 humidity=80.08 pressure=954.02 solar=139.1
+2026-07-08 09:26:44,635 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-08 08:30:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-08 08:30:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-08 09:36:51,578 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-08 09:36:51,579 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-08 09:36:51,580 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-08 08:30:00 water_level=489.322 rainfall_1h=0 temperature=26.36 humidity=80.08 pressure=954.02 solar=139.1
+2026-07-08 09:36:51,583 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-08 08:30:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-08 08:30:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-08 09:47:46,065 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-08 09:47:46,066 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-08 09:47:46,067 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-08 08:30:00 water_level=489.322 rainfall_1h=0 temperature=26.36 humidity=80.08 pressure=954.02 solar=139.1
+2026-07-08 09:47:46,072 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-08 08:30:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-08 08:30:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-08 09:56:38,685 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-08 09:56:38,686 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-08 09:56:38,688 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-08 08:30:00 water_level=489.322 rainfall_1h=0 temperature=26.36 humidity=80.08 pressure=954.02 solar=139.1
+2026-07-08 09:56:38,693 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-08 08:30:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-08 08:30:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-08 10:07:34,551 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-08 10:07:34,552 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-08 10:07:34,554 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-08 08:30:00 water_level=489.322 rainfall_1h=0 temperature=26.36 humidity=80.08 pressure=954.02 solar=139.1
+2026-07-08 10:07:34,557 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-08 08:30:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-08 08:30:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-08 10:16:46,797 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-08 10:16:46,798 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-08 10:16:46,799 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-08 08:30:00 water_level=489.322 rainfall_1h=0 temperature=26.36 humidity=80.08 pressure=954.02 solar=139.1
+2026-07-08 10:16:46,802 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-08 08:30:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-08 08:30:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-08 10:26:52,681 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-08 10:26:52,681 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-08 10:26:52,682 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-08 08:30:00 water_level=489.322 rainfall_1h=0 temperature=26.36 humidity=80.08 pressure=954.02 solar=139.1
+2026-07-08 10:26:52,684 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-08 08:30:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-08 08:30:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-08 10:37:11,181 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-08 10:37:11,183 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-08 10:37:11,185 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-08 08:30:00 water_level=489.322 rainfall_1h=0 temperature=26.36 humidity=80.08 pressure=954.02 solar=139.1
+2026-07-08 10:37:11,189 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-08 08:30:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-08 08:30:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-08 10:46:36,956 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-08 10:46:36,957 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-08 10:46:36,958 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-08 08:30:00 water_level=489.322 rainfall_1h=0 temperature=26.36 humidity=80.08 pressure=954.02 solar=139.1
+2026-07-08 10:46:36,961 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-08 08:30:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-08 08:30:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-08 10:56:58,065 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-08 10:56:58,066 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-08 10:56:58,069 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-08 08:30:00 water_level=489.322 rainfall_1h=0 temperature=26.36 humidity=80.08 pressure=954.02 solar=139.1
+2026-07-08 10:56:58,072 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-08 08:30:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-08 08:30:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-08 11:06:18,183 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-08 11:06:18,184 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-08 11:06:18,185 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-08 08:30:00 water_level=489.322 rainfall_1h=0 temperature=26.36 humidity=80.08 pressure=954.02 solar=139.1
+2026-07-08 11:06:18,188 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-08 08:30:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-08 08:30:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-08 11:18:31,838 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-08 11:18:31,840 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-08 11:18:31,842 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-08 08:30:00 water_level=489.322 rainfall_1h=0 temperature=26.36 humidity=80.08 pressure=954.02 solar=139.1
+2026-07-08 11:18:31,846 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-08 08:30:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-08 08:30:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-08 11:27:38,517 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-08 11:27:38,518 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-08 11:27:38,519 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-08 08:30:00 water_level=489.322 rainfall_1h=0 temperature=26.36 humidity=80.08 pressure=954.02 solar=139.1
+2026-07-08 11:27:38,521 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-08 08:30:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-08 08:30:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-08 11:36:11,345 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-08 11:36:11,346 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-08 11:36:11,347 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-08 08:30:00 water_level=489.322 rainfall_1h=0 temperature=26.36 humidity=80.08 pressure=954.02 solar=139.1
+2026-07-08 11:36:11,350 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-08 08:30:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-08 08:30:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-08 11:36:39,402 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-08 11:36:39,403 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-08 11:36:39,404 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-08 08:30:00 water_level=489.322 rainfall_1h=0 temperature=26.36 humidity=80.08 pressure=954.02 solar=139.1
+2026-07-08 11:36:39,407 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-08 08:30:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-08 08:30:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-08 11:47:55,162 [INFO] data_pipeline: Fetching telemetry จาก https://wea.hii.or.th:3005/api/v1/6dc2d5d4-7909-11f1-a2fe-4d43e47cc2f5 ...
+2026-07-08 11:47:55,163 [INFO] data_pipeline: Telemetry API remark: ข้อมูลที่เผยแพร่ผ่าน API นี้เป็นข้อมูลเบื้องต้นซึ่งยังไม่ได้ผ่านการตรวจสอบขั้นสุดท้าย อาจมีการเปลี่ยนแปลงหรือแก้ไขในภายหลัง ผู้ใช้ควรใช้ข้อมูลดังกล่าวด้วยความระมัดระวัง และโปรดตรวจสอบความถูกต้องก่อนนำไปใช้งาน หากเกิดความเสียหายใดๆ จากการใช้ข้อมูล ผู้ให้บริการขอสงวนสิทธิ์ในการปฏิเสธความรับผิดชอบทั้งหมด
+2026-07-08 11:47:55,164 [INFO] data_pipeline: parse_telemetry_response(): สถานี RES002 (อ่างเก็บน้ำแม่นาเรือ) measure_datetime=2026-07-08 08:30:00 water_level=489.322 rainfall_1h=0 temperature=26.36 humidity=80.08 pressure=954.02 solar=139.1
+2026-07-08 11:47:55,168 [WARNING] data_pipeline: [TELEMETRY_NON_MONOTONIC] สถานี RES002: measure_datetime รอบนี้ (2026-07-08 08:30:00) <= รอบที่เก็บไว้ล่าสุด (2026-07-08 08:30:00) — ข้าม (ไม่ append) กันข้อมูลสลับหน้า-หลังปนในประวัติ ดู telemetry_anomalies_RES002.csv สำหรับสถิติสะสมของปัญหานี้
+2026-07-08 17:33:54,588 [INFO] data_pipeline: ======================================================================
+2026-07-08 17:33:54,589 [INFO] data_pipeline: === Starting data pipeline run (2026-07-08 17:33:54) ===
+2026-07-08 17:33:54,590 [INFO] data_pipeline: Step 1/5: ดึงข้อมูลโทรมาตร
+2026-07-08 17:33:54,591 [WARNING] data_pipeline: ใช้ mock data - ยังไม่ได้เชื่อม API จริง (TELEMETRY_API_URL is None)
+2026-07-08 17:33:54,591 [INFO] data_pipeline: Step 2/5: ดึง MEI + CHIRPS + ERA5T (climate features)
+2026-07-08 17:33:55,454 [INFO] data_pipeline: Downloading ONI (Nino 3.4 cross-check) from https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt ...
+2026-07-08 17:33:55,461 [WARNING] data_pipeline: ดึงข้อมูล ONI (Nino 3.4 cross-check) จาก https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt ไม่สำเร็จ (HTTPSConnectionPool(host='www.cpc.ncep.noaa.gov', port=443): Max retries exceeded with url: /data/indices/oni.ascii.txt (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))) — ข้าม cross-check รอบนี้ (ไม่กระทบ MEI feature หลักซึ่งดึงจาก NOAA PSL คนละแหล่งข้อมูล)
+2026-07-08 17:33:55,463 [INFO] data_pipeline: Downloading MEI v2 from https://psl.noaa.gov/enso/mei/data/meiv2.data ...
+2026-07-08 17:33:55,467 [ERROR] data_pipeline: ดึงข้อมูล MEI จาก https://psl.noaa.gov/enso/mei/data/meiv2.data ไม่สำเร็จ (HTTPSConnectionPool(host='psl.noaa.gov', port=443): Max retries exceeded with url: /enso/mei/data/meiv2.data (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))) — ไม่มีค่า MEI ให้ใช้ในรอบนี้
+2026-07-08 17:33:55,469 [WARNING] data_pipeline: MEI feature ดึงไม่สำเร็จ (fetch_error=HTTPSConnectionPool(host='psl.noaa.gov', port=443): Max retries exceeded with url: /enso/mei/data/meiv2.data (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))) — ค่า MEI จะเป็น None ในแถวที่ append
+2026-07-08 17:33:55,838 [INFO] data_pipeline: โหลดประวัติ P_mm_week จาก /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/Water_demand/active/ml_features_phase4.csv สำเร็จ: 259 สัปดาห์ ครอบคลุมปี [2020, 2021, 2022, 2023, 2024] (นี่คือข้อมูล 'เก็บไว้แล้ว' จากตอน train โมเดล ไม่ใช่ข้อมูลสดจาก GEE — ถ้าปีล่าสุดในนี้ เก่ากว่าปีปัจจุบันมาก SPI_4 baseline จะไม่รวมปีล่าสุดๆ ด้วย ควร backfill CHIRPS ผ่าน GEE เพิ่มเติมเป็นระยะเพื่อให้ baseline นี้ทันสมัยขึ้น)
+2026-07-08 17:33:58,919 [ERROR] data_pipeline: ดึง CHIRPS Final จาก GEE (UCSB-CHG/CHIRPS/DAILY) ไม่สำเร็จ ช่วง 2026-05-11 ถึง 2026-05-19
+Traceback (most recent call last):
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 395, in _fetch_chirps_weekly
+    daily_final = gee_fetch_fn(
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 272, in _fetch_chirps_daily_from_gee
+    ee.Initialize(project=gee_project)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/_utils.py", line 39, in wrapper
+    return func(*args, **kwargs)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/__init__.py", line 230, in Initialize
+    credentials = data.get_persistent_credentials()
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/data.py", line 240, in get_persistent_credentials
+    raise ee_exception.EEException(  # pylint: disable=raise-missing-from
+ee.ee_exception.EEException: Please authorize access to your Earth Engine account by running
+
+earthengine authenticate
+
+in your command line, or ee.Authenticate() in Python, and then retry.
+2026-07-08 17:34:01,992 [ERROR] data_pipeline: ดึง CHIRPS-Prelim จาก GEE (projects/climate-engine-pro/assets/ce-chirps-prelim-pentad) ไม่สำเร็จ ช่วง 2026-05-19 ถึง 2026-07-09 — ตรวจสอบว่า asset ID ยังถูกต้องอยู่หรือไม่ (community catalog อาจย้าย/เปลี่ยน id ได้ ดู comment ที่ CHIRPS_PRELIM_COLLECTION_ID ด้านบนไฟล์)
+Traceback (most recent call last):
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 414, in _fetch_chirps_weekly
+    daily_prelim_raw = gee_fetch_fn(
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 272, in _fetch_chirps_daily_from_gee
+    ee.Initialize(project=gee_project)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/_utils.py", line 39, in wrapper
+    return func(*args, **kwargs)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/__init__.py", line 230, in Initialize
+    credentials = data.get_persistent_credentials()
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/data.py", line 240, in get_persistent_credentials
+    raise ee_exception.EEException(  # pylint: disable=raise-missing-from
+ee.ee_exception.EEException: Please authorize access to your Earth Engine account by running
+
+earthengine authenticate
+
+in your command line, or ee.Authenticate() in Python, and then retry.
+2026-07-08 17:34:02,018 [WARNING] data_pipeline: ไม่มีข้อมูล CHIRPS ของสัปดาห์ as_of เอง (2026-W28) เลย (ทั้งประวัติและสดจาก GEE) — คืนค่า None สำหรับ feature ของสัปดาห์นี้ (ปีก่อนๆ ของสัปดาห์เดียวกันมี 5 ปีในฐาน)
+2026-07-08 17:34:02,020 [WARNING] data_pipeline: CHIRPS feature (zone_A) ดึงไม่สำเร็จ (fetch_error=as_of_week_missing)
+2026-07-08 17:34:02,031 [INFO] data_pipeline: โหลดประวัติ P_mm_week จาก /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/Water_demand/active/ml_features_phase4.csv สำเร็จ: 259 สัปดาห์ ครอบคลุมปี [2020, 2021, 2022, 2023, 2024] (นี่คือข้อมูล 'เก็บไว้แล้ว' จากตอน train โมเดล ไม่ใช่ข้อมูลสดจาก GEE — ถ้าปีล่าสุดในนี้ เก่ากว่าปีปัจจุบันมาก SPI_4 baseline จะไม่รวมปีล่าสุดๆ ด้วย ควร backfill CHIRPS ผ่าน GEE เพิ่มเติมเป็นระยะเพื่อให้ baseline นี้ทันสมัยขึ้น)
+2026-07-08 17:34:04,880 [ERROR] data_pipeline: ดึง CHIRPS Final จาก GEE (UCSB-CHG/CHIRPS/DAILY) ไม่สำเร็จ ช่วง 2026-05-11 ถึง 2026-05-19
+Traceback (most recent call last):
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 395, in _fetch_chirps_weekly
+    daily_final = gee_fetch_fn(
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 272, in _fetch_chirps_daily_from_gee
+    ee.Initialize(project=gee_project)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/_utils.py", line 39, in wrapper
+    return func(*args, **kwargs)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/__init__.py", line 230, in Initialize
+    credentials = data.get_persistent_credentials()
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/data.py", line 240, in get_persistent_credentials
+    raise ee_exception.EEException(  # pylint: disable=raise-missing-from
+ee.ee_exception.EEException: Please authorize access to your Earth Engine account by running
+
+earthengine authenticate
+
+in your command line, or ee.Authenticate() in Python, and then retry.
+2026-07-08 17:34:07,999 [ERROR] data_pipeline: ดึง CHIRPS-Prelim จาก GEE (projects/climate-engine-pro/assets/ce-chirps-prelim-pentad) ไม่สำเร็จ ช่วง 2026-05-19 ถึง 2026-07-09 — ตรวจสอบว่า asset ID ยังถูกต้องอยู่หรือไม่ (community catalog อาจย้าย/เปลี่ยน id ได้ ดู comment ที่ CHIRPS_PRELIM_COLLECTION_ID ด้านบนไฟล์)
+Traceback (most recent call last):
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 414, in _fetch_chirps_weekly
+    daily_prelim_raw = gee_fetch_fn(
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 272, in _fetch_chirps_daily_from_gee
+    ee.Initialize(project=gee_project)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/_utils.py", line 39, in wrapper
+    return func(*args, **kwargs)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/__init__.py", line 230, in Initialize
+    credentials = data.get_persistent_credentials()
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/data.py", line 240, in get_persistent_credentials
+    raise ee_exception.EEException(  # pylint: disable=raise-missing-from
+ee.ee_exception.EEException: Please authorize access to your Earth Engine account by running
+
+earthengine authenticate
+
+in your command line, or ee.Authenticate() in Python, and then retry.
+2026-07-08 17:34:08,022 [WARNING] data_pipeline: ไม่มีข้อมูล CHIRPS ของสัปดาห์ as_of เอง (2026-W28) เลย (ทั้งประวัติและสดจาก GEE) — คืนค่า None สำหรับ feature ของสัปดาห์นี้ (ปีก่อนๆ ของสัปดาห์เดียวกันมี 5 ปีในฐาน)
+2026-07-08 17:34:08,025 [WARNING] data_pipeline: CHIRPS feature (zone_B) ดึงไม่สำเร็จ (fetch_error=as_of_week_missing)
+2026-07-08 17:34:08,027 [ERROR] data_pipeline: ไม่พบ python.exe ของ conda env era5-grib ที่ C:\Program Files\ArcGIS\Pro\bin\Python\envs\era5-grib\python.exe
+2026-07-08 17:34:08,032 [WARNING] data_pipeline: ERA5T feature ดึงไม่สำเร็จ (fetch_error=ไม่พบ python.exe ของ conda env era5-grib ที่ C:\Program Files\ArcGIS\Pro\bin\Python\envs\era5-grib\python.exe)
+2026-07-08 17:34:08,062 [WARNING] data_pipeline: Climate prediction readiness (zone_A): blocked_insufficient_data — ไม่มีสัปดาห์ไหนใน /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/ml_features_live.csv (zone=zone_A) ที่ ERA5T และ CHIRPS ครบ 7/7 วันพร้อมกันเลย แม้แต่สัปดาห์เดียว — block การทำนายไว้ก่อน ไม่ใช้ข้อมูลที่ไม่ครบป้อนเข้าโมเดลไม่ว่ากรณีใด
+2026-07-08 17:34:08,082 [WARNING] data_pipeline: Climate prediction readiness (zone_B): blocked_insufficient_data — ไม่มีสัปดาห์ไหนใน /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/ml_features_live.csv (zone=zone_B) ที่ ERA5T และ CHIRPS ครบ 7/7 วันพร้อมกันเลย แม้แต่สัปดาห์เดียว — block การทำนายไว้ก่อน ไม่ใช้ข้อมูลที่ไม่ครบป้อนเข้าโมเดลไม่ว่ากรณีใด
+2026-07-08 17:34:08,084 [INFO] data_pipeline: Climate features step เสร็จสิ้น (as_of=2026-07-08, data_status=partial): MEI fetch_error=HTTPSConnectionPool(host='psl.noaa.gov', port=443): Max retries exceeded with url: /enso/mei/data/meiv2.data (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden'))), CHIRPS zone_A/B fetch_error=as_of_week_missing/as_of_week_missing, ERA5T n_days_in_week=None fetch_error=ไม่พบ python.exe ของ conda env era5-grib ที่ C:\Program Files\ArcGIS\Pro\bin\Python\envs\era5-grib\python.exe, AI_week zone_A=None (AI_week unavailable (ทั้ง ET0_mm_week และ P_mm_week ไม่พร้อมใช้)), zone_B=None (AI_week unavailable (ทั้ง ET0_mm_week และ P_mm_week ไม่พร้อมใช้)), rows_appended=2
+2026-07-08 17:34:08,085 [INFO] data_pipeline: Step 3/5: ตรวจสอบภาพ SAR ใหม่ + จำแนกพืช
+2026-07-08 17:34:08,086 [INFO] data_pipeline: Checking for new SAR imagery (Google Earth Engine, AOI=zone A/B boundary)
+2026-07-08 17:34:11,043 [WARNING] data_pipeline: SAR classification: เช็คภาพ S1 ใหม่จาก GEE ไม่สำเร็จ (Please authorize access to your Earth Engine account by running
+
+earthengine authenticate
+
+in your command line, or ee.Authenticate() in Python, and then retry.) — ข้ามรอบนี้ (ต้องมี ee credential ตั้งค่าไว้แล้วบนเครื่องที่รัน — ดู TODO Service Account ในหัวไฟล์)
+2026-07-08 17:34:11,045 [INFO] data_pipeline: ไม่พบภาพ SAR ใหม่ในรอบนี้ ข้ามการจำแนกพืช
+2026-07-08 17:34:11,046 [INFO] data_pipeline: Step 4/5: โหลดโมเดล และทำนาย
+2026-07-08 17:34:11,079 [INFO] data_pipeline: Loading Water Demand models from /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/Water_demand/active
+2026-07-08 17:34:12,185 [INFO] data_pipeline: Loaded Water Demand models: catboost=24 lightgbm=24 stage1_classifiers=24 stack_weights=24
+2026-07-08 17:34:12,187 [INFO] data_pipeline: Loading Reservoir Inflow models from /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/Reservoir_inflow/active
+2026-07-08 17:34:12,207 [INFO] data_pipeline: Loaded Reservoir Inflow models: stage1_classifiers=7 stage1_thresholds=7 stage2_regressors=7
+2026-07-08 17:34:12,208 [INFO] data_pipeline: Building feature vector from /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/Water_demand/active/ml_features_phase4.csv
+2026-07-08 17:34:12,221 [INFO] data_pipeline: Zone zone_A: as_of=2024-W51, reg_features=37, clf_features=17
+2026-07-08 17:34:12,228 [INFO] data_pipeline: Zone zone_B: as_of=2024-W51, reg_features=37, clf_features=17
+2026-07-08 17:34:13,387 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-01T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,389 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-02T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,390 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-03T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,392 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-04T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,394 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-05T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,395 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-06T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,396 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-07T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,397 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-08T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,398 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-09T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,399 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-10T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,400 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-11T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,401 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-12T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,401 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-13T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,402 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-14T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,403 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-15T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,404 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-16T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,406 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-17T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,407 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-18T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,407 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-19T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,408 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-20T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,409 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-21T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,410 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-22T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,411 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-23T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,412 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-24T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,414 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-25T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,414 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-26T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:13,431 [INFO] data_pipeline: Reservoir Inflow (live): as_of=2026-06-27, current_qin=49653.74, n_valid_days=350/395 (data_source=live_monthly_account_files, gap_days=11, staleness_status=stale_data_warning)
+2026-07-08 17:34:13,432 [WARNING] data_pipeline: Reservoir Inflow (live) staleness: ข้อมูลที่ใช้ทำนาย (as_of=2026-06-27) เก่ากว่าวันที่รันจริง (2026-07-08) อยู่ 11 วัน — มักเกิดเพราะยังไม่มีการอัปโหลด ไฟล์ 'บัญชีน้ำ' ของเดือนใหม่ (ดู ARCHITECTURE.md > Manual Dependencies) ยังคำนวณผลทำนายให้ตามปกติ แต่ควรพิจารณาด้วยความระมัดระวังเพิ่มขึ้น
+2026-07-08 17:34:13,433 [INFO] data_pipeline: Running prediction with latest features
+2026-07-08 17:34:13,458 [WARNING] data_pipeline: Reservoir Inflow: staleness_status=stale_data_warning (gap_days=11) — ข้อมูลที่ใช้ทำนาย (as_of=2026-06-27) เก่ากว่าวันที่รันจริง (2026-07-08) อยู่ 11 วัน — มักเกิดเพราะยังไม่มีการอัปโหลด ไฟล์ 'บัญชีน้ำ' ของเดือนใหม่ (ดู ARCHITECTURE.md > Manual Dependencies) ยังคำนวณผลทำนายให้ตามปกติ แต่ควรพิจารณาด้วยความระมัดระวังเพิ่มขึ้น (ยังคำนวณผลทำนายต่อ เพราะยังไม่เกินเกณฑ์ blocked)
+2026-07-08 17:34:13,460 [INFO] data_pipeline: Step 5/5: บันทึกผลลัพธ์เป็น JSON
+2026-07-08 17:34:13,461 [INFO] data_pipeline: Saving pipeline results to /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/forecasting_results/latest.json
+2026-07-08 17:34:13,473 [INFO] data_pipeline: Copied pipeline results to website data folder: /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/03_website/assets/data/latest.json
+2026-07-08 17:34:13,479 [INFO] data_pipeline: === Pipeline finished with status: ok ===
+2026-07-08 17:34:20,328 [INFO] data_pipeline: ======================================================================
+2026-07-08 17:34:20,329 [INFO] data_pipeline: === Starting data pipeline run (2026-07-08 17:34:20) ===
+2026-07-08 17:34:20,330 [INFO] data_pipeline: Step 1/5: ดึงข้อมูลโทรมาตร
+2026-07-08 17:34:20,332 [WARNING] data_pipeline: ใช้ mock data - ยังไม่ได้เชื่อม API จริง (TELEMETRY_API_URL is None)
+2026-07-08 17:34:20,333 [INFO] data_pipeline: Step 2/5: ดึง MEI + CHIRPS + ERA5T (climate features)
+2026-07-08 17:34:21,154 [INFO] data_pipeline: Downloading ONI (Nino 3.4 cross-check) from https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt ...
+2026-07-08 17:34:21,163 [WARNING] data_pipeline: ดึงข้อมูล ONI (Nino 3.4 cross-check) จาก https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt ไม่สำเร็จ (HTTPSConnectionPool(host='www.cpc.ncep.noaa.gov', port=443): Max retries exceeded with url: /data/indices/oni.ascii.txt (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))) — ข้าม cross-check รอบนี้ (ไม่กระทบ MEI feature หลักซึ่งดึงจาก NOAA PSL คนละแหล่งข้อมูล)
+2026-07-08 17:34:21,164 [INFO] data_pipeline: Downloading MEI v2 from https://psl.noaa.gov/enso/mei/data/meiv2.data ...
+2026-07-08 17:34:21,168 [ERROR] data_pipeline: ดึงข้อมูล MEI จาก https://psl.noaa.gov/enso/mei/data/meiv2.data ไม่สำเร็จ (HTTPSConnectionPool(host='psl.noaa.gov', port=443): Max retries exceeded with url: /enso/mei/data/meiv2.data (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))) — ไม่มีค่า MEI ให้ใช้ในรอบนี้
+2026-07-08 17:34:21,170 [WARNING] data_pipeline: MEI feature ดึงไม่สำเร็จ (fetch_error=HTTPSConnectionPool(host='psl.noaa.gov', port=443): Max retries exceeded with url: /enso/mei/data/meiv2.data (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))) — ค่า MEI จะเป็น None ในแถวที่ append
+2026-07-08 17:34:21,526 [INFO] data_pipeline: โหลดประวัติ P_mm_week จาก /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/Water_demand/active/ml_features_phase4.csv สำเร็จ: 259 สัปดาห์ ครอบคลุมปี [2020, 2021, 2022, 2023, 2024] (นี่คือข้อมูล 'เก็บไว้แล้ว' จากตอน train โมเดล ไม่ใช่ข้อมูลสดจาก GEE — ถ้าปีล่าสุดในนี้ เก่ากว่าปีปัจจุบันมาก SPI_4 baseline จะไม่รวมปีล่าสุดๆ ด้วย ควร backfill CHIRPS ผ่าน GEE เพิ่มเติมเป็นระยะเพื่อให้ baseline นี้ทันสมัยขึ้น)
+2026-07-08 17:34:24,882 [ERROR] data_pipeline: ดึง CHIRPS Final จาก GEE (UCSB-CHG/CHIRPS/DAILY) ไม่สำเร็จ ช่วง 2026-05-11 ถึง 2026-05-19
+Traceback (most recent call last):
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 395, in _fetch_chirps_weekly
+    daily_final = gee_fetch_fn(
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 272, in _fetch_chirps_daily_from_gee
+    ee.Initialize(project=gee_project)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/_utils.py", line 39, in wrapper
+    return func(*args, **kwargs)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/__init__.py", line 230, in Initialize
+    credentials = data.get_persistent_credentials()
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/data.py", line 240, in get_persistent_credentials
+    raise ee_exception.EEException(  # pylint: disable=raise-missing-from
+ee.ee_exception.EEException: Please authorize access to your Earth Engine account by running
+
+earthengine authenticate
+
+in your command line, or ee.Authenticate() in Python, and then retry.
+2026-07-08 17:34:27,798 [ERROR] data_pipeline: ดึง CHIRPS-Prelim จาก GEE (projects/climate-engine-pro/assets/ce-chirps-prelim-pentad) ไม่สำเร็จ ช่วง 2026-05-19 ถึง 2026-07-09 — ตรวจสอบว่า asset ID ยังถูกต้องอยู่หรือไม่ (community catalog อาจย้าย/เปลี่ยน id ได้ ดู comment ที่ CHIRPS_PRELIM_COLLECTION_ID ด้านบนไฟล์)
+Traceback (most recent call last):
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 414, in _fetch_chirps_weekly
+    daily_prelim_raw = gee_fetch_fn(
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 272, in _fetch_chirps_daily_from_gee
+    ee.Initialize(project=gee_project)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/_utils.py", line 39, in wrapper
+    return func(*args, **kwargs)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/__init__.py", line 230, in Initialize
+    credentials = data.get_persistent_credentials()
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/data.py", line 240, in get_persistent_credentials
+    raise ee_exception.EEException(  # pylint: disable=raise-missing-from
+ee.ee_exception.EEException: Please authorize access to your Earth Engine account by running
+
+earthengine authenticate
+
+in your command line, or ee.Authenticate() in Python, and then retry.
+2026-07-08 17:34:27,821 [WARNING] data_pipeline: ไม่มีข้อมูล CHIRPS ของสัปดาห์ as_of เอง (2026-W28) เลย (ทั้งประวัติและสดจาก GEE) — คืนค่า None สำหรับ feature ของสัปดาห์นี้ (ปีก่อนๆ ของสัปดาห์เดียวกันมี 5 ปีในฐาน)
+2026-07-08 17:34:27,823 [WARNING] data_pipeline: CHIRPS feature (zone_A) ดึงไม่สำเร็จ (fetch_error=as_of_week_missing)
+2026-07-08 17:34:27,833 [INFO] data_pipeline: โหลดประวัติ P_mm_week จาก /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/Water_demand/active/ml_features_phase4.csv สำเร็จ: 259 สัปดาห์ ครอบคลุมปี [2020, 2021, 2022, 2023, 2024] (นี่คือข้อมูล 'เก็บไว้แล้ว' จากตอน train โมเดล ไม่ใช่ข้อมูลสดจาก GEE — ถ้าปีล่าสุดในนี้ เก่ากว่าปีปัจจุบันมาก SPI_4 baseline จะไม่รวมปีล่าสุดๆ ด้วย ควร backfill CHIRPS ผ่าน GEE เพิ่มเติมเป็นระยะเพื่อให้ baseline นี้ทันสมัยขึ้น)
+2026-07-08 17:34:30,896 [ERROR] data_pipeline: ดึง CHIRPS Final จาก GEE (UCSB-CHG/CHIRPS/DAILY) ไม่สำเร็จ ช่วง 2026-05-11 ถึง 2026-05-19
+Traceback (most recent call last):
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 395, in _fetch_chirps_weekly
+    daily_final = gee_fetch_fn(
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 272, in _fetch_chirps_daily_from_gee
+    ee.Initialize(project=gee_project)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/_utils.py", line 39, in wrapper
+    return func(*args, **kwargs)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/__init__.py", line 230, in Initialize
+    credentials = data.get_persistent_credentials()
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/data.py", line 240, in get_persistent_credentials
+    raise ee_exception.EEException(  # pylint: disable=raise-missing-from
+ee.ee_exception.EEException: Please authorize access to your Earth Engine account by running
+
+earthengine authenticate
+
+in your command line, or ee.Authenticate() in Python, and then retry.
+2026-07-08 17:34:33,955 [ERROR] data_pipeline: ดึง CHIRPS-Prelim จาก GEE (projects/climate-engine-pro/assets/ce-chirps-prelim-pentad) ไม่สำเร็จ ช่วง 2026-05-19 ถึง 2026-07-09 — ตรวจสอบว่า asset ID ยังถูกต้องอยู่หรือไม่ (community catalog อาจย้าย/เปลี่ยน id ได้ ดู comment ที่ CHIRPS_PRELIM_COLLECTION_ID ด้านบนไฟล์)
+Traceback (most recent call last):
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 414, in _fetch_chirps_weekly
+    daily_prelim_raw = gee_fetch_fn(
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/chirps_feature.py", line 272, in _fetch_chirps_daily_from_gee
+    ee.Initialize(project=gee_project)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/_utils.py", line 39, in wrapper
+    return func(*args, **kwargs)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/__init__.py", line 230, in Initialize
+    credentials = data.get_persistent_credentials()
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/data.py", line 240, in get_persistent_credentials
+    raise ee_exception.EEException(  # pylint: disable=raise-missing-from
+ee.ee_exception.EEException: Please authorize access to your Earth Engine account by running
+
+earthengine authenticate
+
+in your command line, or ee.Authenticate() in Python, and then retry.
+2026-07-08 17:34:33,975 [WARNING] data_pipeline: ไม่มีข้อมูล CHIRPS ของสัปดาห์ as_of เอง (2026-W28) เลย (ทั้งประวัติและสดจาก GEE) — คืนค่า None สำหรับ feature ของสัปดาห์นี้ (ปีก่อนๆ ของสัปดาห์เดียวกันมี 5 ปีในฐาน)
+2026-07-08 17:34:33,978 [WARNING] data_pipeline: CHIRPS feature (zone_B) ดึงไม่สำเร็จ (fetch_error=as_of_week_missing)
+2026-07-08 17:34:33,980 [ERROR] data_pipeline: ไม่พบ python.exe ของ conda env era5-grib ที่ C:\Program Files\ArcGIS\Pro\bin\Python\envs\era5-grib\python.exe
+2026-07-08 17:34:33,981 [WARNING] data_pipeline: ERA5T feature ดึงไม่สำเร็จ (fetch_error=ไม่พบ python.exe ของ conda env era5-grib ที่ C:\Program Files\ArcGIS\Pro\bin\Python\envs\era5-grib\python.exe)
+2026-07-08 17:34:34,001 [WARNING] data_pipeline: Climate prediction readiness (zone_A): blocked_insufficient_data — ไม่มีสัปดาห์ไหนใน /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/ml_features_live.csv (zone=zone_A) ที่ ERA5T และ CHIRPS ครบ 7/7 วันพร้อมกันเลย แม้แต่สัปดาห์เดียว — block การทำนายไว้ก่อน ไม่ใช้ข้อมูลที่ไม่ครบป้อนเข้าโมเดลไม่ว่ากรณีใด
+2026-07-08 17:34:34,004 [WARNING] data_pipeline: Climate prediction readiness (zone_B): blocked_insufficient_data — ไม่มีสัปดาห์ไหนใน /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/ml_features_live.csv (zone=zone_B) ที่ ERA5T และ CHIRPS ครบ 7/7 วันพร้อมกันเลย แม้แต่สัปดาห์เดียว — block การทำนายไว้ก่อน ไม่ใช้ข้อมูลที่ไม่ครบป้อนเข้าโมเดลไม่ว่ากรณีใด
+2026-07-08 17:34:34,006 [INFO] data_pipeline: Climate features step เสร็จสิ้น (as_of=2026-07-08, data_status=partial): MEI fetch_error=HTTPSConnectionPool(host='psl.noaa.gov', port=443): Max retries exceeded with url: /enso/mei/data/meiv2.data (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden'))), CHIRPS zone_A/B fetch_error=as_of_week_missing/as_of_week_missing, ERA5T n_days_in_week=None fetch_error=ไม่พบ python.exe ของ conda env era5-grib ที่ C:\Program Files\ArcGIS\Pro\bin\Python\envs\era5-grib\python.exe, AI_week zone_A=None (AI_week unavailable (ทั้ง ET0_mm_week และ P_mm_week ไม่พร้อมใช้)), zone_B=None (AI_week unavailable (ทั้ง ET0_mm_week และ P_mm_week ไม่พร้อมใช้)), rows_appended=2
+2026-07-08 17:34:34,007 [INFO] data_pipeline: Step 3/5: ตรวจสอบภาพ SAR ใหม่ + จำแนกพืช
+2026-07-08 17:34:34,008 [INFO] data_pipeline: Checking for new SAR imagery (Google Earth Engine, AOI=zone A/B boundary)
+2026-07-08 17:34:37,223 [WARNING] data_pipeline: SAR classification: เช็คภาพ S1 ใหม่จาก GEE ไม่สำเร็จ (Please authorize access to your Earth Engine account by running
+
+earthengine authenticate
+
+in your command line, or ee.Authenticate() in Python, and then retry.) — ข้ามรอบนี้ (ต้องมี ee credential ตั้งค่าไว้แล้วบนเครื่องที่รัน — ดู TODO Service Account ในหัวไฟล์)
+2026-07-08 17:34:37,225 [INFO] data_pipeline: ไม่พบภาพ SAR ใหม่ในรอบนี้ ข้ามการจำแนกพืช
+2026-07-08 17:34:37,227 [INFO] data_pipeline: Step 4/5: โหลดโมเดล และทำนาย
+2026-07-08 17:34:37,261 [INFO] data_pipeline: Loading Water Demand models from /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/Water_demand/active
+2026-07-08 17:34:38,023 [INFO] data_pipeline: Loaded Water Demand models: catboost=24 lightgbm=24 stage1_classifiers=24 stack_weights=24
+2026-07-08 17:34:38,024 [INFO] data_pipeline: Loading Reservoir Inflow models from /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/Reservoir_inflow/active
+2026-07-08 17:34:38,039 [INFO] data_pipeline: Loaded Reservoir Inflow models: stage1_classifiers=7 stage1_thresholds=7 stage2_regressors=7
+2026-07-08 17:34:38,040 [INFO] data_pipeline: Building feature vector from /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/Water_demand/active/ml_features_phase4.csv
+2026-07-08 17:34:38,052 [INFO] data_pipeline: Zone zone_A: as_of=2024-W51, reg_features=37, clf_features=17
+2026-07-08 17:34:38,058 [INFO] data_pipeline: Zone zone_B: as_of=2024-W51, reg_features=37, clf_features=17
+2026-07-08 17:34:39,112 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-01T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,117 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-02T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,118 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-03T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,119 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-04T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,121 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-05T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,122 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-06T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,124 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-07T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,126 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-08T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,127 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-09T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,130 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-10T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,132 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-11T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,133 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-12T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,134 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-13T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,137 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-14T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,138 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-15T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,139 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-16T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,140 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-17T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,143 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-18T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,144 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-19T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,145 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-20T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,146 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-21T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,147 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-22T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,149 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-23T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,151 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-24T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,153 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-25T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,154 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-26T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-08 17:34:39,171 [INFO] data_pipeline: Reservoir Inflow (live): as_of=2026-06-27, current_qin=49653.74, n_valid_days=350/395 (data_source=live_monthly_account_files, gap_days=11, staleness_status=stale_data_warning)
+2026-07-08 17:34:39,172 [WARNING] data_pipeline: Reservoir Inflow (live) staleness: ข้อมูลที่ใช้ทำนาย (as_of=2026-06-27) เก่ากว่าวันที่รันจริง (2026-07-08) อยู่ 11 วัน — มักเกิดเพราะยังไม่มีการอัปโหลด ไฟล์ 'บัญชีน้ำ' ของเดือนใหม่ (ดู ARCHITECTURE.md > Manual Dependencies) ยังคำนวณผลทำนายให้ตามปกติ แต่ควรพิจารณาด้วยความระมัดระวังเพิ่มขึ้น
+2026-07-08 17:34:39,173 [INFO] data_pipeline: Running prediction with latest features
+2026-07-08 17:34:39,186 [WARNING] data_pipeline: Reservoir Inflow: staleness_status=stale_data_warning (gap_days=11) — ข้อมูลที่ใช้ทำนาย (as_of=2026-06-27) เก่ากว่าวันที่รันจริง (2026-07-08) อยู่ 11 วัน — มักเกิดเพราะยังไม่มีการอัปโหลด ไฟล์ 'บัญชีน้ำ' ของเดือนใหม่ (ดู ARCHITECTURE.md > Manual Dependencies) ยังคำนวณผลทำนายให้ตามปกติ แต่ควรพิจารณาด้วยความระมัดระวังเพิ่มขึ้น (ยังคำนวณผลทำนายต่อ เพราะยังไม่เกินเกณฑ์ blocked)
+2026-07-08 17:34:39,188 [INFO] data_pipeline: Step 5/5: บันทึกผลลัพธ์เป็น JSON
+2026-07-08 17:34:39,188 [INFO] data_pipeline: Saving pipeline results to /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/forecasting_results/latest.json
+2026-07-08 17:34:39,211 [INFO] data_pipeline: Copied pipeline results to website data folder: /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/03_website/assets/data/latest.json
+2026-07-08 17:34:39,218 [INFO] data_pipeline: === Pipeline finished with status: ok ===
+2026-07-08 17:34:47,165 [INFO] data_pipeline: Triggering crop classification (RF v3b, GEE Sentinel-1/2)
+2026-07-08 17:34:51,371 [ERROR] data_pipeline: trigger_crop_classification() ล้มเหลว
+Traceback (most recent call last):
+  File "/sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/pipeline/sar_classification.py", line 364, in trigger_crop_classification
+    ee.Initialize(project=DEFAULT_GEE_PROJECT)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/_utils.py", line 39, in wrapper
+    return func(*args, **kwargs)
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/__init__.py", line 230, in Initialize
+    credentials = data.get_persistent_credentials()
+  File "/sessions/busy-awesome-cerf/.local/lib/python3.10/site-packages/ee/data.py", line 240, in get_persistent_credentials
+    raise ee_exception.EEException(  # pylint: disable=raise-missing-from
+ee.ee_exception.EEException: Please authorize access to your Earth Engine account by running
+
+earthengine authenticate
+
+in your command line, or ee.Authenticate() in Python, and then retry.
+2026-07-11 19:10:21,241 [INFO] data_pipeline: โหลด Kc lookup จาก /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/Water_demand/active/kc_weekly_lookup_all_crops.csv สำเร็จ (260 รายการ)
+2026-07-11 19:10:38,748 [INFO] data_pipeline: โหลด Kc lookup จาก /sessions/busy-awesome-cerf/mnt/maenaruea-water-web/01_data/scripts and code/Water_demand/active/kc_weekly_lookup_all_crops.csv สำเร็จ (260 รายการ)
+2026-07-11 19:22:11,633 [INFO] data_pipeline: Step 1/5: ดึงข้อมูลโทรมาตร
+2026-07-11 19:22:11,634 [WARNING] data_pipeline: ใช้ mock data - ยังไม่ได้เชื่อม API จริง (TELEMETRY_API_URL is None)
+2026-07-11 19:22:11,634 [INFO] data_pipeline: Step 2/5: ดึง MEI + CHIRPS + ERA5T (climate features)
+2026-07-11 19:22:12,049 [INFO] data_pipeline: Downloading ONI (Nino 3.4 cross-check) from https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt ...
+2026-07-11 19:22:13,538 [INFO] data_pipeline: Downloading MEI v2 from https://psl.noaa.gov/enso/mei/data/meiv2.data ...
+2026-07-11 19:22:15,101 [INFO] data_pipeline: MEI ล่าสุดที่ดึงได้จาก NOAA คือช่วง 2026-06 (อายุ 11 วัน ไม่เกินเกณฑ์ 60 วัน) — ปกติ
+2026-07-11 19:22:15,113 [INFO] data_pipeline: MEI feature พร้อมใช้: as_of=2026-W28, MEI=1.52, MEI_lag4=1.52, MEI_lag8=0.27 (latest_actual_period=2026-06, data_age_days=11, is_stale=False, stale_fallback_used=True, mei_reporting_lag_risk=False, nino34_oni_latest={'season': 'AMJ', 'year': 2026, 'anom': 0.98})
+2026-07-11 19:22:15,593 [INFO] data_pipeline: โหลดประวัติ P_mm_week จาก D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active\ml_features_phase4.csv สำเร็จ: 259 สัปดาห์ ครอบคลุมปี [2020, 2021, 2022, 2023, 2024] (นี่คือข้อมูล 'เก็บไว้แล้ว' จากตอน train โมเดล ไม่ใช่ข้อมูลสดจาก GEE — ถ้าปีล่าสุดในนี้ เก่ากว่าปีปัจจุบันมาก SPI_4 baseline จะไม่รวมปีล่าสุดๆ ด้วย ควร backfill CHIRPS ผ่าน GEE เพิ่มเติมเป็นระยะเพื่อให้ baseline นี้ทันสมัยขึ้น)
+2026-07-11 19:22:19,387 [INFO] data_pipeline: GEE auth: ใช้ Service Account (gee-service-account@maenaruea-water-pipeline.iam.gserviceaccount.com, key=gee-service-account-key.json) -- เหมาะกับ scheduled task
+2026-07-11 19:22:21,600 [INFO] data_pipeline: GEE auth: ใช้ Service Account (gee-service-account@maenaruea-water-pipeline.iam.gserviceaccount.com, key=gee-service-account-key.json) -- เหมาะกับ scheduled task
+2026-07-11 19:22:22,727 [WARNING] data_pipeline: ไม่มีข้อมูล CHIRPS ของสัปดาห์ as_of เอง (2026-W28) เลย (ทั้งประวัติและสดจาก GEE) — คืนค่า None สำหรับ feature ของสัปดาห์นี้ (ปีก่อนๆ ของสัปดาห์เดียวกันมี 5 ปีในฐาน)
+2026-07-11 19:22:22,727 [WARNING] data_pipeline: CHIRPS feature (zone_A) ดึงไม่สำเร็จ (fetch_error=as_of_week_missing)
+2026-07-11 19:22:22,733 [INFO] data_pipeline: โหลดประวัติ P_mm_week จาก D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active\ml_features_phase4.csv สำเร็จ: 259 สัปดาห์ ครอบคลุมปี [2020, 2021, 2022, 2023, 2024] (นี่คือข้อมูล 'เก็บไว้แล้ว' จากตอน train โมเดล ไม่ใช่ข้อมูลสดจาก GEE — ถ้าปีล่าสุดในนี้ เก่ากว่าปีปัจจุบันมาก SPI_4 baseline จะไม่รวมปีล่าสุดๆ ด้วย ควร backfill CHIRPS ผ่าน GEE เพิ่มเติมเป็นระยะเพื่อให้ baseline นี้ทันสมัยขึ้น)
+2026-07-11 19:22:25,446 [INFO] data_pipeline: GEE auth: ใช้ Service Account (gee-service-account@maenaruea-water-pipeline.iam.gserviceaccount.com, key=gee-service-account-key.json) -- เหมาะกับ scheduled task
+2026-07-11 19:22:26,608 [INFO] data_pipeline: GEE auth: ใช้ Service Account (gee-service-account@maenaruea-water-pipeline.iam.gserviceaccount.com, key=gee-service-account-key.json) -- เหมาะกับ scheduled task
+2026-07-11 19:22:28,037 [WARNING] data_pipeline: ไม่มีข้อมูล CHIRPS ของสัปดาห์ as_of เอง (2026-W28) เลย (ทั้งประวัติและสดจาก GEE) — คืนค่า None สำหรับ feature ของสัปดาห์นี้ (ปีก่อนๆ ของสัปดาห์เดียวกันมี 5 ปีในฐาน)
+2026-07-11 19:22:28,037 [WARNING] data_pipeline: CHIRPS feature (zone_B) ดึงไม่สำเร็จ (fetch_error=as_of_week_missing)
+2026-07-11 19:22:28,042 [INFO] data_pipeline: เรียก ERA5T worker ผ่าน subprocess: ['C:\\Program Files\\ArcGIS\\Pro\\bin\\Python\\envs\\era5-grib\\python.exe', 'D:\\maenaruea-water-web\\01_data\\scripts and code\\pipeline\\era5t_worker.py', '--as-of-date', '2026-07-11', '--out-json', 'D:\\maenaruea-water-web\\01_data\\scripts and code\\pipeline\\era5t_output\\era5t_week_2026-07-11.json']
+2026-07-11 19:23:01,037 [INFO] data_pipeline: era5t_worker.py stdout:
+[OK] เขียนผลลัพธ์ไปที่ D:\maenaruea-water-web\01_data\scripts and code\pipeline\era5t_output\era5t_week_2026-07-11.json
+
+2026-07-11 19:23:01,038 [WARNING] data_pipeline: era5t_worker.py stderr:
+2026-07-11 19:22:31,337 INFO Request ID is f9aa65f9-6b1d-4d75-b57e-fd3750b66fa9
+2026-07-11 19:22:31,611 INFO status has been updated to accepted
+2026-07-11 19:22:45,891 INFO status has been updated to running
+2026-07-11 19:22:53,685 INFO status has been updated to successful
+
+7fe118617661aa495dfcadee4327c5a4.grib:   0%|          | 0.00/784 [00:00<?, ?B/s]
+7fe118617661aa495dfcadee4327c5a4.grib: 100%|##########| 784/784 [00:00<00:00, 1.29kB/s]
+                                                                                       
+C:\Program Files\ArcGIS\Pro\bin\Python\envs\era5-grib\Lib\site-packages\cfgrib\xarray_store.py:51: FutureWarning: In a future version of xarray the default value for compat will change from compat='no_conflicts' to compat='override'. This is likely to lead to different results when combining overlapping variables with the same name. To opt in to new defaults and get rid of these warnings now use `set_options(use_new_combine_kwarg_defaults=True) or set compat explicitly.
+  o = xr.merge([o, ds], **kwargs)
+C:\Program Files\ArcGIS\Pro\bin\Python\envs\era5-grib\Lib\site-packages\cfgrib\xarray_store.py:51: FutureWarning: In a future version of xarray the default value for compat will change from compat='no_conflicts' to compat='override'. This is likely to lead to different results when combining overlapping variables with the same name. To opt in to new defaults and get rid of these warnings now use `set_options(use_new_combine_kwarg_defaults=True) or set compat explicitly.
+  o = xr.merge([o, ds], **kwargs)
+C:\Program Files\ArcGIS\Pro\bin\Python\envs\era5-grib\Lib\site-packages\cfgrib\xarray_store.py:51: FutureWarning: In a future version of xarray the default value for compat will change from compat='no_conflicts' to compat='override'. This is likely to lead to different results when combining overlapping variables with the same name. To opt in to new defaults and get rid of these warnings now use `set_options(use_new_combine_kwarg_defaults=True) or set compat explicitly.
+  o = xr.merge([o, ds], **kwargs)
+C:\Program Files\ArcGIS\Pro\bin\Python\envs\era5-grib\Lib\site-packages\cfgrib\xarray_store.py:51: FutureWarning: In a future version of xarray the default value for compat will change from compat='no_conflicts' to compat='override'. This is likely to lead to different results when combining overlapping variables with the same name. To opt in to new defaults and get rid of these warnings now use `set_options(use_new_combine_kwarg_defaults=True) or set compat explicitly.
+  o = xr.merge([o, ds], **kwargs)
+C:\Program Files\ArcGIS\Pro\bin\Python\envs\era5-grib\Lib\site-packages\cfgrib\xarray_store.py:51: FutureWarning: In a future version of xarray the default value for compat will change from compat='no_conflicts' to compat='override'. This is likely to lead to different results when combining overlapping variables with the same name. To opt in to new defaults and get rid of these warnings now use `set_options(use_new_combine_kwarg_defaults=True) or set compat explicitly.
+  o = xr.merge([o, ds], **kwargs)
+
+2026-07-11 19:23:01,044 [INFO] data_pipeline: ERA5T weekly feature เสร็จสิ้น (as_of=2026-07-11, iso_year=2026, iso_week=28, n_days_in_week=1, ET0_mm_week=0.3911)
+2026-07-11 19:23:01,044 [INFO] data_pipeline: Reading latest cached SAR crop classification result (from sar_background_job.py)
+2026-07-11 19:23:01,046 [WARNING] data_pipeline: NIR/GIR (zone_A) คำนวณไม่ได้สัปดาห์นี้: blocked (ET0_mm_week หรือ P_eff_mm ยังไม่พร้อมใช้ในสัปดาห์นี้ หรือไม่มีพื้นที่ crop ให้คำนวณ) (area_basis=sar_live: ใช้ผล SAR classification ล่าสุด)
+2026-07-11 19:23:01,046 [WARNING] data_pipeline: NIR/GIR (zone_B) คำนวณไม่ได้สัปดาห์นี้: blocked (ET0_mm_week หรือ P_eff_mm ยังไม่พร้อมใช้ในสัปดาห์นี้ หรือไม่มีพื้นที่ crop ให้คำนวณ) (area_basis=sar_live: ใช้ผล SAR classification ล่าสุด)
+2026-07-11 19:23:01,057 [WARNING] data_pipeline: Climate prediction readiness (zone_A): blocked_insufficient_data — ไม่มีสัปดาห์ไหนใน D:\maenaruea-water-web\01_data\scripts and code\pipeline\ml_features_live.csv (zone=zone_A) ที่ ERA5T และ CHIRPS ครบ 7/7 วันพร้อมกันเลย แม้แต่สัปดาห์เดียว — block การทำนายไว้ก่อน ไม่ใช้ข้อมูลที่ไม่ครบป้อนเข้าโมเดลไม่ว่ากรณีใด
+2026-07-11 19:23:01,058 [WARNING] data_pipeline: Climate prediction readiness (zone_B): blocked_insufficient_data — ไม่มีสัปดาห์ไหนใน D:\maenaruea-water-web\01_data\scripts and code\pipeline\ml_features_live.csv (zone=zone_B) ที่ ERA5T และ CHIRPS ครบ 7/7 วันพร้อมกันเลย แม้แต่สัปดาห์เดียว — block การทำนายไว้ก่อน ไม่ใช้ข้อมูลที่ไม่ครบป้อนเข้าโมเดลไม่ว่ากรณีใด
+2026-07-11 19:23:01,058 [INFO] data_pipeline: Climate features step เสร็จสิ้น (as_of=2026-07-11, data_status=partial): MEI fetch_error=None, CHIRPS zone_A/B fetch_error=as_of_week_missing/as_of_week_missing, ERA5T n_days_in_week=1 fetch_error=None, AI_week zone_A=None (AI_week unavailable (P_mm_week ไม่พร้อมใช้ — CHIRPS ของสัปดาห์นี้ยังไม่ครบ)), zone_B=None (AI_week unavailable (P_mm_week ไม่พร้อมใช้ — CHIRPS ของสัปดาห์นี้ยังไม่ครบ)), rows_appended=2
+2026-07-11 19:23:01,058 [INFO] data_pipeline: Step 3/5: อ่านผล SAR crop classification ล่าสุด (sar_background_job.py แยกต่างหาก)
+2026-07-11 19:23:01,058 [INFO] data_pipeline: Reading latest cached SAR crop classification result (from sar_background_job.py)
+2026-07-11 19:23:01,058 [INFO] data_pipeline: Step 4/5: โหลดโมเดล และทำนาย
+2026-07-11 19:23:01,107 [INFO] data_pipeline: Loading Water Demand models from D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active
+2026-07-11 19:23:02,186 [INFO] data_pipeline: Loaded Water Demand models: catboost=24 lightgbm=24 stage1_classifiers=24 stack_weights=24
+2026-07-11 19:23:02,186 [INFO] data_pipeline: Loading Reservoir Inflow models from D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\active
+2026-07-11 19:23:02,243 [INFO] data_pipeline: Loaded Reservoir Inflow models: stage1_classifiers=7 stage1_thresholds=7 stage2_regressors=7
+2026-07-11 19:23:02,255 [ERROR] data_pipeline: _wd_build_live_df() ล้มเหลวไม่คาดคิด -- จะใช้ static fallback ทุก zone แทน
+Traceback (most recent call last):
+  File "D:\maenaruea-water-web\01_data\scripts and code\pipeline\data_pipeline.py", line 1228, in _wd_build_feature_vector
+    live_df = _wd_build_live_df()
+  File "D:\maenaruea-water-web\01_data\scripts and code\pipeline\data_pipeline.py", line 1103, in _wd_build_live_df
+    raw = pd.read_csv(ML_FEATURES_LIVE_CSV)
+  File "D:\maenaruea-water-web\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 873, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "D:\maenaruea-water-web\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 306, in _read
+    return parser.read(nrows)
+           ~~~~~~~~~~~^^^^^^^
+  File "D:\maenaruea-water-web\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1947, in read
+    ) = self._engine.read(  # type: ignore[attr-defined]
+        ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        nrows
+        ^^^^^
+    )
+    ^
+  File "D:\maenaruea-water-web\.venv\Lib\site-packages\pandas\io\parsers\c_parser_wrapper.py", line 215, in read
+    chunks = self._reader.read_low_memory(nrows)
+  File "pandas/_libs/parsers.pyx", line 832, in pandas._libs.parsers.TextReader.read_low_memory
+  File "pandas/_libs/parsers.pyx", line 897, in pandas._libs.parsers.TextReader._read_rows
+  File "pandas/_libs/parsers.pyx", line 868, in pandas._libs.parsers.TextReader._tokenize_rows
+  File "pandas/_libs/parsers.pyx", line 885, in pandas._libs.parsers.TextReader._check_tokenize_status
+  File "pandas/_libs/parsers.pyx", line 2084, in pandas._libs.parsers.raise_parser_error
+pandas.errors.ParserError: Error tokenizing data. C error: Expected 30 fields in line 26, saw 34
+
+2026-07-11 19:23:02,293 [INFO] data_pipeline: Zone zone_A: ใช้ static snapshot (D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active\ml_features_phase4.csv) -- live path ยังไม่พร้อม (ไม่มีประวัติพอ หรือ feature set ยังไม่ตรงสเปกโมเดล)
+2026-07-11 19:23:02,298 [INFO] data_pipeline: Zone zone_A: as_of=2024-W51, source=static_snapshot, reg_features=37, clf_features=17
+2026-07-11 19:23:02,301 [INFO] data_pipeline: Zone zone_B: ใช้ static snapshot (D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active\ml_features_phase4.csv) -- live path ยังไม่พร้อม (ไม่มีประวัติพอ หรือ feature set ยังไม่ตรงสเปกโมเดล)
+2026-07-11 19:23:02,305 [INFO] data_pipeline: Zone zone_B: as_of=2024-W51, source=static_snapshot, reg_features=37, clf_features=17
+2026-07-11 19:23:02,961 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-01T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,961 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-02T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,962 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-03T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,962 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-04T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,962 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-05T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,962 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-06T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,962 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-07T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,963 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-08T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,963 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-09T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,970 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-10T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,970 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-11T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,970 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-12T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,970 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-13T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,971 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-14T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,971 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-15T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,971 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-16T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,971 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-17T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,971 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-18T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,971 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-19T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,971 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-20T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,971 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-21T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,972 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-22T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,972 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-23T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,972 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-24T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,972 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-25T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,972 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-26T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:23:02,981 [INFO] data_pipeline: Reservoir Inflow (live): as_of=2026-06-27, current_qin=49653.74, n_valid_days=350/395 (data_source=live_monthly_account_files, gap_days=14, staleness_status=stale_data_warning)
+2026-07-11 19:23:02,981 [WARNING] data_pipeline: Reservoir Inflow (live) staleness: ข้อมูลที่ใช้ทำนาย (as_of=2026-06-27) เก่ากว่าวันที่รันจริง (2026-07-11) อยู่ 14 วัน — มักเกิดเพราะยังไม่มีการอัปโหลด ไฟล์ 'บัญชีน้ำ' ของเดือนใหม่ (ดู ARCHITECTURE.md > Manual Dependencies) ยังคำนวณผลทำนายให้ตามปกติ แต่ควรพิจารณาด้วยความระมัดระวังเพิ่มขึ้น
+2026-07-11 19:23:02,981 [INFO] data_pipeline: Running prediction with latest features
+2026-07-11 19:23:07,427 [WARNING] data_pipeline: Reservoir Inflow: staleness_status=stale_data_warning (gap_days=14) — ข้อมูลที่ใช้ทำนาย (as_of=2026-06-27) เก่ากว่าวันที่รันจริง (2026-07-11) อยู่ 14 วัน — มักเกิดเพราะยังไม่มีการอัปโหลด ไฟล์ 'บัญชีน้ำ' ของเดือนใหม่ (ดู ARCHITECTURE.md > Manual Dependencies) ยังคำนวณผลทำนายให้ตามปกติ แต่ควรพิจารณาด้วยความระมัดระวังเพิ่มขึ้น (ยังคำนวณผลทำนายต่อ เพราะยังไม่เกินเกณฑ์ blocked)
+2026-07-11 19:23:07,427 [INFO] data_pipeline: Step 5/5: บันทึกผลลัพธ์เป็น JSON
+2026-07-11 19:23:07,427 [INFO] data_pipeline: Saving pipeline results to D:\maenaruea-water-web\01_data\forecasting_results\latest.json
+2026-07-11 19:23:07,431 [INFO] data_pipeline: Copied pipeline results to website data folder: D:\maenaruea-water-web\03_website\assets\data\latest.json
+2026-07-11 19:32:11,945 [INFO] data_pipeline: Step 1/5: ดึงข้อมูลโทรมาตร
+2026-07-11 19:32:11,946 [WARNING] data_pipeline: ใช้ mock data - ยังไม่ได้เชื่อม API จริง (TELEMETRY_API_URL is None)
+2026-07-11 19:32:11,946 [INFO] data_pipeline: Step 2/5: ดึง MEI + CHIRPS + ERA5T (climate features)
+2026-07-11 19:32:12,339 [INFO] data_pipeline: Downloading ONI (Nino 3.4 cross-check) from https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt ...
+2026-07-11 19:32:13,860 [INFO] data_pipeline: Downloading MEI v2 from https://psl.noaa.gov/enso/mei/data/meiv2.data ...
+2026-07-11 19:32:14,984 [INFO] data_pipeline: MEI ล่าสุดที่ดึงได้จาก NOAA คือช่วง 2026-06 (อายุ 11 วัน ไม่เกินเกณฑ์ 60 วัน) — ปกติ
+2026-07-11 19:32:14,990 [INFO] data_pipeline: MEI feature พร้อมใช้: as_of=2026-W28, MEI=1.52, MEI_lag4=1.52, MEI_lag8=0.27 (latest_actual_period=2026-06, data_age_days=11, is_stale=False, stale_fallback_used=True, mei_reporting_lag_risk=False, nino34_oni_latest={'season': 'AMJ', 'year': 2026, 'anom': 0.98})
+2026-07-11 19:32:15,480 [INFO] data_pipeline: โหลดประวัติ P_mm_week จาก D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active\ml_features_phase4.csv สำเร็จ: 259 สัปดาห์ ครอบคลุมปี [2020, 2021, 2022, 2023, 2024] (นี่คือข้อมูล 'เก็บไว้แล้ว' จากตอน train โมเดล ไม่ใช่ข้อมูลสดจาก GEE — ถ้าปีล่าสุดในนี้ เก่ากว่าปีปัจจุบันมาก SPI_4 baseline จะไม่รวมปีล่าสุดๆ ด้วย ควร backfill CHIRPS ผ่าน GEE เพิ่มเติมเป็นระยะเพื่อให้ baseline นี้ทันสมัยขึ้น)
+2026-07-11 19:32:19,839 [INFO] data_pipeline: GEE auth: ใช้ Service Account (gee-service-account@maenaruea-water-pipeline.iam.gserviceaccount.com, key=gee-service-account-key.json) -- เหมาะกับ scheduled task
+2026-07-11 19:32:23,105 [INFO] data_pipeline: GEE auth: ใช้ Service Account (gee-service-account@maenaruea-water-pipeline.iam.gserviceaccount.com, key=gee-service-account-key.json) -- เหมาะกับ scheduled task
+2026-07-11 19:32:24,609 [WARNING] data_pipeline: ไม่มีข้อมูล CHIRPS ของสัปดาห์ as_of เอง (2026-W28) เลย (ทั้งประวัติและสดจาก GEE) — คืนค่า None สำหรับ feature ของสัปดาห์นี้ (ปีก่อนๆ ของสัปดาห์เดียวกันมี 5 ปีในฐาน)
+2026-07-11 19:32:24,609 [WARNING] data_pipeline: CHIRPS feature (zone_A) ดึงไม่สำเร็จ (fetch_error=as_of_week_missing)
+2026-07-11 19:32:24,613 [INFO] data_pipeline: โหลดประวัติ P_mm_week จาก D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active\ml_features_phase4.csv สำเร็จ: 259 สัปดาห์ ครอบคลุมปี [2020, 2021, 2022, 2023, 2024] (นี่คือข้อมูล 'เก็บไว้แล้ว' จากตอน train โมเดล ไม่ใช่ข้อมูลสดจาก GEE — ถ้าปีล่าสุดในนี้ เก่ากว่าปีปัจจุบันมาก SPI_4 baseline จะไม่รวมปีล่าสุดๆ ด้วย ควร backfill CHIRPS ผ่าน GEE เพิ่มเติมเป็นระยะเพื่อให้ baseline นี้ทันสมัยขึ้น)
+2026-07-11 19:32:26,449 [INFO] data_pipeline: GEE auth: ใช้ Service Account (gee-service-account@maenaruea-water-pipeline.iam.gserviceaccount.com, key=gee-service-account-key.json) -- เหมาะกับ scheduled task
+2026-07-11 19:32:28,721 [INFO] data_pipeline: GEE auth: ใช้ Service Account (gee-service-account@maenaruea-water-pipeline.iam.gserviceaccount.com, key=gee-service-account-key.json) -- เหมาะกับ scheduled task
+2026-07-11 19:32:30,180 [WARNING] data_pipeline: ไม่มีข้อมูล CHIRPS ของสัปดาห์ as_of เอง (2026-W28) เลย (ทั้งประวัติและสดจาก GEE) — คืนค่า None สำหรับ feature ของสัปดาห์นี้ (ปีก่อนๆ ของสัปดาห์เดียวกันมี 5 ปีในฐาน)
+2026-07-11 19:32:30,180 [WARNING] data_pipeline: CHIRPS feature (zone_B) ดึงไม่สำเร็จ (fetch_error=as_of_week_missing)
+2026-07-11 19:32:30,180 [INFO] data_pipeline: เรียก ERA5T worker ผ่าน subprocess: ['C:\\Program Files\\ArcGIS\\Pro\\bin\\Python\\envs\\era5-grib\\python.exe', 'D:\\maenaruea-water-web\\01_data\\scripts and code\\pipeline\\era5t_worker.py', '--as-of-date', '2026-07-11', '--out-json', 'D:\\maenaruea-water-web\\01_data\\scripts and code\\pipeline\\era5t_output\\era5t_week_2026-07-11.json']
+2026-07-11 19:32:57,495 [INFO] data_pipeline: era5t_worker.py stdout:
+[OK] เขียนผลลัพธ์ไปที่ D:\maenaruea-water-web\01_data\scripts and code\pipeline\era5t_output\era5t_week_2026-07-11.json
+
+2026-07-11 19:32:57,495 [WARNING] data_pipeline: era5t_worker.py stderr:
+2026-07-11 19:32:32,369 INFO Request ID is fc5ba0ea-213e-438c-99b1-a557575187f1
+2026-07-11 19:32:32,587 INFO status has been updated to accepted
+2026-07-11 19:32:46,861 INFO status has been updated to running
+2026-07-11 19:32:54,859 INFO status has been updated to successful
+
+8c56999993a7f8d500d67b05a0f948c5.grib:   0%|          | 0.00/784 [00:00<?, ?B/s]
+8c56999993a7f8d500d67b05a0f948c5.grib: 100%|##########| 784/784 [00:00<00:00, 1.26kB/s]
+                                                                                       
+Ignoring index file 'D:\\maenaruea-water-web\\01_data\\scripts and code\\pipeline\\era5t_output\\era5t_week_202607_06-10.grib.5b7b6.idx' older than GRIB file
+Ignoring index file 'D:\\maenaruea-water-web\\01_data\\scripts and code\\pipeline\\era5t_output\\era5t_week_202607_06-10.grib.5b7b6.idx' older than GRIB file
+Ignoring index file 'D:\\maenaruea-water-web\\01_data\\scripts and code\\pipeline\\era5t_output\\era5t_week_202607_06-10.grib.5b7b6.idx' older than GRIB file
+Ignoring index file 'D:\\maenaruea-water-web\\01_data\\scripts and code\\pipeline\\era5t_output\\era5t_week_202607_06-10.grib.5b7b6.idx' older than GRIB file
+Ignoring index file 'D:\\maenaruea-water-web\\01_data\\scripts and code\\pipeline\\era5t_output\\era5t_week_202607_06-10.grib.5b7b6.idx' older than GRIB file
+Ignoring index file 'D:\\maenaruea-water-web\\01_data\\scripts and code\\pipeline\\era5t_output\\era5t_week_202607_06-10.grib.5b7b6.idx' older than GRIB file
+Ignoring index file 'D:\\maenaruea-water-web\\01_data\\scripts and code\\pipeline\\era5t_output\\era5t_week_202607_06-10.grib.5b7b6.idx' older than GRIB file
+Ignoring index file 'D:\\maenaruea-water-web\\01_data\\scripts and code\\pipeline\\era5t_output\\era5t_week_202607_06-10.grib.5b7b6.idx' older than GRIB file
+C:\Program Files\ArcGIS\Pro\bin\Python\envs\era5-grib\Lib\site-packages\cfgrib\xarray_store.py:51: FutureWarning: In a future version of xarray the default value for compat will change from compat='no_conflicts' to compat='override'. This is likely to lead to different results when combining overlapping variables with the same name. To opt in to new defaults and get rid of these warnings now use `set_options(use_new_combine_kwarg_defaults=True) or set compat explicitly.
+  o = xr.merge([o, ds], **kwargs)
+C:\Program Files\ArcGIS\Pro\bin\Python\envs\era5-grib\Lib\site-packages\cfgrib\xarray_store.py:51: FutureWarning: In a future version of xarray the default value for compat will change from compat='no_conflicts' to compat='override'. This is likely to lead to different results when combining overlapping variables with the same name. To opt in to new defaults and get rid of these warnings now use `set_options(use_new_combine_kwarg_defaults=True) or set compat explicitly.
+  o = xr.merge([o, ds], **kwargs)
+C:\Program Files\ArcGIS\Pro\bin\Python\envs\era5-grib\Lib\site-packages\cfgrib\xarray_store.py:51: FutureWarning: In a future version of xarray the default value for compat will change from compat='no_conflicts' to compat='override'. This is likely to lead to different results when combining overlapping variables with the same name. To opt in to new defaults and get rid of these warnings now use `set_options(use_new_combine_kwarg_defaults=True) or set compat explicitly.
+  o = xr.merge([o, ds], **kwargs)
+C:\Program Files\ArcGIS\Pro\bin\Python\envs\era5-grib\Lib\site-packages\cfgrib\xarray_store.py:51: FutureWarning: In a future version of xarray the default value for compat will change from compat='no_conflicts' to compat='override'. This is likely to lead to different results when combining overlapping variables with the same name. To opt in to new defaults and get rid of these warnings now use `set_options(use_new_combine_kwarg_defaults=True) or set compat explicitly.
+  o = xr.merge([o, ds], **kwargs)
+C:\Program Files\ArcGIS\Pro\bin\Python\envs\era5-grib\Lib\site-packages\cfgrib\xarray_store.py:51: FutureWarning: In a future version of xarray the default value for compat will change from compat='no_conflicts' to compat='override'. This is likely to lead to different results when combining overlapping variables with the same name. To opt in to new defaults and get rid of these warnings now use `set_options(use_new_combine_kwarg_defaults=True) or set compat explicitly.
+  o = xr.merge([o, ds], **kwargs)
+
+2026-07-11 19:32:57,504 [INFO] data_pipeline: ERA5T weekly feature เสร็จสิ้น (as_of=2026-07-11, iso_year=2026, iso_week=28, n_days_in_week=1, ET0_mm_week=0.3911)
+2026-07-11 19:32:57,504 [INFO] data_pipeline: Reading latest cached SAR crop classification result (from sar_background_job.py)
+2026-07-11 19:32:57,506 [WARNING] data_pipeline: NIR/GIR (zone_A) คำนวณไม่ได้สัปดาห์นี้: blocked (ET0_mm_week หรือ P_eff_mm ยังไม่พร้อมใช้ในสัปดาห์นี้ หรือไม่มีพื้นที่ crop ให้คำนวณ) (area_basis=sar_live: ใช้ผล SAR classification ล่าสุด)
+2026-07-11 19:32:57,506 [WARNING] data_pipeline: NIR/GIR (zone_B) คำนวณไม่ได้สัปดาห์นี้: blocked (ET0_mm_week หรือ P_eff_mm ยังไม่พร้อมใช้ในสัปดาห์นี้ หรือไม่มีพื้นที่ crop ให้คำนวณ) (area_basis=sar_live: ใช้ผล SAR classification ล่าสุด)
+2026-07-11 19:32:57,517 [WARNING] data_pipeline: Climate prediction readiness (zone_A): blocked_insufficient_data — ไม่มีสัปดาห์ไหนใน D:\maenaruea-water-web\01_data\scripts and code\pipeline\ml_features_live.csv (zone=zone_A) ที่ ERA5T และ CHIRPS ครบ 7/7 วันพร้อมกันเลย แม้แต่สัปดาห์เดียว — block การทำนายไว้ก่อน ไม่ใช้ข้อมูลที่ไม่ครบป้อนเข้าโมเดลไม่ว่ากรณีใด
+2026-07-11 19:32:57,517 [WARNING] data_pipeline: Climate prediction readiness (zone_B): blocked_insufficient_data — ไม่มีสัปดาห์ไหนใน D:\maenaruea-water-web\01_data\scripts and code\pipeline\ml_features_live.csv (zone=zone_B) ที่ ERA5T และ CHIRPS ครบ 7/7 วันพร้อมกันเลย แม้แต่สัปดาห์เดียว — block การทำนายไว้ก่อน ไม่ใช้ข้อมูลที่ไม่ครบป้อนเข้าโมเดลไม่ว่ากรณีใด
+2026-07-11 19:32:57,517 [INFO] data_pipeline: Climate features step เสร็จสิ้น (as_of=2026-07-11, data_status=partial): MEI fetch_error=None, CHIRPS zone_A/B fetch_error=as_of_week_missing/as_of_week_missing, ERA5T n_days_in_week=1 fetch_error=None, AI_week zone_A=None (AI_week unavailable (P_mm_week ไม่พร้อมใช้ — CHIRPS ของสัปดาห์นี้ยังไม่ครบ)), zone_B=None (AI_week unavailable (P_mm_week ไม่พร้อมใช้ — CHIRPS ของสัปดาห์นี้ยังไม่ครบ)), rows_appended=2
+2026-07-11 19:32:57,517 [INFO] data_pipeline: Step 3/5: อ่านผล SAR crop classification ล่าสุด (sar_background_job.py แยกต่างหาก)
+2026-07-11 19:32:57,518 [INFO] data_pipeline: Reading latest cached SAR crop classification result (from sar_background_job.py)
+2026-07-11 19:32:57,518 [INFO] data_pipeline: Step 4/5: โหลดโมเดล และทำนาย
+2026-07-11 19:32:57,565 [INFO] data_pipeline: Loading Water Demand models from D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active
+2026-07-11 19:32:57,847 [INFO] data_pipeline: Loaded Water Demand models: catboost=24 lightgbm=24 stage1_classifiers=24 stack_weights=24
+2026-07-11 19:32:57,847 [INFO] data_pipeline: Loading Reservoir Inflow models from D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\active
+2026-07-11 19:32:57,857 [INFO] data_pipeline: Loaded Reservoir Inflow models: stage1_classifiers=7 stage1_thresholds=7 stage2_regressors=7
+2026-07-11 19:32:57,893 [INFO] data_pipeline: Zone zone_A: ใช้ static snapshot (D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active\ml_features_phase4.csv) -- live path ยังไม่พร้อม (ไม่มีประวัติพอ หรือ feature set ยังไม่ตรงสเปกโมเดล)
+2026-07-11 19:32:57,899 [INFO] data_pipeline: Zone zone_A: as_of=2024-W51, source=static_snapshot, reg_features=37, clf_features=17
+2026-07-11 19:32:57,906 [INFO] data_pipeline: Zone zone_B: ใช้ static snapshot (D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active\ml_features_phase4.csv) -- live path ยังไม่พร้อม (ไม่มีประวัติพอ หรือ feature set ยังไม่ตรงสเปกโมเดล)
+2026-07-11 19:32:57,912 [INFO] data_pipeline: Zone zone_B: as_of=2024-W51, source=static_snapshot, reg_features=37, clf_features=17
+2026-07-11 19:32:58,400 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-01T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,400 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-02T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,400 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-03T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,400 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-04T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,400 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-05T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,400 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-06T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,400 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-07T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,401 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-08T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,401 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-09T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,401 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-10T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,401 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-11T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,401 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-12T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,401 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-13T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,401 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-14T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,402 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-15T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,402 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-16T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,402 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-17T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,402 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-18T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,402 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-19T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,402 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-20T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,402 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-21T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,402 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-22T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,402 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-23T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,403 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-24T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,403 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-25T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,403 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-26T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-11 19:32:58,412 [INFO] data_pipeline: Reservoir Inflow (live): as_of=2026-06-27, current_qin=49653.74, n_valid_days=350/395 (data_source=live_monthly_account_files, gap_days=14, staleness_status=stale_data_warning)
+2026-07-11 19:32:58,412 [WARNING] data_pipeline: Reservoir Inflow (live) staleness: ข้อมูลที่ใช้ทำนาย (as_of=2026-06-27) เก่ากว่าวันที่รันจริง (2026-07-11) อยู่ 14 วัน — มักเกิดเพราะยังไม่มีการอัปโหลด ไฟล์ 'บัญชีน้ำ' ของเดือนใหม่ (ดู ARCHITECTURE.md > Manual Dependencies) ยังคำนวณผลทำนายให้ตามปกติ แต่ควรพิจารณาด้วยความระมัดระวังเพิ่มขึ้น
+2026-07-11 19:32:58,412 [INFO] data_pipeline: Running prediction with latest features
+2026-07-11 19:33:01,619 [WARNING] data_pipeline: Reservoir Inflow: staleness_status=stale_data_warning (gap_days=14) — ข้อมูลที่ใช้ทำนาย (as_of=2026-06-27) เก่ากว่าวันที่รันจริง (2026-07-11) อยู่ 14 วัน — มักเกิดเพราะยังไม่มีการอัปโหลด ไฟล์ 'บัญชีน้ำ' ของเดือนใหม่ (ดู ARCHITECTURE.md > Manual Dependencies) ยังคำนวณผลทำนายให้ตามปกติ แต่ควรพิจารณาด้วยความระมัดระวังเพิ่มขึ้น (ยังคำนวณผลทำนายต่อ เพราะยังไม่เกินเกณฑ์ blocked)
+2026-07-11 19:33:01,619 [INFO] data_pipeline: Step 5/5: บันทึกผลลัพธ์เป็น JSON
+2026-07-11 19:33:01,620 [INFO] data_pipeline: Saving pipeline results to D:\maenaruea-water-web\01_data\forecasting_results\latest.json
+2026-07-11 19:33:01,623 [INFO] data_pipeline: Copied pipeline results to website data folder: D:\maenaruea-water-web\03_website\assets\data\latest.json
+2026-07-13 10:00:01,235 [INFO] data_pipeline: ======================================================================
+2026-07-13 10:00:01,235 [INFO] data_pipeline: === Starting data pipeline run (2026-07-13 10:00:01) ===
+2026-07-13 10:00:01,236 [INFO] data_pipeline: Step 1/5: ดึงข้อมูลโทรมาตร
+2026-07-13 10:00:01,236 [WARNING] data_pipeline: ใช้ mock data - ยังไม่ได้เชื่อม API จริง (TELEMETRY_API_URL is None)
+2026-07-13 10:00:01,236 [INFO] data_pipeline: Step 2/5: ดึง MEI + CHIRPS + ERA5T (climate features)
+2026-07-13 10:00:04,153 [INFO] data_pipeline: Downloading ONI (Nino 3.4 cross-check) from https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt ...
+2026-07-13 10:00:06,110 [INFO] data_pipeline: Downloading MEI v2 from https://psl.noaa.gov/enso/mei/data/meiv2.data ...
+2026-07-13 10:00:07,356 [INFO] data_pipeline: MEI ล่าสุดที่ดึงได้จาก NOAA คือช่วง 2026-06 (อายุ 13 วัน ไม่เกินเกณฑ์ 60 วัน) — ปกติ
+2026-07-13 10:00:07,367 [INFO] data_pipeline: MEI feature พร้อมใช้: as_of=2026-W29, MEI=1.52, MEI_lag4=1.52, MEI_lag8=0.27 (latest_actual_period=2026-06, data_age_days=13, is_stale=False, stale_fallback_used=True, mei_reporting_lag_risk=False, nino34_oni_latest={'season': 'AMJ', 'year': 2026, 'anom': 0.98})
+2026-07-13 10:00:11,089 [INFO] data_pipeline: โหลดประวัติ P_mm_week จาก D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active\ml_features_phase4.csv สำเร็จ: 259 สัปดาห์ ครอบคลุมปี [2020, 2021, 2022, 2023, 2024] (นี่คือข้อมูล 'เก็บไว้แล้ว' จากตอน train โมเดล ไม่ใช่ข้อมูลสดจาก GEE — ถ้าปีล่าสุดในนี้ เก่ากว่าปีปัจจุบันมาก SPI_4 baseline จะไม่รวมปีล่าสุดๆ ด้วย ควร backfill CHIRPS ผ่าน GEE เพิ่มเติมเป็นระยะเพื่อให้ baseline นี้ทันสมัยขึ้น)
+2026-07-13 10:00:15,882 [INFO] data_pipeline: GEE auth: ใช้ Service Account (gee-service-account@maenaruea-water-pipeline.iam.gserviceaccount.com, key=gee-service-account-key.json) -- เหมาะกับ scheduled task
+2026-07-13 10:00:18,160 [INFO] data_pipeline: GEE auth: ใช้ Service Account (gee-service-account@maenaruea-water-pipeline.iam.gserviceaccount.com, key=gee-service-account-key.json) -- เหมาะกับ scheduled task
+2026-07-13 10:00:20,045 [WARNING] data_pipeline: ไม่มีข้อมูล CHIRPS ของสัปดาห์ as_of เอง (2026-W29) เลย (ทั้งประวัติและสดจาก GEE) — คืนค่า None สำหรับ feature ของสัปดาห์นี้ (ปีก่อนๆ ของสัปดาห์เดียวกันมี 5 ปีในฐาน)
+2026-07-13 10:00:20,045 [WARNING] data_pipeline: CHIRPS feature (zone_A) ดึงไม่สำเร็จ (fetch_error=as_of_week_missing)
+2026-07-13 10:00:20,050 [INFO] data_pipeline: โหลดประวัติ P_mm_week จาก D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active\ml_features_phase4.csv สำเร็จ: 259 สัปดาห์ ครอบคลุมปี [2020, 2021, 2022, 2023, 2024] (นี่คือข้อมูล 'เก็บไว้แล้ว' จากตอน train โมเดล ไม่ใช่ข้อมูลสดจาก GEE — ถ้าปีล่าสุดในนี้ เก่ากว่าปีปัจจุบันมาก SPI_4 baseline จะไม่รวมปีล่าสุดๆ ด้วย ควร backfill CHIRPS ผ่าน GEE เพิ่มเติมเป็นระยะเพื่อให้ baseline นี้ทันสมัยขึ้น)
+2026-07-13 10:00:22,923 [INFO] data_pipeline: GEE auth: ใช้ Service Account (gee-service-account@maenaruea-water-pipeline.iam.gserviceaccount.com, key=gee-service-account-key.json) -- เหมาะกับ scheduled task
+2026-07-13 10:00:27,151 [INFO] data_pipeline: GEE auth: ใช้ Service Account (gee-service-account@maenaruea-water-pipeline.iam.gserviceaccount.com, key=gee-service-account-key.json) -- เหมาะกับ scheduled task
+2026-07-13 10:00:27,679 [WARNING] data_pipeline: ไม่มีข้อมูล CHIRPS ของสัปดาห์ as_of เอง (2026-W29) เลย (ทั้งประวัติและสดจาก GEE) — คืนค่า None สำหรับ feature ของสัปดาห์นี้ (ปีก่อนๆ ของสัปดาห์เดียวกันมี 5 ปีในฐาน)
+2026-07-13 10:00:27,679 [WARNING] data_pipeline: CHIRPS feature (zone_B) ดึงไม่สำเร็จ (fetch_error=as_of_week_missing)
+2026-07-13 10:00:27,682 [INFO] data_pipeline: เรียก ERA5T worker ผ่าน subprocess: ['C:\\Program Files\\ArcGIS\\Pro\\bin\\Python\\envs\\era5-grib\\python.exe', 'D:\\maenaruea-water-web\\01_data\\scripts and code\\pipeline\\era5t_worker.py', '--as-of-date', '2026-07-13', '--out-json', 'D:\\maenaruea-water-web\\01_data\\scripts and code\\pipeline\\era5t_output\\era5t_week_2026-07-13.json']
+2026-07-13 10:00:27,978 [WARNING] data_pipeline: era5t_worker.py stderr:
+[WARN] as_of_date=2026-07-13 เป็นวันจันทร์ของสัปดาห์นี้เอง (หรือก่อนหน้านั้น) — ยังไม่มีวันไหนของสัปดาห์นี้ที่ผ่านไปแล้วเลย ข้ามการยิง CDS รอบนี้
+[WARN] no_days_available_yet (n_days_in_week=0 — ET0_mm_week=None รอบนี้)
+
+2026-07-13 10:00:27,983 [WARNING] data_pipeline: era5t_worker.py (weekly) returncode=1 — มักหมายถึง n_days_in_week=0 หรือบางวันข้อมูลไม่ครบ (ไม่ใช่ fetch_error เสมอไป ดู n_days_in_week/ET0_mm_week ใน worker_output ประกอบ)
+2026-07-13 10:00:27,984 [INFO] data_pipeline: ERA5T weekly feature เสร็จสิ้น (as_of=2026-07-13, iso_year=2026, iso_week=29, n_days_in_week=0, ET0_mm_week=None)
+2026-07-13 10:00:27,984 [WARNING] data_pipeline: ERA5T weekly: n_days_in_week=0 (ยังไม่มีวันไหนของสัปดาห์นี้พร้อมใช้จริง) — ET0_mm_week ไม่ควรถูกนำไปใช้เป็นค่าจริง แม้ fetch_error ของ worker เองจะเป็น None ก็ตาม
+2026-07-13 10:00:27,984 [WARNING] data_pipeline: ERA5T weekly (integration step): n_days_in_week=0 — ยังไม่มีวันไหนของสัปดาห์นี้ที่ ERA5T ดึงข้อมูลได้จริง (มักเกิดตอนต้นสัปดาห์ ที่ ERA5T latency ยังไม่ทันข้อมูลของวันก่อนหน้า) — ET0_mm_week/AI_week ของรอบนี้จึงไม่พร้อมใช้
+2026-07-13 10:00:27,984 [INFO] data_pipeline: Reading latest cached SAR crop classification result (from sar_background_job.py)
+2026-07-13 10:00:27,993 [WARNING] data_pipeline: NIR/GIR (zone_A) คำนวณไม่ได้สัปดาห์นี้: blocked (ET0_mm_week หรือ P_eff_mm ยังไม่พร้อมใช้ในสัปดาห์นี้ หรือไม่มีพื้นที่ crop ให้คำนวณ) (area_basis=sar_live: ใช้ผล SAR classification ล่าสุด)
+2026-07-13 10:00:27,993 [WARNING] data_pipeline: NIR/GIR (zone_B) คำนวณไม่ได้สัปดาห์นี้: blocked (ET0_mm_week หรือ P_eff_mm ยังไม่พร้อมใช้ในสัปดาห์นี้ หรือไม่มีพื้นที่ crop ให้คำนวณ) (area_basis=sar_live: ใช้ผล SAR classification ล่าสุด)
+2026-07-13 10:00:28,016 [WARNING] data_pipeline: Climate prediction readiness (zone_A): blocked_insufficient_data — ไม่มีสัปดาห์ไหนใน D:\maenaruea-water-web\01_data\scripts and code\pipeline\ml_features_live.csv (zone=zone_A) ที่ ERA5T และ CHIRPS ครบ 7/7 วันพร้อมกันเลย แม้แต่สัปดาห์เดียว — block การทำนายไว้ก่อน ไม่ใช้ข้อมูลที่ไม่ครบป้อนเข้าโมเดลไม่ว่ากรณีใด
+2026-07-13 10:00:28,016 [WARNING] data_pipeline: Climate prediction readiness (zone_B): blocked_insufficient_data — ไม่มีสัปดาห์ไหนใน D:\maenaruea-water-web\01_data\scripts and code\pipeline\ml_features_live.csv (zone=zone_B) ที่ ERA5T และ CHIRPS ครบ 7/7 วันพร้อมกันเลย แม้แต่สัปดาห์เดียว — block การทำนายไว้ก่อน ไม่ใช้ข้อมูลที่ไม่ครบป้อนเข้าโมเดลไม่ว่ากรณีใด
+2026-07-13 10:00:28,017 [INFO] data_pipeline: Climate features step เสร็จสิ้น (as_of=2026-07-13, data_status=partial): MEI fetch_error=None, CHIRPS zone_A/B fetch_error=as_of_week_missing/as_of_week_missing, ERA5T n_days_in_week=0 fetch_error=n_days_in_week=0 — ยังไม่มีวันไหนของสัปดาห์นี้ที่ ERA5T ดึงข้อมูลได้จริง (มักเกิดตอนต้นสัปดาห์ ที่ ERA5T latency ยังไม่ทันข้อมูลของวันก่อนหน้า) — ET0_mm_week/AI_week ของรอบนี้จึงไม่พร้อมใช้, AI_week zone_A=None (AI_week unavailable (ทั้ง ET0_mm_week และ P_mm_week ไม่พร้อมใช้)), zone_B=None (AI_week unavailable (ทั้ง ET0_mm_week และ P_mm_week ไม่พร้อมใช้)), rows_appended=2
+2026-07-13 10:00:28,017 [INFO] data_pipeline: Step 3/5: อ่านผล SAR crop classification ล่าสุด (sar_background_job.py แยกต่างหาก)
+2026-07-13 10:00:28,017 [INFO] data_pipeline: Reading latest cached SAR crop classification result (from sar_background_job.py)
+2026-07-13 10:00:28,017 [INFO] data_pipeline: Step 4/5: โหลดโมเดล และทำนาย
+2026-07-13 10:00:28,218 [INFO] data_pipeline: Loading Water Demand models from D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active
+2026-07-13 10:00:29,930 [INFO] data_pipeline: Loaded Water Demand models: catboost=24 lightgbm=24 stage1_classifiers=24 stack_weights=24
+2026-07-13 10:00:29,931 [INFO] data_pipeline: Loading Reservoir Inflow models from D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\active
+2026-07-13 10:00:29,996 [INFO] data_pipeline: Loaded Reservoir Inflow models: stage1_classifiers=7 stage1_thresholds=7 stage2_regressors=7
+2026-07-13 10:00:30,027 [INFO] data_pipeline: Zone zone_A: ใช้ static snapshot (D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active\ml_features_phase4.csv) -- live path ยังไม่พร้อม (ไม่มีประวัติพอ หรือ feature set ยังไม่ตรงสเปกโมเดล)
+2026-07-13 10:00:30,033 [INFO] data_pipeline: Zone zone_A: as_of=2024-W51, source=static_snapshot, reg_features=37, clf_features=17
+2026-07-13 10:00:30,039 [INFO] data_pipeline: Zone zone_B: ใช้ static snapshot (D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active\ml_features_phase4.csv) -- live path ยังไม่พร้อม (ไม่มีประวัติพอ หรือ feature set ยังไม่ตรงสเปกโมเดล)
+2026-07-13 10:00:30,044 [INFO] data_pipeline: Zone zone_B: as_of=2024-W51, source=static_snapshot, reg_features=37, clf_features=17
+2026-07-13 10:00:30,775 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-01T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,775 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-02T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,777 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-03T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,777 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-04T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,777 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-05T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,777 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-06T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,778 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-07T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,778 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-08T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,778 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-09T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,778 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-10T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,778 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-11T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,778 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-12T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,778 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-13T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,779 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-14T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,779 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-15T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,779 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-16T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,779 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-17T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,779 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-18T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,779 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-19T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,779 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-20T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,779 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-21T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,780 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-22T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,780 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-23T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,780 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-24T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,780 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-25T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,780 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-26T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-13 10:00:30,789 [INFO] data_pipeline: Reservoir Inflow (live): as_of=2026-06-27, current_qin=49653.74, n_valid_days=350/395 (data_source=live_monthly_account_files, gap_days=16, staleness_status=stale_data_blocked)
+2026-07-13 10:00:30,790 [WARNING] data_pipeline: Reservoir Inflow (live) staleness: ข้อมูลที่มีล่าสุด (as_of=2026-06-27) ถึง 2026-07-13 อยู่ 16 วัน (เกิน 14 วัน) — บล็อกการทำนายไว้ก่อน ไม่ใช้ข้อมูลที่เก่าเกินไปทำนาย (ดู ARCHITECTURE.md > Manual Dependencies — ตรวจสอบว่ามีการอัปโหลดไฟล์ 'บัญชีน้ำ' เดือนล่าสุดหรือยัง)
+2026-07-13 10:00:30,790 [INFO] data_pipeline: Running prediction with latest features
+2026-07-13 10:00:35,866 [WARNING] data_pipeline: Reservoir Inflow: ข้ามการทำนายทั้งหมด (staleness_status=stale_data_blocked, gap_days=16) — ข้อมูลที่มีล่าสุด (as_of=2026-06-27) ถึง 2026-07-13 อยู่ 16 วัน (เกิน 14 วัน) — บล็อกการทำนายไว้ก่อน ไม่ใช้ข้อมูลที่เก่าเกินไปทำนาย (ดู ARCHITECTURE.md > Manual Dependencies — ตรวจสอบว่ามีการอัปโหลดไฟล์ 'บัญชีน้ำ' เดือนล่าสุดหรือยัง)
+2026-07-13 10:00:35,867 [INFO] data_pipeline: Step 5/5: บันทึกผลลัพธ์เป็น JSON
+2026-07-13 10:00:35,867 [INFO] data_pipeline: Saving pipeline results to D:\maenaruea-water-web\01_data\forecasting_results\latest.json
+2026-07-13 10:00:35,870 [INFO] data_pipeline: Copied pipeline results to website data folder: D:\maenaruea-water-web\03_website\assets\data\latest.json
+2026-07-13 10:00:35,883 [INFO] data_pipeline: === Pipeline finished with status: ok ===
+2026-07-14 14:26:46,137 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-01T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,139 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-02T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,140 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-03T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,142 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-04T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,143 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-05T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,143 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-06T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,145 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-07T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,146 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-08T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,147 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-09T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,148 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-10T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,149 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-11T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,149 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-12T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,150 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-13T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,151 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-14T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,152 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-15T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,153 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-16T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,155 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-17T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,156 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-18T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,158 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-19T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,159 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-20T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,160 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-21T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,161 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-22T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,162 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-23T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,162 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-24T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,163 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-25T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:26:46,164 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-26T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,023 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-01T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,025 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-02T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,026 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-03T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,027 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-04T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,029 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-05T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,030 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-06T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,031 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-07T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,032 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-08T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,032 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-09T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,033 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-10T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,034 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-11T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,034 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-12T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,036 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-13T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,037 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-14T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,038 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-15T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,038 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-16T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,039 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-17T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,040 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-18T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,040 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-19T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,041 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-20T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,043 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-21T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,043 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-22T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,044 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-23T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,045 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-24T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,046 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-25T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 14:58:53,046 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-26T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:00:45,996 [INFO] data_pipeline: ======================================================================
+2026-07-14 15:00:45,996 [INFO] data_pipeline: === Starting data pipeline run (2026-07-14 15:00:45) ===
+2026-07-14 15:00:45,996 [INFO] data_pipeline: Step 1/5: ดึงข้อมูลโทรมาตร
+2026-07-14 15:00:45,996 [WARNING] data_pipeline: ใช้ mock data - ยังไม่ได้เชื่อม API จริง (TELEMETRY_API_URL is None)
+2026-07-14 15:00:45,997 [INFO] data_pipeline: Step 2/5: ดึง MEI + CHIRPS + ERA5T (climate features)
+2026-07-14 15:00:48,581 [INFO] data_pipeline: Downloading ONI (Nino 3.4 cross-check) from https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt ...
+2026-07-14 15:00:49,976 [INFO] data_pipeline: Downloading MEI v2 from https://psl.noaa.gov/enso/mei/data/meiv2.data ...
+2026-07-14 15:00:50,890 [INFO] data_pipeline: MEI ล่าสุดที่ดึงได้จาก NOAA คือช่วง 2026-06 (อายุ 14 วัน ไม่เกินเกณฑ์ 60 วัน) — ปกติ
+2026-07-14 15:00:50,902 [INFO] data_pipeline: MEI feature พร้อมใช้: as_of=2026-W29, MEI=1.52, MEI_lag4=1.52, MEI_lag8=0.27 (latest_actual_period=2026-06, data_age_days=14, is_stale=False, stale_fallback_used=True, mei_reporting_lag_risk=False, nino34_oni_latest={'season': 'AMJ', 'year': 2026, 'anom': 0.98})
+2026-07-14 15:00:54,623 [INFO] data_pipeline: โหลดประวัติ P_mm_week จาก D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active\ml_features_phase4.csv สำเร็จ: 259 สัปดาห์ ครอบคลุมปี [2020, 2021, 2022, 2023, 2024] (นี่คือข้อมูล 'เก็บไว้แล้ว' จากตอน train โมเดล ไม่ใช่ข้อมูลสดจาก GEE — ถ้าปีล่าสุดในนี้ เก่ากว่าปีปัจจุบันมาก SPI_4 baseline จะไม่รวมปีล่าสุดๆ ด้วย ควร backfill CHIRPS ผ่าน GEE เพิ่มเติมเป็นระยะเพื่อให้ baseline นี้ทันสมัยขึ้น)
+2026-07-14 15:00:57,558 [INFO] data_pipeline: GEE auth: ใช้ Service Account (gee-service-account@maenaruea-water-pipeline.iam.gserviceaccount.com, key=gee-service-account-key.json) -- เหมาะกับ scheduled task
+2026-07-14 15:00:58,716 [INFO] data_pipeline: GEE auth: ใช้ Service Account (gee-service-account@maenaruea-water-pipeline.iam.gserviceaccount.com, key=gee-service-account-key.json) -- เหมาะกับ scheduled task
+2026-07-14 15:00:59,988 [WARNING] data_pipeline: ไม่มีข้อมูล CHIRPS ของสัปดาห์ as_of เอง (2026-W29) เลย (ทั้งประวัติและสดจาก GEE) — คืนค่า None สำหรับ feature ของสัปดาห์นี้ (ปีก่อนๆ ของสัปดาห์เดียวกันมี 5 ปีในฐาน)
+2026-07-14 15:00:59,988 [WARNING] data_pipeline: CHIRPS feature (zone_A) ดึงไม่สำเร็จ (fetch_error=as_of_week_missing)
+2026-07-14 15:00:59,993 [INFO] data_pipeline: โหลดประวัติ P_mm_week จาก D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active\ml_features_phase4.csv สำเร็จ: 259 สัปดาห์ ครอบคลุมปี [2020, 2021, 2022, 2023, 2024] (นี่คือข้อมูล 'เก็บไว้แล้ว' จากตอน train โมเดล ไม่ใช่ข้อมูลสดจาก GEE — ถ้าปีล่าสุดในนี้ เก่ากว่าปีปัจจุบันมาก SPI_4 baseline จะไม่รวมปีล่าสุดๆ ด้วย ควร backfill CHIRPS ผ่าน GEE เพิ่มเติมเป็นระยะเพื่อให้ baseline นี้ทันสมัยขึ้น)
+2026-07-14 15:01:01,805 [INFO] data_pipeline: GEE auth: ใช้ Service Account (gee-service-account@maenaruea-water-pipeline.iam.gserviceaccount.com, key=gee-service-account-key.json) -- เหมาะกับ scheduled task
+2026-07-14 15:01:02,957 [INFO] data_pipeline: GEE auth: ใช้ Service Account (gee-service-account@maenaruea-water-pipeline.iam.gserviceaccount.com, key=gee-service-account-key.json) -- เหมาะกับ scheduled task
+2026-07-14 15:01:03,433 [WARNING] data_pipeline: ไม่มีข้อมูล CHIRPS ของสัปดาห์ as_of เอง (2026-W29) เลย (ทั้งประวัติและสดจาก GEE) — คืนค่า None สำหรับ feature ของสัปดาห์นี้ (ปีก่อนๆ ของสัปดาห์เดียวกันมี 5 ปีในฐาน)
+2026-07-14 15:01:03,436 [WARNING] data_pipeline: CHIRPS feature (zone_B) ดึงไม่สำเร็จ (fetch_error=as_of_week_missing)
+2026-07-14 15:01:03,438 [INFO] data_pipeline: เรียก ERA5T worker ผ่าน subprocess: ['C:\\Program Files\\ArcGIS\\Pro\\bin\\Python\\envs\\era5-grib\\python.exe', 'D:\\maenaruea-water-web\\01_data\\scripts and code\\pipeline\\era5t_worker.py', '--as-of-date', '2026-07-14', '--out-json', 'D:\\maenaruea-water-web\\01_data\\scripts and code\\pipeline\\era5t_output\\era5t_week_2026-07-14.json']
+2026-07-14 15:01:07,849 [WARNING] data_pipeline: era5t_worker.py stderr:
+[WARN] ดึงข้อมูลวัน [datetime.date(2026, 7, 13)] ไม่สำเร็จ (HTTPError: 400 Client Error: Bad Request for url: https://cds.climate.copernicus.eu/api/retrieve/v1/processes/reanalysis-era5-single-levels/execution
+invalid request
+None of the data you have requested is available yet, please revise the period requested. The latest date available for this dataset is: 2026-07-09 08:00) — ตัดวันล่าสุด (2026-07-13) ออกแล้วลองใหม่ (อาจเป็นเพราะ ERA5T ยังไม่ปล่อยข้อมูล ของวันนั้นจริงๆ)
+[WARN] ไม่สามารถดึงข้อมูลของกลุ่มวัน [datetime.date(2026, 7, 13)] ได้เลยแม้แต่วันเดียว
+[WARN] no_days_available_yet (n_days_in_week=0 — ET0_mm_week=None รอบนี้)
+
+2026-07-14 15:01:07,859 [WARNING] data_pipeline: era5t_worker.py (weekly) returncode=1 — มักหมายถึง n_days_in_week=0 หรือบางวันข้อมูลไม่ครบ (ไม่ใช่ fetch_error เสมอไป ดู n_days_in_week/ET0_mm_week ใน worker_output ประกอบ)
+2026-07-14 15:01:07,860 [INFO] data_pipeline: ERA5T weekly feature เสร็จสิ้น (as_of=2026-07-14, iso_year=2026, iso_week=29, n_days_in_week=0, ET0_mm_week=None)
+2026-07-14 15:01:07,860 [WARNING] data_pipeline: ERA5T weekly: n_days_in_week=0 (ยังไม่มีวันไหนของสัปดาห์นี้พร้อมใช้จริง) — ET0_mm_week ไม่ควรถูกนำไปใช้เป็นค่าจริง แม้ fetch_error ของ worker เองจะเป็น None ก็ตาม
+2026-07-14 15:01:07,860 [WARNING] data_pipeline: ERA5T weekly (integration step): n_days_in_week=0 — ยังไม่มีวันไหนของสัปดาห์นี้ที่ ERA5T ดึงข้อมูลได้จริง (มักเกิดตอนต้นสัปดาห์ ที่ ERA5T latency ยังไม่ทันข้อมูลของวันก่อนหน้า) — ET0_mm_week/AI_week ของรอบนี้จึงไม่พร้อมใช้
+2026-07-14 15:01:07,860 [INFO] data_pipeline: Reading latest cached SAR crop classification result (from sar_background_job.py)
+2026-07-14 15:01:07,870 [WARNING] data_pipeline: NIR/GIR (zone_A) คำนวณไม่ได้สัปดาห์นี้: blocked (ET0_mm_week หรือ P_eff_mm ยังไม่พร้อมใช้ในสัปดาห์นี้ หรือไม่มีพื้นที่ crop ให้คำนวณ) (area_basis=sar_live: ใช้ผล SAR classification ล่าสุด)
+2026-07-14 15:01:07,870 [WARNING] data_pipeline: NIR/GIR (zone_B) คำนวณไม่ได้สัปดาห์นี้: blocked (ET0_mm_week หรือ P_eff_mm ยังไม่พร้อมใช้ในสัปดาห์นี้ หรือไม่มีพื้นที่ crop ให้คำนวณ) (area_basis=sar_live: ใช้ผล SAR classification ล่าสุด)
+2026-07-14 15:01:07,888 [WARNING] data_pipeline: Climate prediction readiness (zone_A): blocked_insufficient_data — ไม่มีสัปดาห์ไหนใน D:\maenaruea-water-web\01_data\scripts and code\pipeline\ml_features_live.csv (zone=zone_A) ที่ ERA5T และ CHIRPS ครบ 7/7 วันพร้อมกันเลย แม้แต่สัปดาห์เดียว — block การทำนายไว้ก่อน ไม่ใช้ข้อมูลที่ไม่ครบป้อนเข้าโมเดลไม่ว่ากรณีใด
+2026-07-14 15:01:07,888 [WARNING] data_pipeline: Climate prediction readiness (zone_B): blocked_insufficient_data — ไม่มีสัปดาห์ไหนใน D:\maenaruea-water-web\01_data\scripts and code\pipeline\ml_features_live.csv (zone=zone_B) ที่ ERA5T และ CHIRPS ครบ 7/7 วันพร้อมกันเลย แม้แต่สัปดาห์เดียว — block การทำนายไว้ก่อน ไม่ใช้ข้อมูลที่ไม่ครบป้อนเข้าโมเดลไม่ว่ากรณีใด
+2026-07-14 15:01:07,888 [INFO] data_pipeline: Climate features step เสร็จสิ้น (as_of=2026-07-14, data_status=partial): MEI fetch_error=None, CHIRPS zone_A/B fetch_error=as_of_week_missing/as_of_week_missing, ERA5T n_days_in_week=0 fetch_error=n_days_in_week=0 — ยังไม่มีวันไหนของสัปดาห์นี้ที่ ERA5T ดึงข้อมูลได้จริง (มักเกิดตอนต้นสัปดาห์ ที่ ERA5T latency ยังไม่ทันข้อมูลของวันก่อนหน้า) — ET0_mm_week/AI_week ของรอบนี้จึงไม่พร้อมใช้, AI_week zone_A=None (AI_week unavailable (ทั้ง ET0_mm_week และ P_mm_week ไม่พร้อมใช้)), zone_B=None (AI_week unavailable (ทั้ง ET0_mm_week และ P_mm_week ไม่พร้อมใช้)), rows_appended=2
+2026-07-14 15:01:07,888 [INFO] data_pipeline: Step 3/5: อ่านผล SAR crop classification ล่าสุด (sar_background_job.py แยกต่างหาก)
+2026-07-14 15:01:07,888 [INFO] data_pipeline: Reading latest cached SAR crop classification result (from sar_background_job.py)
+2026-07-14 15:01:07,889 [INFO] data_pipeline: Step 4/5: โหลดโมเดล และทำนาย
+2026-07-14 15:01:08,122 [INFO] data_pipeline: Loading Water Demand models from D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active
+2026-07-14 15:01:09,986 [INFO] data_pipeline: Loaded Water Demand models: catboost=24 lightgbm=24 stage1_classifiers=24 stack_weights=24
+2026-07-14 15:01:09,986 [INFO] data_pipeline: Loading Reservoir Inflow models from D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\active
+2026-07-14 15:01:10,048 [INFO] data_pipeline: Loaded Reservoir Inflow models: stage1_classifiers=7 stage1_thresholds=7 stage2_regressors=7
+2026-07-14 15:01:10,076 [INFO] data_pipeline: Zone zone_A: ใช้ static snapshot (D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active\ml_features_phase4.csv) -- live path ยังไม่พร้อม (ไม่มีประวัติพอ หรือ feature set ยังไม่ตรงสเปกโมเดล)
+2026-07-14 15:01:10,080 [INFO] data_pipeline: Zone zone_A: as_of=2024-W51, source=static_snapshot, reg_features=37, clf_features=17
+2026-07-14 15:01:10,085 [INFO] data_pipeline: Zone zone_B: ใช้ static snapshot (D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active\ml_features_phase4.csv) -- live path ยังไม่พร้อม (ไม่มีประวัติพอ หรือ feature set ยังไม่ตรงสเปกโมเดล)
+2026-07-14 15:01:10,090 [INFO] data_pipeline: Zone zone_B: as_of=2024-W51, source=static_snapshot, reg_features=37, clf_features=17
+2026-07-14 15:01:10,706 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-01T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,706 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-02T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,706 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-03T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,707 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-04T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,707 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-05T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,707 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-06T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,707 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-07T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,707 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-08T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,708 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-09T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,708 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-10T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,708 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-11T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,708 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-12T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,708 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-13T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,708 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-14T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,708 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-15T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,708 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-16T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,709 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-17T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,709 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-18T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,709 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-19T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,709 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-20T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,709 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-21T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,709 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-22T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,709 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-23T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,709 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-24T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,709 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-25T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,710 [WARNING] data_pipeline: API_t คำนวณไม่ได้ที่ 2025-06-26T00:00:00 เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)
+2026-07-14 15:01:10,719 [INFO] data_pipeline: Reservoir Inflow (live): as_of=2026-07-14, current_qin=12175.07, n_valid_days=367/426 (data_source=live_monthly_account_files, gap_days=0, staleness_status=ok)
+2026-07-14 15:01:10,719 [INFO] data_pipeline: Running prediction with latest features
+2026-07-14 15:01:16,095 [INFO] data_pipeline: Step 5/5: บันทึกผลลัพธ์เป็น JSON
+2026-07-14 15:01:16,095 [INFO] data_pipeline: Saving pipeline results to D:\maenaruea-water-web\01_data\forecasting_results\latest.json
+2026-07-14 15:01:16,098 [INFO] data_pipeline: Copied pipeline results to website data folder: D:\maenaruea-water-web\03_website\assets\data\latest.json
+2026-07-14 15:01:16,115 [INFO] data_pipeline: === Pipeline finished with status: ok ===

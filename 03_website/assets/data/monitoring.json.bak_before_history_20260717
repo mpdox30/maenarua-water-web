@@ -1,0 +1,141 @@
+{
+  "meta": {
+    "source": "สถานีโทรมาตร สสน. (API) ผ่าน Google Sheet wide_log (poll ทุก 10 นาที) + 01_data/Reservoirs/reference (rating curve ต่ออ่าง)",
+    "updated": "2026-07-17T23:10:00",
+    "data_connected": true
+  },
+  "stations": [
+    {
+      "station_code": "RES002",
+      "name_th": "อ่างเก็บน้ำแม่นาเรือ",
+      "name_en": "Mae Na Rua Reservoir",
+      "spillway_msl": 489.54,
+      "water_level": 488.992,
+      "rainfall_1h": 0.0,
+      "temperature": 23.43,
+      "humidity": 95.86,
+      "pressure": 954.13,
+      "solar": 0.0,
+      "measure_datetime": "2026-07-17T23:10:00",
+      "storage_m3": 1463583.8,
+      "storage_max_m3": 1625463.8,
+      "capacity_pct": 90.0,
+      "distance_to_spillway_m": -0.548
+    },
+    {
+      "station_code": "RES004",
+      "name_th": "อ่างเก็บน้ำวิทยาลัยเกษตร",
+      "name_en": "Phayao C.A.T. Reservoir",
+      "spillway_msl": 457.07,
+      "water_level": 455.471,
+      "rainfall_1h": 0.0,
+      "temperature": 23.14,
+      "humidity": 91.94,
+      "pressure": 957.97,
+      "solar": 0.2,
+      "measure_datetime": "2026-07-17T23:10:00",
+      "storage_m3": 263557.6,
+      "storage_max_m3": 347778.7,
+      "capacity_pct": 75.8,
+      "distance_to_spillway_m": -1.599
+    },
+    {
+      "station_code": "RES005",
+      "name_th": "อ่างเก็บน้ำห้วยถ้ำ",
+      "name_en": "Huai Tham Reservoir",
+      "spillway_msl": 478.1,
+      "water_level": 478.2,
+      "rainfall_1h": 0.0,
+      "temperature": 22.9,
+      "humidity": 94.8,
+      "pressure": 954.6,
+      "solar": 0.2,
+      "measure_datetime": "2026-07-17T22:30:00",
+      "storage_m3": 504287.5,
+      "storage_max_m3": 495467.8,
+      "capacity_pct": 101.8,
+      "distance_to_spillway_m": 0.1
+    },
+    {
+      "station_code": "RES006",
+      "name_th": "อ่างเก็บน้ำห้วยโซ้",
+      "name_en": "Huai So Reservoir",
+      "spillway_msl": 508.0,
+      "water_level": 508.044,
+      "rainfall_1h": 0.0,
+      "temperature": 22.66,
+      "humidity": 98.0,
+      "pressure": 952.29,
+      "solar": 0.0,
+      "measure_datetime": "2026-07-17T23:10:00",
+      "storage_m3": 120518.4,
+      "storage_max_m3": 119007.2,
+      "capacity_pct": 101.3,
+      "distance_to_spillway_m": 0.044
+    }
+  ],
+  "reservoirs": [
+    {
+      "name_th": "อ่างเก็บน้ำแม่นาเรือ",
+      "name_en": "Mae Na Rua Reservoir",
+      "spillway_msl": 489.54,
+      "area_display": "188.0 ไร่ (0.301 ตร.กม.)",
+      "capacity_display": "1.625 ล้าน ลบ.ม.",
+      "on_map": true,
+      "station_code": "RES002"
+    },
+    {
+      "name_th": "อ่างเก็บน้ำวิทยาลัยเกษตร",
+      "name_en": "Phayao C.A.T. Reservoir",
+      "spillway_msl": 457.07,
+      "area_display": "35.4 ไร่ (0.057 ตร.กม.)",
+      "capacity_display": "0.348 ล้าน ลบ.ม.",
+      "on_map": true,
+      "station_code": "RES004"
+    },
+    {
+      "name_th": "อ่างเก็บน้ำห้วยถ้ำ",
+      "name_en": "Huai Tham Reservoir",
+      "spillway_msl": 478.1,
+      "area_display": "54.9 ไร่ (0.088 ตร.กม.)",
+      "capacity_display": "0.495 ล้าน ลบ.ม.",
+      "on_map": true,
+      "station_code": "RES005"
+    },
+    {
+      "name_th": "อ่างเก็บน้ำห้วยโซ้",
+      "name_en": "Huai So Reservoir",
+      "spillway_msl": 508.0,
+      "area_display": "21.4 ไร่ (0.034 ตร.กม.)",
+      "capacity_display": "0.119 ล้าน ลบ.ม.",
+      "on_map": true,
+      "station_code": "RES006"
+    },
+    {
+      "name_th": "อ่างเก็บน้ำห้วยจำตุ้ม",
+      "name_en": "Huai Cham Tum Reservoir",
+      "spillway_msl": 497.5,
+      "area_display": "38.2 ไร่ (0.061 ตร.กม.)",
+      "capacity_display": "0.314 ล้าน ลบ.ม.",
+      "on_map": true,
+      "station_code": null
+    }
+  ],
+  "cadence_table": [
+    {
+      "source": "สถานีโทรมาตร (อากาศ/ระดับน้ำ)",
+      "frequency": "ทุก 10 นาที",
+      "note": "ดึงจาก API สสน. ผ่าน Google Apps Script อัตโนมัติ (wide_log Google Sheet)"
+    },
+    {
+      "source": "Sentinel-1 SAR",
+      "frequency": "ทุก ~7–10 วัน",
+      "note": "ตาม revisit cycle ของดาวเทียม"
+    },
+    {
+      "source": "MODIS ET",
+      "frequency": "ทุก ~2 สัปดาห์",
+      "note": "ต้องมี gap-filling สำหรับช่วงที่ latency ค้าง"
+    }
+  ]
+}

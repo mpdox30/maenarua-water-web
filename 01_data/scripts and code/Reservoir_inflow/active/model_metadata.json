@@ -115,6 +115,11 @@
       "issue": "no_duplicate_evidence_rows_02-06_to_12_and_02-21_to_24",
       "description": "9 แถว (2026-02-07, 08, 09, 11, 12, 21, 22, 23, 24) ใน training CSV เดิมมี Q_in_t ที่ไม่ตรงกับ raw file แม้ Level/DeltaS/Rain จะตรงกับ raw วันเดียวกันทุกตัว (ไม่มีหลักฐาน duplicate ชัดเจนแบบ 01-08 แต่ raw น่าเชื่อถือกว่าเพราะ evap/infiltration bug ถูกแก้แล้ว) แทนที่ด้วยค่า raw ที่แก้ไข evap/infiltration แล้ว พร้อม flag training_value_replaced_no_duplicate_evidence=True ย้ายจาก lineage_group C ไป A (resolved-by-raw-trust — หลักฐานอ่อนกว่า 01-08 เล็กน้อย ควรทราบไว้)",
       "status": "corrected_in_training_csv"
+    },
+    {
+      "issue": "percent_full_scale_mismatch",
+      "description": "_ri_load_raw_monthly_data() เคยคำนวณ %Full_t เป็นสัดส่วน (0.85-1.05) แทนที่จะเป็นเปอร์เซ็นต์ (85-107) ตามที่ training data ใช้จริง ทำให้ live prediction ทุกครั้งก่อนหน้านี้ป้อน out-of-distribution input เข้าโมเดล แก้แล้ว 2026-07-07 พร้อมปรับ RESERVOIR_PLAUSIBLE_PERCENT_FULL_MAX คู่กัน (1.05→105.0)",
+      "impact": "ค่าทำนาย live ทุกรอบก่อนวันที่แก้ไม่ควรเชื่อถือ (out-of-distribution input)"
     }
   ],
   "threshold_instability_from_correction": {
