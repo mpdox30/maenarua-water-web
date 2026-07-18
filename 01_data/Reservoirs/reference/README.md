@@ -12,8 +12,21 @@ Inflow ของอ่างเก็บน้ำแม่นาเรือ แ
 คอลัมน์: msl_height_m, z_factor, area_m2, volume_m3
 771 แถว ครอบคลุมระดับน้ำ 482.8–490.5 m (ทุก 1 cm)
 มาจาก sheet "Rating Curve 1 CM" ของไฟล์ 2026_May_MNR.xlsx
-**เป็นตารางเดียวที่ใช้อ้างอิง Area/Volume ทั้งหมด** (ยืนยันแล้วว่าตัดตาราง
-"Rating Curve" เก่า และ "Area_Terrain" ออก ไม่ใช้อีกต่อไป)
+ใช้อ้างอิง Volume (ΔS), Area สำหรับ R (ฝน) และ E (ระเหย)
+
+**แก้ไข 2026-07-18**: บรรทัดข้างล่างนี้ (เดิมบอกว่าตัด Area_Terrain ออกแล้ว ใช้
+rating_curve_1cm.csv แทนทั้งหมดรวม Infiltration) **ไม่ตรงกับไฟล์ทางการฉบับปัจจุบัน**
+— ตรวจสอบสูตรจริงในไฟล์ `01_data/Reservoirs/inflow/2026/2026_July_MNR.xlsx` (sheet
+"บัญชีน้ำ" คอลัมน์ J) โดยตรงแล้วพบว่า **Infiltration ยังคง XLOOKUP จาก sheet
+"Area_Terrain" อยู่** ไม่ใช่ rating_curve_1cm.csv:
+```
+J6 = XLOOKUP(B6, Area_Terrain!$A$2:$A$500, Area_Terrain!$C$2:$C$500, , -1) * 0.001
+```
+ส่วน ΔS (C), R (H), E (I) ยัง XLOOKUP จาก 'Rating Curve 1 CM' ตามที่ README นี้ระบุไว้ถูกต้อง
+สรุป: **rating_curve_1cm.csv ใช้กับ ΔS/R/E เท่านั้น ส่วน Infiltration ยังต้องใช้ area_terrain.csv
+แยกต่างหาก** (เข้าใจว่าบันทึกเดิม 5 ก.ค. อ้างอิงไฟล์ 2026_May_MNR.xlsx ที่อาจมีสูตรคนละเวอร์ชันกับ
+ไฟล์กรกฎาคมที่ใช้งานจริงตอนนี้ — ไม่ได้ตามไปตรวจสอบว่าเปลี่ยนตอนไหน) `reservoir_water_balance.py`
+ใช้ `area_terrain.csv` สำหรับ Infiltration อยู่แล้ว ถูกต้องตรงกับไฟล์จริง ไม่ต้องแก้โค้ด
 
 วิธี lookup ต้อง **ตรงกับพฤติกรรม Excel XLOOKUP(...,match_mode=-1) เป๊ะ**
 คือ "exact match หรือค่าที่เล็กกว่าถัดไป" (step lookup) — **ไม่ใช่ linear
@@ -46,7 +59,7 @@ Inflow(day) = ΔS − R + O + Spill + E + Infiltration
 | ΔS | Volume(t) − Volume(t−1) | rating_curve_1cm.csv (คอลัมน์ volume_m3) |
 | R | Area × Rain_mm / 1000 | rating_curve_1cm.csv (คอลัมน์ area_m2) |
 | E | Area × (EvapNorm/days_in_month × 0.7) / 1000 | rating_curve_1cm.csv + monthly_evap_norm.json |
-| Infiltration | Area × 0.001 | rating_curve_1cm.csv |
+| Infiltration | Area × 0.001 | **area_terrain.csv** (แก้ไข 2026-07-18 — ไม่ใช่ rating_curve_1cm.csv ดูรายละเอียดด้านบน) |
 | Spill | sum 24 ค่าใน 1 วันของ weir formula | weir_constants.json (ต้องมี water_level ราย ชม.) |
 | O | query event log (Google Form) → lookup flow rate | flow_rate_spillway.csv / flow_rate_inlet.csv |
 

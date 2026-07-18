@@ -45,6 +45,8 @@ from typing import Optional
 REFERENCE_DIR = Path(__file__).resolve().parent.parent.parent / "Reservoirs" / "reference"
 RATING_CURVE_CSV = REFERENCE_DIR / "rating_curve_1cm.csv"
 AREA_TERRAIN_CSV = REFERENCE_DIR / "area_terrain.csv"
+FLOW_RATE_INLET_CSV = REFERENCE_DIR / "flow_rate_inlet.csv"
+FLOW_RATE_SPILLWAY_CSV = REFERENCE_DIR / "flow_rate_spillway.csv"
 
 # ปรับตาม "ตารางปล่อยน้ำ" ของแม่นาเรือ — พารามิเตอร์ weir formula จากชีต "น้ำล้นสปิลเวย์"
 SPILLWAY_LEVEL_ADJ_OFFSET_M = 0.155   # water_level (ADJ) = water_level - 0.155
@@ -102,6 +104,73 @@ def _area_terrain() -> list[list[float]]:
     if _area_terrain_cache is None:
         _area_terrain_cache = _load_curve(AREA_TERRAIN_CSV)
     return _area_terrain_cache
+
+
+_flow_rate_inlet_cache: Optional[dict[int, float]] = None
+_flow_rate_spillway_cache: Optional[dict[int, float]] = None
+
+
+def _load_flow_rate_table(path: Path) -> dict[int, float]:
+    """
+    โหลดตาราง "จำนวนรอบวาล์ว -> อัตราการไหล" (valve_turns, avg_v_ms, avg_q_m3h, avg_q_m3min)
+    คืนค่า dict {valve_turns(int): avg_q_m3h(float)} — เก็บเฉพาะคอลัมน์ avg_q_m3h เพราะเป็นหน่วยที่
+    ใช้แปลงเป็น m3/day ตรงๆ (× จำนวนชั่วโมงที่เปิด)
+    """
+    table: dict[int, float] = {}
+    with open(path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            table[int(float(row["valve_turns"]))] = float(row["avg_q_m3h"])
+    return table
+
+
+def _flow_rate_inlet() -> dict[int, float]:
+    global _flow_rate_inlet_cache
+    if _flow_rate_inlet_cache is None:
+        _flow_rate_inlet_cache = _load_flow_rate_table(FLOW_RATE_INLET_CSV)
+    return _flow_rate_inlet_cache
+
+
+def _flow_rate_spillway() -> dict[int, float]:
+    global _flow_rate_spillway_cache
+    if _flow_rate_spillway_cache is None:
+        _flow_rate_spillway_cache = _load_flow_rate_table(FLOW_RATE_SPILLWAY_CSV)
+    return _flow_rate_spillway_cache
+
+
+def valve_turns_to_flow_m3_per_day(
+    valve_turns: int, outlet: str = "inlet", open_hours: float = 24.0,
+) -> float:
+    """
+    แปลง "จำนวนรอบที่เปิดวาล์ว" เป็นปริมาณน้ำที่ปล่อยออก O (m3/day) — ใช้ตาราง
+    flow_rate_inlet.csv/flow_rate_spillway.csv (01_data/Reservoirs/reference/) ที่มาจากการวัดจริง
+    3 รอบต่อค่า valve_turns (ดู README.md ในโฟลเดอร์เดียวกัน) — เพิ่ม 2026-07-18 เพื่อรองรับ
+    Google Form บันทึกการปล่อยน้ำในอนาคต (ตอนนี้ยังไม่มี Form จริง ฟังก์ชันนี้พร้อมใช้งานรอไว้)
+
+    outlet: "inlet" (ท่อฝั่งทางเข้าอ่าง) หรือ "spillway" (ท่อฝั่ง spillway) — ต้องเลือกให้ตรงกับ
+    ท่อที่เปิดจริง เพราะอัตราการไหลต่อรอบวาล์วไม่เท่ากัน (ดูตัวอย่าง: รอบ 6 inlet ให้ 232.2 m3/h
+    แต่ spillway ให้ 393.6 m3/h)
+    open_hours: จำนวนชั่วโมงที่เปิดวาล์วจริงในวันนั้น (default 24 = เปิดทั้งวันเต็ม)
+
+    lookup แบบ exact match ตาม valve_turns เท่านั้น (ไม่มีทศนิยม ตามที่ README.md ระบุ — วัดจริงมา
+    เป็นจำนวนเต็มรอบ ไม่ได้ interpolate ระหว่างรอบ)
+
+    raises KeyError ถ้า valve_turns ไม่มีในตาราง (ต้องเป็นค่าที่วัดจริงไว้เท่านั้น ไม่ประมาณเอง)
+    """
+    if outlet == "inlet":
+        table = _flow_rate_inlet()
+    elif outlet == "spillway":
+        table = _flow_rate_spillway()
+    else:
+        raise ValueError(f"outlet ต้องเป็น 'inlet' หรือ 'spillway' เท่านั้น ได้รับ: {outlet!r}")
+
+    if valve_turns not in table:
+        raise KeyError(
+            f"ไม่มีข้อมูลวัดจริงสำหรับ valve_turns={valve_turns} ในตาราง flow_rate_{outlet}.csv "
+            f"(ค่าที่มี: {sorted(table.keys())}) -- ไม่ประมาณค่าเอง ต้องใช้ค่าที่วัดจริงไว้เท่านั้น"
+        )
+    avg_q_m3h = table[valve_turns]
+    return avg_q_m3h * open_hours
 
 
 def _xlookup_floor(level: float, table: list[list[float]]) -> list[float]:

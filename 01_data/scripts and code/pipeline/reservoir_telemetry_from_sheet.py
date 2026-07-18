@@ -106,13 +106,32 @@ STATION_CODE = "RES002"
 
 
 def _parse_wide_log_xlsx(path: Path) -> list[dict]:
+    """
+    แก้ไข 2026-07-18: บางไฟล์ .xlsx ที่ export/ดาวน์โหลดมา คอลัมน์ measure_datetime ไม่ถูก
+    openpyxl จำเป็น datetime object อัตโนมัติ (ขึ้นกับว่า cell format ในไฟล์ต้นฉบับเป็น "วันที่"
+    จริงหรือแค่ text) — ถ้าได้ str กลับมาแทน datetime ให้ normalize ผ่าน _parse_dt_lenient()
+    เหมือนกับที่ทำใน _parse_wide_log_csv() (ยืนยันบั๊กนี้จากไฟล์ Telemetry_Mae_Na_Rua-1e5d2517.xlsx
+    ตอนใช้กับ reservoir_daily_orchestration.py — เดิม error TypeError ตอนลบ datetime กับ str)
+    """
     import openpyxl
 
     wb = openpyxl.load_workbook(path, data_only=True)
     ws = wb["wide_log"]
     rows = list(ws.iter_rows(values_only=True))
     header = [str(h) for h in rows[0]]
-    return [dict(zip(header, r)) for r in rows[1:] if r[1] is not None]
+    dt_col_idx = header.index("measure_datetime") if "measure_datetime" in header else None
+
+    out = []
+    for r in rows[1:]:
+        if r[1] is None:
+            continue
+        row_dict = dict(zip(header, r))
+        if dt_col_idx is not None:
+            mt = row_dict.get("measure_datetime")
+            if isinstance(mt, str):
+                row_dict["measure_datetime"] = _parse_dt_lenient(mt)
+        out.append(row_dict)
+    return out
 
 
 _DT_RE = __import__("re").compile(r"^(\d+)-(\d+)-(\d+)\s+(\d+):(\d+):(\d+)")

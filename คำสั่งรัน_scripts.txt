@@ -1,6 +1,6 @@
 ============================================================
  คำสั่งรัน .py ทั้งหมดในโปรเจกต์ Mae Na Rua Water Web (สำหรับรันเอง manual)
- อัปเดตล่าสุด: 2026-07-17
+ อัปเดตล่าสุด: 2026-07-18
 ============================================================
 
 หมายเหตุทั่วไป:
@@ -40,9 +40,13 @@ run_sar_background_job.bat
 
 ------------------------------------------------------------
 3) reservoir_daily_orchestration.py — คำนวณน้ำไหลลงอ่าง (Inflow) รายวันจากข้อมูลโทรมาตร
-   (โหมด shadow — เขียนผลแยกไว้ที่ 01_data/Reservoirs/inflow_auto/RES002_daily_computed.csv
-   ยังไม่ทับไฟล์ทางการ 2026_MM_MNR.xlsx)
+   **LIVE ตั้งแต่ 2026-07-18** — เขียนทั้ง shadow CSV (01_data/Reservoirs/inflow_auto/
+   RES002_daily_computed.csv) และไฟล์ทางการจริง 2026_MM_MNR.xlsx พร้อมกัน (backup ไฟล์เดิม
+   อัตโนมัติทุกครั้งก่อนเขียน) — ยอมรับความเสี่ยงคลาดเคลื่อนบางวันจาก rain-window convention
+   ที่ยังไม่ยืนยัน 100% แล้วตามที่ตกลงกันไว้
    ความถี่ที่แนะนำ: ทุกวัน (คำนวณของ "เมื่อวาน" เป็นค่า default ถ้าไม่ระบุ --date)
+   ตั้ง Task Scheduler อัตโนมัติแล้วผ่าน run_reservoir_daily_orchestration.bat (ดูคอมเมนต์ในไฟล์
+   .bat สำหรับคำสั่ง schtasks) — คำสั่งด้านล่างสำหรับรันมือ/ทดสอบเพิ่มเติม
 ------------------------------------------------------------
 cd /d "D:\maenaruea-water-web\01_data\scripts and code\pipeline"
 python reservoir_daily_orchestration.py
@@ -51,15 +55,65 @@ python reservoir_daily_orchestration.py
 cd /d "D:\maenaruea-water-web\01_data\scripts and code\pipeline"
 python reservoir_daily_orchestration.py --date 2026-07-14
 
+   ถ้าอยากปิดการเขียนไฟล์ทางการชั่วคราว (กลับไป shadow-only):
+cd /d "D:\maenaruea-water-web\01_data\scripts and code\pipeline"
+python reservoir_daily_orchestration.py --skip-official-write
+
+   ทางเลือก (launcher, ใช้ตัวเดียวกับที่ Task Scheduler เรียก):
+cd /d "D:\maenaruea-water-web\01_data\scripts and code\pipeline"
+run_reservoir_daily_orchestration.bat
+
 
 ------------------------------------------------------------
 4) monitoring_data_builder.py — ดึงข้อมูลโทรมาตรสด 4 สถานี (RES002/004/005/006) มาคำนวณ
    % ความจุ แล้วเขียนทับ 03_website/assets/data/monitoring.json
    (การ์ดในหน้า monitoring.html และการ์ด % ความจุอ่างเก็บน้ำในหน้า index.html อ่านไฟล์นี้)
    ความถี่ที่แนะนำ: ทุก 10-15 นาที ถ้าอยากให้หน้าเว็บสดใกล้เคียง real-time (หรือรันมือก่อนเปิดดูก็ได้)
+   ตั้ง Task Scheduler อัตโนมัติแล้วผ่าน run_monitoring_data_builder.bat (ทุก 15 นาที)
 ------------------------------------------------------------
 cd /d "D:\maenaruea-water-web\01_data\scripts and code\pipeline"
 python monitoring_data_builder.py
+
+   ทางเลือก (launcher):
+cd /d "D:\maenaruea-water-web\01_data\scripts and code\pipeline"
+run_monitoring_data_builder.bat
+
+
+------------------------------------------------------------
+5) reservoir_official_file_writer.py — เขียนผลคำนวณลงไฟล์ทางการโดยตรง (ปกติถูกเรียกจาก
+   reservoir_daily_orchestration.py อัตโนมัติอยู่แล้ว ไม่ต้องรันแยกเอง ยกเว้นต้องการ backfill
+   หลายวันย้อนหลังพร้อมกันในคำสั่งเดียว)
+------------------------------------------------------------
+cd /d "D:\maenaruea-water-web\01_data\scripts and code\pipeline"
+python reservoir_official_file_writer.py --dates 2026-07-15,2026-07-16,2026-07-17
+
+   ทดสอบก่อนโดยไม่เขียนไฟล์จริง (dry run):
+cd /d "D:\maenaruea-water-web\01_data\scripts and code\pipeline"
+python reservoir_official_file_writer.py --dates 2026-07-18 --dry-run
+
+
+============================================================
+ ตั้ง Task Scheduler อัตโนมัติ (ทำครั้งเดียวต่อเครื่อง) — เปิด Command Prompt "Run as Administrator"
+============================================================
+schtasks /create /tn "MaeNaRua_Pipeline_Weekly" ^
+  /tr "\"D:\maenaruea-water-web\01_data\scripts and code\pipeline\run_pipeline.bat\"" ^
+  /sc WEEKLY /d MON /st 02:00 /ru "%USERNAME%" /rl LIMITED /f
+
+schtasks /create /tn "MaeNaRua_SAR_Background_Job" ^
+  /tr "\"D:\maenaruea-water-web\01_data\scripts and code\pipeline\run_sar_background_job.bat\"" ^
+  /sc WEEKLY /d MON /st 03:00 /ru "%USERNAME%" /rl LIMITED /f
+
+schtasks /create /tn "MaeNaRua_Reservoir_Daily_Orchestration" ^
+  /tr "\"D:\maenaruea-water-web\01_data\scripts and code\pipeline\run_reservoir_daily_orchestration.bat\"" ^
+  /sc DAILY /st 07:30 /ru "%USERNAME%" /rl LIMITED /f
+
+schtasks /create /tn "MaeNaRua_Monitoring_Data_Builder" ^
+  /tr "\"D:\maenaruea-water-web\01_data\scripts and code\pipeline\run_monitoring_data_builder.bat\"" ^
+  /sc MINUTE /mo 15 /ru "%USERNAME%" /rl LIMITED /f
+
+   ดูสถานะทั้งหมด:  schtasks /query /tn "MaeNaRua_*" /fo LIST /v  (หรือดูทีละตัวแทน * ถ้าคำสั่งนี้ไม่รองรับ wildcard บนเครื่องคุณ)
+   รันทดสอบทันที:    schtasks /run /tn "<ชื่อ task>"
+   ลบ task:         schtasks /delete /tn "<ชื่อ task>" /f
 
 
 ============================================================

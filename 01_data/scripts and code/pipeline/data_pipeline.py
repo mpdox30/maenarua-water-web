@@ -819,6 +819,190 @@ def _append_ml_features_live(rows: list, csv_path: Path = ML_FEATURES_LIVE_CSV) 
             writer.writerow({col: row.get(col) for col in ML_FEATURES_LIVE_COLUMNS})
 
 
+def _backfill_incomplete_climate_weeks(
+    as_of_date: Optional[Any] = None,
+    csv_path: Path = ML_FEATURES_LIVE_CSV,
+    min_age_days: int = 14,
+    max_weeks_to_check: int = 12,
+    max_weeks_to_backfill: int = 2,
+) -> dict:
+    """
+    2026-07-18 เพิ่ม — แก้ปัญหาที่ตรวจพบว่า ml_features_live.csv ไม่มีสัปดาห์ไหนครบ 7/7 วันเลยแม้แต่
+    สัปดาห์เดียว (พบตอนเช็คว่า climate_prediction_readiness จะ "หาย" ไปเองตามที่เคยสันนิษฐานไว้จริง
+    หรือไม่ — คำตอบคือไม่จริง ถ้าไม่มีฟังก์ชันนี้)
+
+    ต้นเหตุ: `_fetch_climate_features_step()` ดึงข้อมูลของ "สัปดาห์นี้" (as_of=วันนี้) ทุกครั้งที่รัน
+    ซึ่ง ERA5T/CHIRPS มี publish latency เสมอ (ธรรมชาติของข้อมูล reanalysis/near-real-time — ดู
+    chirps_feature.py docstring หัวข้อ latency) ทำให้สัปดาห์ปัจจุบันไม่ครบ 7 วันโดยธรรมชาติ (ยิ่งรัน
+    ต้นสัปดาห์ยิ่งชัด) และไม่มีขั้นตอนไหนย้อนไปดึงสัปดาห์เก่าซ้ำตอนข้อมูล final ออกแล้วจริง ทำให้แถวเก่า
+    ค้าง partial (era5t/chirps_n_days_in_week < 7) ตลอดไปแม้เวลาผ่านไปนานแค่ไหนก็ตาม
+
+    ฟังก์ชันนี้: สแกน ml_features_live.csv หาคู่ (zone, year, week) ที่เคย fetch ได้ไม่ครบ 7/7 (ทั้ง
+    era5t และ/หรือ chirps) และยังไม่มีแถวไหนของคู่นั้นครบ 7/7 อยู่แล้ว แล้วกรองเอาเฉพาะสัปดาห์ที่ผ่าน
+    ไปนานพอ (>= min_age_days วันจากวันอาทิตย์ของสัปดาห์นั้น) ที่ provider ควรจะเผยแพร่ข้อมูล final
+    แล้วจริง จากนั้น re-fetch สัปดาห์นั้นใหม่ (as_of = วันอาทิตย์ของสัปดาห์) — ถ้าได้ 7/7 ทั้งคู่แล้ว
+    จะ **append แถวใหม่** (ไม่แก้/ลบแถวเดิม เก็บไว้เป็น audit trail คู่กันตามธรรมเนียมไฟล์นี้) ให้
+    `_wd_select_climate_features_for_prediction()` มีแถวสมบูรณ์ให้เลือกใช้ในรอบต่อไป
+
+    จำกัดจำนวนสัปดาห์ที่ backfill จริงต่อรอบด้วย max_weeks_to_backfill (ค่าเริ่มต้น 2) เพราะ ERA5T
+    ต้องเรียก subprocess แยก environment ทีละสัปดาห์ (ช้า อาจกินเวลาหลายนาทีต่อสัปดาห์) — ถ้ามีสัปดาห์
+    ค้างมากกว่านี้จะทยอยไล่ backfill ต่อในรอบถัดๆไปเอง ไม่จำเป็นต้องทำครบในรอบเดียว
+
+    **ข้อจำกัดของแถวที่ backfill**: ไม่ได้ re-fetch MEI (ไม่เกี่ยวกับ n_days_in_week completeness) และ
+    ไม่ได้คำนวณ NIR_A_m3/GIR_B_m3 ย้อนหลัง (ต้องใช้พื้นที่ SAR classification ณ ตอนนั้นซึ่งอาจต่างจาก
+    ปัจจุบันแล้ว) — เพียงพอสำหรับให้ readiness check ผ่าน (ต้องการแค่ era5t/chirps ครบ 7/7) แต่ถ้าจะ
+    เอาแถวนี้ไปใช้ป้อนโมเดลจริงในอนาคตต้องพิจารณาช่องว่างนี้ก่อน (ตอนนี้ยังไม่กระทบเพราะ
+    _wd_build_feature_vector()/_wd_run_prediction() ยังไม่ได้เรียกใช้ live path นี้จริง)
+
+    ออกแบบให้ "ไม่ raise" เหมือนฟังก์ชันอื่นในไฟล์นี้ — ห่อแต่ละสัปดาห์ด้วย try/except แยกกัน สัปดาห์
+    หนึ่งพังไม่กระทบสัปดาห์อื่น เรียกจาก `_fetch_climate_features_step()` ต่อจาก append สัปดาห์ปัจจุบัน
+
+    คืนค่า dict {checked, backfilled, skipped_too_recent, still_incomplete, errors} (list ของ dict
+    ต่อสัปดาห์ในแต่ละ key ยกเว้น errors เป็น list ของ str)
+    """
+    from datetime import date
+
+    result: dict = {
+        "checked": [], "backfilled": [], "skipped_too_recent": [],
+        "still_incomplete": [], "errors": [],
+    }
+
+    as_of = as_of_date or datetime.now(timezone.utc).date()
+    csv_path = Path(csv_path)
+    if not csv_path.exists():
+        return result
+
+    def _to_int(v: Any) -> Optional[int]:
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            return None
+
+    import csv as csv_module
+
+    seen_complete: set = set()
+    incomplete_keys: set = set()
+    try:
+        with open(csv_path, newline="", encoding="utf-8") as f:
+            for r in csv_module.DictReader(f):
+                zone = r.get("zone")
+                year_i, week_i = _to_int(r.get("year")), _to_int(r.get("week"))
+                if not zone or year_i is None or week_i is None:
+                    continue
+                key = (zone, year_i, week_i)
+                is_complete = (
+                    _to_int(r.get("era5t_n_days_in_week")) == 7
+                    and _to_int(r.get("chirps_n_days_in_week")) == 7
+                )
+                if is_complete:
+                    seen_complete.add(key)
+                else:
+                    incomplete_keys.add(key)
+    except Exception as exc:
+        logger.exception("_backfill_incomplete_climate_weeks: อ่าน %s ไม่สำเร็จ", csv_path)
+        result["errors"].append(f"read {csv_path}: {exc}")
+        return result
+
+    candidate_keys = sorted(incomplete_keys - seen_complete, key=lambda k: (k[1], k[2]), reverse=True)
+    candidate_keys = candidate_keys[:max_weeks_to_check]
+
+    backfilled_count = 0
+    for zone, year_i, week_i in candidate_keys:
+        result["checked"].append({"zone": zone, "year": year_i, "week": week_i})
+        try:
+            sunday = date.fromisocalendar(year_i, week_i, 7)
+        except ValueError as exc:
+            result["errors"].append(f"{zone} {year_i}-W{week_i:02d}: year/week ไม่ valid ({exc})")
+            continue
+
+        age_days = (as_of - sunday).days
+        if age_days < min_age_days:
+            result["skipped_too_recent"].append(
+                {"zone": zone, "year": year_i, "week": week_i, "age_days": age_days}
+            )
+            continue
+
+        if backfilled_count >= max_weeks_to_backfill:
+            result["still_incomplete"].append({
+                "zone": zone, "year": year_i, "week": week_i,
+                "reason": "ครบ quota backfill ของรอบนี้แล้ว (max_weeks_to_backfill) -- รอบถัดไปไล่ต่อ",
+            })
+            continue
+
+        try:
+            import chirps_feature
+            chirps_result = chirps_feature.get_chirps_feature(zone=zone, as_of_date=sunday)
+        except Exception as exc:
+            logger.exception("Backfill CHIRPS ล้มเหลว (%s %s-W%02d)", zone, year_i, week_i)
+            result["errors"].append(f"chirps backfill {zone} {year_i}-W{week_i:02d}: {exc}")
+            continue
+
+        try:
+            era5t_result = _fetch_era5t_via_subprocess(as_of_date=sunday, weekly=True)
+        except Exception as exc:
+            logger.exception("Backfill ERA5T ล้มเหลว (%s %s-W%02d)", zone, year_i, week_i)
+            result["errors"].append(f"era5t backfill {zone} {year_i}-W{week_i:02d}: {exc}")
+            continue
+
+        chirps_days = _to_int((chirps_result or {}).get("n_days_in_week"))
+        worker_output = (era5t_result or {}).get("worker_output") or {}
+        era5t_days = _to_int(worker_output.get("n_days_in_week"))
+
+        if chirps_days == 7 and era5t_days == 7:
+            et0_mm_week = worker_output.get("ET0_mm_week")
+            p_mm_week = (chirps_result or {}).get("p_mm_week")
+            row = {
+                "run_timestamp": datetime.now(timezone.utc).isoformat(),
+                "as_of_date": sunday.isoformat(),
+                "year": year_i, "week": week_i, "zone": zone,
+                "MEI": None, "MEI_lag4": None, "MEI_lag8": None,
+                "mei_reporting_lag_risk": None,
+                "mei_fetch_error": "backfill row -- ไม่ได้ re-fetch MEI (ดู docstring ฟังก์ชันนี้)",
+                "P_mm_week": p_mm_week,
+                "P_eff_mm": chirps_result.get("p_eff_mm"),
+                "P_mm_week_lag1": chirps_result.get("p_mm_week_lag1"),
+                "P_mm_week_lag2": chirps_result.get("p_mm_week_lag2"),
+                "P_mm_week_lag4": chirps_result.get("p_mm_week_lag4"),
+                "SPI_4": chirps_result.get("spi_4"),
+                "drought_flag": chirps_result.get("drought_flag"),
+                "chirps_data_type": chirps_result.get("data_type"),
+                "chirps_n_days_in_week": chirps_days,
+                "chirps_fetch_error": chirps_result.get("fetch_error"),
+                "ET0_mm_week": et0_mm_week,
+                "T_mean": worker_output.get("T_mean"),
+                "RH_pct": worker_output.get("RH_pct"),
+                "VPD_kPa": worker_output.get("VPD_kPa"),
+                "u2_ms": worker_output.get("u2_ms"),
+                "Rn_MJ": worker_output.get("Rn_MJ"),
+                "era5t_n_days_in_week": era5t_days,
+                "era5t_fetch_error": era5t_result.get("fetch_error"),
+                "AI_week": (et0_mm_week / p_mm_week) if (et0_mm_week is not None and p_mm_week) else None,
+                "AI_week_status": "backfilled 2026-07-18 (ดึงย้อนหลังหลังข้อมูล final ออกแล้ว)",
+                "NIR_A_m3": None, "GIR_B_m3": None,
+                "wd_area_basis": None,
+                "wd_nir_gir_status": "backfill row -- ไม่ได้คำนวณ NIR/GIR ย้อนหลัง (ดู docstring ฟังก์ชันนี้)",
+            }
+            try:
+                _append_ml_features_live([row], csv_path)
+                result["backfilled"].append({"zone": zone, "year": year_i, "week": week_i})
+                backfilled_count += 1
+                logger.info(
+                    "Backfill climate week สำเร็จ: %s %s-W%02d (era5t=%s/7, chirps=%s/7)",
+                    zone, year_i, week_i, era5t_days, chirps_days,
+                )
+            except Exception as exc:
+                logger.exception("Backfill append ล้มเหลว (%s %s-W%02d)", zone, year_i, week_i)
+                result["errors"].append(f"append backfill row {zone} {year_i}-W{week_i:02d}: {exc}")
+        else:
+            result["still_incomplete"].append({
+                "zone": zone, "year": year_i, "week": week_i,
+                "era5t_n_days_in_week": era5t_days, "chirps_n_days_in_week": chirps_days,
+                "reason": "re-fetch แล้วยังไม่ครบ 7/7 (provider อาจยังไม่ final จริง หรือมี gap จริงในสัปดาห์นั้น)",
+            })
+
+    return result
+
+
 def _fetch_climate_features_step(as_of_date: Optional[Any] = None) -> dict:
     """
     Integration step ที่เรียกต่อจาก Step 1 (telemetry) ใน run_pipeline() — เรียก MEI -> CHIRPS ->
@@ -1005,6 +1189,24 @@ def _fetch_climate_features_step(as_of_date: Optional[Any] = None) -> dict:
     except Exception as exc:
         logger.exception("append เข้า ml_features_live.csv ไม่สำเร็จ")
         result["errors"].append("append_ml_features_live: " + str(exc))
+
+    # 2026-07-18 เพิ่ม -- ไล่ backfill สัปดาห์เก่าที่เคย fetch ได้ไม่ครบ 7/7 วัน แต่ผ่านมานานพอที่
+    # ERA5T/CHIRPS ควรมีข้อมูล final ให้ดึงซ้ำได้แล้ว (ดู docstring _backfill_incomplete_climate_weeks())
+    # วางไว้ก่อน prediction_readiness ด้านล่างตั้งใจ -- ถ้า backfill สำเร็จรอบนี้ readiness จะเห็นผลทันที
+    try:
+        backfill_result = _backfill_incomplete_climate_weeks(as_of_date=as_of)
+        result["backfill"] = backfill_result
+        if backfill_result["backfilled"]:
+            logger.info(
+                "Backfill climate weeks: เติมสำเร็จ %d สัปดาห์ (%s)",
+                len(backfill_result["backfilled"]), backfill_result["backfilled"],
+            )
+        if backfill_result["errors"]:
+            logger.warning("Backfill climate weeks มี error บางส่วน: %s", backfill_result["errors"])
+    except Exception as exc:
+        logger.exception("_backfill_incomplete_climate_weeks() raise ออกมาโดยไม่คาดคิด (ควรไม่ raise ปกติ)")
+        result["errors"].append("backfill_climate_weeks: " + str(exc))
+        result["backfill"] = None
 
     prediction_readiness = {}
     for zone in ("zone_A", "zone_B"):

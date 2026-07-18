@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คาดการณ์น้ำท่วม | ข้อมูลประกอบการตัดสินใจเพื่อการบริหารจัดการน้ำ ตำบลแม่นาเรือ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --bg-950: #06161c; --bg-900: #081e26; --bg-800: #0d2a34; --bg-700: #123643;
+    --surface: rgba(255,255,255,0.045); --surface-hover: rgba(255,255,255,0.075);
+    --border: rgba(157,201,201,0.16); --border-strong: rgba(157,201,201,0.32);
+    --teal-300: #7fe0d1; --teal-400: #45c2ad; --teal-500: #2a9d8f; --teal-glow: rgba(69,194,173,0.35);
+    --amber-400: #e0a94f; --amber-300: #f0c47c;
+    --text-100: #eef6f4; --text-300: #c4d6d3; --text-500: #8aa3a0; --text-600: #66807d;
+    --radius-lg: 18px; --radius-md: 12px; --radius-sm: 8px;
+    --flag-normal: #2a9d8f; --flag-watch: #e0a94f; --flag-warning: #e0763f; --flag-critical: #e05252;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: radial-gradient(ellipse 1200px 700px at 15% -10%, #103743 0%, transparent 60%),
+                radial-gradient(ellipse 900px 600px at 100% 10%, #0e2f2a 0%, transparent 55%),
+                var(--bg-950);
+    color: var(--text-300); font-family: "IBM Plex Sans Thai", "Sarabun", sans-serif; line-height: 1.65; -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 { font-family: "Noto Serif Thai", "Space Grotesk", serif; color: var(--text-100); font-weight: 600; letter-spacing: 0.01em; margin: 0; }
+  a { color: inherit; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: "Space Grotesk", "IBM Plex Sans Thai", sans-serif; font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--teal-300); font-weight: 600; }
+  .eyebrow::before { content: ""; width: 16px; height: 1px; background: var(--teal-400); display: inline-block; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 40px; }
+  .num { font-family: "Space Grotesk", "IBM Plex Sans Thai", sans-serif; }
+
+  header.site-header { position: sticky; top: 0; z-index: 1200; background: rgba(6,22,28,0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+  .header-inner { max-width: 1240px; margin: 0 auto; padding: 16px 40px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; flex: 1 1 auto; min-width: 0; }
+  .brand-mark { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 35% 30%, rgba(127,224,209,0.35), transparent 70%); flex: none; }
+  .brand-mark svg { width: 18px; height: 18px; }
+  .brand-text-th { font-family: "Noto Serif Thai", serif; font-size: 14px; color: var(--text-100); font-weight: 600; line-height: 1.35; max-width: 320px; }
+  .brand-text-en { font-family: "Space Grotesk", sans-serif; font-size: 10px; letter-spacing: 0.06em; color: var(--text-500); margin-top: 2px; }
+  nav.main-nav { flex: none; display: flex; gap: 24px; align-items: center; }
+  nav.main-nav a { text-decoration: none; font-size: 13.5px; color: var(--text-500); font-weight: 500; padding: 6px 2px; border-bottom: 1px solid transparent; transition: color .2s, border-color .2s; white-space: nowrap; }
+  nav.main-nav a:hover { color: var(--teal-300); border-color: var(--teal-400); }
+  nav.main-nav a.current { color: var(--text-100); border-color: var(--amber-400); }
+  .nav-toggle { display: none; flex: none; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border-strong); background: var(--surface); align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .nav-toggle span { display: block; width: 18px; height: 2px; background: var(--text-100); border-radius: 2px; }
+  .nav-toggle span + span { margin-top: 4px; }
+  .mobile-nav { display: none; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: rgba(6,22,28,0.98); border-bottom: 1px solid var(--border); padding: 8px 24px 16px; }
+  .mobile-nav a { display: block; padding: 12px 4px; font-size: 14px; color: var(--text-300); text-decoration: none; border-bottom: 1px solid var(--border); }
+  .mobile-nav a:last-child { border-bottom: none; }
+  .mobile-nav a.current { color: var(--teal-300); font-weight: 600; }
+  .mobile-nav.open { display: flex; }
+
+  /* ===== แถบธงเตือนใหญ่ ===== */
+  .flag-banner { border-bottom: 1px solid var(--border); }
+  .flag-banner-inner { max-width: 1240px; margin: 0 auto; padding: 18px 40px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .flag-badge { display: inline-flex; align-items: center; gap: 10px; padding: 10px 20px; border-radius: 999px; font-weight: 700; font-size: 15.5px; color: #06161c; font-family: "IBM Plex Sans Thai", sans-serif; flex: none; }
+  .flag-badge .pulse { width: 10px; height: 10px; border-radius: 50%; background: rgba(6,22,28,0.55); animation: pulse 1.8s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .flag-msg { font-size: 13.5px; color: var(--text-100); flex: 1 1 320px; }
+  .flag-meta { font-size: 12px; color: var(--text-500); flex: none; text-align: right; }
+  .flag-normal-bg   { background: linear-gradient(90deg, rgba(42,157,143,0.16), transparent 70%); }
+  .flag-watch-bg    { background: linear-gradient(90deg, rgba(224,169,79,0.16), transparent 70%); }
+  .flag-warning-bg  { background: linear-gradient(90deg, rgba(224,118,63,0.18), transparent 70%); }
+  .flag-critical-bg { background: linear-gradient(90deg, rgba(224,82,82,0.22), transparent 70%); }
+  .stale-note { background: rgba(138,163,160,0.12); border: 1px solid var(--border-strong); color: var(--text-300); padding: 10px 16px; border-radius: var(--radius-sm); font-size: 12.5px; margin-top: 12px; display: none; }
+
+  .page-hero { padding: 42px 0 8px; }
+  .page-hero h1 { font-size: 30px; line-height: 1.3; margin: 14px 0 10px; }
+  .page-hero p.lead { color: var(--text-500); font-size: 14px; max-width: 720px; margin: 0; }
+
+  section.section { padding: 40px 0; }
+  section.section + section.section { border-top: 1px solid var(--border); }
+  .section-head { margin-bottom: 24px; }
+  .section-head h2 { font-size: 21px; margin-top: 8px; }
+  .section-head p { color: var(--text-500); font-size: 13px; margin: 6px 0 0; max-width: 640px; }
+
+  /* KPI */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 26px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 18px 20px; }
+  .kpi .label { font-size: 12px; color: var(--text-500); margin-bottom: 8px; }
+  .kpi .value { font-family: "Space Grotesk", "IBM Plex Sans Thai", sans-serif; font-size: 26px; font-weight: 600; color: var(--text-100); line-height: 1.1; }
+  .kpi .value small { font-size: 13px; color: var(--text-500); font-weight: 500; margin-left: 4px; }
+  .kpi .sub { font-size: 11.5px; color: var(--text-600); margin-top: 6px; }
+  .kpi .sub.up { color: var(--amber-300); }
+  .kpi .sub.down { color: var(--teal-300); }
+
+  /* chart */
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px; }
+  .chart-legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; color: var(--text-500); margin-bottom: 12px; }
+  .chart-legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .lg-line { width: 22px; height: 0; border-top: 2.5px solid; display: inline-block; }
+  .lg-box { width: 14px; height: 10px; display: inline-block; border-radius: 2px; }
+  #kwanChart { width: 100%; height: 360px; display: block; }
+
+  /* heatmap */
+  .heat-wrap { overflow-x: auto; }
+  table.heat { border-collapse: collapse; width: 100%; min-width: 640px; }
+  table.heat th, table.heat td { padding: 9px 12px; font-size: 12.5px; text-align: center; border: 1px solid rgba(157,201,201,0.10); }
+  table.heat th { color: var(--text-500); font-weight: 500; background: rgba(255,255,255,0.03); font-family: "Space Grotesk", "IBM Plex Sans Thai", sans-serif; }
+  table.heat td.rowname { text-align: left; color: var(--text-100); font-weight: 500; white-space: nowrap; }
+  table.heat td .cellv { font-family: "Space Grotesk", sans-serif; font-weight: 600; }
+  .heat-empty { background: var(--surface); border: 1px dashed var(--border-strong); border-radius: var(--radius-md); padding: 26px; text-align: center; color: var(--text-500); font-size: 13px; }
+
+  /* map */
+  #riskMap { height: 440px; border-radius: var(--radius-lg); border: 1px solid var(--border-strong); z-index: 1; }
+  .leaflet-container { background: #0d2a34; font-family: "IBM Plex Sans Thai", sans-serif; }
+  .map-note { font-size: 11.5px; color: var(--text-600); margin-top: 10px; }
+
+  /* reliability */
+  .rel-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
+  .rel-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px 22px; font-size: 13px; color: var(--text-300); }
+  .rel-card h4 { font-size: 14.5px; margin-bottom: 10px; }
+  .rel-card ul { margin: 0; padding-left: 18px; }
+  .rel-card li { margin-bottom: 6px; font-size: 12.5px; color: var(--text-500); }
+  .warn-li { color: var(--amber-300) !important; }
+
+  footer.site-footer { border-top: 1px solid var(--border); padding: 32px 0 40px; }
+  .footer-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+  .footer-inner p { margin: 0; font-size: 12px; color: var(--text-600); }
+
+  @media (max-width: 980px) {
+    .wrap, .header-inner, .flag-banner-inner { padding-left: 24px; padding-right: 24px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .rel-grid { grid-template-columns: 1fr; }
+    nav.main-nav { display: none; }
+    .nav-toggle { display: flex; }
+  }
+  @media (max-width: 560px) { .page-hero h1 { font-size: 24px; } .kpi-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 5 11 5 15.5C5 19.09 8.13 22 12 22C15.87 22 19 19.09 19 15.5C19 11 12 2 12 2Z" stroke="#7fe0d1" stroke-width="1.4"/></svg>
+      </span>
+      <span>
+        <div class="brand-text-th">ข้อมูลประกอบการตัดสินใจเพื่อการบริหารจัดการน้ำ ตำบลแม่นาเรือ</div>
+        <div class="brand-text-en">Decision support data for water management · Mae Na Rua</div>
+      </span>
+    </a>
+    <nav class="main-nav">
+      <a href="index.html">หน้าแรก</a>
+      <a href="water-demand.html">ความต้องการใช้น้ำ</a>
+      <a href="inflow-forecast.html">น้ำไหลลงอ่าง</a>
+      <a href="monitoring.html">สถานการณ์น้ำ</a>
+      <a href="flood-forecast.html" class="current">คาดการณ์น้ำท่วม</a>
+      <a href="gis-map.html">แผนที่ GIS</a>
+      <a href="research.html">งานวิจัย</a>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="เปิดเมนู" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="mobile-nav" id="mobileNav">
+      <a href="index.html">หน้าแรก</a>
+      <a href="water-demand.html">ความต้องการใช้น้ำ</a>
+      <a href="inflow-forecast.html">น้ำไหลลงอ่าง</a>
+      <a href="monitoring.html">สถานการณ์น้ำ</a>
+      <a href="flood-forecast.html" class="current">คาดการณ์น้ำท่วม</a>
+      <a href="gis-map.html">แผนที่ GIS</a>
+      <a href="research.html">งานวิจัย</a>
+    </nav>
+  </div>
+</header>
+<script>
+(function(){
+  var btn = document.getElementById('navToggle');
+  var panel = document.getElementById('mobileNav');
+  if (btn && panel) {
+    btn.addEventListener('click', function(){
+      var isOpen = panel.classList.toggle('open');
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+  }
+})();
+</script>
+
+<div class="flag-banner" id="flagBanner">
+  <div class="flag-banner-inner">
+    <span class="flag-badge" id="flagBadge" style="background: var(--text-600);"><span class="pulse"></span><span id="flagBadgeText">กำลังโหลด…</span></span>
+    <span class="flag-msg" id="flagMsg">กำลังโหลดข้อมูลพยากรณ์ล่าสุด</span>
+    <span class="flag-meta" id="flagMeta"></span>
+  </div>
+</div>
+
+<main>
+  <section class="page-hero">
+    <div class="wrap">
+      <div class="eyebrow">Flood Forecast · WMB Model</div>
+      <h1>คาดการณ์น้ำท่วม 7 วันข้างหน้า</h1>
+      <p class="lead">
+        แบบจำลองสมดุลมวลน้ำ (WMB) ครอบคลุมตำบลแม่นาเรือ บ้านตุ่น และแม่ใส —
+        พยากรณ์ระดับกว๊านพะเยา น้ำล้นตลิ่งรายลำน้ำ และพื้นที่เสี่ยง อัปเดตอัตโนมัติทุกวัน
+        จากสถานีโทรมาตรและแบบจำลองที่ผ่านการตรวจพิสูจน์ 3 ชุดข้อมูลอิสระ
+      </p>
+      <div class="stale-note" id="staleNote"></div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="label">ระดับกว๊านพะเยาวันนี้</div>
+          <div class="value num" id="kpiKwan">—<small>ม.รทก</small></div>
+          <div class="sub" id="kpiKwanSub">—</div></div>
+        <div class="kpi"><div class="label">ระยะห่างจากตลิ่งห้วยแม่นาเรือ (391.80)</div>
+          <div class="value num" id="kpiGap">—<small>ม.</small></div>
+          <div class="sub" id="kpiGapSub">ตลิ่งห้วยร่องไฮ 391.00 ม.</div></div>
+        <div class="kpi"><div class="label">ฝนสะสม 7 วันย้อนหลัง</div>
+          <div class="value num" id="kpiRain">—<small>มม.</small></div>
+          <div class="sub" id="kpiRainSub">ภูเขา — / ที่ราบ — มม.</div></div>
+        <div class="kpi"><div class="label">น้ำล้นคาดการณ์รวม 7 วัน</div>
+          <div class="value num" id="kpiOv">—<small>ล้าน ลบ.ม.</small></div>
+          <div class="sub" id="kpiOvSub">—</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">Kwan Phayao Level</div>
+        <h2>ระดับกว๊านพะเยา — ย้อนหลัง 30 วัน และพยากรณ์ 7 วัน</h2>
+        <p>เส้นประคือค่าพยากรณ์ พร้อมช่วงความไม่แน่นอน P10–P90 จากการทดสอบย้อนหลัง 18 เดือน
+           — ระดับกว๊านคือกลไกหลักของน้ำท่วมริมตลิ่ง (backwater)</p>
+      </div>
+      <div class="chart-card">
+        <div class="chart-legend">
+          <span><span class="lg-line" style="border-color:#7fe0d1"></span>ระดับตรวจวัดจริง</span>
+          <span><span class="lg-line" style="border-color:#f0c47c; border-top-style:dashed"></span>พยากรณ์ (ค่ากลาง)</span>
+          <span><span class="lg-box" style="background:rgba(240,196,124,0.18)"></span>ช่วง P10–P90</span>
+          <span><span class="lg-line" style="border-color:#e05252; border-top-style:dotted"></span>ตลิ่งห้วยแม่นาเรือ 391.80</span>
+          <span><span class="lg-line" style="border-color:#e0763f; border-top-style:dotted"></span>ตลิ่งห้วยร่องไฮ 391.00</span>
+        </div>
+        <canvas id="kwanChart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">Overflow Heatmap</div>
+        <h2>น้ำล้นตลิ่งคาดการณ์ รายลำน้ำ × รายวัน</h2>
+        <p>ปริมาณน้ำล้นจากแบบจำลอง WMB (ล้าน ลบ.ม./วัน) — สีเข้มขึ้นตามปริมาณ
+           สมมุติฐานฝนล่วงหน้า = ไม่มีฝนเพิ่ม (ค่าประมาณด้านต่ำ)</p>
+      </div>
+      <div id="heatContainer" class="heat-wrap"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">Risk Map</div>
+        <h2>แผนที่จุดเสี่ยง</h2>
+        <p>สีของแต่ละจุดตามระดับเตือนของลำน้ำนั้นใน 7 วันข้างหน้า — คลิกดูรายละเอียด</p>
+      </div>
+      <div id="riskMap"></div>
+      <p class="map-note">แนวลำน้ำจากการสำรวจ/KML ของโครงการ | อ่างเก็บน้ำ 7 แห่ง (รวมห้วยตุ่นและห้วยม่วง ตำบลบ้านตุ่น) |
+         ตำแหน่งจุดเสี่ยง = ปลายลำน้ำฝั่งกว๊าน</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">Reliability</div>
+        <h2>ความน่าเชื่อถือและคุณภาพข้อมูลวันนี้</h2>
+      </div>
+      <div class="rel-grid">
+        <div class="rel-card">
+          <h4>ขอบเขตของแบบจำลอง</h4>
+          <ul id="modelInfoList">
+            <li>กำลังโหลด…</li>
+          </ul>
+        </div>
+        <div class="rel-card">
+          <h4>คำเตือนคุณภาพข้อมูล (จากรอบประมวลผลล่าสุด)</h4>
+          <ul id="warnList"><li>—</li></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div>
+      <div class="brand-text-th">ข้อมูลประกอบการตัดสินใจเพื่อการบริหารจัดการน้ำ ตำบลแม่นาเรือ</div>
+      <p style="margin-top:4px;">School of ICT มหาวิทยาลัยพะเยา ร่วมกับ Hydro-Informatics Institute (HII)</p>
+    </div>
+    <p id="footerStatus">คาดการณ์น้ำท่วม · WMB model</p>
+  </div>
+</footer>
+
+<script>
+const DATA_ENDPOINT = 'assets/data/flood_latest.json';
+const CANALS_GJ = 'assets/data/wmb_canals.geojson.json';
+const RES_GJ = 'assets/data/wmb_reservoirs7.geojson.json';
+const STALE_HOURS = 48;
+
+const FLAG = {
+  normal:   { th: 'ปกติ',      color: 'var(--flag-normal)',   bg: 'flag-normal-bg',   hex: '#2a9d8f' },
+  watch:    { th: 'เฝ้าระวัง', color: 'var(--flag-watch)',    bg: 'flag-watch-bg',    hex: '#e0a94f' },
+  warning:  { th: 'เตือนภัย',  color: 'var(--flag-warning)',  bg: 'flag-warning-bg',  hex: '#e0763f' },
+  critical: { th: 'วิกฤต',     color: 'var(--flag-critical)', bg: 'flag-critical-bg', hex: '#e05252' },
+};
+const LV = ['normal', 'watch', 'warning', 'critical'];
+
+function fmt(n, d) {
+  if (n === null || n === undefined || Number.isNaN(n)) return '—';
+  return Number(n).toLocaleString('en-US', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+}
+function thDate(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+}
+
+async function main() {
+  let data;
+  try {
+    const r = await fetch(DATA_ENDPOINT, { cache: 'no-store' });
+    data = await r.json();
+  } catch (e) {
+    document.getElementById('flagBadgeText').textContent = 'ไม่พบข้อมูล';
+    document.getElementById('flagMsg').textContent =
+      'โหลดข้อมูลพยากรณ์ไม่สำเร็จ — ตรวจสอบว่า pipeline รายวันทำงานอยู่ หรือดูสถานการณ์น้ำสดที่หน้า "สถานการณ์น้ำ"';
+    return;
+  }
+  render(data);
+}
+
+function render(d) {
+  // ---------- staleness ----------
+  const gen = new Date(d.generated_at.replace(' ', 'T'));
+  const ageH = (Date.now() - gen.getTime()) / 36e5;
+  let flag = FLAG[d.flags.overall] || FLAG.normal;
+  if (ageH > STALE_HOURS) {
+    const sn = document.getElementById('staleNote');
+    sn.style.display = 'block';
+    sn.textContent = 'ข้อมูลไม่ได้อัปเดตตั้งแต่ ' + d.generated_at +
+      ' (' + Math.round(ageH) + ' ชม.ที่แล้ว) — ธงเตือนด้านบนอาจไม่สะท้อนสถานการณ์ปัจจุบัน';
+  }
+  // ---------- ธง ----------
+  const banner = document.getElementById('flagBanner');
+  banner.classList.add(flag.bg);
+  const badge = document.getElementById('flagBadge');
+  badge.style.background = flag.hex;
+  document.getElementById('flagBadgeText').textContent = 'ระดับ: ' + flag.th;
+  document.getElementById('flagMsg').textContent = d.flags.message;
+  document.getElementById('flagMeta').innerHTML =
+    'วันฐานพยากรณ์ <span class="num">' + d.base_date + '</span><br>อัปเดต <span class="num">' + d.generated_at + '</span>';
+  document.getElementById('footerStatus').textContent =
+    'อัปเดตอัตโนมัติรายวัน · รอบล่าสุด ' + d.generated_at;
+
+  // ---------- KPI ----------
+  document.getElementById('kpiKwan').innerHTML = fmt(d.kwan_now.level, 2) + '<small>ม.รทก</small>';
+  const ch = d.kwan_now.change_3d;
+  const sub = document.getElementById('kpiKwanSub');
+  if (ch !== null && ch !== undefined) {
+    sub.textContent = (ch >= 0 ? '▲ +' : '▼ ') + fmt(ch, 2) + ' ม. ใน 3 วัน';
+    sub.className = 'sub ' + (ch > 0.01 ? 'up' : 'down');
+  }
+  const gap = d.banks.Mae_Main1 - d.kwan_now.level;
+  document.getElementById('kpiGap').innerHTML = fmt(gap, 2) + '<small>ม.</small>';
+  document.getElementById('kpiRain').innerHTML =
+    fmt((d.rain_7d.mtn + d.rain_7d.low) / 2, 0) + '<small>มม.</small>';
+  document.getElementById('kpiRainSub').textContent =
+    'ภูเขา ' + fmt(d.rain_7d.mtn, 0) + ' / ที่ราบ ' + fmt(d.rain_7d.low, 0) + ' มม.';
+  document.getElementById('kpiOv').innerHTML =
+    fmt(d.overflow_total_7d, 2) + '<small>ล้าน ลบ.ม.</small>';
+  document.getElementById('kpiOvSub').textContent = d.overflow_forecast.length
+    ? 'พบจุดเสี่ยง ' + new Set(d.overflow_forecast.map(x => x.node)).size + ' ลำน้ำ'
+    : 'ไม่มีน้ำล้นคาดการณ์';
+
+  drawChart(d);
+  drawHeat(d);
+  drawMap(d);
+
+  // ---------- reliability ----------
+  document.getElementById('modelInfoList').innerHTML =
+    d.model_info.split('|').map(x => '<li>' + x.trim() + '</li>').join('') +
+    '<li>สมมุติฐานฝนล่วงหน้า = 0 มม. (ค่าประมาณด้านต่ำ) — ช่วงพายุควรติดตามรายวัน</li>';
+  document.getElementById('warnList').innerHTML = (d.warnings && d.warnings.length)
+    ? d.warnings.map(w => '<li class="warn-li">' + w + '</li>').join('')
+    : '<li>ไม่มีคำเตือน — ข้อมูลครบถ้วน</li>';
+}
+
+// ---------- กราฟ canvas ----------
+function drawChart(d) {
+  const cv = document.getElementById('kwanChart');
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth, H = 360;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const ctx = cv.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const obs = d.kwan_observed_30d, fc = d.kwan_forecast;
+  const all = obs.map(o => ({ x: o.date, y: o.level }))
+    .concat(fc.map(f => ({ x: f.date, y: f.level })));
+  const ys = all.map(p => p.y).concat(fc.map(f => f.p10), fc.map(f => f.p90),
+                                      [d.banks.Mae_Main1, d.banks.RongHai]);
+  let ymin = Math.min(...ys) - 0.15, ymax = Math.max(...ys) + 0.15;
+  const n = obs.length + fc.length;
+  const padL = 56, padR = 16, padT = 14, padB = 34;
+  const xw = (W - padL - padR) / (n - 1);
+  const X = i => padL + i * xw;
+  const Y = v => padT + (ymax - v) / (ymax - ymin) * (H - padT - padB);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.font = '11px Space Grotesk, sans-serif';
+  // grid แนวนอน
+  const step = (ymax - ymin) > 1.6 ? 0.5 : 0.25;
+  for (let v = Math.ceil(ymin / step) * step; v <= ymax; v += step) {
+    ctx.strokeStyle = 'rgba(157,201,201,0.08)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, Y(v)); ctx.lineTo(W - padR, Y(v)); ctx.stroke();
+    ctx.fillStyle = '#66807d'; ctx.textAlign = 'right';
+    ctx.fillText(v.toFixed(2), padL - 8, Y(v) + 3.5);
+  }
+  // เส้นตลิ่ง
+  [[d.banks.Mae_Main1, '#e05252'], [d.banks.RongHai, '#e0763f']].forEach(([b, c]) => {
+    ctx.strokeStyle = c; ctx.setLineDash([2, 4]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(padL, Y(b)); ctx.lineTo(W - padR, Y(b)); ctx.stroke();
+    ctx.setLineDash([]);
+  });
+  // แถบ P10-P90
+  ctx.fillStyle = 'rgba(240,196,124,0.16)';
+  ctx.beginPath();
+  fc.forEach((f, i) => { const x = X(obs.length - 1 + i + 1); i === 0 ? ctx.moveTo(x, Y(f.p90)) : ctx.lineTo(x, Y(f.p90)); });
+  for (let i = fc.length - 1; i >= 0; i--) ctx.lineTo(X(obs.length + i), Y(fc[i].p10));
+  ctx.closePath(); ctx.fill();
+  // เส้น observed
+  ctx.strokeStyle = '#7fe0d1'; ctx.lineWidth = 2.2; ctx.beginPath();
+  obs.forEach((o, i) => i === 0 ? ctx.moveTo(X(i), Y(o.level)) : ctx.lineTo(X(i), Y(o.level)));
+  ctx.stroke();
+  // เส้น forecast (ต่อจากจุดสุดท้าย observed)
+  ctx.strokeStyle = '#f0c47c'; ctx.lineWidth = 2.2; ctx.setLineDash([6, 5]);
+  ctx.beginPath();
+  ctx.moveTo(X(obs.length - 1), Y(obs[obs.length - 1].level));
+  fc.forEach((f, i) => ctx.lineTo(X(obs.length + i), Y(f.level)));
+  ctx.stroke(); ctx.setLineDash([]);
+  // จุด forecast
+  fc.forEach((f, i) => {
+    ctx.fillStyle = '#f0c47c'; ctx.beginPath();
+    ctx.arc(X(obs.length + i), Y(f.level), 3, 0, Math.PI * 2); ctx.fill();
+  });
+  // แกน x labels (ทุก ~6 จุด + วัน forecast ทุกวัน)
+  ctx.fillStyle = '#66807d'; ctx.textAlign = 'center';
+  all.forEach((p, i) => {
+    const isFc = i >= obs.length;
+    if ((i % 6 === 0 && !isFc) || isFc) {
+      ctx.fillStyle = isFc ? '#8aa3a0' : '#66807d';
+      ctx.fillText(thDate(p.x), X(i), H - 12);
+    }
+  });
+  // เส้นแบ่ง วันนี้
+  const xNow = X(obs.length - 1);
+  ctx.strokeStyle = 'rgba(238,246,244,0.25)'; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(xNow, padT); ctx.lineTo(xNow, H - padB); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#8aa3a0'; ctx.textAlign = 'left';
+  ctx.fillText('วันนี้', xNow + 5, padT + 10);
+}
+
+// ---------- heatmap ----------
+function drawHeat(d) {
+  const el = document.getElementById('heatContainer');
+  const days = d.kwan_forecast.map(f => f.date);
+  if (!d.overflow_forecast.length) {
+    el.innerHTML = '<div class="heat-empty">✅ แบบจำลองไม่คาดการณ์น้ำล้นตลิ่งในทุกลำน้ำตลอด 7 วันข้างหน้า (ภายใต้สมมุติฐานไม่มีฝนเพิ่ม)</div>';
+    return;
+  }
+  const nodes = {};
+  d.overflow_forecast.forEach(r => {
+    if (!nodes[r.node]) nodes[r.node] = { name: r.name_th, vals: {} };
+    nodes[r.node].vals[r.date] = r.mcm;
+  });
+  const maxv = Math.max(...d.overflow_forecast.map(r => r.mcm));
+  let html = '<table class="heat"><tr><th style="text-align:left">ลำน้ำ</th>' +
+    days.map(dd => '<th>' + thDate(dd) + '</th>').join('') + '</tr>';
+  Object.keys(nodes).forEach(k => {
+    html += '<tr><td class="rowname">' + nodes[k].name + '</td>';
+    days.forEach(dd => {
+      const v = nodes[k].vals[dd];
+      if (v === undefined) { html += '<td style="color:#41565a">·</td>'; }
+      else {
+        const t = Math.min(1, v / (maxv || 1));
+        const bg = 'rgba(224,' + Math.round(150 - 70 * t) + ',' + Math.round(79 - 30 * t) + ',' + (0.18 + 0.5 * t).toFixed(2) + ')';
+        html += '<td style="background:' + bg + '"><span class="cellv">' + fmt(v, v < 0.01 ? 3 : 2) + '</span></td>';
+      }
+    });
+    html += '</tr>';
+  });
+  html += '</table>';
+  el.innerHTML = html;
+}
+
+// ---------- แผนที่ ----------
+function nodeFlagLevel(d, node) {
+  const rows = d.overflow_forecast.filter(r => r.node === node);
+  const mx = rows.length ? Math.max(...rows.map(r => r.mcm)) : 0;
+  let lv = mx > 0.2 ? 3 : mx > 0.05 ? 2 : mx > 0.001 ? 1 : 0;
+  if ((node === 'Mae_Main1' || node === 'RongHai') && LV.indexOf(d.flags.kwan) > lv)
+    lv = LV.indexOf(d.flags.kwan);
+  return LV[lv];
+}
+function drawMap(d) {
+  const map = L.map('riskMap', { scrollWheelZoom: false })
+    .setView([19.115, 99.87], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    { attribution: '© OpenStreetMap', opacity: 0.75 }).addTo(map);
+  fetch(CANALS_GJ).then(r => r.json()).then(gj => {
+    L.geoJSON(gj, { style: { color: '#45c2ad', weight: 1.6, opacity: 0.75 } }).addTo(map);
+  }).catch(() => {});
+  fetch(RES_GJ).then(r => r.json()).then(gj => {
+    L.geoJSON(gj, {
+      style: { color: '#7fe0d1', weight: 1.5, fillColor: '#2a9d8f', fillOpacity: 0.55 },
+      onEachFeature: (f, ly) => ly.bindPopup('<b>' + (f.properties.Name_T || f.properties.Name) + '</b>')
+    }).addTo(map);
+  }).catch(() => {});
+  Object.entries(d.nodes).forEach(([node, p]) => {
+    const lv = nodeFlagLevel(d, node);
+    const f = FLAG[lv];
+    const rows = d.overflow_forecast.filter(r => r.node === node);
+    const total = rows.reduce((s, r) => s + r.mcm, 0);
+    L.circleMarker([p.lat, p.lon], {
+      radius: lv === 'normal' ? 6 : 9, color: '#06161c', weight: 1.5,
+      fillColor: f.hex, fillOpacity: 0.95,
+    }).addTo(map).bindPopup(
+      '<b>' + p.name_th + '</b><br>ระดับเตือน: ' + f.th +
+      (total > 0 ? '<br>น้ำล้นคาดการณ์รวม ' + fmt(total, 2) + ' ล้าน ลบ.ม./7 วัน' : '<br>ไม่มีน้ำล้นคาดการณ์')
+    );
+  });
+}
+
+main();
+window.addEventListener('resize', () => {
+  fetch(DATA_ENDPOINT, { cache: 'force-cache' }).then(r => r.json()).then(drawChart).catch(() => {});
+});
+</script>
+
+</body>
+</html>
