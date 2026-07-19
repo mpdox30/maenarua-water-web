@@ -30,3 +30,10 @@ __pycache__/
 # Google Drive หรือ Git LFS แยกต่างหาก ไม่ใช่ commit ตรงเข้า repo นี้
 01_data/scripts and code/Water_demand/active/catboost_models.pkl
 01_data/scripts and code/Water_demand/active/rf_model_v3b_final.pkl
+
+# --- 2026-07-20 เพิ่ม — ไฟล์นี้มี password จริงของ API สถานีโทรมาตร (กช.สสน.) ฝังอยู่ตรงๆ ---
+# หลุดติดไปกับ git commit ก่อนหน้านี้ จนถูกดันขึ้น GitHub และ repo ถูกเปลี่ยนเป็น public ไปแล้วตอนที่
+# พบ (2026-07-20) ได้ลบออกจาก git history ทั้งหมดด้วย git filter-repo แล้ว + ขอรหัสผ่านใหม่จาก
+# กช.สสน. มาแทนตัวเดิมที่ถือว่ารั่วแล้ว ไฟล์ยังอยู่บนดิสก์ตามปกติ (ไว้เป็น reference คนละจุดกับ
+# environment variable TELEMETRY_API_URL ที่ telemetry_feature.py อ่านจริง) แค่ไม่ track ใน git อีกต่อไป
+01_data/telemetry/Tele_API_Address.txt
