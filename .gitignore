@@ -37,3 +37,12 @@ __pycache__/
 # กช.สสน. มาแทนตัวเดิมที่ถือว่ารั่วแล้ว ไฟล์ยังอยู่บนดิสก์ตามปกติ (ไว้เป็น reference คนละจุดกับ
 # environment variable TELEMETRY_API_URL ที่ telemetry_feature.py อ่านจริง) แค่ไม่ track ใน git อีกต่อไป
 01_data/telemetry/Tele_API_Address.txt
+
+# --- 2026-07-20 เพิ่ม — เอกสารประกอบ manuscript (draft) ---
+# ลบออกจาก git history ทั้งหมดแล้วด้วย git filter-repo (2026-07-20) ตามที่ผู้ใช้ขอ เพราะ repo
+# เปลี่ยนเป็น public แล้ว และ PROJECT_MEMORY.md ระบุชัดว่าห้ามเอา draft manuscript ไปแสดงในส่วน
+# สาธารณะ — research.html อ้างอิงไฟล์ในนี้ด้วย relative path "../04_docs_research/..." แต่ path นี้
+# พังอยู่แล้วบน GitHub Pages ที่ deploy จริง (workflow publish แค่ 03_website/ เป็น root ไม่รวม
+# โฟลเดอร์นี้อยู่แล้ว) ลบออกจึงไม่กระทบเว็บ live เพิ่มเติม ไฟล์ยังอยู่บนดิสก์ตามปกติสำหรับดูผ่าน local
+# server เท่านั้น แค่ไม่ track ใน git อีกต่อไป
+04_docs_research/
