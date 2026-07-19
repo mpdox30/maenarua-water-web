@@ -114,7 +114,7 @@
   }
   .brand-mark svg { width: 18px; height: 18px; }
   .brand-text-th { font-family: "Noto Serif Thai", serif; font-size: 14px; color: var(--text-100); font-weight: 600; line-height: 1.35; max-width: 320px; }
-  .brand-text-en { font-family: "Space Grotesk", sans-serif; font-size: 10px; letter-spacing: 0.06em; text-transform: none; color: var(--text-500); margin-top: 2px; }
+  .brand-text-en { font-family: "Space Grotesk", sans-serif; font-size: 10px; letter-spacing: 0.06em; text-transform: none; color: var(--text-500); margin-top: 2px; line-height: 1.5; }
   nav.main-nav { flex: none; }
 
   nav.main-nav { display: flex; gap: 28px; align-items: center; }
@@ -217,18 +217,18 @@
   .btn-outline:hover { background: var(--surface-hover); border-color: var(--teal-400); }
 
   /* hero graphic: real isometric terrain illustration + orbiting satellite rings */
-  .hero-art { position: relative; display: flex; align-items: center; justify-content: center; height: 420px; }
+  .hero-art { position: relative; display: flex; align-items: center; justify-content: center; height: 520px; }
   .hero-art .terrain-img {
     position: relative;
     z-index: 1;
-    max-width: 62%;
-    max-height: 62%;
+    max-width: 85%;
+    max-height: 85%;
     width: auto;
     height: auto;
     object-fit: contain;
     filter: drop-shadow(0 18px 32px rgba(0,0,0,0.55)) drop-shadow(0 0 20px rgba(69,194,173,0.18));
   }
-  .hero-art .orbit-svg { position: absolute; inset: 0; width: 100%; height: 100%; max-width: 440px; margin: auto; pointer-events: none; z-index: 2; }
+  .hero-art .orbit-svg { position: absolute; inset: 0; width: 100%; height: 100%; max-width: 528px; margin: auto; pointer-events: none; z-index: 2; }
   .ring { fill: none; stroke: rgba(127,224,209,0.22); stroke-width: 1; }
   .ring-dash { stroke-dasharray: 2 7; stroke: rgba(224,169,79,0.4); }
   .satellite { filter: drop-shadow(0 0 5px rgba(127,224,209,0.6)); }
@@ -236,8 +236,8 @@
   @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   @keyframes spin-slow-rev { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
   @keyframes pulse { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
-  .orbit-1 { transform-origin: 220px 220px; animation: spin-slow 40s linear infinite; }
-  .orbit-2 { transform-origin: 220px 220px; animation: spin-slow-rev 58s linear infinite; }
+  .orbit-1 { transform-origin: 264px 260px; animation: spin-slow 40s linear infinite; }
+  .orbit-2 { transform-origin: 264px 260px; animation: spin-slow-rev 58s linear infinite; }
   .pulse { animation: pulse 3.2s ease-in-out infinite; }
 
   /* ---------- SECTION shared ---------- */
@@ -334,36 +334,42 @@
   .nav-card .go { font-size: 12px; color: var(--teal-300); font-weight: 600; display: flex; align-items: center; gap: 6px; }
   .nav-card:hover .go { color: var(--amber-300); }
 
-  /* ---------- MAP TEASER ---------- */
-  .map-teaser {
-    display: grid;
-    grid-template-columns: 0.9fr 1.1fr;
-    gap: 40px;
-    align-items: center;
-  }
-  .map-box {
-    height: 300px;
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border);
-    background:
-      linear-gradient(160deg, rgba(69,194,173,0.10), rgba(6,22,28,0.4)),
-      repeating-linear-gradient(0deg, rgba(157,201,201,0.05) 0 1px, transparent 1px 34px),
-      repeating-linear-gradient(90deg, rgba(157,201,201,0.05) 0 1px, transparent 1px 34px),
-      var(--bg-900);
-    position: relative;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--text-500);
-    font-size: 13px;
-    text-align: center;
-    padding: 0;
-    overflow: hidden;
-  }
-  .map-box .leaflet-container { background: transparent; font-family: "IBM Plex Sans Thai", sans-serif; }
-  .map-box .leaflet-control-attribution { font-size: 9px; background: rgba(6,22,28,0.6); color: var(--text-600); }
-  .map-box .leaflet-control-attribution a { color: var(--text-500); }
-  .map-box-fallback { padding: 20px; }
-  .map-legend { display: flex; gap: 20px; margin-top: 16px; font-size: 12.5px; color: var(--text-500); flex-wrap: wrap; }
+  /* ---------- แผนที่แบบโต้ตอบ (ย้ายมาจาก gis-map.html แทนที่ map-teaser เดิม) ---------- */
+  .map-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
+  #map { height: 560px; width: 100%; border-radius: var(--radius-md); border: 1px solid var(--border); }
+  .map-controls { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; align-items: center; }
+  .layer-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-300); cursor: pointer; user-select: none; }
+  .layer-toggle input { accent-color: #45c2ad; width: 14px; height: 14px; }
   .legend-dot { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 7px; vertical-align: middle; }
+  .leaflet-popup-content-wrapper { background: #0d2a34; color: #eef6f4; border-radius: 10px; }
+  .leaflet-popup-tip { background: #0d2a34; }
+  .leaflet-popup-content { font-family: "IBM Plex Sans Thai", sans-serif; font-size: 12.5px; }
+  .leaflet-popup-content b { color: #7fe0d1; }
+  .leaflet-control-attribution { background: rgba(6,22,28,0.7) !important; color: var(--text-500) !important; }
+  .leaflet-control-attribution a { color: var(--teal-300) !important; }
+  .basemap-control { background: rgba(8,30,38,0.88); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid var(--border-strong); border-radius: 10px; padding: 4px; display: flex; gap: 2px; box-shadow: 0 4px 14px rgba(0,0,0,0.35); margin: 8px !important; }
+  .basemap-control button { background: transparent; border: none; color: var(--text-500); font-family: "IBM Plex Sans Thai", sans-serif; font-size: 11.5px; font-weight: 500; padding: 6px 11px; border-radius: 7px; cursor: pointer; transition: background .15s, color .15s; white-space: nowrap; }
+  .basemap-control button:hover { color: var(--text-100); background: var(--surface-hover); }
+  .basemap-control button.active { background: var(--teal-400); color: #06161c; font-weight: 600; }
+
+  /* ---------- SAR crop classification + รายชื่อหมู่บ้าน (ย้ายมาจาก gis-map.html) ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
+  .badge-ok { background: rgba(69,194,173,0.14); color: var(--teal-300); border: 1px solid rgba(69,194,173,0.35); }
+  .badge-low { background: rgba(224,169,79,0.16); color: var(--amber-300); border: 1px solid rgba(224,169,79,0.42); }
+  .badge-blocked { background: rgba(226,102,90,0.16); color: #f3a89f; border: 1px solid rgba(226,102,90,0.42); }
+  .disclaimer-box { margin-top: 22px; padding: 18px 22px; border-radius: var(--radius-md); background: rgba(224,169,79,0.06); border: 1px solid rgba(224,169,79,0.26); }
+  .disclaimer-box h4 { font-size: 13px; color: var(--amber-300); margin-bottom: 10px; font-family: "IBM Plex Sans Thai", sans-serif; font-weight: 600; }
+  .disclaimer-box ul { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--text-500); }
+  .disclaimer-box li { margin-bottom: 6px; }
+  .disclaimer-box li:last-child { margin-bottom: 0; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.data-table th, table.data-table td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+  table.data-table th { color: var(--text-500); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.04em; }
+  table.data-table td { color: var(--text-300); }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table td.hl { color: var(--teal-300); font-weight: 600; }
+  .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 8px 20px; overflow-x: auto; }
+  .table-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
 
   .access-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
   .access-card {
@@ -389,18 +395,20 @@
   @media (max-width: 980px) {
     .wrap, .header-inner, .status-bar-inner { padding-left: 24px; padding-right: 24px; }
     .hero-grid { grid-template-columns: 1fr; }
-    .hero-art { order: -1; height: 280px; }
+    .hero-art { order: -1; height: 340px; }
     .kpi-grid { grid-template-columns: repeat(2, 1fr); }
     .card-grid { grid-template-columns: 1fr 1fr; }
-    .map-teaser { grid-template-columns: 1fr; }
     .access-grid { grid-template-columns: 1fr; }
+    .table-grid-2 { grid-template-columns: 1fr; }
     nav.main-nav { display: none; }
     .nav-toggle { display: flex; }
+    #map { height: 420px; }
   }
   @media (max-width: 560px) {
     .hero h1 { font-size: 30px; }
     .kpi-grid { grid-template-columns: 1fr; }
     .card-grid { grid-template-columns: 1fr; }
+    .basemap-control { flex-wrap: wrap; max-width: 160px; }
   }
 </style>
 </head>
@@ -414,29 +422,27 @@
       </span>
       <span>
         <div class="brand-text-th">ข้อมูลประกอบการตัดสินใจเพื่อการบริหารจัดการน้ำ ตำบลแม่นาเรือ</div>
-        <div class="brand-text-en">Decision support data for water management · Mae Na Rua</div>
+        <div class="brand-text-en">Decision support data for water management<br>Mae Na Rua Subdistrict</div>
       </span>
     </a>
     <nav class="main-nav">
       <a href="index.html" class="current">หน้าแรก</a>
-      <a href="water-demand.html">ความต้องการใช้น้ำ</a>
-      <a href="inflow-forecast.html">น้ำไหลลงอ่าง</a>
       <a href="monitoring.html">สถานการณ์น้ำ</a>
+      <a href="inflow-forecast.html">คาดการณ์น้ำไหลลงอ่าง</a>
+      <a href="water-demand.html">คาดการณ์ความต้องการใช้น้ำ</a>
       <a href="flood-forecast.html">คาดการณ์น้ำท่วม</a>
-      <a href="gis-map.html">แผนที่ GIS</a>
-      <a href="research.html">งานวิจัย</a>
+      <a href="research.html">ดาวน์โหลดเอกสาร</a>
     </nav>
     <button class="nav-toggle" id="navToggle" aria-label="เปิดเมนู" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
     <nav class="mobile-nav" id="mobileNav">
       <a href="index.html" class="current">หน้าแรก</a>
-      <a href="water-demand.html">ความต้องการใช้น้ำ</a>
-      <a href="inflow-forecast.html">น้ำไหลลงอ่าง</a>
       <a href="monitoring.html">สถานการณ์น้ำ</a>
+      <a href="inflow-forecast.html">คาดการณ์น้ำไหลลงอ่าง</a>
+      <a href="water-demand.html">คาดการณ์ความต้องการใช้น้ำ</a>
       <a href="flood-forecast.html">คาดการณ์น้ำท่วม</a>
-      <a href="gis-map.html">แผนที่ GIS</a>
-      <a href="research.html">งานวิจัย</a>
+      <a href="research.html">ดาวน์โหลดเอกสาร</a>
     </nav>
   </div>
 </header>
@@ -480,25 +486,24 @@
         </div>
         <div class="hero-cta">
           <a class="btn btn-primary" href="water-demand.html">ดูข้อมูลพยากรณ์ →</a>
-          <a class="btn btn-outline" href="gis-map.html">เปิดแผนที่พื้นที่</a>
         </div>
       </div>
 
       <div class="hero-art">
-        <img class="terrain-img" src="assets/img/mae-na-rua-isometric.png" alt="ภาพจำลอง 3D isometric พื้นที่ตำบลแม่นาเรือ แสดงภูเขา ป่า อ่างเก็บน้ำ และแปลงเกษตร">
-        <svg class="orbit-svg" viewBox="0 0 440 440" xmlns="http://www.w3.org/2000/svg">
-          <circle class="ring" cx="220" cy="220" r="214"/>
-          <circle class="ring ring-dash" cx="220" cy="220" r="178"/>
+        <img class="terrain-img" src="assets/img/mae-na-rua-isometric.svg" alt="ภาพจำลอง 3D isometric พื้นที่ตำบลแม่นาเรือ แสดงภูเขา ป่า อ่างเก็บน้ำ แปลงเกษตร และโดรนสำรวจ">
+        <svg class="orbit-svg" viewBox="0 0 528 520" xmlns="http://www.w3.org/2000/svg">
+          <circle class="ring" cx="264" cy="260" r="250"/>
+          <circle class="ring ring-dash" cx="264" cy="260" r="225"/>
 
           <g class="orbit-1">
-            <g class="satellite" transform="translate(220,6)">
+            <g class="satellite" transform="translate(264,10)">
               <line x1="0" y1="0" x2="0" y2="9" stroke="#7fe0d1" stroke-width="1"/>
               <circle cx="0" cy="0" r="1.3" fill="#7fe0d1"/>
               <rect x="-6" y="9" width="12" height="6" rx="1.5" fill="#0d2a34" stroke="#7fe0d1" stroke-width="1"/>
               <rect x="-17" y="10.5" width="9" height="3" fill="none" stroke="#7fe0d1" stroke-width="1"/>
               <rect x="8" y="10.5" width="9" height="3" fill="none" stroke="#7fe0d1" stroke-width="1"/>
             </g>
-            <g class="satellite" transform="translate(384,83) rotate(35)">
+            <g class="satellite" transform="translate(456,100) rotate(35)">
               <line x1="0" y1="0" x2="0" y2="9" stroke="#7fe0d1" stroke-width="1"/>
               <circle cx="0" cy="0" r="1.3" fill="#7fe0d1"/>
               <rect x="-6" y="9" width="12" height="6" rx="1.5" fill="#0d2a34" stroke="#7fe0d1" stroke-width="1"/>
@@ -507,7 +512,7 @@
             </g>
           </g>
           <g class="orbit-2">
-            <g class="satellite" transform="translate(42,220) rotate(-30)">
+            <g class="satellite" transform="translate(39,260) rotate(-30)">
               <line x1="0" y1="0" x2="0" y2="9" stroke="#7fe0d1" stroke-width="1"/>
               <circle cx="0" cy="0" r="1.3" fill="#7fe0d1"/>
               <rect x="-6" y="9" width="12" height="6" rx="1.5" fill="#0d2a34" stroke="#7fe0d1" stroke-width="1"/>
@@ -527,34 +532,177 @@
           <div class="eyebrow">ภาพรวมพื้นที่</div>
           <h2>ตัวชี้วัดสำคัญ</h2>
         </div>
-        <p>ข้อมูลอ้างอิงจากผลการศึกษาย้อนหลัง — จะปรับเป็นค่าปัจจุบันเมื่อระบบ live pipeline พร้อมใช้งาน</p>
+        <p>ข้อมูลขอบเขต/พื้นที่จาก GIS shapefile ของโครงการ · % ความจุอ่างและสถานะระบบเป็นข้อมูลล่าสุดที่มี</p>
       </div>
       <div class="kpi-grid">
         <div class="kpi-card">
+          <div class="kpi-icon">🗺️</div>
+          <div class="kpi-label">ขอบเขตตำบลแม่นาเรือ</div>
+          <div class="kpi-value">46.3<span class="kpi-unit">ตร.กม.</span></div>
+          <div class="kpi-note">28,957 ไร่ (Tambon_boundary.shp)</div>
+        </div>
+        <div class="kpi-card">
           <div class="kpi-icon">🌾</div>
-          <div class="kpi-label">โซนพื้นที่เกษตรที่ติดตาม</div>
-          <div class="kpi-value">2<span class="kpi-unit">โซน</span></div>
-          <div class="kpi-note">Zone A (Rainfed) · Zone B (Irrigated)</div>
+          <div class="kpi-label">พื้นที่โซนเกษตร</div>
+          <div class="kpi-value" style="font-size:14px;">
+            <div class="kpi-mini-list">
+              <div class="kpi-mini-row"><span class="name">Zone A (Rainfed)</span><span class="val">34.7 ตร.กม.</span></div>
+              <div class="kpi-mini-row"><span class="name">Zone B (Irrigated)</span><span class="val">11.6 ตร.กม.</span></div>
+            </div>
+          </div>
+          <div class="kpi-note">รวม 46.3 ตร.กม. (zone_a/zone_b.geojson)</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-icon">🌊</div>
-          <div class="kpi-label">% ความจุอ่างเก็บน้ำ (live)</div>
+          <div class="kpi-label">% ความจุอ่างเก็บน้ำ 5 อ่าง (live)</div>
           <div class="kpi-value" id="capacityKpiValue" style="font-size:14px;">
             <div class="kpi-mini-list"><span style="font-size:12px; color:var(--text-500); font-weight:400;">กำลังโหลด…</span></div>
           </div>
           <div class="kpi-note" id="capacityKpiNote">รอเชื่อมข้อมูลโทรมาตรแบบ live</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon">📅</div>
-          <div class="kpi-label">ช่วงข้อมูลที่ใช้พัฒนาโมเดล</div>
-          <div class="kpi-value" style="font-size:22px;">2020–24</div>
-          <div class="kpi-note">Train 2020–22 · Calibrate 23 · Test 24</div>
         </div>
         <div class="kpi-card accent-amber">
           <div class="kpi-icon">⏳</div>
           <div class="kpi-label">สถานะระบบพยากรณ์</div>
           <div class="kpi-value" style="font-size:16px;"><span class="badge-status">Validation เท่านั้น</span></div>
           <div class="kpi-note">ยังไม่เปิดใช้งาน live forecast</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">แผนที่แบบโต้ตอบ</div>
+          <h2>ขอบเขตตำบล หมู่บ้าน โซนเกษตร และอ่างเก็บน้ำ</h2>
+        </div>
+        <p>เลือกแผนที่พื้นหลังได้ที่มุมแผนที่ · เปิด/ปิดเลเยอร์ข้อมูลได้ด้านล่าง · คลิกที่พื้นที่หรือจุดอ่างเก็บน้ำเพื่อดูรายละเอียด</p>
+      </div>
+      <div class="map-card">
+        <div id="map"></div>
+        <div class="map-controls">
+          <label class="layer-toggle"><input type="checkbox" id="toggle-tambon" checked><span class="legend-dot" style="background:transparent; border:1.5px solid #c4d6d3;"></span>ขอบเขตตำบล</label>
+          <label class="layer-toggle"><input type="checkbox" id="toggle-village" checked><span class="legend-dot" style="background:transparent; border:1.5px solid #9d7fe0;"></span>ขอบเขตหมู่บ้าน (18 แห่ง)</label>
+          <label class="layer-toggle"><input type="checkbox" id="toggle-a" checked><span class="legend-dot" style="background:#e0a94f"></span>Zone A — Rainfed</label>
+          <label class="layer-toggle"><input type="checkbox" id="toggle-b" checked><span class="legend-dot" style="background:#45c2ad"></span>Zone B — พื้นที่ใช้น้ำ</label>
+          <label class="layer-toggle"><input type="checkbox" id="toggle-res" checked><span class="legend-dot" style="background:#7fe0d1"></span>อ่างเก็บน้ำ (5 แห่ง)</label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ย้ายมาจาก gis-map.html (2026-07-19) — ผล SAR crop classification อ่านจาก latest.json ->
+       crop_classification เหมือนเดิม -->
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">SAR Crop Classification</div>
+          <h2>ผลจำแนกชนิดพืชจากภาพ Sentinel-1/2 (RF v3b)</h2>
+        </div>
+        <p id="sarStatusNote">กำลังโหลดข้อมูล…</p>
+      </div>
+      <div id="sarNoDataBox" class="table-card" style="display:none; padding:20px;">
+        <p style="margin:0; color:var(--text-500); font-size:13px;">
+          ยังไม่มีผลจำแนกพืชจาก SAR background job เลย (sar_background_job.py ยังไม่เคยรันสำเร็จบนเครื่องนี้ —
+          ดู run_sar_background_job.bat/Windows Task Scheduler)
+        </p>
+      </div>
+      <div id="sarLoadErrorBox" class="table-card" style="display:none; padding:20px;">
+        <p style="margin:0; color:var(--text-500); font-size:13px;">ไม่สามารถโหลดข้อมูลได้</p>
+      </div>
+      <div id="sarResultBox" style="display:none;">
+        <div class="table-card">
+          <div class="table-grid-2">
+            <table class="data-table">
+              <thead><tr><th colspan="2">Zone A — พื้นที่พืชผล (เฮกตาร์)</th></tr></thead>
+              <tbody id="sarZoneATableBody"></tbody>
+            </table>
+            <table class="data-table">
+              <thead><tr><th colspan="2">Zone B — พื้นที่พืชผล (เฮกตาร์)</th></tr></thead>
+              <tbody id="sarZoneBTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="disclaimer-box" id="sarQualityBox" style="display:none;">
+          <h4>⚠ คุณภาพข้อมูล SAR ของรอบนี้ — ควรตรวจสอบก่อนเชื่อผลจำแนกพืช</h4>
+          <p id="sarQualityNote" style="font-size:12.5px; color:var(--text-500); margin:0 0 10px;"></p>
+          <ul id="sarQualityWeeksList"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ย้ายมาจาก gis-map.html (2026-07-19) — รายชื่อหมู่บ้าน 18 แห่ง (คงที่ ไม่มี JS) -->
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">รายชื่อหมู่บ้าน</div>
+          <h2>หมู่บ้านในตำบลแม่นาเรือ (18 แห่ง)</h2>
+        </div>
+        <p>อ้างอิงชื่อหมู่บ้านจากเว็บไซต์ อบต.แม่นาเรือ ผูกกับขอบเขต GIS (ขอบเขตหมู่บ้าน_Edit.shp)</p>
+      </div>
+      <div class="table-card">
+        <div class="table-grid-2">
+          <table class="data-table">
+            <thead><tr><th>หมู่ที่</th><th>ชื่อหมู่บ้าน</th></tr></thead>
+            <tbody>
+              <tr><td class="hl">หมู่ 1</td><td>บ้านสันขี้เหล็ก</td></tr>
+              <tr><td class="hl">หมู่ 2</td><td>บ้านโซ้</td></tr>
+              <tr><td class="hl">หมู่ 3</td><td>บ้านร่องคำหลวง</td></tr>
+              <tr><td class="hl">หมู่ 4</td><td>บ้านร่องคำน้อย</td></tr>
+              <tr><td class="hl">หมู่ 5</td><td>บ้านไร่</td></tr>
+              <tr><td class="hl">หมู่ 6</td><td>บ้านสันป่าสัก</td></tr>
+              <tr><td class="hl">หมู่ 7</td><td>บ้านซ่อน</td></tr>
+              <tr><td class="hl">หมู่ 8</td><td>บ้านแม่นาเรือปง</td></tr>
+              <tr><td class="hl">หมู่ 9</td><td>บ้านแม่นาเรือสันทราย</td></tr>
+            </tbody>
+          </table>
+          <table class="data-table">
+            <thead><tr><th>หมู่ที่</th><th>ชื่อหมู่บ้าน</th></tr></thead>
+            <tbody>
+              <tr><td class="hl">หมู่ 10</td><td>บ้านแม่นาเรือใต้</td></tr>
+              <tr><td class="hl">หมู่ 11</td><td>บ้านโบสถ์</td></tr>
+              <tr><td class="hl">หมู่ 12</td><td>บ้านร่องคำดง</td></tr>
+              <tr><td class="hl">หมู่ 13</td><td>บ้านไร่สันจำปา</td></tr>
+              <tr><td class="hl">หมู่ 14</td><td>บ้านสันป่างิ้ว</td></tr>
+              <tr><td class="hl">หมู่ 15</td><td>บ้านร่องคำศรีชุม</td></tr>
+              <tr><td class="hl">หมู่ 16</td><td>บ้านแม่นาเรือปง</td></tr>
+              <tr><td class="hl">หมู่ 17</td><td>บ้านแม่นาเรือสันทราย</td></tr>
+              <tr><td class="hl">หมู่ 18</td><td>บ้านเหล่าพัฒนา</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p style="font-size:12px; color:var(--text-500); margin-top:14px;">
+        หมายเหตุ: ไฟล์ shapefile ต้นฉบับ (ขอบเขตหมู่บ้าน_Edit.shp) มีปัญหาการเข้ารหัสอักขระไทยในฟิลด์ชื่อ (mojibake) ทำให้อ่านชื่อโดยตรงจากไฟล์ไม่ได้
+        จึงใช้ชื่อหมู่บ้านอย่างเป็นทางการจากเว็บไซต์ อบต.แม่นาเรือ (maenarua.go.th) จับคู่กับเลขหมู่ (Moo) ในไฟล์ ซึ่งไม่กระทบต่อความถูกต้องของขอบเขตภูมิศาสตร์
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">การเข้าถึงข้อมูล</div>
+          <h2>3 ระดับความละเอียดอ่อน</h2>
+        </div>
+      </div>
+      <div class="access-grid">
+        <div class="access-card">
+          <h5>🟢 สาธารณะ</h5>
+          <p>กราฟสรุปพยากรณ์รายสัปดาห์ แผนที่ % ความจุอ่าง และข่าวสาร/สรุปงานวิจัย — เปิดให้ทุกคนเข้าถึง</p>
+        </div>
+        <div class="access-card restricted">
+          <h5>🟡 จำกัดสิทธิ์ (นักวิจัย/หน่วยงาน)</h5>
+          <p>Raw sensor data, ค่า NSE/KGE ละเอียด, train/test set, โค้ด/โมเดล และข้อมูล ET/water balance</p>
+        </div>
+        <div class="access-card internal">
+          <h5>⚪ เฉพาะทีมโครงการ</h5>
+          <p>Dashboard pre/post training, ข้อมูลชุมชน, draft manuscript และเอกสารภายในที่ยังไม่เผยแพร่</p>
         </div>
       </div>
     </div>
@@ -588,12 +736,6 @@
           <p>ข้อมูลจากสถานีโทรมาตร ทั้งสภาพอากาศและระดับน้ำในอ่างเก็บน้ำ</p>
           <span class="go">ดูรายละเอียด →</span>
         </a>
-        <a class="nav-card" href="gis-map.html">
-          <div class="icon">🗺️</div>
-          <h4>แผนที่เชิงพื้นที่ (GIS)</h4>
-          <p>ขอบเขตโซนเกษตรและอ่างเก็บน้ำ</p>
-          <span class="go">ดูรายละเอียด →</span>
-        </a>
         <a class="nav-card" href="research.html">
           <div class="icon">📄</div>
           <h4>งานวิจัย / เอกสารเผยแพร่</h4>
@@ -606,55 +748,6 @@
           <p>Raw sensor data, NSE/KGE ละเอียด, train/test set และโค้ด/โมเดล (จำกัดสิทธิ์)</p>
           <span class="go">ดูรายละเอียด →</span>
         </a>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="wrap map-teaser">
-      <div>
-        <div class="eyebrow">พื้นที่ศึกษา</div>
-        <h2 style="margin-top:10px; margin-bottom:14px;">แผนที่โซนเกษตรและอ่างเก็บน้ำ</h2>
-        <p style="color:var(--text-500); font-size:13.5px; max-width:420px; margin-bottom:20px;">
-          ขอบเขต Zone A/B และอ่างเก็บน้ำ จัดทำจากข้อมูล GIS/remote sensing
-          — แผนที่แบบโต้ตอบ (Leaflet) จะเปิดใช้งานในหน้าแผนที่โดยเฉพาะ
-        </p>
-        <a class="btn btn-outline" href="gis-map.html">เปิดแผนที่แบบเต็ม →</a>
-      </div>
-      <div>
-        <div class="map-box" id="mapTeaser">
-          <div class="map-box-fallback">🗺️ พรีวิวแผนที่ Zone A / Zone B และตำแหน่งอ่างเก็บน้ำ</div>
-        </div>
-        <div class="map-legend">
-          <span><span class="legend-dot" style="background:var(--amber-400)"></span>Zone A – Rainfed</span>
-          <span><span class="legend-dot" style="background:var(--teal-400)"></span>Zone B – Irrigated</span>
-          <span><span class="legend-dot" style="background:#6fcf97"></span>อ่างเก็บน้ำ</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="wrap">
-      <div class="section-head">
-        <div>
-          <div class="eyebrow">การเข้าถึงข้อมูล</div>
-          <h2>3 ระดับความละเอียดอ่อน</h2>
-        </div>
-      </div>
-      <div class="access-grid">
-        <div class="access-card">
-          <h5>🟢 สาธารณะ</h5>
-          <p>กราฟสรุปพยากรณ์รายสัปดาห์ แผนที่ % ความจุอ่าง และข่าวสาร/สรุปงานวิจัย — เปิดให้ทุกคนเข้าถึง</p>
-        </div>
-        <div class="access-card restricted">
-          <h5>🟡 จำกัดสิทธิ์ (นักวิจัย/หน่วยงาน)</h5>
-          <p>Raw sensor data, ค่า NSE/KGE ละเอียด, train/test set, โค้ด/โมเดล และข้อมูล ET/water balance</p>
-        </div>
-        <div class="access-card internal">
-          <h5>⚪ เฉพาะทีมโครงการ</h5>
-          <p>Dashboard pre/post training, ข้อมูลชุมชน, draft manuscript และเอกสารภายในที่ยังไม่เผยแพร่</p>
-        </div>
       </div>
     </div>
   </section>
@@ -674,12 +767,17 @@
 // การ์ด "% ความจุอ่างเก็บน้ำ" ดึงจากไฟล์เดียวกับหน้า monitoring.html (assets/data/monitoring.json)
 // ซึ่งสร้างโดย 01_data/scripts and code/pipeline/monitoring_data_builder.py จากข้อมูลสถานีโทรมาตร
 // สด 4 จุด (RES002/RES004/RES005/RES006) — ถ้าโหลดไม่สำเร็จ การ์ดจะกลับไปแสดงสถานะ "รอเชื่อมข้อมูล" เดิม
+// อ่างห้วยจำตุ้ม (ChamTum) ไม่มี Tele_Code/สถานีโทรมาตรติดตั้ง (ยืนยันจาก monitoring_data_builder.py::
+// RESERVOIR_NO_TELEMETRY) จึงเติมแถวสถิตนี้ต่อท้ายรายการที่โหลดจริง แทนการเว้นอ่างนี้ไปเฉยๆ
 const STATION_SHORT_NAME = {
   RES002: 'แม่นาเรือ',
   RES004: 'วิทยาลัยเกษตร',
   RES005: 'ห้วยถ้ำ',
   RES006: 'ห้วยโซ้',
 };
+const NO_TELEMETRY_ROW =
+  '<div class="kpi-mini-row"><span class="name">ห้วยจำตุ้ม</span>' +
+  '<span class="val" style="font-size:11px; color:var(--text-600); font-weight:500;">ยังไม่ติดตั้งสถานีโทรมาตร</span></div>';
 
 fetch('assets/data/monitoring.json')
   .then(res => {
@@ -698,7 +796,7 @@ fetch('assets/data/monitoring.json')
       const cls = (pct !== null && pct !== undefined && pct > 100) ? 'val over' : 'val';
       const name = STATION_SHORT_NAME[s.station_code] || s.station_code;
       return `<div class="kpi-mini-row"><span class="name">${name}</span><span class="${cls}">${display}</span></div>`;
-    }).join('') + '</div>';
+    }).join('') + NO_TELEMETRY_ROW + '</div>';
 
     if (json.meta && json.meta.updated) {
       const d = new Date(json.meta.updated);
@@ -713,42 +811,210 @@ fetch('assets/data/monitoring.json')
     document.getElementById('capacityKpiNote').textContent = 'รอเชื่อมข้อมูลโทรมาตรแบบ live';
   });
 
-// พรีวิวแผนที่ Zone A/B + อ่างเก็บน้ำ (mini Leaflet, ไม่โต้ตอบ) — โหลด GeoJSON จาก
-// assets/data/{zone_a,zone_b,reservoirs}.geojson.json ซึ่ง extract มาจากชุดเดียวกับที่ฝังอยู่ใน
-// gis-map.html (เส้นทาง 415-419) เพื่อไม่ต้องซ้ำ 180KB+ ของ inline const ในหน้านี้อีกรอบ
-// พื้นหลังใช้ภาพถ่ายดาวเทียม Esri World Imagery (basemap เดียวกับตัวเลือก "satellite" ใน gis-map.html)
-// ถ้าโหลดไม่สำเร็จ (เช่น เปิดผ่าน file:// โดยไม่มี local server) จะเหลือข้อความ fallback เดิมไว้
-(function () {
-  const container = document.getElementById('mapTeaser');
-  if (!container || typeof L === 'undefined') return;
+// แผนที่แบบโต้ตอบเต็มรูปแบบ (ย้ายมาจาก gis-map.html ทั้งหมด 2026-07-19 — แทนที่พรีวิว mini-map เดิม)
+const map = L.map('map', { scrollWheelZoom: false }).setView([19.0841, 99.8491], 13);
 
-  Promise.all([
-    fetch('assets/data/zone_a.geojson.json').then(r => { if (!r.ok) throw new Error('zone_a HTTP ' + r.status); return r.json(); }),
-    fetch('assets/data/zone_b.geojson.json').then(r => { if (!r.ok) throw new Error('zone_b HTTP ' + r.status); return r.json(); }),
-    fetch('assets/data/reservoirs.geojson.json').then(r => { if (!r.ok) throw new Error('reservoirs HTTP ' + r.status); return r.json(); }),
-  ]).then(([zoneA, zoneB, reservoirs]) => {
-    container.innerHTML = '';
+const basemaps = {
+  dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap contributors &copy; CARTO', subdomains: 'abcd', maxZoom: 19
+  }),
+  light: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap contributors &copy; CARTO', subdomains: 'abcd', maxZoom: 19
+  }),
+  streets: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors', subdomains: 'abc', maxZoom: 19
+  }),
+  satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics', maxZoom: 19
+  }),
+  terrain: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri — Source: Esri, USGS, NOAA', maxZoom: 19
+  })
+};
+let currentBase = 'dark';
+basemaps[currentBase].addTo(map);
 
-    const map = L.map(container, {
-      zoomControl: false, dragging: false, scrollWheelZoom: false,
-      doubleClickZoom: false, boxZoom: false, keyboard: false, touchZoom: false, tap: false,
+const BasemapControl = L.Control.extend({
+  options: { position: 'topright' },
+  onAdd: function() {
+    const div = L.DomUtil.create('div', 'basemap-control');
+    const options = [
+      ['dark', 'มืด'],
+      ['light', 'สว่าง'],
+      ['streets', 'ถนน'],
+      ['satellite', 'ดาวเทียม'],
+      ['terrain', 'ภูมิประเทศ']
+    ];
+    options.forEach(function(opt) {
+      const key = opt[0], label = opt[1];
+      const btn = L.DomUtil.create('button', key === currentBase ? 'active' : '', div);
+      btn.type = 'button';
+      btn.textContent = label;
+      btn.addEventListener('click', function() {
+        if (key === currentBase) return;
+        map.removeLayer(basemaps[currentBase]);
+        basemaps[key].addTo(map);
+        currentBase = key;
+        div.querySelectorAll('button').forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+      });
     });
+    L.DomEvent.disableClickPropagation(div);
+    L.DomEvent.disableScrollPropagation(div);
+    return div;
+  }
+});
+map.addControl(new BasemapControl());
 
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      attribution: 'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics', maxZoom: 19,
-    }).addTo(map);
+Promise.all([
+  fetch('assets/data/tambon_boundary.geojson.json').then(r => r.json()),
+  fetch('assets/data/villages.geojson.json').then(r => r.json()),
+  fetch('assets/data/zone_a.geojson.json').then(r => r.json()),
+  fetch('assets/data/zone_b.geojson.json').then(r => r.json()),
+  fetch('assets/data/reservoirs.geojson.json').then(r => r.json())
+]).then(([tambonBoundaryGeoJSON, villagesGeoJSON, zoneAGeoJSON, zoneBGeoJSON, reservoirsGeoJSON]) => {
 
-    const zoneALayer = L.geoJSON(zoneA, { style: { color: '#e0a94f', weight: 1.5, fillColor: '#e0a94f', fillOpacity: 0.16 } }).addTo(map);
-    const zoneBLayer = L.geoJSON(zoneB, { style: { color: '#45c2ad', weight: 1.5, fillColor: '#45c2ad', fillOpacity: 0.2 } }).addTo(map);
-    const reservoirLayer = L.geoJSON(reservoirs, { style: { color: '#6fcf97', weight: 1.5, fillColor: '#6fcf97', fillOpacity: 0.6 } }).addTo(map);
+  const tambonLayer = L.geoJSON(tambonBoundaryGeoJSON, {
+    style: { color: '#c4d6d3', weight: 2, dashArray: '6,5', fillOpacity: 0 }
+  }).bindPopup(function(layer){
+    const p = layer.feature.properties;
+    return '<b>' + p.Name + '</b><br>พื้นที่: ' + p.Area_km2 + ' ตร.กม. (' + p.Area_rai.toLocaleString() + ' ไร่)';
+  }).addTo(map);
 
-    const group = L.featureGroup([zoneALayer, zoneBLayer, reservoirLayer]);
-    map.fitBounds(group.getBounds(), { padding: [12, 12] });
-  }).catch(err => {
-    console.error('โหลดพรีวิวแผนที่ไม่สำเร็จ:', err);
-    // เหลือ fallback text เดิมไว้ (ไม่ต้องทำอะไรเพิ่ม เพราะยังไม่ได้ล้าง innerHTML)
+  const villageLayer = L.geoJSON(villagesGeoJSON, {
+    style: { color: '#9d7fe0', weight: 1.2, fillColor: '#9d7fe0', fillOpacity: 0.06, dashArray: '3,4' }
+  }).bindPopup(function(layer){
+    const p = layer.feature.properties;
+    return '<b>หมู่ ' + p.Moo + '</b><br>' + p.Name_TH;
+  }).addTo(map);
+
+  const zoneALayer = L.geoJSON(zoneAGeoJSON, {
+    style: { color: '#e0a94f', weight: 1.5, fillColor: '#e0a94f', fillOpacity: 0.12 }
+  }).bindPopup(function(layer){
+    const p = layer.feature.properties;
+    return '<b>Zone A — ' + (p.zone_name || 'Rainfed') + '</b><br>พื้นที่เกษตรน้ำฝน';
+  }).addTo(map);
+
+  const zoneBLayer = L.geoJSON(zoneBGeoJSON, {
+    style: { color: '#45c2ad', weight: 1.5, fillColor: '#45c2ad', fillOpacity: 0.18 }
+  }).bindPopup(function(layer){
+    const p = layer.feature.properties;
+    return '<b>' + (p.LU_DES_TH || 'Zone B') + '</b><br>พื้นที่: ' + (p.Area_SqKm || '-') + ' ตร.กม.';
+  }).addTo(map);
+
+  const reservoirLayer = L.geoJSON(reservoirsGeoJSON, {
+    style: { color: '#7fe0d1', weight: 1.5, fillColor: '#7fe0d1', fillOpacity: 0.55 }
+  }).bindPopup(function(layer){
+    const p = layer.feature.properties;
+    return '<b>' + (p.Name_T || p.Name) + '</b><br>' + (p.Name || '');
+  }).addTo(map);
+
+  document.getElementById('toggle-tambon').addEventListener('change', e => {
+    if (e.target.checked) map.addLayer(tambonLayer); else map.removeLayer(tambonLayer);
   });
-})();
+  document.getElementById('toggle-village').addEventListener('change', e => {
+    if (e.target.checked) map.addLayer(villageLayer); else map.removeLayer(villageLayer);
+  });
+  document.getElementById('toggle-a').addEventListener('change', e => {
+    if (e.target.checked) map.addLayer(zoneALayer); else map.removeLayer(zoneALayer);
+  });
+  document.getElementById('toggle-b').addEventListener('change', e => {
+    if (e.target.checked) map.addLayer(zoneBLayer); else map.removeLayer(zoneBLayer);
+  });
+  document.getElementById('toggle-res').addEventListener('change', e => {
+    if (e.target.checked) map.addLayer(reservoirLayer); else map.removeLayer(reservoirLayer);
+  });
+
+}).catch(err => {
+  console.error('โหลดข้อมูล GeoJSON ไม่สำเร็จ:', err);
+});
+</script>
+
+<script>
+// SAR crop classification (ย้ายมาจาก gis-map.html 2026-07-19) — โหลดจาก latest.json (crop_classification
+// field เขียนโดย sar_background_job.py ผ่าน data_pipeline.py::save_results())
+const SAR_DATA_ENDPOINT = 'assets/data/latest.json';
+
+const SAR_CROP_TH = {rice: 'ข้าว', corn: 'ข้าวโพด', cassava: 'มันสำปะหลัง', longan: 'ลำไย', etc: 'อื่นๆ (ยางพารา/ปาล์ม/ยาสูบ ฯลฯ)'};
+
+function _sarFmtHa(v) {
+  return (v === null || v === undefined) ? '—' : Number(v).toFixed(2) + ' ha';
+}
+
+function renderSarZoneTable(tbodyId, cropAreaHa) {
+  const tbody = document.getElementById(tbodyId);
+  if (!cropAreaHa || Object.keys(cropAreaHa).length === 0) {
+    tbody.innerHTML = '<tr><td colspan="2">ไม่มีข้อมูล</td></tr>';
+    return;
+  }
+  const order = ['rice', 'corn', 'cassava', 'longan', 'etc'];
+  const crops = order.filter(c => c in cropAreaHa).concat(Object.keys(cropAreaHa).filter(c => !order.includes(c)));
+  tbody.innerHTML = crops.map(crop =>
+    '<tr><td>' + (SAR_CROP_TH[crop] || crop) + '</td><td class="hl">' + _sarFmtHa(cropAreaHa[crop]) + '</td></tr>'
+  ).join('');
+}
+
+function renderSarSection(json) {
+  const cc = json.crop_classification;
+  const statusNote = document.getElementById('sarStatusNote');
+  const noDataBox = document.getElementById('sarNoDataBox');
+  const resultBox = document.getElementById('sarResultBox');
+
+  if (!cc) {
+    noDataBox.style.display = '';
+    resultBox.style.display = 'none';
+    statusNote.innerHTML = '<span class="badge badge-low">ยังไม่มีข้อมูล</span>';
+    return;
+  }
+
+  noDataBox.style.display = 'none';
+  resultBox.style.display = '';
+
+  const zones = cc.zone_crop_area_ha || {};
+  renderSarZoneTable('sarZoneATableBody', zones.zone_A);
+  renderSarZoneTable('sarZoneBTableBody', zones.zone_B);
+
+  let statusBadge;
+  if (cc.is_stale) {
+    statusBadge = '<span class="badge badge-low">⚠ ข้อมูลเก่า ' + (cc.age_days ?? '?') + ' วัน</span>';
+  } else if (cc.status === 'ok') {
+    statusBadge = '<span class="badge badge-ok">✓ อัปเดตล่าสุด</span>';
+  } else {
+    statusBadge = '<span class="badge badge-blocked">status: ' + (cc.status ?? 'unknown') + '</span>';
+  }
+  statusNote.innerHTML = 'ปีที่จำแนก ' + (cc.year ?? '—') + ' &nbsp;' + statusBadge;
+
+  const dq = cc.sar_data_quality;
+  const qualityBox = document.getElementById('sarQualityBox');
+  const divergingWeeks = (dq && dq.weeks_diverging_from_training) || [];
+  if (dq && !dq.error && divergingWeeks.length > 0) {
+    qualityBox.style.display = '';
+    document.getElementById('sarQualityNote').textContent = dq.risk_note || '';
+    document.getElementById('sarQualityWeeksList').innerHTML =
+      '<li>' + divergingWeeks.length + ' สัปดาห์ diverge จาก training baseline (สัปดาห์ที่: ' +
+        divergingWeeks.join(', ') + ')</li>' +
+      '<li>สัปดาห์ว่างทั้งหมด: ' + (dq.n_empty_weeks ?? '?') + '/' + (dq.n_total_weeks ?? '?') +
+        ' (' + (dq.empty_week_pct ?? '?') + '%) เทียบกับสัดส่วนที่โมเดลเคยเจอตอน train (' +
+        (dq.training_baseline_null_band_pct ?? '?') + '%)</li>' +
+      '<li>ตัวเลขพื้นที่พืชด้านบนของรอบนี้ควรตีความอย่างระมัดระวัง — โปรดดูรายละเอียดเต็มที่ทีมข้อมูลก่อนใช้อ้างอิงเชิงนโยบาย</li>';
+  } else {
+    qualityBox.style.display = 'none';
+  }
+}
+
+fetch(SAR_DATA_ENDPOINT)
+  .then(res => {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  })
+  .then(renderSarSection)
+  .catch(err => {
+    console.error('โหลดข้อมูล SAR crop classification ไม่สำเร็จ:', err);
+    document.getElementById('sarStatusNote').innerHTML = '<span class="badge badge-blocked">โหลดไม่สำเร็จ</span>';
+    document.getElementById('sarLoadErrorBox').style.display = '';
+    document.getElementById('sarLoadErrorBox').querySelector('p').textContent =
+      'ไม่สามารถโหลดข้อมูลจาก ' + SAR_DATA_ENDPOINT + ' ได้';
+  });
 </script>
 
 </body>

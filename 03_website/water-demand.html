@@ -174,24 +174,22 @@
     </a>
     <nav class="main-nav">
       <a href="index.html">หน้าแรก</a>
-      <a href="water-demand.html" class="current">ความต้องการใช้น้ำ</a>
-      <a href="inflow-forecast.html">น้ำไหลลงอ่าง</a>
       <a href="monitoring.html">สถานการณ์น้ำ</a>
+      <a href="inflow-forecast.html">คาดการณ์น้ำไหลลงอ่าง</a>
+      <a href="water-demand.html" class="current">คาดการณ์ความต้องการใช้น้ำ</a>
       <a href="flood-forecast.html">คาดการณ์น้ำท่วม</a>
-      <a href="gis-map.html">แผนที่ GIS</a>
-      <a href="research.html">งานวิจัย</a>
+      <a href="research.html">ดาวน์โหลดเอกสาร</a>
     </nav>
     <button class="nav-toggle" id="navToggle" aria-label="เปิดเมนู" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
     <nav class="mobile-nav" id="mobileNav">
       <a href="index.html">หน้าแรก</a>
-      <a href="water-demand.html" class="current">ความต้องการใช้น้ำ</a>
-      <a href="inflow-forecast.html">น้ำไหลลงอ่าง</a>
       <a href="monitoring.html">สถานการณ์น้ำ</a>
+      <a href="inflow-forecast.html">คาดการณ์น้ำไหลลงอ่าง</a>
+      <a href="water-demand.html" class="current">คาดการณ์ความต้องการใช้น้ำ</a>
       <a href="flood-forecast.html">คาดการณ์น้ำท่วม</a>
-      <a href="gis-map.html">แผนที่ GIS</a>
-      <a href="research.html">งานวิจัย</a>
+      <a href="research.html">ดาวน์โหลดเอกสาร</a>
     </nav>
   </div>
 </header>
@@ -278,8 +276,8 @@
     <div class="wrap">
       <div class="section-head">
         <div>
-          <div class="eyebrow">ผลพยากรณ์ปี 2024</div>
-          <h2>ค่าจริง เทียบกับ ค่าพยากรณ์</h2>
+          <div class="eyebrow">พยากรณ์ล่วงหน้า 12 สัปดาห์</div>
+          <h2>ค่าพยากรณ์สุดท้าย เทียบกับ Magnitude ก่อนคูณความน่าจะเป็น</h2>
         </div>
         <p>เส้นทึบ = ค่าพยากรณ์สุดท้าย (final_m3) · เส้นประ = ขนาดคาดการณ์ก่อนคูณด้วยความน่าจะเป็น (magnitude_m3)</p>
       </div>
@@ -302,7 +300,7 @@
       <div class="section-head">
         <div>
           <div class="eyebrow">รายละเอียดต่อ Horizon</div>
-          <h2>ค่าพยากรณ์รายสัปดาห์ (H+1 ถึง H+12)</h2>
+          <h2>ค่าพยากรณ์รายสัปดาห์ (สัปดาห์ที่ 1 ถึง สัปดาห์ที่ 12)</h2>
         </div>
         <p>probability_active คือความน่าจะเป็นที่โมเดล stage-1 ประเมินว่ามีความต้องการใช้น้ำ (&gt; 0) ในสัปดาห์นั้น</p>
       </div>
@@ -506,7 +504,7 @@ function renderTable(zoneObj) {
   const tbody = document.getElementById('performanceTableBody');
   tbody.innerHTML = rows.map((r, i) => `
     <tr>
-      <td>H+${i + 1}</td>
+      <td>สัปดาห์ที่ ${i + 1}</td>
       <td>${fmtPct(r.probability_active)}</td>
       <td>${fmtInt(r.magnitude_m3)}</td>
       <td class="hl">${fmtInt(r.final_m3)}</td>
@@ -517,7 +515,7 @@ function buildChart(zone) {
   const zoneObj = zone === 'A' ? data.forecasts.demand_zone_a : data.forecasts.demand_zone_b;
   if (!zoneObj) return;
   const rows = horizonsArray(zoneObj);
-  const labels = rows.map((_, i) => 'H+' + (i + 1));
+  const labels = rows.map((_, i) => 'สัปดาห์ที่ ' + (i + 1));
   if (chart) chart.destroy();
   chart = new Chart(ctx, {
     type: 'line',

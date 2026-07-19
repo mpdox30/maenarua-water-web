@@ -124,6 +124,16 @@
   .method-card h5 { font-size: 14.5px; color: var(--text-100); font-family: "IBM Plex Sans Thai", sans-serif; font-weight: 600; margin-bottom: 8px; }
   .method-card p { font-size: 12.5px; color: var(--text-500); margin: 0; }
 
+  /* reservoir inflow (WMB model) — ภาพรวม + รายอ่าง */
+  .res-controls { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+  .res-controls label { font-size: 12.5px; color: var(--text-500); display: flex; align-items: center; gap: 8px; }
+  .res-controls select { background: var(--bg-800); color: var(--text-100); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 7px 10px; font-size: 13px; font-family: inherit; }
+  .seg-toggle { display: inline-flex; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 3px; gap: 2px; }
+  .seg-toggle button { border: none; background: transparent; color: var(--text-500); font-size: 12px; font-family: inherit; padding: 6px 14px; border-radius: 999px; cursor: pointer; transition: background .15s, color .15s; }
+  .seg-toggle button.active { background: var(--teal-400); color: #06161c; font-weight: 600; }
+  .res-detail-note { font-size: 11.5px; color: var(--text-600); margin: 12px 0 0; }
+  .cross-check-note { margin-top: 14px; padding: 12px 16px; border-radius: var(--radius-sm); background: rgba(69,194,173,0.07); border: 1px solid rgba(69,194,173,0.24); font-size: 12px; color: var(--text-300); }
+
   .access-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
   .access-card { border-radius: var(--radius-md); padding: 20px; border: 1px solid var(--border); background: var(--surface); border-top: 3px solid var(--teal-400); }
   .access-card.restricted { border-top-color: var(--amber-400); }
@@ -164,24 +174,22 @@
     </a>
     <nav class="main-nav">
       <a href="index.html">หน้าแรก</a>
-      <a href="water-demand.html">ความต้องการใช้น้ำ</a>
-      <a href="inflow-forecast.html" class="current">น้ำไหลลงอ่าง</a>
       <a href="monitoring.html">สถานการณ์น้ำ</a>
+      <a href="inflow-forecast.html" class="current">คาดการณ์น้ำไหลลงอ่าง</a>
+      <a href="water-demand.html">คาดการณ์ความต้องการใช้น้ำ</a>
       <a href="flood-forecast.html">คาดการณ์น้ำท่วม</a>
-      <a href="gis-map.html">แผนที่ GIS</a>
-      <a href="research.html">งานวิจัย</a>
+      <a href="research.html">ดาวน์โหลดเอกสาร</a>
     </nav>
     <button class="nav-toggle" id="navToggle" aria-label="เปิดเมนู" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
     <nav class="mobile-nav" id="mobileNav">
       <a href="index.html">หน้าแรก</a>
-      <a href="water-demand.html">ความต้องการใช้น้ำ</a>
-      <a href="inflow-forecast.html" class="current">น้ำไหลลงอ่าง</a>
       <a href="monitoring.html">สถานการณ์น้ำ</a>
+      <a href="inflow-forecast.html" class="current">คาดการณ์น้ำไหลลงอ่าง</a>
+      <a href="water-demand.html">คาดการณ์ความต้องการใช้น้ำ</a>
       <a href="flood-forecast.html">คาดการณ์น้ำท่วม</a>
-      <a href="gis-map.html">แผนที่ GIS</a>
-      <a href="research.html">งานวิจัย</a>
+      <a href="research.html">ดาวน์โหลดเอกสาร</a>
     </nav>
   </div>
 </header>
@@ -210,7 +218,7 @@
   <section class="page-hero">
     <div class="wrap">
       <div class="eyebrow">Hurdle Model (CatBoost) · ผลพยากรณ์ล่าสุดจาก Pipeline</div>
-      <h1>พยากรณ์ปริมาณน้ำไหลลงอ่างเก็บน้ำ</h1>
+      <h1>พยากรณ์ปริมาณน้ำไหลลงอ่างเก็บน้ำแม่นาเรือ</h1>
       <p class="lead">
         พยากรณ์ปริมาณน้ำไหลลงอ่าง (Q_in) ล่วงหน้า 1–7 วัน ด้วยโครงสร้าง hurdle สองขั้นตอน
         (จำแนกวันที่ไม่มีน้ำไหลเข้าก่อน แล้วถดถอยค่าปริมาณด้วย CatBoost) — อัปเดตทุกครั้งที่ pipeline รัน
@@ -234,13 +242,13 @@
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-icon">💧</div>
-          <div class="kpi-label">Q_in ปัจจุบัน (as_of)</div>
+          <div class="kpi-label">น้ำไหลเข้ารวม (Q_in) ปัจจุบัน</div>
           <div class="kpi-value" id="kpiCurrentQin">—</div>
           <div class="kpi-note" id="kpiCurrentQinNote">กำลังโหลดข้อมูล…</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-icon">🔮</div>
-          <div class="kpi-label">พยากรณ์ H+1</div>
+          <div class="kpi-label">พยากรณ์น้ำไหลเข้ารวม (ล่วงหน้า 1 วัน)</div>
           <div class="kpi-value" id="kpiH1">—</div>
           <div class="kpi-note" id="kpiModelNse">กำลังโหลดข้อมูล…</div>
         </div>
@@ -257,6 +265,12 @@
           <div class="kpi-note">NSE ติดลบบนชุดทดสอบ — ดูคำเตือนใต้กราฟก่อนใช้งานจริง</div>
         </div>
       </div>
+      <div class="cross-check-note">
+        ℹ️ <strong>Q_in</strong> ที่นี่คำนวณจากสมการสมดุลมวลน้ำของอ่าง (ΔStorage บวกกลับด้วยปริมาณที่ปล่อย/ล้น/ระเหย/ซึม แล้วหักน้ำฝนที่ตกลงอ่างตรง) —
+        จึงเป็น <strong>น้ำไหลเข้ารวมจากลุ่มน้ำ (ไม่ใช่ค่าหลังหักการระบายออก)</strong> ค่า 0 ในบางวันเป็นไปได้จริง
+        เมื่อระดับน้ำในอ่างไม่เปลี่ยนแปลงสุทธิ ไม่ได้แปลว่าไม่มีน้ำไหลเข้าเลย — ดูน้ำท่าประมาณการจากแบบจำลองฝน-น้ำท่า WMB
+        (อิสระจากค่านี้) ได้ในหัวข้อ "ภาพรวมน้ำท่าไหลลงอ่างเก็บน้ำ" ด้านล่าง
+      </div>
     </div>
   </section>
 
@@ -265,7 +279,7 @@
       <div class="section-head">
         <div>
           <div class="eyebrow">ผลพยากรณ์ล่าสุด</div>
-          <h2>ปริมาณน้ำไหลลงอ่าง H+1 ถึง H+7 วัน</h2>
+          <h2>ปริมาณน้ำไหลลงอ่าง ล่วงหน้า 1–7 วัน</h2>
         </div>
         <p>เส้นทึบสีเขียว = ความเชื่อมั่นปกติ · เส้นประสีเหลืองอำพัน/จุดสี่เหลี่ยม = horizon ที่ NSE ติดลบบนชุดทดสอบ (ความเชื่อมั่นต่ำ)</p>
       </div>
@@ -308,6 +322,47 @@
         <ul id="limitationsList">
           <li>กำลังโหลดข้อมูล…</li>
         </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">WMB Model · น้ำท่า 5 อ่าง</div>
+          <h2>ภาพรวมน้ำท่าไหลลงอ่างเก็บน้ำ ตำบลแม่นาเรือและบ้านตุ่น</h2>
+        </div>
+        <p>ประมาณการน้ำท่าจากแบบจำลองฝน-น้ำท่า WMB รายวัน (สังเกตการณ์/backcast เท่านั้น) — คนละแหล่งข้อมูล/วิธีคำนวณกับ Q_in
+           ที่หน่วยงานรายงานด้านบน ใช้เป็นข้อมูลอ้างอิงไขว้ (cross-check) ได้</p>
+      </div>
+      <div class="chart-card">
+        <div class="chart-wrap"><canvas id="resOverviewChart"></canvas></div>
+        <div class="chart-legend" id="resOverviewLegend"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">WMB Model · รายอ่าง</div>
+          <h2>น้ำท่าไหลเข้า เทียบกับความจุเก็บกักอ่างเก็บน้ำ</h2>
+        </div>
+        <p>เลือกอ่างและช่วงเวลาที่ต้องการดู — เส้นประคือความจุเก็บกักของอ่างนั้น (MCM) เทียบมาตราส่วนกับปริมาณน้ำท่าต่อช่วงเวลา</p>
+      </div>
+      <div class="chart-card">
+        <div class="res-controls">
+          <label>อ่างเก็บน้ำ: <select id="resSelect"></select></label>
+          <div class="seg-toggle" id="resGranToggle">
+            <button type="button" data-gran="daily" class="active">รายวัน</button>
+            <button type="button" data-gran="weekly">รายสัปดาห์</button>
+            <button type="button" data-gran="monthly">รายเดือน</button>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="resDetailChart"></canvas></div>
+        <p class="res-detail-note" id="resDetailNote"></p>
       </div>
     </div>
   </section>
@@ -470,7 +525,8 @@ function renderInflow(json) {
   `;
 
   document.getElementById('kpiCurrentQin').innerHTML = fmtNum(f.current_qin_m3_per_day, 2) + '<span class="kpi-unit">ม³/วัน</span>';
-  document.getElementById('kpiCurrentQinNote').textContent = 'ข้อมูล ณ วันที่ ' + f.as_of_date;
+  document.getElementById('kpiCurrentQinNote').textContent = 'ข้อมูล ณ วันที่ ' + f.as_of_date +
+    (f.current_qin_m3_per_day === 0 ? ' — ค่า 0 นี้เป็นค่าคำนวณจากสมดุลมวลน้ำ ดูคำอธิบายด้านล่าง' : '');
 
   document.getElementById('kpiReservoir').textContent = f.target_reservoir || '—';
   document.getElementById('kpiDataSource').textContent = DATA_SOURCE_LABELS[f.data_source] || f.data_source || '—';
@@ -511,7 +567,7 @@ function renderInflow(json) {
   new Chart(document.getElementById('inflowChart').getContext('2d'), {
     type: 'line',
     data: {
-      labels: horizonKeys.map(k => 'H+' + k.slice(1)),
+      labels: horizonKeys.map(k => 'ล่วงหน้า ' + k.slice(1) + ' วัน'),
       datasets: [{
         label: 'พยากรณ์ Q_in (ม³/วัน)',
         data: horizonData.map(h => h.prediction_m3_per_day),
@@ -545,7 +601,7 @@ function renderInflow(json) {
       ? '<span class="badge badge-low">⚠ ความเชื่อมั่นต่ำ</span>'
       : '<span class="badge badge-ok">ปกติ</span>';
     return `<tr>
-      <td>H+${i + 1}</td>
+      <td>ล่วงหน้า ${i + 1} วัน</td>
       <td class="hl">${fmtNum(h.prediction_m3_per_day, 2)}</td>
       <td>${(h.prob_zero * 100).toFixed(2)}%</td>
       <td>${h.model_name || '—'}</td>
@@ -589,6 +645,128 @@ fetch(DATA_ENDPOINT)
     if (statusText) statusText.textContent = 'ไม่สามารถโหลดข้อมูลจาก ' + DATA_ENDPOINT + ' ได้';
     document.getElementById('horizonTableBody').innerHTML =
       '<tr><td colspan="6">ไม่สามารถโหลดข้อมูลจาก ' + DATA_ENDPOINT + ' ได้</td></tr>';
+  });
+
+// ================= WMB Model: น้ำท่าไหลลงอ่างเก็บน้ำ 5 อ่าง (ภาพรวม + รายอ่าง) =================
+// ข้อมูลจาก reservoir_inflow_{daily,weekly,monthly}.csv ของ WMB_Phayao แปลงเป็น JSON เดียว —
+// คนละแหล่ง/วิธีคำนวณกับ Q_in ด้านบน (ซึ่งมาจากไฟล์บัญชีน้ำที่หน่วยงานรายงาน) ใช้เป็นข้อมูลอ้างอิงไขว้
+const RES_INFLOW_ENDPOINT = 'assets/data/reservoir_inflow.json';
+const RES_ORDER = ['MaeNaRua', 'HuayTham', 'So', 'CAT', 'ChamTum'];
+const RES_COLORS = { MaeNaRua: '#45c2ad', HuayTham: '#e0a94f', So: '#7fa8e0', CAT: '#c98be0', ChamTum: '#e0839c', total: '#eef6f4' };
+
+let resData = null, resDetailChart = null, resGran = 'daily', resSelected = 'MaeNaRua';
+
+function fmtMcm(v) {
+  if (v === null || v === undefined) return '—';
+  return Number(v).toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+}
+
+function drawResOverview(d) {
+  const rows = d.daily;
+  const labels = rows.map(r => r.date);
+  const datasets = RES_ORDER.map(key => ({
+    label: d.reservoirs[key].name_th,
+    data: rows.map(r => r[key]),
+    borderColor: RES_COLORS[key], backgroundColor: RES_COLORS[key],
+    borderWidth: 1.3, pointRadius: 0, tension: 0.15,
+  })).concat([{
+    label: 'รวม 5 อ่าง',
+    data: rows.map(r => r.total),
+    borderColor: RES_COLORS.total, backgroundColor: 'rgba(238,246,244,0.05)',
+    borderWidth: 1.8, borderDash: [4, 3], pointRadius: 0, tension: 0.15, fill: false,
+  }]);
+
+  new Chart(document.getElementById('resOverviewChart').getContext('2d'), {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#8aa3a0', font: { size: 10 }, maxTicksLimit: 10 }, grid: { color: 'rgba(157,201,201,0.06)' } },
+        y: { ticks: { color: '#8aa3a0', font: { size: 10 } }, grid: { color: 'rgba(157,201,201,0.08)' },
+             title: { display: true, text: 'MCM/วัน', color: '#8aa3a0', font: { size: 11 } } },
+      },
+    },
+  });
+
+  document.getElementById('resOverviewLegend').innerHTML =
+    RES_ORDER.map(key => '<span><span class="legend-dot" style="background:' + RES_COLORS[key] + '"></span>' + d.reservoirs[key].name_th + '</span>').join('') +
+    '<span><span class="legend-dot" style="background:' + RES_COLORS.total + '"></span>รวม 5 อ่าง (เส้นประ)</span>';
+}
+
+function drawResDetail(d) {
+  const rows = d[resGran];
+  const meta = d.reservoirs[resSelected];
+  const labels = rows.map(r => r.date);
+  const values = rows.map(r => r[resSelected]);
+  const capacity = meta.storage_capacity_mcm;
+  const granTh = resGran === 'daily' ? 'วัน' : resGran === 'weekly' ? 'สัปดาห์' : 'เดือน';
+
+  if (resDetailChart) resDetailChart.destroy();
+  resDetailChart = new Chart(document.getElementById('resDetailChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'น้ำท่าไหลเข้า (' + meta.name_th + ')',
+          data: values,
+          borderColor: '#45c2ad', backgroundColor: 'rgba(69,194,173,0.14)',
+          borderWidth: 1.8, pointRadius: resGran === 'monthly' ? 3 : 0, tension: 0.2, fill: true,
+        },
+        {
+          label: 'ความจุเก็บกัก',
+          data: labels.map(() => capacity),
+          borderColor: '#e0a94f', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, fill: false,
+        },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#8aa3a0', font: { size: 10 }, maxTicksLimit: 10 }, grid: { color: 'rgba(157,201,201,0.06)' } },
+        y: { ticks: { color: '#8aa3a0', font: { size: 10 } }, grid: { color: 'rgba(157,201,201,0.08)' },
+             title: { display: true, text: 'MCM/' + granTh, color: '#8aa3a0', font: { size: 11 } } },
+      },
+    },
+  });
+
+  document.getElementById('resDetailNote').textContent =
+    meta.name_th + ' — ความจุเก็บกัก ' + fmtMcm(capacity) + ' MCM · ระดับสันทำนบ (spillway) ' + fmtNum(meta.spillway_level_m, 2) + ' ม.รทก · ' +
+    'ข้อมูล ' + rows.length + ' จุด (' + labels[0] + ' ถึง ' + labels[labels.length - 1] + ')';
+}
+
+function initResCharts(d) {
+  resData = d;
+  const sel = document.getElementById('resSelect');
+  sel.innerHTML = RES_ORDER.map(k => '<option value="' + k + '">' + d.reservoirs[k].name_th + '</option>').join('');
+  sel.value = resSelected;
+  sel.addEventListener('change', () => { resSelected = sel.value; drawResDetail(resData); });
+
+  document.querySelectorAll('#resGranToggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#resGranToggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      resGran = btn.dataset.gran;
+      drawResDetail(resData);
+    });
+  });
+
+  drawResOverview(d);
+  drawResDetail(d);
+}
+
+fetch(RES_INFLOW_ENDPOINT)
+  .then(res => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+  .then(initResCharts)
+  .catch(err => {
+    console.error('โหลดข้อมูลน้ำท่า WMB ไม่สำเร็จ:', err);
+    const note = document.getElementById('resDetailNote');
+    if (note) note.textContent = 'ไม่สามารถโหลดข้อมูลน้ำท่าจาก ' + RES_INFLOW_ENDPOINT + ' ได้';
   });
 </script>
 

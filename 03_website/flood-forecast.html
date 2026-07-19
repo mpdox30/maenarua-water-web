@@ -9,6 +9,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="assets/js/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <style>
   :root {
     --bg-950: #06161c; --bg-900: #081e26; --bg-800: #0d2a34; --bg-700: #123643;
@@ -89,6 +92,12 @@
   .kpi .sub { font-size: 11.5px; color: var(--text-600); margin-top: 6px; }
   .kpi .sub.up { color: var(--amber-300); }
   .kpi .sub.down { color: var(--teal-300); }
+  .kpi-banks .bank-list { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
+  .kpi-banks .bank-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 12px; }
+  .kpi-banks .bank-row .bname { display: flex; align-items: center; gap: 6px; color: var(--text-300); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .kpi-banks .bank-row .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+  .kpi-banks .bank-row .bval { font-family: "Space Grotesk", sans-serif; font-weight: 600; flex: none; white-space: nowrap; }
+  .kpi-banks .bank-hint { font-size: 10.5px; color: var(--text-600); margin-top: 8px; }
 
   /* chart */
   .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px; }
@@ -111,6 +120,14 @@
   #riskMap { height: 440px; border-radius: var(--radius-lg); border: 1px solid var(--border-strong); z-index: 1; }
   .leaflet-container { background: #0d2a34; font-family: "IBM Plex Sans Thai", sans-serif; }
   .map-note { font-size: 11.5px; color: var(--text-600); margin-top: 10px; }
+  .leaflet-control-layers { background: rgba(8,30,38,0.94) !important; color: var(--text-300); border: 1px solid var(--border-strong) !important; border-radius: var(--radius-sm) !important; font-size: 12.5px; }
+  .leaflet-control-layers-toggle { filter: invert(1) hue-rotate(180deg); }
+  .leaflet-control-layers label { margin-bottom: 4px; }
+  .depth-legend { display: none; align-items: center; gap: 10px; margin-top: 10px; font-size: 11.5px; color: var(--text-500); flex-wrap: wrap; }
+  .depth-legend.show { display: flex; }
+  .depth-legend .bar-col { display: flex; flex-direction: column; gap: 3px; }
+  .depth-legend .bar { width: 180px; height: 10px; border-radius: 4px; background: linear-gradient(90deg, #30123b 0%, #466be3 12.5%, #28bbeb 25%, #32f197 37.5%, #a4fc3b 50%, #edcf39 62.5%, #fa7d20 75%, #d02f04 87.5%, #7a0402 100%); flex: none; }
+  .depth-legend .scale { display: flex; justify-content: space-between; width: 180px; font-size: 10px; color: var(--text-600); }
 
   /* reliability */
   .rel-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
@@ -119,6 +136,12 @@
   .rel-card ul { margin: 0; padding-left: 18px; }
   .rel-card li { margin-bottom: 6px; font-size: 12.5px; color: var(--text-500); }
   .warn-li { color: var(--amber-300) !important; }
+
+  /* WMB daily model charts (native Chart.js — แทนที่ iframe เดิม) */
+  .wmb-chart-card + .wmb-chart-card { margin-top: 18px; }
+  .wmb-chart-card .chart-wrap { position: relative; height: 220px; }
+  .wmb-chart-card .chart-wrap.tall { height: 280px; }
+  .wmb-chart-card .chart-note { font-size: 11.5px; color: var(--text-600); margin: 10px 0 0; }
 
   footer.site-footer { border-top: 1px solid var(--border); padding: 32px 0 40px; }
   .footer-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
@@ -149,24 +172,22 @@
     </a>
     <nav class="main-nav">
       <a href="index.html">หน้าแรก</a>
-      <a href="water-demand.html">ความต้องการใช้น้ำ</a>
-      <a href="inflow-forecast.html">น้ำไหลลงอ่าง</a>
       <a href="monitoring.html">สถานการณ์น้ำ</a>
+      <a href="inflow-forecast.html">คาดการณ์น้ำไหลลงอ่าง</a>
+      <a href="water-demand.html">คาดการณ์ความต้องการใช้น้ำ</a>
       <a href="flood-forecast.html" class="current">คาดการณ์น้ำท่วม</a>
-      <a href="gis-map.html">แผนที่ GIS</a>
-      <a href="research.html">งานวิจัย</a>
+      <a href="research.html">ดาวน์โหลดเอกสาร</a>
     </nav>
     <button class="nav-toggle" id="navToggle" aria-label="เปิดเมนู" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
     <nav class="mobile-nav" id="mobileNav">
       <a href="index.html">หน้าแรก</a>
-      <a href="water-demand.html">ความต้องการใช้น้ำ</a>
-      <a href="inflow-forecast.html">น้ำไหลลงอ่าง</a>
       <a href="monitoring.html">สถานการณ์น้ำ</a>
+      <a href="inflow-forecast.html">คาดการณ์น้ำไหลลงอ่าง</a>
+      <a href="water-demand.html">คาดการณ์ความต้องการใช้น้ำ</a>
       <a href="flood-forecast.html" class="current">คาดการณ์น้ำท่วม</a>
-      <a href="gis-map.html">แผนที่ GIS</a>
-      <a href="research.html">งานวิจัย</a>
+      <a href="research.html">ดาวน์โหลดเอกสาร</a>
     </nav>
   </div>
 </header>
@@ -206,9 +227,9 @@
         <div class="kpi"><div class="label">ระดับกว๊านพะเยาวันนี้</div>
           <div class="value num" id="kpiKwan">—<small>ม.รทก</small></div>
           <div class="sub" id="kpiKwanSub">—</div></div>
-        <div class="kpi"><div class="label">ระยะห่างจากตลิ่งห้วยแม่นาเรือ (391.80)</div>
-          <div class="value num" id="kpiGap">—<small>ม.</small></div>
-          <div class="sub" id="kpiGapSub">ตลิ่งห้วยร่องไฮ 391.00 ม.</div></div>
+        <div class="kpi kpi-banks"><div class="label">ระยะห่างจากตลิ่ง — ทุกห้วยที่ลงกว๊าน</div>
+          <div class="bank-list" id="bankList"><div class="bank-row"><span class="bname">กำลังโหลด…</span></div></div>
+          <div class="bank-hint">เรียงจากใกล้ตลิ่งที่สุด · เทียบกับระดับกว๊านวันนี้</div></div>
         <div class="kpi"><div class="label">ฝนสะสม 7 วันย้อนหลัง</div>
           <div class="value num" id="kpiRain">—<small>มม.</small></div>
           <div class="sub" id="kpiRainSub">ภูเขา — / ที่ราบ — มม.</div></div>
@@ -260,8 +281,15 @@
         <p>สีของแต่ละจุดตามระดับเตือนของลำน้ำนั้นใน 7 วันข้างหน้า — คลิกดูรายละเอียด</p>
       </div>
       <div id="riskMap"></div>
-      <p class="map-note">แนวลำน้ำจากการสำรวจ/KML ของโครงการ | อ่างเก็บน้ำ 7 แห่ง (รวมห้วยตุ่นและห้วยม่วง ตำบลบ้านตุ่น) |
-         ตำแหน่งจุดเสี่ยง = ปลายลำน้ำฝั่งกว๊าน</p>
+      <div class="depth-legend" id="depthLegend">
+        <span id="depthLegendLabel">ความลึกน้ำท่วม</span>
+        <div class="bar-col">
+          <div class="bar"></div>
+          <div class="scale"><span>0 ม.</span><span>2 ม.</span><span>4 ม.+</span></div>
+        </div>
+      </div>
+      <p class="map-note">แนวลำน้ำจากการสำรวจ/KML ของโครงการ (สีน้ำเงิน) | อ่างเก็บน้ำ 7 แห่ง (รวมห้วยตุ่นและห้วยม่วง ตำบลบ้านตุ่น) |
+         ตำแหน่งจุดเสี่ยง = ปลายลำน้ำฝั่งกว๊าน | เลือกชั้นข้อมูลความลึกน้ำท่วมและแผนที่พื้นหลังได้จากไอคอนมุมขวาบนของแผนที่</p>
     </div>
   </section>
 
@@ -285,6 +313,40 @@
       </div>
     </div>
   </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">WMB Phayao Model · จำลองรายวันทั้งระบบ</div>
+        <h2>ภาพรวมแบบจำลอง WMB พะเยา (ก.ค. 2567 – มิ.ย. 2569)</h2>
+        <p id="wmbCalibNote">กำลังโหลดข้อมูล…</p>
+        <p class="chart-note" style="margin-top:6px;">ซูมดูช่วงเวลาได้ด้วยการเลื่อนสกรอลล์เมาส์/บีบนิ้วบนกราฟ แล้วลากเพื่อเลื่อนช่วงเวลา
+          <button type="button" id="wmbResetZoomBtn" style="margin-left:8px; background:var(--surface); border:1px solid var(--border-strong); color:var(--text-300); border-radius:999px; padding:3px 12px; font-size:11px; cursor:pointer;">รีเซ็ตซูมทุกกราฟ</button></p>
+      </div>
+
+      <div class="chart-card wmb-chart-card">
+        <div class="chart-wrap"><canvas id="wmbRainChart"></canvas></div>
+        <p class="chart-note">ฝนเฉลี่ยพื้นที่ (มม./วัน) — เฉลี่ยจากจุดฝนจำลอง/สถานีเสมือนทั่วลุ่มน้ำ</p>
+      </div>
+      <div class="chart-card wmb-chart-card">
+        <div class="chart-wrap"><canvas id="wmbRunoffChart"></canvas></div>
+        <p class="chart-note">Runoff รวมทั้งลุ่มน้ำ (MCM/วัน) ก่อนเข้าอ่างเก็บน้ำ/คลองส่งน้ำ</p>
+      </div>
+      <div class="chart-card wmb-chart-card">
+        <div class="chart-wrap tall"><canvas id="wmbOverflowChart"></canvas></div>
+        <div class="chart-legend" id="wmbOverflowLegend"></div>
+      </div>
+      <div class="chart-card wmb-chart-card">
+        <div class="chart-wrap tall"><canvas id="wmbLakeChart"></canvas></div>
+        <p class="chart-note">เส้นประแดง = ตลิ่งปลายห้วยแม่นาเรือ (391.80 ม.รทก) · แถบสี = ช่วงพายุสำคัญที่ใช้ตรวจสอบแบบจำลอง</p>
+      </div>
+
+      <p class="map-note" id="wmbFooterNote" style="margin-top:14px;">กำลังโหลดข้อมูล…</p>
+      <p class="map-note">อ่างเก็บน้ำ 5 แห่ง (inflow/ความจุ รายวัน-สัปดาห์-เดือน) ดูรายละเอียดเต็มได้ที่หัวข้อ
+        "ภาพรวมน้ำท่าไหลลงอ่างเก็บน้ำ" ในหน้า <a href="inflow-forecast.html" style="color:var(--teal-300);">คาดการณ์น้ำไหลลงอ่าง</a> —
+        ตัดส่วน validation ระดับระบบคลองและตารางสรุปต่อโหนดออกจากหน้านี้ (ดูได้จากทีมโครงการโดยตรง)</p>
+    </div>
+  </section>
 </main>
 
 <footer class="site-footer">
@@ -302,6 +364,14 @@ const DATA_ENDPOINT = 'assets/data/flood_latest.json';
 const CANALS_GJ = 'assets/data/wmb_canals.geojson.json';
 const RES_GJ = 'assets/data/wmb_reservoirs7.geojson.json';
 const STALE_HOURS = 48;
+
+// ภาพซ้อนความลึกน้ำท่วม (สร้างจาก raster WMB, EPSG:4326) — ทั้งสองชั้นใช้ขอบเขตเดียวกัน
+const DEPTH_BOUNDS = [[19.01883856557195, 99.75718730414324], [19.158288896246347, 99.92468585009338]];
+const DEPTH_VMAX = 4.0;
+const DEPTH_LAYERS_META = {
+  yagi2024: { url: 'assets/data/flood_depth_yagi2024.png', label: 'ความลึกน้ำท่วมจริง — พายุยากิ 2567' },
+  p95:      { url: 'assets/data/flood_risk_p95.png',       label: 'แผนที่ความเสี่ยงเชิงสถิติ (P95)' },
+};
 
 const FLAG = {
   normal:   { th: 'ปกติ',      color: 'var(--flag-normal)',   bg: 'flag-normal-bg',   hex: '#2a9d8f' },
@@ -365,8 +435,7 @@ function render(d) {
     sub.textContent = (ch >= 0 ? '▲ +' : '▼ ') + fmt(ch, 2) + ' ม. ใน 3 วัน';
     sub.className = 'sub ' + (ch > 0.01 ? 'up' : 'down');
   }
-  const gap = d.banks.Mae_Main1 - d.kwan_now.level;
-  document.getElementById('kpiGap').innerHTML = fmt(gap, 2) + '<small>ม.</small>';
+  drawBankList(d);
   document.getElementById('kpiRain').innerHTML =
     fmt((d.rain_7d.mtn + d.rain_7d.low) / 2, 0) + '<small>มม.</small>';
   document.getElementById('kpiRainSub').textContent =
@@ -388,6 +457,24 @@ function render(d) {
   document.getElementById('warnList').innerHTML = (d.warnings && d.warnings.length)
     ? d.warnings.map(w => '<li class="warn-li">' + w + '</li>').join('')
     : '<li>ไม่มีคำเตือน — ข้อมูลครบถ้วน</li>';
+}
+
+// ---------- ระยะห่างจากตลิ่ง รายห้วย ----------
+function drawBankList(d) {
+  const el = document.getElementById('bankList');
+  const rows = Object.entries(d.banks).map(([node, bank]) => {
+    const gap = bank - d.kwan_now.level;
+    const name = (d.nodes && d.nodes[node] && d.nodes[node].name_th) || node;
+    let cls = 'normal';
+    if (gap <= 0) cls = 'critical';
+    else if (gap <= 0.3) cls = 'warning';
+    else if (gap <= 0.6) cls = 'watch';
+    return { name, bank, gap, cls };
+  }).sort((a, b) => a.gap - b.gap);
+  el.innerHTML = rows.map(r => (
+    '<div class="bank-row"><span class="bname"><span class="dot" style="background:' + FLAG[r.cls].hex + '"></span>' + r.name + '</span>' +
+    '<span class="bval" style="color:' + FLAG[r.cls].hex + '">' + (r.gap >= 0 ? '+' : '') + fmt(r.gap, 2) + ' ม.</span></div>'
+  )).join('');
 }
 
 // ---------- กราฟ canvas ----------
@@ -511,17 +598,37 @@ function nodeFlagLevel(d, node) {
 function drawMap(d) {
   const map = L.map('riskMap', { scrollWheelZoom: false })
     .setView([19.115, 99.87], 12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    { attribution: '© OpenStreetMap', opacity: 0.75 }).addTo(map);
+
+  // ---------- แผนที่พื้นหลัง (เลือกได้) ----------
+  const baseOSM = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    { attribution: '© OpenStreetMap', opacity: 0.75 });
+  const baseSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    { attribution: 'Tiles © Esri' });
+  const baseDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    { attribution: '© OpenStreetMap, © CARTO' });
+  const baseTerrain = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    { attribution: '© OpenStreetMap, © OpenTopoMap', opacity: 0.85 });
+  baseOSM.addTo(map);
+  const baseMaps = {
+    'ถนน/สิ่งปลูกสร้าง (OSM)': baseOSM,
+    'ภาพถ่ายดาวเทียม': baseSat,
+    'มืด (Dark)': baseDark,
+    'ภูมิประเทศ': baseTerrain,
+  };
+
+  // ---------- คลอง/อ่างเก็บน้ำ — สีน้ำเงินให้ชัดขึ้น ----------
   fetch(CANALS_GJ).then(r => r.json()).then(gj => {
-    L.geoJSON(gj, { style: { color: '#45c2ad', weight: 1.6, opacity: 0.75 } }).addTo(map);
+    L.geoJSON(gj, { style: { color: '#2f7bff', weight: 2.4, opacity: 0.95 } }).addTo(map);
   }).catch(() => {});
   fetch(RES_GJ).then(r => r.json()).then(gj => {
     L.geoJSON(gj, {
-      style: { color: '#7fe0d1', weight: 1.5, fillColor: '#2a9d8f', fillOpacity: 0.55 },
+      style: { color: '#5b9dff', weight: 2, fillColor: '#1e5fd9', fillOpacity: 0.55 },
       onEachFeature: (f, ly) => ly.bindPopup('<b>' + (f.properties.Name_T || f.properties.Name) + '</b>')
     }).addTo(map);
   }).catch(() => {});
+
+  // ---------- จุดเสี่ยงรายห้วย ----------
+  const markerLayer = L.layerGroup();
   Object.entries(d.nodes).forEach(([node, p]) => {
     const lv = nodeFlagLevel(d, node);
     const f = FLAG[lv];
@@ -530,17 +637,218 @@ function drawMap(d) {
     L.circleMarker([p.lat, p.lon], {
       radius: lv === 'normal' ? 6 : 9, color: '#06161c', weight: 1.5,
       fillColor: f.hex, fillOpacity: 0.95,
-    }).addTo(map).bindPopup(
+    }).addTo(markerLayer).bindPopup(
       '<b>' + p.name_th + '</b><br>ระดับเตือน: ' + f.th +
       (total > 0 ? '<br>น้ำล้นคาดการณ์รวม ' + fmt(total, 2) + ' ล้าน ลบ.ม./7 วัน' : '<br>ไม่มีน้ำล้นคาดการณ์')
     );
   });
+  markerLayer.addTo(map);
+
+  // ---------- ชั้นความลึกน้ำท่วม (เหตุการณ์ในอดีต / ความเสี่ยง) ----------
+  const legend = document.getElementById('depthLegend');
+  const legendLabel = document.getElementById('depthLegendLabel');
+  const depthLayers = {};
+  Object.entries(DEPTH_LAYERS_META).forEach(([key, meta]) => {
+    const layer = L.imageOverlay(meta.url, DEPTH_BOUNDS, { opacity: 0.8, interactive: false });
+    depthLayers[meta.label] = layer;
+    layer.on('add', () => { legend.classList.add('show'); legendLabel.textContent = meta.label + ' (0–' + DEPTH_VMAX + '+ ม.)'; });
+    layer.on('remove', () => { if (!map.hasLayer(depthLayers['ความลึกน้ำท่วมจริง — พายุยากิ 2567']) && !map.hasLayer(depthLayers['แผนที่ความเสี่ยงเชิงสถิติ (P95)'])) legend.classList.remove('show'); });
+  });
+
+  L.control.layers(baseMaps, Object.assign({ 'จุดเสี่ยงรายห้วย': markerLayer }, depthLayers), { collapsed: true }).addTo(map);
 }
 
 main();
 window.addEventListener('resize', () => {
   fetch(DATA_ENDPOINT, { cache: 'force-cache' }).then(r => r.json()).then(drawChart).catch(() => {});
 });
+</script>
+
+<script>
+// ================= WMB Phayao Model: จำลองรายวันทั้งระบบ =================
+// แทนที่ iframe ของ dashboard.html (5MB Plotly export) ด้วยกราฟ Chart.js เบาๆ ที่อ่านข้อมูลตรงจาก
+// assets/data/wmb_daily_model.json (สร้างจาก 03_model/simulation/{rain_daily_corrected,mass_balance,
+// Flood_output}.csv + 01_raw_data/kwaan_level/kwaan_level_daily.csv ของ WMB_Phayao) — ตัดส่วน
+// "Validation ระดับระบบคลอง" (scatter SAR vs sim) และ "สรุปต่อโหนด" (ตาราง) ออกตามคำขอของทีมโครงการ
+const WMB_MODEL_ENDPOINT = 'assets/data/wmb_daily_model.json';
+const WMB_NODE_COLORS = ['#45c2ad', '#e0a94f', '#7fa8e0', '#c98be0', '#e0839c', '#8fd14f'];
+const wmbCharts = [];
+// chartjs-plugin-zoom (โหลดผ่าน CDN ใน <head>) ลงทะเบียนตัวเองอัตโนมัติเมื่อโหลดผ่าน <script> tag
+// (ตาม official docs) จึงไม่ต้องเรียก Chart.register() เอง
+
+// วาดทั้งแถบสี (พื้นหลัง) และชื่อพายุ (ข้อความ) ให้ตรงกับกราฟต้นฉบับ (Plotly add_vrect/annotation_text)
+// — ใช้ซ้ำในทั้ง 4 กราฟ โดยรับ dates ของแต่ละกราฟเอง เพราะกราฟระดับกว๊านมีช่วงวันที่ไม่เท่ากับอีก 3 กราฟ
+function wmbEventBandsPlugin(events, dates) {
+  return {
+    id: 'wmbEventBands',
+    beforeDatasetsDraw(chart) {
+      const { ctx, chartArea, scales } = chart;
+      if (!chartArea) return;
+      const xScale = scales.x;
+      events.forEach(ev => {
+        let i0 = dates.indexOf(ev.start);
+        let i1 = dates.indexOf(ev.end);
+        if (i0 === -1) i0 = 0;
+        if (i1 === -1) i1 = dates.length - 1;
+        const x0 = xScale.getPixelForValue(i0);
+        const x1 = xScale.getPixelForValue(i1);
+        ctx.save();
+        ctx.fillStyle = ev.color;
+        ctx.fillRect(x0, chartArea.top, x1 - x0, chartArea.bottom - chartArea.top);
+        ctx.restore();
+      });
+    },
+    afterDatasetsDraw(chart) {
+      const { ctx, chartArea, scales } = chart;
+      if (!chartArea) return;
+      const xScale = scales.x;
+      ctx.save();
+      ctx.font = '10px "IBM Plex Sans Thai", sans-serif';
+      ctx.fillStyle = 'rgba(238,246,244,0.9)';
+      ctx.textBaseline = 'top';
+      events.forEach(ev => {
+        let i0 = dates.indexOf(ev.start);
+        if (i0 === -1) i0 = 0;
+        const x0 = xScale.getPixelForValue(i0);
+        ctx.fillText(ev.label, Math.max(x0 + 3, chartArea.left + 3), chartArea.top + 3);
+      });
+      ctx.restore();
+    },
+  };
+}
+
+function wmbSparseTicks() {
+  return { color: '#8aa3a0', font: { size: 10 }, maxTicksLimit: 8 };
+}
+
+function wmbZoomConfig() {
+  return {
+    pan: { enabled: true, mode: 'x' },
+    zoom: { wheel: { enabled: true }, pinch: { enabled: true }, drag: { enabled: false }, mode: 'x' },
+  };
+}
+
+function wmbTitle(text) {
+  return { display: true, text, color: '#eef6f4', font: { size: 13, weight: '600', family: '"IBM Plex Sans Thai", sans-serif' }, padding: { bottom: 10 } };
+}
+
+function initWmbCharts(d) {
+  const dates = d.dates;
+
+  document.getElementById('wmbCalibNote').textContent =
+    'Calibration v10 — R² ระบบ = ' + d.calibration.r2_system + ', RMSE ' + d.calibration.rmse_mcm +
+    ' MCM, Bias ' + (d.calibration.bias_mcm >= 0 ? '+' : '') + d.calibration.bias_mcm + ' MCM (validate กับข้อมูล SAR อิสระ)';
+  document.getElementById('wmbFooterNote').textContent =
+    d.calibration.note + ' | overflow รวม ' + d.calibration.overflow_total_mcm + ' MCM/' + d.calibration.period_days + ' วัน';
+
+  wmbCharts.push(new Chart(document.getElementById('wmbRainChart').getContext('2d'), {
+    type: 'bar',
+    data: { labels: dates, datasets: [{
+      label: 'ฝนเฉลี่ยพื้นที่ (มม./วัน)', data: d.rain_mm,
+      backgroundColor: 'rgba(69,148,194,0.7)', barPercentage: 1, categoryPercentage: 1,
+    }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, title: wmbTitle('ฝนเฉลี่ยพื้นที่ (มม./วัน)'), zoom: wmbZoomConfig() },
+      scales: {
+        x: { ticks: wmbSparseTicks(), grid: { display: false } },
+        y: { ticks: { color: '#8aa3a0', font: { size: 10 } }, grid: { color: 'rgba(157,201,201,0.08)' } },
+      },
+    },
+    plugins: [wmbEventBandsPlugin(d.events, dates)],
+  }));
+
+  wmbCharts.push(new Chart(document.getElementById('wmbRunoffChart').getContext('2d'), {
+    type: 'line',
+    data: { labels: dates, datasets: [{
+      label: 'Runoff รวม (MCM/วัน)', data: d.runoff_mcm,
+      borderColor: '#2a9d8f', backgroundColor: 'rgba(42,157,143,0.18)',
+      borderWidth: 1.3, pointRadius: 0, fill: true, tension: 0.1,
+    }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, title: wmbTitle('Runoff รวม (MCM/วัน)'), zoom: wmbZoomConfig() },
+      scales: {
+        x: { ticks: wmbSparseTicks(), grid: { display: false } },
+        y: { ticks: { color: '#8aa3a0', font: { size: 10 } }, grid: { color: 'rgba(157,201,201,0.08)' } },
+      },
+    },
+    plugins: [wmbEventBandsPlugin(d.events, dates)],
+  }));
+
+  const nodeKeys = Object.keys(d.overflow_by_node);
+  wmbCharts.push(new Chart(document.getElementById('wmbOverflowChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: nodeKeys.map((k, i) => ({
+        label: d.overflow_by_node[k].name_th,
+        data: d.overflow_by_node[k].values,
+        borderColor: WMB_NODE_COLORS[i % WMB_NODE_COLORS.length],
+        backgroundColor: WMB_NODE_COLORS[i % WMB_NODE_COLORS.length] + '33',
+        borderWidth: 1.2, pointRadius: 0, fill: true, tension: 0.1,
+      })),
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false }, title: wmbTitle('Overflow รายโหนด (MCM/วัน)'), zoom: wmbZoomConfig() },
+      scales: {
+        x: { ticks: wmbSparseTicks(), grid: { display: false } },
+        y: { ticks: { color: '#8aa3a0', font: { size: 10 } }, grid: { color: 'rgba(157,201,201,0.08)' } },
+      },
+    },
+    plugins: [wmbEventBandsPlugin(d.events, dates)],
+  }));
+  document.getElementById('wmbOverflowLegend').innerHTML = nodeKeys.map((k, i) =>
+    '<span><span class="legend-dot" style="background:' + WMB_NODE_COLORS[i % WMB_NODE_COLORS.length] + '"></span>' + d.overflow_by_node[k].name_th + '</span>'
+  ).join('');
+
+  const lakeDates = d.lake_level.dates;
+  wmbCharts.push(new Chart(document.getElementById('wmbLakeChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: lakeDates,
+      datasets: [
+        {
+          label: 'ระดับกว๊านพะเยา (ม.รทก)', data: d.lake_level.level_m,
+          borderColor: '#274c9e', backgroundColor: 'transparent',
+          borderWidth: 1.5, pointRadius: 0, tension: 0.1,
+        },
+        {
+          label: d.lake_level.bank_label,
+          data: lakeDates.map(() => d.lake_level.bank_m),
+          borderColor: '#e05252', borderDash: [6, 4], borderWidth: 1.4, pointRadius: 0, fill: false,
+        },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, title: wmbTitle('ระดับกว๊านพะเยา (ม.รทก)'), zoom: wmbZoomConfig() },
+      scales: {
+        x: { ticks: wmbSparseTicks(), grid: { display: false } },
+        y: { ticks: { color: '#8aa3a0', font: { size: 10 } }, grid: { color: 'rgba(157,201,201,0.08)' } },
+      },
+    },
+    plugins: [wmbEventBandsPlugin(d.events, lakeDates)],
+  }));
+
+  const resetBtn = document.getElementById('wmbResetZoomBtn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      wmbCharts.forEach(c => { if (typeof c.resetZoom === 'function') c.resetZoom(); });
+    });
+  }
+}
+
+fetch(WMB_MODEL_ENDPOINT)
+  .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(initWmbCharts)
+  .catch(err => {
+    console.error('โหลดข้อมูลแบบจำลอง WMB ไม่สำเร็จ:', err);
+    document.getElementById('wmbCalibNote').textContent = 'ไม่สามารถโหลดข้อมูลแบบจำลอง WMB ได้';
+    document.getElementById('wmbFooterNote').textContent = '';
+  });
 </script>
 
 </body>
