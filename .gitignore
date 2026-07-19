@@ -22,3 +22,11 @@ __pycache__/
 
 # --- Logs (regenerable) ---
 01_data/scripts and code/pipeline/logs/*.txt
+
+# --- 2026-07-19 เพิ่ม — โมเดลไบนารีขนาดใหญ่เกินลิมิต GitHub (100MB/ไฟล์) ---
+# ถูกลบออกจาก git history ทั้งหมดแล้วด้วย git filter-repo (2026-07-19) เพราะ push ครั้งแรกโดน
+# GitHub ปฏิเสธ (pre-receive hook declined — GH001 file too large) ไฟล์ยังอยู่บนดิสก์ตามปกติ
+# (data_pipeline.py ยังโหลดใช้ได้ปกติ) แค่ไม่ track ใน git อีกต่อไป ถ้าต้องสำรอง/แชร์โมเดลพวกนี้ให้ใช้
+# Google Drive หรือ Git LFS แยกต่างหาก ไม่ใช่ commit ตรงเข้า repo นี้
+01_data/scripts and code/Water_demand/active/catboost_models.pkl
+01_data/scripts and code/Water_demand/active/rf_model_v3b_final.pkl
