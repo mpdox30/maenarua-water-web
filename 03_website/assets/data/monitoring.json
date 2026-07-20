@@ -1,7 +1,7 @@
 {
   "meta": {
     "source": "สถานีโทรมาตร สสน. (API) ผ่าน Google Sheet wide_log (poll ทุก 10 นาที) + 01_data/Reservoirs/reference (rating curve ต่ออ่าง)",
-    "updated": "2026-07-20T17:20:00",
+    "updated": "2026-07-20T20:10:00",
     "data_connected": true
   },
   "stations": [
@@ -10,17 +10,17 @@
       "name_th": "อ่างเก็บน้ำแม่นาเรือ",
       "name_en": "Mae Na Rua Reservoir",
       "spillway_msl": 489.54,
-      "water_level": 488.89,
+      "water_level": 488.878,
       "rainfall_1h": 0.0,
-      "temperature": 26.14,
-      "humidity": 86.2,
-      "pressure": 953.79,
-      "solar": 81.1,
-      "measure_datetime": "2026-07-20T17:20:00",
-      "storage_m3": 1433876.9,
+      "temperature": 24.36,
+      "humidity": 95.37,
+      "pressure": 954.11,
+      "solar": 0.0,
+      "measure_datetime": "2026-07-20T20:10:00",
+      "storage_m3": 1430387.4,
       "storage_max_m3": 1625463.8,
-      "capacity_pct": 88.2,
-      "distance_to_spillway_m": -0.65,
+      "capacity_pct": 88.0,
+      "distance_to_spillway_m": -0.662,
       "history": [
         {
           "t": "2026-07-10T18:00:00",
@@ -981,6 +981,18 @@
         {
           "t": "2026-07-20T17:00:00",
           "level": 488.896
+        },
+        {
+          "t": "2026-07-20T18:00:00",
+          "level": 488.883
+        },
+        {
+          "t": "2026-07-20T19:00:00",
+          "level": 488.878
+        },
+        {
+          "t": "2026-07-20T20:00:00",
+          "level": 488.884
         }
       ]
     },
@@ -991,11 +1003,11 @@
       "spillway_msl": 457.07,
       "water_level": 455.457,
       "rainfall_1h": 0.0,
-      "temperature": 26.42,
-      "humidity": 87.33,
-      "pressure": 957.27,
-      "solar": 97.7,
-      "measure_datetime": "2026-07-20T17:20:00",
+      "temperature": 23.86,
+      "humidity": 91.33,
+      "pressure": 957.72,
+      "solar": 0.2,
+      "measure_datetime": "2026-07-20T20:10:00",
       "storage_m3": 262873.8,
       "storage_max_m3": 347778.7,
       "capacity_pct": 75.6,
@@ -1960,6 +1972,18 @@
         {
           "t": "2026-07-20T17:00:00",
           "level": 455.457
+        },
+        {
+          "t": "2026-07-20T18:00:00",
+          "level": 455.45
+        },
+        {
+          "t": "2026-07-20T19:00:00",
+          "level": 455.457
+        },
+        {
+          "t": "2026-07-20T20:00:00",
+          "level": 455.45
         }
       ]
     },
@@ -1969,12 +1993,12 @@
       "name_en": "Huai Tham Reservoir",
       "spillway_msl": 478.1,
       "water_level": 478.14,
-      "rainfall_1h": 0.0,
-      "temperature": 25.0,
-      "humidity": 91.2,
-      "pressure": 954.6,
-      "solar": 59.7,
-      "measure_datetime": "2026-07-20T17:00:00",
+      "rainfall_1h": 0.4,
+      "temperature": 23.4,
+      "humidity": 94.5,
+      "pressure": 954.8,
+      "solar": 0.2,
+      "measure_datetime": "2026-07-20T20:00:00",
       "storage_m3": 498995.6,
       "storage_max_m3": 495467.8,
       "capacity_pct": 100.7,
@@ -2935,6 +2959,18 @@
         {
           "t": "2026-07-20T17:00:00",
           "level": 478.14
+        },
+        {
+          "t": "2026-07-20T18:00:00",
+          "level": 478.14
+        },
+        {
+          "t": "2026-07-20T19:00:00",
+          "level": 478.14
+        },
+        {
+          "t": "2026-07-20T20:00:00",
+          "level": 478.14
         }
       ]
     },
@@ -2943,17 +2979,17 @@
       "name_th": "อ่างเก็บน้ำห้วยโซ้",
       "name_en": "Huai So Reservoir",
       "spillway_msl": 508.0,
-      "water_level": 508.05,
+      "water_level": 508.044,
       "rainfall_1h": 0.0,
-      "temperature": 24.44,
-      "humidity": 94.09,
-      "pressure": 951.97,
-      "solar": 79.5,
-      "measure_datetime": "2026-07-20T17:20:00",
-      "storage_m3": 120724.5,
+      "temperature": 22.8,
+      "humidity": 97.53,
+      "pressure": 952.47,
+      "solar": 0.0,
+      "measure_datetime": "2026-07-20T20:10:00",
+      "storage_m3": 120518.4,
       "storage_max_m3": 119007.2,
-      "capacity_pct": 101.4,
-      "distance_to_spillway_m": 0.05,
+      "capacity_pct": 101.3,
+      "distance_to_spillway_m": 0.044,
       "history": [
         {
           "t": "2026-07-10T18:00:00",
@@ -3914,6 +3950,18 @@
         {
           "t": "2026-07-20T17:00:00",
           "level": 508.05
+        },
+        {
+          "t": "2026-07-20T18:00:00",
+          "level": 508.044
+        },
+        {
+          "t": "2026-07-20T19:00:00",
+          "level": 508.043
+        },
+        {
+          "t": "2026-07-20T20:00:00",
+          "level": 508.043
         }
       ]
     }
