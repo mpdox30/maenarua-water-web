@@ -1,7 +1,7 @@
 {
   "meta": {
     "source": "สถานีโทรมาตร สสน. (API) ผ่าน Google Sheet wide_log (poll ทุก 10 นาที) + 01_data/Reservoirs/reference (rating curve ต่ออ่าง)",
-    "updated": "2026-07-21T10:50:00",
+    "updated": "2026-07-21T11:10:00",
     "data_connected": true
   },
   "stations": [
@@ -10,17 +10,17 @@
       "name_th": "อ่างเก็บน้ำแม่นาเรือ",
       "name_en": "Mae Na Rua Reservoir",
       "spillway_msl": 489.54,
-      "water_level": 488.858,
+      "water_level": 488.871,
       "rainfall_1h": 0.0,
-      "temperature": 26.17,
-      "humidity": 84.12,
-      "pressure": 955.63,
-      "solar": 217.2,
-      "measure_datetime": "2026-07-21T10:50:00",
-      "storage_m3": 1424573.9,
+      "temperature": 26.66,
+      "humidity": 80.58,
+      "pressure": 955.54,
+      "solar": 322.5,
+      "measure_datetime": "2026-07-21T11:10:00",
+      "storage_m3": 1428352.3,
       "storage_max_m3": 1625463.8,
-      "capacity_pct": 87.6,
-      "distance_to_spillway_m": -0.682,
+      "capacity_pct": 87.9,
+      "distance_to_spillway_m": -0.669,
       "history": [
         {
           "t": "2026-07-10T18:00:00",
@@ -1049,6 +1049,10 @@
         {
           "t": "2026-07-21T10:00:00",
           "level": 488.871
+        },
+        {
+          "t": "2026-07-21T11:00:00",
+          "level": 488.855
         }
       ]
     },
@@ -1059,11 +1063,11 @@
       "spillway_msl": 457.07,
       "water_level": 455.45,
       "rainfall_1h": 0.0,
-      "temperature": 26.75,
-      "humidity": 78.03,
-      "pressure": 959.28,
-      "solar": 234.4,
-      "measure_datetime": "2026-07-21T10:50:00",
+      "temperature": 27.3,
+      "humidity": 77.4,
+      "pressure": 959.29,
+      "solar": 327.2,
+      "measure_datetime": "2026-07-21T11:10:00",
       "storage_m3": 262532.1,
       "storage_max_m3": 347778.7,
       "capacity_pct": 75.5,
@@ -2096,6 +2100,10 @@
         {
           "t": "2026-07-21T10:00:00",
           "level": 455.45
+        },
+        {
+          "t": "2026-07-21T11:00:00",
+          "level": 455.45
         }
       ]
     },
@@ -2104,17 +2112,17 @@
       "name_th": "อ่างเก็บน้ำห้วยถ้ำ",
       "name_en": "Huai Tham Reservoir",
       "spillway_msl": 478.1,
-      "water_level": 478.13,
+      "water_level": 478.12,
       "rainfall_1h": 0.0,
-      "temperature": 26.1,
-      "humidity": 88.2,
-      "pressure": 956.6,
-      "solar": 246.8,
-      "measure_datetime": "2026-07-21T10:00:00",
-      "storage_m3": 498113.7,
+      "temperature": 26.4,
+      "humidity": 88.9,
+      "pressure": 956.3,
+      "solar": 282.5,
+      "measure_datetime": "2026-07-21T11:00:00",
+      "storage_m3": 497231.7,
       "storage_max_m3": 495467.8,
-      "capacity_pct": 100.5,
-      "distance_to_spillway_m": 0.03,
+      "capacity_pct": 100.4,
+      "distance_to_spillway_m": 0.02,
       "history": [
         {
           "t": "2026-07-10T18:00:00",
@@ -3139,6 +3147,10 @@
         {
           "t": "2026-07-21T10:00:00",
           "level": 478.13
+        },
+        {
+          "t": "2026-07-21T11:00:00",
+          "level": 478.12
         }
       ]
     },
@@ -3147,17 +3159,17 @@
       "name_th": "อ่างเก็บน้ำห้วยโซ้",
       "name_en": "Huai So Reservoir",
       "spillway_msl": 508.0,
-      "water_level": 508.055,
+      "water_level": 508.056,
       "rainfall_1h": 0.0,
-      "temperature": 26.24,
-      "humidity": 87.47,
-      "pressure": 953.84,
-      "solar": 177.5,
-      "measure_datetime": "2026-07-21T10:50:00",
-      "storage_m3": 120896.2,
+      "temperature": 27.4,
+      "humidity": 83.51,
+      "pressure": 953.73,
+      "solar": 269.3,
+      "measure_datetime": "2026-07-21T11:10:00",
+      "storage_m3": 120930.6,
       "storage_max_m3": 119007.2,
       "capacity_pct": 101.6,
-      "distance_to_spillway_m": 0.055,
+      "distance_to_spillway_m": 0.056,
       "history": [
         {
           "t": "2026-07-10T18:00:00",
@@ -4186,6 +4198,10 @@
         {
           "t": "2026-07-21T10:00:00",
           "level": 508.049
+        },
+        {
+          "t": "2026-07-21T11:00:00",
+          "level": 508.056
         }
       ]
     }
