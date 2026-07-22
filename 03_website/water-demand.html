@@ -256,6 +256,12 @@
           <div class="kpi-value" id="kpiZoneBMae">—<span class="kpi-unit">ลบ.ม./สัปดาห์</span></div>
           <div class="kpi-note" id="kpiZoneBNote">กำลังโหลดข้อมูล…</div>
         </div>
+        <div class="kpi-card" id="reservoirBreakdownCard">
+          <div class="kpi-icon">💧</div>
+          <div class="kpi-label">Zone B แบ่งตามอ่าง (h=1)</div>
+          <div class="kpi-value" style="font-size:14.5px; line-height:1.8; font-weight:500;" id="kpiReservoirBreakdown">กำลังโหลดข้อมูล…</div>
+          <div class="kpi-note" id="kpiReservoirBreakdownNote">สัดส่วนคำนวณจาก FAO-56 ต่ออ่าง (พื้นที่ SAR ล่าสุด)</div>
+        </div>
         <div class="kpi-card accent-amber">
           <div class="kpi-icon">📅</div>
           <div class="kpi-label">สัปดาห์อ้างอิง (as_of)</div>
@@ -452,6 +458,32 @@ function renderKPI(json) {
   document.getElementById('kpiZoneBMae').innerHTML = fmtInt(b1 && b1.final_m3) + '<span class="kpi-unit">ลบ.ม./สัปดาห์</span>';
   document.getElementById('kpiZoneBNote').innerHTML = 'P(มีความต้องการ) = ' + fmtPct(b1 && b1.probability_active) +
     ' &nbsp;<span class="badge ' + bSrc.badgeClass + '">' + bSrc.text + '</span>';
+
+  // 2026-07-22 เพิ่ม -- การ์ดแบ่งค่าพยากรณ์ Zone B (final_m3 ด้านบน) ตามอ่างที่ส่งน้ำ ใช้สัดส่วน FAO-56
+  // ต่ออ่างที่ pipeline คำนวณไว้แล้ว (data_pipeline.py: _wd_allocate_zone_b_reservoir_breakdown()) --
+  // ผลรวม allocated_m3 ของทุกอ่าง = final_m3 เป๊ะ ไม่ใช่ตัวเลขอิสระใหม่
+  const reservoirBreakdownEl = document.getElementById('kpiReservoirBreakdown');
+  const reservoirBreakdownNoteEl = document.getElementById('kpiReservoirBreakdownNote');
+  const reservoirBreakdown = b1 && b1.reservoir_breakdown;
+  if (reservoirBreakdownEl) {
+    if (reservoirBreakdown && reservoirBreakdown.reservoirs) {
+      const entries = Object.entries(reservoirBreakdown.reservoirs);
+      reservoirBreakdownEl.innerHTML = entries.map(([name, info]) => {
+        const shortName = name.replace('อ่างเก็บน้ำ', '');
+        return '<div style="display:flex; justify-content:space-between; gap:10px;">' +
+          '<span style="color:var(--text-500); font-weight:400;">' + shortName + '</span>' +
+          '<span>' + fmtInt(info.allocated_m3) +
+          ' <span style="color:var(--text-600); font-size:11px;">(' + Math.round(info.share * 100) + '%)</span></span>' +
+          '</div>';
+      }).join('');
+      if (reservoirBreakdownNoteEl) reservoirBreakdownNoteEl.textContent =
+        'จัดสรรจากค่าพยากรณ์ Zone B (' + fmtInt(reservoirBreakdown.total_m3) + ' ลบ.ม./สัปดาห์) ตามสัดส่วน FAO-56 ต่ออ่าง';
+    } else {
+      reservoirBreakdownEl.innerHTML = '<span style="font-size:13px; color:var(--text-600); font-weight:400;">ยังไม่มีข้อมูล</span>';
+      if (reservoirBreakdownNoteEl) reservoirBreakdownNoteEl.textContent =
+        'ต้องมีทั้งผลจำแนกพืชต่ออ่าง (SAR) และข้อมูล climate สัปดาห์นี้พร้อมใช้ก่อน';
+    }
+  }
 
   const asOfA = a.as_of ? (a.as_of.year + '-W' + String(a.as_of.week).padStart(2, '0')) : '—';
   const asOfB = b.as_of ? (b.as_of.year + '-W' + String(b.as_of.week).padStart(2, '0')) : '—';

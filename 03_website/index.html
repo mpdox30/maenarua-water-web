@@ -935,7 +935,7 @@ Promise.all([
 // field เขียนโดย sar_background_job.py ผ่าน data_pipeline.py::save_results())
 const SAR_DATA_ENDPOINT = 'assets/data/latest.json';
 
-const SAR_CROP_TH = {rice: 'ข้าว', corn: 'ข้าวโพด', cassava: 'มันสำปะหลัง', longan: 'ลำไย', etc: 'อื่นๆ (ยางพารา/ปาล์ม/ยาสูบ ฯลฯ)'};
+const SAR_CROP_TH = {rice: 'ข้าว', corn: 'ข้าวโพด', cassava: 'มันสำปะหลัง', longan: 'ลำไย', etc: 'อื่นๆ (ยางพารา/ปาล์ม ฯลฯ)'};
 
 function _sarFmtHa(v) {
   return (v === null || v === undefined) ? '—' : Number(v).toFixed(2) + ' ha';
