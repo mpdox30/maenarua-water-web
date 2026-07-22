@@ -426,6 +426,15 @@ def _run_weekly_mode(args, out_json_path: Path, result: dict) -> tuple:
         candidate_days = _iso_week_days(as_of)
         result["candidate_days"] = [d.isoformat() for d in candidate_days]
 
+        # โหมดรายสัปดาห์: default 12:00 UTC — ตรงกับ archive/Phase3 step1 era5 download
+        # et0.ipynb (cell ที่ export ET0_weekly_phayao_2018_2024.csv จริงใช้ 'time': '12:00'
+        # เท่านั้น) แก้ไข 2026-07-05 หลังพบว่าเดิมใช้ 07:00 ผิดจาก methodology ตอน train
+        # ย้ายมาไว้นอก if/else ด้านล่าง (2026-07-22) เพราะ rolling-window fallback ต้องใช้ตัวแปรนี้
+        # ด้วยแม้ candidate_days จะว่างเปล่า (as_of เป็นวันจันทร์)
+        time_utc = args.time_utc or DEFAULT_WEEKLY_TIME_UTC
+        result["time_utc_used"] = time_utc
+        grib_dir = out_json_path.parent
+
         if not candidate_days:
             warnings.append(
                 f"as_of_date={as_of.isoformat()} เป็นวันจันทร์ของสัปดาห์นี้เอง (หรือก่อนหน้านั้น) "
@@ -437,12 +446,6 @@ def _run_weekly_mode(args, out_json_path: Path, result: dict) -> tuple:
             for d in candidate_days:
                 groups.setdefault((d.year, d.month), []).append(d)
 
-            # โหมดรายสัปดาห์: default 12:00 UTC — ตรงกับ archive/Phase3 step1 era5 download
-            # et0.ipynb (cell ที่ export ET0_weekly_phayao_2018_2024.csv จริงใช้ 'time': '12:00'
-            # เท่านั้น) แก้ไข 2026-07-05 หลังพบว่าเดิมใช้ 07:00 ผิดจาก methodology ตอน train
-            time_utc = args.time_utc or DEFAULT_WEEKLY_TIME_UTC
-            result["time_utc_used"] = time_utc
-            grib_dir = out_json_path.parent
             for (_, _), days_in_group in sorted(groups.items()):
                 fetched_days, grib_path = _fetch_week_with_retry(
                     days_in_group, time_utc, args.area, grib_dir, warnings
@@ -470,6 +473,70 @@ def _run_weekly_mode(args, out_json_path: Path, result: dict) -> tuple:
         daily_results.append(day_eto)
 
     n_days = len(daily_results)
+
+    # ---------------------------------------------------------------------------
+    # 2026-07-22 เพิ่ม: rolling 7-day window fallback (เหมือนหลักการที่ chirps_feature.py ทำกับ
+    # CHIRPS Prelim FTP — _rolling_window_estimate()) เมื่อสัปดาห์ปฏิทิน ISO ของ as_of เอง**ไม่มี
+    # ข้อมูลจริงเลยสักวัน** (n_days == 0) — เกิดขึ้นได้เสมอต้นสัปดาห์เพราะ ERA5T (CDS) มี latency
+    # ~5 วัน ถ้า as_of อยู่ใน 1-2 วันแรกของสัปดาห์ วันที่ผ่านไปแล้วของสัปดาห์นี้ (Monday ถึง as_of-1)
+    # จะยังไม่ผ่าน latency เลยสักวัน (พบจริงจาก log Colab 2026-07-22: as_of=2026-07-22 (พุธ),
+    # candidate_days=[07-20, 07-21] ถูก CDS ปฏิเสธทั้งคู่ เพราะข้อมูลล่าสุดที่มีจริงคือ 07-17)
+    #
+    # แทนที่จะคืน n_days=0/ET0_mm_week=None ทันที ลองมองย้อนหลัง 7 วันปฏิทินล่าสุดนับจาก as_of-1
+    # แทน (ข้ามขอบเขตสัปดาห์ ISO ได้ — ยิง CDS request แยกต่างหากอีกรอบเฉพาะตอนที่จำเป็นเท่านั้น
+    # ไม่กระทบ path ปกติที่สัปดาห์มีข้อมูลอยู่แล้วบางส่วน) ติดแท็ก is_rolling_estimate=true ให้ผู้เรียก
+    # (data_pipeline.py) แยกแยะได้ชัดเจนว่าไม่ใช่ผลรวมของสัปดาห์ปฏิทินจริง — **สำคัญ**: ผู้เรียกต้อง
+    # ไม่ใช้ค่านี้ป้อนเข้าโมเดล Water Demand โดยตรง (out-of-distribution เทียบกับตอน train ที่ข้อมูล
+    # เป็นสัปดาห์ปฏิทินสมบูรณ์เสมอ) ใช้ได้แค่เป็น advisory metric (AI_week) เท่านั้น
+    result["is_rolling_estimate"] = False
+    result["rolling_window"] = None
+
+    if n_days == 0 and not args.grib_in_week:
+        window_days = 7
+        rolling_days = sorted(as_of - timedelta(days=i) for i in range(1, window_days + 1))
+        rolling_groups: dict = {}
+        for d in rolling_days:
+            rolling_groups.setdefault((d.year, d.month), []).append(d)
+
+        rolling_per_day: dict = {}
+        rolling_grib_paths: list = []
+        for (_, _), days_in_group in sorted(rolling_groups.items()):
+            fetched_days, grib_path = _fetch_week_with_retry(
+                days_in_group, time_utc, args.area, grib_dir, warnings
+            )
+            if grib_path is None:
+                continue
+            rolling_grib_paths.append(str(grib_path))
+            rolling_per_day.update(_decode_grib_multiday(grib_path))
+
+        rolling_daily_results = []
+        for date_str in sorted(rolling_per_day.keys()):
+            dv = rolling_per_day[date_str]
+            required = ("t2m", "d2m", "u10", "v10", "ssr", "str")
+            if not all(k in dv for k in required):
+                continue
+            day_eto = _eto_for_day(dv)
+            day_eto["date"] = date_str
+            rolling_daily_results.append(day_eto)
+
+        rolling_n_days = len(rolling_daily_results)
+        if rolling_n_days > 0:
+            warnings.append(
+                f"สัปดาห์ปฏิทิน ISO ({result.get('iso_year')}-W{result.get('iso_week'):02d}) ไม่มีข้อมูล "
+                f"จริงเลยสักวัน — ใช้ rolling {window_days}-day window แทน "
+                f"({rolling_days[0].isoformat()} ถึง {rolling_days[-1].isoformat()}, "
+                f"{rolling_n_days} วันที่มีข้อมูลจริงในช่วงนั้น) เป็นค่าประมาณการ "
+                "(is_rolling_estimate=true — ไม่ใช่ผลรวมของสัปดาห์ปฏิทินจริง ห้ามป้อนเข้าโมเดลตรงๆ)"
+            )
+            result["is_rolling_estimate"] = True
+            result["rolling_window"] = {
+                "start": rolling_days[0].isoformat(),
+                "end": rolling_days[-1].isoformat(),
+            }
+            result["grib_source"] = (result.get("grib_source") or "") + f" + rolling:{rolling_grib_paths}"
+            daily_results = rolling_daily_results
+            n_days = rolling_n_days
+
     result["n_days_in_week"] = n_days
     result["daily_breakdown"] = daily_results
     result["warnings"] = warnings
@@ -530,6 +597,11 @@ def main(argv=None) -> int:
         "VPD_kPa": None,
         "u2_ms": None,
         "Rn_MJ": None,
+        # 2026-07-22 เพิ่ม: true ถ้า n_days_in_week มาจาก rolling 7-day window fallback แทนสัปดาห์
+        # ปฏิทิน ISO จริง (ดู _run_weekly_mode()) — ผู้เรียกต้องไม่ป้อนค่านี้เข้าโมเดล Water Demand
+        # โดยตรง (out-of-distribution เทียบกับตอน train) ใช้ได้แค่เป็น advisory metric เท่านั้น
+        "is_rolling_estimate": False,
+        "rolling_window": None,
         "warnings": None,
         "fetch_error": None,
     }

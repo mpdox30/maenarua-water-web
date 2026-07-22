@@ -6,21 +6,26 @@ chirps_feature.py
 
 ที่มา: ต่อยอดจาก archive/Phase3 step2 chirps rainfall.ipynb ซึ่ง comment ไว้เองในโค้ดต้นฉบับว่า
 "Method: GEE export (แนะนำ) หรือ rasterio extract จาก GeoTIFF" — โมดูลนี้เลือกใช้ทาง GEE export
-ตามที่แนะนำ (ไม่ใช้วิธี download .tif.gz ทีละวันจาก data.chc.ucsb.edu ที่ notebook เดิมใช้เป็น
-fallback เพราะเปราะบางกว่ามาก: ต้องยิง request แยกทุกวัน, ไฟล์ 404/เปลี่ยน path บ่อย, ไม่มี retry)
+เป็นแหล่งหลัก (Final + Prelim เดิม) และเพิ่มทาง rasterio extract ตรงจาก CHC FTP เป็นแหล่งเสริม
+(Prelim FTP — ดูประวัติการแก้ไขด้านล่าง) แทนที่จะใช้วิธี download .tif.gz ทีละวันจาก
+data.chc.ucsb.edu ตรงๆ แบบที่ notebook เดิมใช้เป็น fallback (เปราะบางกว่ามาก: ต้องยิง request
+แยกทุกวัน, ไฟล์ 404/เปลี่ยน path บ่อย, ไม่มี retry — ตอนนี้ปรับให้ทนทานขึ้นด้วย ftplib + cache +
+retry-skip แทน ดู _fetch_chirps_prelim_from_ftp())
 
 ต่างจากต้นฉบับตรงที่:
-  1. ใช้ Earth Engine Python API (`ee`) ดึงค่าฝนตรงที่พิกัด ต.แม่นาเรือ แทนการวนดาวน์โหลด
-     GeoTIFF รายวันด้วย requests+rasterio+gzip ทีละไฟล์
-  2. แยกแหล่งข้อมูลสองชั้นตาม latency จริงของ CHIRPS (ดู docstring ของ _fetch_chirps_daily_from_gee
-     ด้านล่าง): CHIRPS Final (ทางการใน GEE catalog, ล่าช้า ~20 วัน) กับ CHIRPS-Prelim (community
-     catalog, ล่าช้า <5 วัน) แล้ว log ให้ชัดเจนว่าค่าของแต่ละสัปดาห์มาจากแหล่งไหน — ต้นฉบับไม่ได้
-     แยกแยะเรื่องนี้เลย (ใช้ final อย่างเดียวและไม่บอกว่าข้อมูลล่าสุดอาจยังไม่ผ่านการันตีด้วย gauge)
+  1. ใช้ Earth Engine Python API (`ee`) ดึงค่าฝนตรงที่พิกัด ต.แม่นาเรือ เป็นแหล่งหลัก (Final +
+     Prelim เดิม) และใช้ ftplib+rasterio ดึงตรงจาก CHC FTP เป็นแหล่งเสริม (Prelim FTP)
+  2. แยกแหล่งข้อมูลตาม latency จริงของ CHIRPS เป็น 3 ชั้น (ดู docstring ของ _fetch_chirps_weekly
+     ด้านล่าง): CHIRPS Final (ทางการใน GEE catalog, ล่าช้า ~20 วัน) -> CHIRPS Prelim FTP (ตรงจาก
+     CHC FTP, ล่าช้า ~7 วัน) -> CHIRPS-Prelim เดิม (community catalog บน GEE, fallback สุดท้าย)
+     แล้ว log ให้ชัดเจนว่าค่าของแต่ละสัปดาห์มาจากแหล่งไหน
   3. เพิ่มการโหลด "ประวัติ P_mm_week หลายปี" จากไฟล์ training ที่มีอยู่แล้วในเครื่อง
      (Water_demand/active/ml_features_phase4.csv) เป็น baseline สำหรับคำนวณ SPI_4 แบบ real-time
      แทนที่จะต้องดึง CHIRPS ย้อนหลังทุกปีใหม่ทุกครั้ง (ดู _load_historical_p_mm_week ด้านล่าง)
   4. เพิ่ม error isolation แบบเดียวกับ mei_feature.py/data_pipeline.py — ไม่ raise exception ออก
      นอกฟังก์ชัน get_chirps_feature()
+  5. เพิ่ม rolling 7-day window fallback สำหรับกรณีสัปดาห์ปฏิทิน ISO ปัจจุบันไม่มีข้อมูลจริงเลยสักวัน
+     (ดู _rolling_window_estimate() — data_type="rolling_estimate")
 
 ความรู้พื้นฐานที่ต้องเข้าใจก่อนใช้โมดูลนี้:
   - พิกัดอ้างอิง: TARGET_LAT/TARGET_LON = (19.05, 99.80) ตรงตามที่ระบุใน archive notebook
@@ -35,30 +40,53 @@ fallback เพราะเปราะบางกว่ามาก: ต้อ
     LAG_WINDOWS เต็มชุด [1,2,3,4,8,12] ซึ่งใช้กับ target เท่านั้น)
   - SPI_4 คำนวณเป็น z-score ของ P_4week (rolling 4-week sum ของ P_mm_week) **เทียบกับสัปดาห์
     เดียวกันข้ามปีทั้งหมด** (`groupby('week')` ไม่ใช่ `groupby(['year','week'])`) ตามสูตรตรงจาก
-    feature_schema.md หัวข้อ 3.5 (บรรทัด 272-278):
+    feature_schema.md หัวข้อ 3.5:
         SPI_4 = groupby('week')['P_4week'].transform(
                     lambda x: zscore(x, ddof=1) if len(x) > 1 else 0.0
                 ).fillna(0.0).round(3)
         drought_flag = (SPI_4 < -1.0).astype(int)
-    ผลตามมา (ระบุไว้ในเอกสารเองบรรทัด 289-291): การคำนวณ SPI_4 ของสัปดาห์ปัจจุบันแบบ real-time
-    "ต้องมีข้อมูล P_4week ของสัปดาห์เดียวกันจากปีก่อนๆ ครบ ไม่ใช่แค่ปีเดียว" — นี่คือเหตุผลที่โมดูลนี้
-    ต้องโหลด "ประวัติ" (historical baseline) ก่อนเสมอ ไม่ใช่แค่ดึง CHIRPS ของสัปดาห์ล่าสุดอย่างเดียว
-  - CHIRPS ไม่ได้อัปเดตทันที มี 2 ระดับความสมบูรณ์ (ดู _fetch_chirps_daily_from_gee):
-      Prelim: ล่าช้า <5 วัน (อัปเดตทุก pentad คือทุก 5 วัน วันที่ 2,7,12,17,22,27 ของเดือน)
-      Final : ล่าช้า ~20 วันหลังจากสิ้นเดือน (รอ station gauge data มา unbias ให้เสร็จก่อน)
-    ค่าของสัปดาห์ล่าสุด (as_of week) แทบทุกครั้งจะเป็น prelim หรือยังไม่มีเลย ไม่ใช่ final
+    ผลตามมา: การคำนวณ SPI_4 ของสัปดาห์ปัจจุบันแบบ real-time "ต้องมีข้อมูล P_4week ของสัปดาห์
+    เดียวกันจากปีก่อนๆ ครบ ไม่ใช่แค่ปีเดียว" — นี่คือเหตุผลที่โมดูลนี้ต้องโหลด "ประวัติ" (historical
+    baseline) ก่อนเสมอ ไม่ใช่แค่ดึง CHIRPS ของสัปดาห์ล่าสุดอย่างเดียว
+  - CHIRPS ไม่ได้อัปเดตทันที มีหลายระดับความสมบูรณ์/latency (ดู _fetch_chirps_weekly ด้านล่างสำหรับ
+    รายละเอียดเต็มของ waterfall 3 ชั้น):
+      Final     : ล่าช้า ~20 วันหลังสิ้นเดือน (รอ station gauge data มา unbias ก่อน) — แม่นสุด
+      Prelim FTP: ล่าช้า ~7 วัน (ตรงจาก CHC FTP, publish เป็นรอบ pentad ทุก 5 วัน) — ยังไม่ผ่าน
+                  gauge correction แต่เร็วกว่า Final มาก
+      Prelim เดิม (community, GEE): fallback สุดท้ายเท่านั้น
+    ค่าของสัปดาห์ล่าสุด (as_of week) แทบทุกครั้งจะเป็น prelim_ftp หรือ rolling_estimate ไม่ใช่ final
 
-สถานะการทดสอบ / TODO ก่อน deploy จริง (อัปเดตล่าสุด 2026-07-14):
-  - ทดสอบกับ GEE จริงแล้วสำเร็จทั้ง CHIRPS Final และ CHIRPS-Prelim (รวมถึงแก้บั๊ก pentad-vs-daily
-    ที่เจอระหว่างเทสแล้ว — ดู _expand_pentad_to_daily()) ด้วย project 'maenaruea-water-pipeline'
-  - ✅ 2026-07-14: _fetch_chirps_daily_from_gee() เปลี่ยนจากเรียก ee.Initialize(project=...) ตรงๆ
-    เป็นเรียกผ่าน gee_auth.init_ee(gee_project) แล้ว (ดู gee_auth.py) — ฟังก์ชันนี้จะใช้ Service
-    Account อัตโนมัติถ้าตั้ง env var GEE_SERVICE_ACCOUNT_EMAIL/GEE_SERVICE_ACCOUNT_KEY ไว้ครบ
-    (ดูขั้นตอนสร้าง Service Account เต็มใน docstring หัวไฟล์ gee_auth.py) ไม่งั้น fallback ไปใช้
-    personal credential (ee.Authenticate()) เหมือนเดิมอัตโนมัติ ไม่ error — **โค้ดพร้อมรองรับแล้ว
-    แต่ผู้ใช้ยังต้องไปสร้าง Service Account จริงใน GCP Console เองก่อน ถึงจะเปลี่ยนโหมดจริง**
-    (ยังไม่ได้ทำขั้นตอนนั้น ณ วันที่เขียนนี้ — ตรวจสอบได้จาก log "GEE auth: ใช้ personal
-    credential" ตอนรัน pipeline จริง ถ้ายังเห็นข้อความนี้แปลว่ายังไม่ได้ตั้งค่า)
+ประวัติการแก้ไข:
+  - 2026-07-05: ทดสอบกับ GEE จริงสำเร็จทั้ง CHIRPS Final และ CHIRPS-Prelim ด้วย project
+    'maenaruea-water-pipeline' (รวมถึงแก้บั๊ก pentad-vs-daily ที่เจอระหว่างเทส — ดู
+    _expand_pentad_to_daily())
+  - 2026-07-14: เปลี่ยน _fetch_chirps_daily_from_gee() จากเรียก ee.Initialize(project=...) ตรงๆ
+    เป็นเรียกผ่าน gee_auth.init_ee(gee_project) (ดู gee_auth.py) เพื่อรองรับ Service Account
+  - ✅ 2026-07-22: ยืนยันแล้วว่า Service Account auth ทำงานได้จริงบนเครื่อง production (log
+    "GEE auth: ใช้ Service Account" ปรากฏจริงตอนรัน) ไม่ใช่ personal credential แบบ interactive
+    อีกต่อไป
+  - 2026-07-22 (รอบ 2 — Prelim FTP): เพิ่มแหล่งข้อมูลที่ 3 "CHIRPS v3.0 Preliminary" ตรงจาก CHC
+    FTP (ftp.chc.ucsb.edu) แทนที่จะใช้ทาง GEE-native ของ CHIRPS v3 (asset
+    UCSB-CHC/CHIRPS/V3/DAILY_SAT) ซึ่งทดสอบจริงแล้วพบว่า lag ยังเท่า Final เดิม (~22 วัน) ไม่ช่วย
+    อะไร (แม้หน้า catalog จะเขียนว่า "Near-Real-Time" ก็ตาม) ส่วน CHIRPS v3 Preliminary ทาง FTP
+    ยืนยันด้วยการ list ไดเรกทอรีจริงว่า lag จริง ~7 วัน (เร็วกว่า Final ~3 เท่า) และไฟล์เป็นรายวัน
+    จริงอยู่แล้ว (ชื่อไฟล์ chirps-v3.0.prelim.YYYY.MM.DD.tif ต่อวัน ไม่ต้องแปลง pentad-to-daily แบบ
+    Prelim เดิม) ไม่มี official GEE mirror สำหรับตัวนี้ จึงดึงด้วย ftplib (anonymous login) แล้วอ่าน
+    ค่าที่จุดด้วย rasterio แทน (ดู _fetch_chirps_prelim_from_ftp()) waterfall กลายเป็น 3 ชั้น:
+    Final (GEE) -> Prelim FTP (ใหม่, เร็วสุดจริง) -> Prelim เดิม (community, GEE, fallback สุดท้าย)
+    data_type ที่เป็นไปได้เพิ่ม "prelim_ftp"
+  - 2026-07-22 (รอบ 3 — rolling window): เพิ่ม _rolling_window_estimate() สำหรับกรณีสัปดาห์ปฏิทิน
+    ISO ของ as_of เองไม่มีข้อมูลจริงเลยสักวัน (0/7 วัน — เกิดขึ้นได้เสมอเพราะ Prelim FTP publish
+    เป็นรอบ pentad ทุก 5 วัน ไม่ใช่ทุกวัน ดังนั้นสัปดาห์ที่กำลังดำเนินอยู่มักจะยังไม่มีวันไหนถูก
+    ครอบคลุมเลยจนกว่า pentad ถัดไปจะปิดรอบ) แทนที่จะคืน "missing" ทันที จะมองหาวันล่าสุดที่มีข้อมูล
+    จริงแล้วรวมฝน 7 วันปฏิทินล่าสุดนับถอยจากวันนั้นแทน (ข้ามขอบเขตสัปดาห์ ISO ได้) ติดแท็ก
+    data_type="rolling_estimate" ให้รู้ชัดว่าไม่ใช่ผลรวมของสัปดาห์ปฏิทินจริง พร้อมฟิลด์ผลลัพธ์ใหม่
+    is_rolling_estimate (bool) และ rolling_window ({"start":..., "end":...}) ทดสอบยืนยันแล้วบน
+    เครื่อง production จริงทั้ง zone_A/zone_B (2026-07-22): ได้ data_type="rolling_estimate" แทน
+    "missing" สำเร็จ ไม่มี error
+    (ทั้งรอบ 2 และรอบ 3 พัฒนา/ทดสอบใน pipeline/chirps_v3_test_20260722/ ก่อน promote มาทับไฟล์นี้ —
+    โฟลเดอร์นั้นยังเก็บสคริปต์วินิจฉัย find_chirps_v3_latest.py และ list_chirps_v3_ftp_dirs.py ไว้
+    เป็น reference ถ้าต้องตรวจสอบ latency ของแหล่งข้อมูลซ้ำในอนาคต)
 """
 
 from __future__ import annotations
@@ -79,42 +107,41 @@ from scipy.stats import zscore
 TARGET_LAT = 19.05
 TARGET_LON = 99.80
 
-# GEE dataset ตามที่ archive notebook แนะนำไว้เอง ("Method: GEE export (แนะนำ)") แทนการดาวน์โหลด
-# .tif.gz ทีละวันจาก data.chc.ucsb.edu ที่เปราะบางกว่า
-#
 # CHIRPS_FINAL_COLLECTION_ID: catalog ทางการของ Google Earth Engine (Version 2.0 Final) —
 # https://developers.google.com/earth-engine/datasets/catalog/UCSB-CHG_CHIRPS_DAILY
 # ล่าช้า ~20 วันหลังสิ้นเดือน (รอ gauge data มา unbias ก่อนถึงจะปล่อยเป็น final)
 CHIRPS_FINAL_COLLECTION_ID = "UCSB-CHG/CHIRPS/DAILY"
 
+# 2026-07-22 (รอบ 2, เลิกใช้แล้ว): CHIRPS v3.0 DAILY_SAT ผ่าน GEE — ทดสอบจริงแล้วพบว่า lag = 22
+# วัน แทบเท่า Final เดิม ไม่ช่วยอะไร เก็บ collection ID ไว้เป็น reference เฉยๆ ไม่ได้ใช้แล้วใน
+# waterfall ด้านล่าง (ดู CHIRPS_FTP_* ที่แทนที่ tier นี้แทน)
+CHIRPS_V3_REALTIME_COLLECTION_ID_UNUSED = "UCSB-CHC/CHIRPS/V3/DAILY_SAT"
+
+# 2026-07-22 (รอบ 2, ตัวที่ใช้จริง): CHIRPS v3.0 **Preliminary** ตรงจาก CHC FTP เอง (ไม่มี
+# official GEE mirror สำหรับตัวนี้) ยืนยัน lag จริง = 7 วัน เร็วกว่า Final ~3 เท่า และไฟล์เป็น
+# รายวันจริงอยู่แล้ว โครงสร้าง path บน FTP: {CHIRPS_FTP_BASE}/daily/{prelim|final}/sat/{year}/
+# ชื่อไฟล์: chirps-v3.0.prelim.YYYY.MM.DD.tif (หรือ chirps-v3.0.sat.YYYY.MM.DD.tif สำหรับ final —
+# ไม่ได้ใช้ final ทาง FTP เพราะ Final ผ่าน GEE ที่มีอยู่แล้วทำงานได้ดีอยู่แล้ว ไม่จำเป็นต้องเปลี่ยน)
+CHIRPS_FTP_HOST = "ftp.chc.ucsb.edu"
+CHIRPS_FTP_BASE = "/pub/org/chc/products/CHIRPS/v3.0"
+CHIRPS_PRELIM_FTP_SUBPATH = "daily/prelim/sat"
+CHIRPS_PRELIM_FTP_PREFIX = "chirps-v3.0.prelim"
+
 # CHIRPS_PRELIM_COLLECTION_ID: จาก Awesome GEE Community Catalog (ไม่ใช่ catalog ทางการของ Google)
-# เป็นข้อมูล pentad (ราย 5 วัน ไม่ใช่รายวัน) ล่าช้า <5 วัน เหมาะกับสัปดาห์ล่าสุดที่ final ยังไม่ออก
+# เป็นข้อมูล pentad (ราย 5 วัน ไม่ใช่รายวัน) ล่าช้า <5 วัน — ตอนนี้ถูกลดบทบาทเป็น fallback ชั้น
+# สุดท้ายเท่านั้น (ใช้เฉพาะวันที่ Prelim FTP ด้านบนก็ยังไม่ครอบคลุม เช่น pentad ล่าสุดยังไม่ปิดรอบ
+# หรือ FTP เข้าไม่ได้วันนั้น) แทนที่จะเป็นชั้นเติมช่องว่างหลักเหมือนเดิม เพราะ Prelim FTP เร็วกว่า
+# จริง (lag ~7 วัน ยืนยันแล้ว)
 # ⚠️ หมายเหตุสำคัญ: asset ID นี้มาจากการค้นคว้า ณ วันที่เขียนโมดูลนี้ (2026-07) — เนื่องจาก
 # community catalog อาจย้าย/เปลี่ยน asset ID ได้โดยไม่แจ้งล่วงหน้า (ต่างจาก catalog ทางการที่เสถียรกว่า)
 # ให้ตรวจสอบ https://gee-community-catalog.org/projects/chirps_prelim/ ว่า asset ID ยังตรงก่อนใช้งานจริง
 # ครั้งแรก ถ้า id เปลี่ยนไปแล้วให้ปรับค่านี้ หรือส่ง prelim_collection_id เข้า get_chirps_feature() เอง
-#
-# ✅ ทดสอบกับ GEE จริงแล้ว (2026-07-05, project='maenaruea-water-pipeline'): asset ID นี้ยังใช้ได้
-# จริง ดึงข้อมูลได้ (ตัวอย่าง: pentad 26-30 มิ.ย. 2026 = 24.66 มม. รวม 5 วัน) และยืนยันว่าค่า "time"
-# ของแต่ละภาพคือวันเริ่มต้นของ pentad จริง (ตรงตามสมมติฐานที่ _expand_pentad_to_daily() ใช้)
-# **ต้องแปลงผ่าน _expand_pentad_to_daily() ก่อนใช้เสมอ** เพราะเป็นข้อมูล pentad (สะสม 5 วัน)
-# ไม่ใช่รายวัน — ถ้าไม่แปลงก่อนจะเอาค่าฝนสะสม 5 วันไปนับเป็น 1 วันปนกับ Final ผิดเพี้ยนไปมาก
 CHIRPS_PRELIM_COLLECTION_ID = "projects/climate-engine-pro/assets/ce-chirps-prelim-pentad"
 
 CHIRPS_BAND_NAME = "precipitation"
 
-# Google Cloud Project ที่เปิดใช้ Earth Engine API แล้ว (ยืนยันแล้วโดยผู้ใช้ว่า
-# ee.Initialize(project='maenaruea-water-pipeline') + ee.String('test').getInfo() ทำงานได้จริง
-# บนเครื่องนี้ — ใช้ project เดียวกับที่เคยตั้งค่าไว้แล้วสำหรับงาน Sentinel-1/2 crop classification
-# ไม่ต้องสร้าง credential ใหม่) ใช้เป็นค่า default ของ gee_project ทุกฟังก์ชันในไฟล์นี้ ยังคง
-# override ได้ผ่าน parameter gee_project ถ้าต้องการใช้ project อื่นในอนาคต
-#
-# 🔴 TODO ก่อน deploy จริง: ทดสอบผ่านทั้งหมด (2026-07-05) ด้วย personal credential
-# (ee.Authenticate() แบบ interactive) เท่านั้น — ยังไม่ได้ตั้งค่า Service Account (ตั้งใจเว้นไว้
-# ก่อน รอให้ทุกแหล่งข้อมูล ERA5/CHIRPS/MEI พิสูจน์ใช้งานได้ครบก่อนค่อยตั้ง) personal credential
-# ไม่เหมาะกับการรันแบบ scheduled/unattended ผ่าน run_pipeline.bat เพราะ token อาจหมดอายุโดยไม่มี
-# คน login ซ้ำให้ — ต้องเปลี่ยนเป็น Service Account ก่อน wire โมดูลนี้เข้ากับ data_pipeline.py จริง
-# (รายละเอียดวิธีเปลี่ยน ดู TODO ใน docstring ของ _fetch_chirps_daily_from_gee() ด้านล่าง)
+# Google Cloud Project ที่เปิดใช้ Earth Engine API แล้ว ใช้เป็นค่า default ของ gee_project ทุก
+# ฟังก์ชันในไฟล์นี้ ยังคง override ได้ผ่าน parameter gee_project ถ้าต้องการใช้ project อื่นในอนาคต
 DEFAULT_GEE_PROJECT = "maenaruea-water-pipeline"
 
 # ข้อมูลของวันที่เก่ากว่านี้ (วัน) ถือว่าน่าจะมี Final แล้ว (20 วันหลังสิ้นเดือน ~ ปัดขึ้นเป็น 50 วัน
@@ -136,6 +163,10 @@ SPI_DROUGHT_THRESHOLD = -1.0
 SCRIPT_DIR = Path(__file__).resolve().parent
 LOG_DIR = SCRIPT_DIR / "logs"
 LOG_FILE = LOG_DIR / "pipeline_log.txt"
+
+# 2026-07-22 (รอบ 2): แคชไฟล์ .tif ที่ดาวน์โหลดจาก CHIRPS FTP ไว้ในเครื่อง กันโหลดซ้ำถ้ารันหลายรอบ
+# ในวันเดียวกัน
+CHIRPS_FTP_CACHE_DIR = SCRIPT_DIR / "ftp_cache"
 
 # ประวัติ P_mm_week ที่มีอยู่แล้วในเครื่อง (output ของ build_feature_matrix() ตอน train โมเดล) —
 # ใช้เป็น baseline หลายปีสำหรับคำนวณ SPI_4 แบบ real-time โดยไม่ต้องดึง CHIRPS ย้อนหลังใหม่ทุกครั้ง
@@ -225,7 +256,7 @@ def _load_historical_p_mm_week(csv_path: Path = DEFAULT_HISTORICAL_CSV_PATH) -> 
 
 
 # ---------------------------------------------------------------------------
-# Step 2: ดึง CHIRPS สดใหม่ผ่าน GEE (final ก่อน, ตามด้วย prelim สำหรับสัปดาห์ล่าสุดที่ final ไม่ทัน)
+# Step 2: ดึง CHIRPS สดใหม่ผ่าน GEE (final และ prelim เดิม)
 # ---------------------------------------------------------------------------
 def _fetch_chirps_daily_from_gee(
     start_date: date,
@@ -238,31 +269,16 @@ def _fetch_chirps_daily_from_gee(
 ) -> pd.DataFrame:
     """
     ดึงค่าฝนรายวันที่พิกัด (lat, lon) จาก GEE ImageCollection ที่ระบุ ในช่วง [start_date, end_date)
+    (ใช้ได้กับทั้ง Final และ Prelim เดิมก่อนแปลง pentad — โครงสร้างข้อมูลที่ GEE คืนมาเหมือนกันหมด
+    ไม่ว่า collection ไหน)
 
-    ต้องมีการตั้งค่า Earth Engine ไว้ก่อนแล้ว (ครั้งเดียวต่อเครื่อง ไม่ใช่ทุกครั้งที่เรียกฟังก์ชันนี้):
-      1. มี Google Cloud Project ที่เปิดใช้ Earth Engine API แล้ว (ส่งชื่อ project เข้ามาทาง
-         gee_project — ต้องตั้งค่าเอง ไม่มีค่า default เพราะเป็น project เฉพาะของผู้ใช้)
-      2. รัน `ee.Authenticate()` อย่างน้อยหนึ่งครั้งบนเครื่องที่จะรัน pipeline นี้ (เปิด browser
-         ให้ login ครั้งแรก)
-
-      ฟังก์ชันนี้เรียกแค่ `ee.Initialize(project=gee_project)` เฉยๆ โดยสมมติว่า credentials
-      ถูกตั้งค่าไว้แล้วจากขั้นตอนข้างต้น (ไม่ทำ auth flow เองในนี้ เพราะเป็น one-time environment
-      setup ไม่ใช่ per-call operation)
-
-      🔴 TODO ก่อน deploy จริง (ยืนยันแล้ว 2026-07-05 ว่าโค้ดใช้งานได้จริงด้วยวิธีนี้ แต่ยังไม่พร้อม
-      สำหรับ production): ตอนนี้ทดสอบผ่านด้วย **personal credential** (ee.Authenticate() แบบ
-      interactive) เท่านั้น ซึ่ง**ไม่เหมาะกับการรันแบบ scheduled/unattended** (เช่นผ่าน Windows
-      Task Scheduler ตาม run_pipeline.bat) เพราะ OAuth token ส่วนตัวอาจหมดอายุหรือถูก revoke โดยไม่
-      มีใครคอย login ซ้ำให้ ทำให้ pipeline พังกลางทางแบบเงียบๆ ได้ ก่อนนำไป deploy จริงต้องเปลี่ยนเป็น
-      **service account** แทน (ดู https://developers.google.com/earth-engine/guides/service_account
-      — จะเปลี่ยนจาก `ee.Initialize(project=...)` เฉยๆ เป็น
-      `ee.Initialize(credentials=ee.ServiceAccountCredentials(email, key_file))`) — ตอนนี้ตั้งใจ
-      ยังไม่ทำขั้นตอนนี้ (รอให้ทุกแหล่งข้อมูล ERA5/CHIRPS/MEI พิสูจน์ใช้งานได้ครบก่อน) แต่ห้ามลืม
-      ก่อนต่อเข้ากับ pipeline จริง
+    Auth: เรียกผ่าน gee_auth.init_ee(gee_project) — ใช้ Service Account อัตโนมัติถ้าตั้ง env var
+    GEE_SERVICE_ACCOUNT_EMAIL/GEE_SERVICE_ACCOUNT_KEY ไว้ครบ (ดู gee_auth.py) ไม่งั้น fallback ไปใช้
+    personal credential เหมือนเดิม
 
     คืนค่า DataFrame [date, precipitation] รายวัน (อาจมีวันที่ขาดถ้า collection ไม่มีภาพวันนั้น)
     ถ้าดึงไม่สำเร็จ (network / auth / collection ผิด) จะ raise exception ออกไปให้ผู้เรียก
-    (get_chirps_feature) จัดการเป็น error isolation อีกที — ฟังก์ชันระดับล่างนี้ไม่ silent-fail เอง
+    (_fetch_chirps_weekly) จัดการเป็น error isolation อีกที — ฟังก์ชันระดับล่างนี้ไม่ silent-fail เอง
     เพื่อให้ผู้เรียกรู้ได้ว่าดึง final/prelim อันไหนไม่สำเร็จบ้าง
     """
     import ee
@@ -279,7 +295,8 @@ def _fetch_chirps_daily_from_gee(
 
     # getRegion() คืนค่าเป็น time series ที่จุดเดียวแบบ efficient (เรียก server-side ครั้งเดียว
     # ไม่ต้องวน reduceRegion ทีละภาพจากฝั่ง client) — แถวแรกเป็น header
-    scale_m = 5500  # ความละเอียด CHIRPS ~0.05° ~ 5.5 กม. (ตาม comment ใน archive notebook เดิม)
+    scale_m = 5500  # ความละเอียด CHIRPS ~0.05° ~ 5.5 กม. (v3 catalog ระบุ 5566 ม. ใกล้เคียงกันมาก
+                     # ไม่ต่างกันมีนัยสำคัญสำหรับการดึงค่าจุดเดียวแบบนี้)
     raw = collection.getRegion(point, scale_m).getInfo()
 
     if not raw or len(raw) < 2:
@@ -299,9 +316,116 @@ def _fetch_chirps_daily_from_gee(
     return pd.DataFrame(records)
 
 
+# ---------------------------------------------------------------------------
+# 2026-07-22 (รอบ 2): CHIRPS v3 Preliminary ผ่าน FTP+rasterio
+# ---------------------------------------------------------------------------
+def _fetch_chirps_prelim_from_ftp(
+    start_date: date,
+    end_date: date,
+    lat: float = TARGET_LAT,
+    lon: float = TARGET_LON,
+    ftp_host: str = CHIRPS_FTP_HOST,
+    ftp_base: str = CHIRPS_FTP_BASE,
+    ftp_subpath: str = CHIRPS_PRELIM_FTP_SUBPATH,
+    filename_prefix: str = CHIRPS_PRELIM_FTP_PREFIX,
+    cache_dir: Path = CHIRPS_FTP_CACHE_DIR,
+) -> pd.DataFrame:
+    """
+    ดาวน์โหลดไฟล์ CHIRPS v3 รายวัน (.tif) ตรงจาก CHC FTP (ftp.chc.ucsb.edu, anonymous login —
+    ไม่ต้องมี credential ใดๆ) เฉพาะวันที่อยู่ในช่วง [start_date, end_date) แล้วอ่านค่าฝนที่จุดพิกัด
+    (lat, lon) ด้วย rasterio (จุดเดียว ไม่ใช่ zonal average — ตรงกับที่ _fetch_chirps_daily_from_gee()
+    ทำผ่าน getRegion(point, scale) อยู่แล้ว ดังนั้นรูปแบบผลลัพธ์ [date, precipitation] เหมือนกันทุก
+    ประการ ใช้แทนกันได้ในโครงสร้าง waterfall ของ _fetch_chirps_weekly())
+
+    ไม่ผ่าน Earth Engine เลย — ไม่ต้องมี GEE credentials/network สำหรับ tier นี้ (path นี้ใช้ ftplib
+    ธรรมดา) หมายเหตุ CRS: ไฟล์ CHIRPS เป็น GeoTIFF แบบ EPSG:4326 (lat/lon ตรงๆ ไม่ต้อง reproject)
+    ตามมาตรฐานของผลิตภัณฑ์นี้ — rasterio .sample() จึงรับพิกัด (lon, lat) ตรงๆ ได้เลย
+
+    ไฟล์ที่ยังไม่ publish บน FTP (เช่นวันที่อยู่ใน pentad ที่ยังไม่ปิดรอบ) จะเจอ error ตอน RETR —
+    ถือเป็นเรื่องปกติสำหรับวันล่าสุดที่ยังไม่ออก ข้ามวันนั้นไปเงียบๆ (ไม่ raise) เพื่อให้ waterfall
+    ชั้นถัดไป (Prelim เดิม/community) มีโอกาสเติมช่องว่างแทนถ้าจำเป็น
+
+    ไฟล์ที่ดาวน์โหลดสำเร็จแล้วจะถูก cache ไว้ที่ cache_dir ไม่โหลดซ้ำรอบถัดไป (skip-if-cached)
+    """
+    from ftplib import FTP, error_perm
+
+    import rasterio
+
+    cache_dir = Path(cache_dir)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+
+    dates = pd.date_range(start_date, end_date, freq="D", inclusive="left")
+
+    ftp: Optional[FTP] = None
+    n_downloaded = 0
+    n_cached = 0
+    n_unavailable = 0
+    records: list[dict] = []
+
+    try:
+        for d in dates:
+            fname = f"{filename_prefix}.{d.year}.{d.month:02d}.{d.day:02d}.tif"
+            local_path = cache_dir / fname
+
+            if local_path.exists():
+                n_cached += 1
+            else:
+                if ftp is None:
+                    ftp = FTP(ftp_host, timeout=60)
+                    ftp.login()
+                    ftp.set_pasv(True)
+                remote_path = f"{ftp_base}/{ftp_subpath}/{d.year}/{fname}"
+                try:
+                    with open(local_path, "wb") as f:
+                        ftp.retrbinary(f"RETR {remote_path}", f.write)
+                    n_downloaded += 1
+                except error_perm:
+                    # ไฟล์ยังไม่มีบน FTP (ปกติสำหรับวันล่าสุดที่ pentad ยังไม่ปิดรอบ) -- ข้ามเงียบๆ
+                    if local_path.exists():
+                        local_path.unlink()
+                    n_unavailable += 1
+                    continue
+                except Exception:
+                    logger.exception(
+                        "ดาวน์โหลด CHIRPS Prelim FTP ล้มเหลว (ไม่ใช่ 550/ไม่มีไฟล์): %s", remote_path,
+                    )
+                    if local_path.exists():
+                        local_path.unlink()
+                    n_unavailable += 1
+                    continue
+
+            try:
+                with rasterio.open(local_path) as src:
+                    sampled = next(src.sample([(lon, lat)]))
+                    val = sampled[0] if sampled is not None and len(sampled) > 0 else None
+                records.append({
+                    "date": pd.Timestamp(d).normalize(),
+                    "precipitation": float(val) if val is not None else np.nan,
+                })
+            except Exception:
+                logger.exception("อ่านค่าจากไฟล์ CHIRPS Prelim FTP ไม่สำเร็จ: %s -- ข้ามวันนี้", local_path)
+    finally:
+        if ftp is not None:
+            try:
+                ftp.quit()
+            except Exception:
+                pass
+
+    logger.info(
+        "CHIRPS Prelim FTP: ช่วง %s ถึง %s -- ดาวน์โหลดใหม่ %d ไฟล์, ใช้แคชเดิม %d ไฟล์, "
+        "ยังไม่มีบน FTP %d วัน, อ่านค่าได้จริง %d วัน",
+        start_date, end_date, n_downloaded, n_cached, n_unavailable, len(records),
+    )
+
+    if not records:
+        return pd.DataFrame(columns=["date", "precipitation"])
+    return pd.DataFrame(records)
+
+
 def _pentad_period_length_days(pentad_start: pd.Timestamp) -> int:
     """
-    คืนจำนวนวันจริงของ pentad period ที่เริ่มต้นที่ pentad_start
+    คืนจำนวนวันจริงของ pentad period ที่เริ่มต้นที่ pentad_start (ใช้เฉพาะกับ Prelim เดิม/community
+    เท่านั้น — Prelim FTP เป็นรายวันจริงไม่ต้องผ่านฟังก์ชันนี้)
 
     Pentad มาตรฐาน (ที่ CHIRPS ใช้) แบ่งเดือนเป็น 6 ช่วง: วันที่ 1-5, 6-10, 11-15, 16-20, 21-25,
     26-สิ้นเดือน — 5 ช่วงแรกยาว 5 วันเท่ากันเสมอ มีแค่ช่วงสุดท้าย (เริ่มวันที่ 26) ที่ยาวไม่เท่ากัน
@@ -328,24 +452,21 @@ def _pentad_period_length_days(pentad_start: pd.Timestamp) -> int:
 
 def _expand_pentad_to_daily(pentad_df: pd.DataFrame) -> pd.DataFrame:
     """
-    แปลงข้อมูล CHIRPS-Prelim ที่ได้จาก GEE (เป็น pentad — ค่าฝนสะสม 5 วัน ต่อ 1 "แถว/ภาพ" ไม่ใช่
-    รายวันจริงแม้ว่า _fetch_chirps_daily_from_gee() จะคืนมาในรูปแบบ DataFrame [date, precipitation]
-    เดียวกับข้อมูลรายวันของ Final ก็ตาม) ให้เป็นค่าประมาณ "ต่อวัน" โดยสมมติว่าฝนตกสม่ำเสมอตลอด
-    pentad นั้น (หาร total ด้วยจำนวนวันจริงของ pentad นั้นๆ)
+    แปลงข้อมูล CHIRPS-Prelim เดิม (community, GEE) ที่เป็น pentad — ค่าฝนสะสม 5 วัน ต่อ 1
+    "แถว/ภาพ" ไม่ใช่รายวันจริง — ให้เป็นค่าประมาณ "ต่อวัน" โดยสมมติว่าฝนตกสม่ำเสมอตลอด pentad นั้น
+    (หาร total ด้วยจำนวนวันจริงของ pentad นั้นๆ) ใช้เฉพาะกับ Prelim เดิมเท่านั้น — Prelim FTP เป็น
+    รายวันจริงอยู่แล้วไม่ต้องผ่านฟังก์ชันนี้
 
     **ทำไมต้องมีฟังก์ชันนี้ (บั๊กที่พบจากการทดสอบจริงกับ GEE เมื่อ 2026-07-05):** ทดสอบดึง
     CHIRPS-Prelim จริงพบว่า asset ที่ใช้ (`ce-chirps-prelim-pentad`) เป็นข้อมูล **pentad ราย 5 วัน**
     ไม่ใช่รายวัน (ชื่อ asset ก็บอกอยู่แล้ว "pentad" แต่ตอนเขียนโค้ดครั้งแรกพลาดไม่ได้ทำ transform
     ให้ตรงกับความจริงข้อนี้) ถ้าไม่แปลงก่อน โค้ดเดิมจะเอาค่าฝนสะสม 5 วัน (เช่น 24.66 มม.) ไปนับเป็น
-    "1 วัน" ปนกับข้อมูลรายวันจริงของ Final ตรงๆ ทำให้ P_mm_week ผิดเพี้ยนไปมาก (นับจำนวนวันในสัปดาห์
-    ผิด และ sum ผิด) — ฟังก์ชันนี้แก้โดย "กระจาย" ค่า pentad ให้เป็นแถวรายวัน (ค่าเท่ากันทุกวันใน
-    pentad เดียวกัน = total/n_days) ก่อนส่งต่อไป groupby รายสัปดาห์ตามปกติ ผลคือสัปดาห์ปัจจุบันที่ยัง
-    ไม่มี pentad ล่าสุดออก (รอ ~2 วันหลัง pentad จบ) จะแสดงเป็นสัปดาห์ที่ "ข้อมูลไม่ครบ" (n_days < 7)
-    อย่างถูกต้อง แทนที่จะเป็น all-or-nothing แบบเดิม
+    "1 วัน" ปนกับข้อมูลรายวันจริงของ Final ตรงๆ ทำให้ P_mm_week ผิดเพี้ยนไปมาก — ฟังก์ชันนี้แก้โดย
+    "กระจาย" ค่า pentad ให้เป็นแถวรายวัน (ค่าเท่ากันทุกวันใน pentad เดียวกัน = total/n_days) ก่อนส่ง
+    ต่อไป groupby รายสัปดาห์ตามปกติ
 
     ⚠️ สมมติฐาน: ค่า "time" ของแต่ละภาพใน asset นี้คือ **วันเริ่มต้น** ของ pentad นั้น (ยืนยันแล้ว
-    จากการทดสอบจริง 2026-07-05 — ภาพที่ได้ลงวันที่ 2026-06-26 ตรงกับ pentad 26-30 มิ.ย. พอดี ไม่ใช่
-    กลางหรือปลาย pentad) ถ้า asset เปลี่ยนหรือ id เปลี่ยนไปในอนาคต ควรตรวจสอบสมมติฐานนี้ซ้ำอีกครั้ง
+    จากการทดสอบจริง 2026-07-05) ถ้า asset เปลี่ยนหรือ id เปลี่ยนไปในอนาคต ควรตรวจสอบสมมติฐานนี้ซ้ำอีกครั้ง
     """
     if pentad_df.empty:
         return pentad_df
@@ -368,26 +489,42 @@ def _fetch_chirps_weekly(
     prelim_collection_id: str = CHIRPS_PRELIM_COLLECTION_ID,
     gee_project: Optional[str] = DEFAULT_GEE_PROJECT,
     gee_fetch_fn: Callable[..., pd.DataFrame] = _fetch_chirps_daily_from_gee,
-) -> pd.DataFrame:
+    prelim_ftp_fetch_fn: Callable[..., pd.DataFrame] = _fetch_chirps_prelim_from_ftp,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
-    ดึงฝนรายวันจาก CHIRPS Final ก่อนเสมอ (ครอบคลุมได้ถึงประมาณ "วันนี้ - 20 วัน" เท่านั้น เพราะ
-    final ต้องรอ gauge data) แล้วเติมช่วงท้าย (วันที่ final ยังไม่ครอบคลุม) ด้วย CHIRPS-Prelim
-    แทน จากนั้น resample รวมเป็นรายสัปดาห์ (ISO week) พร้อม tag แหล่งข้อมูลของแต่ละสัปดาห์
+    ดึงฝนรายวัน 3 ชั้นเรียงลำดับ (แม่นสุดก่อน):
+      1. CHIRPS Final      (ถึงประมาณ "วันนี้ - 50 วัน" เท่านั้น — ผ่าน GEE, ผ่าน gauge correction)
+      2. CHIRPS Prelim FTP (เติมช่วงตั้งแต่ final_cutoff ถึง end_date — ตรงจาก CHC FTP, รายวันจริง,
+         lag จริง ~7 วัน)
+      3. CHIRPS Prelim เดิม (community pentad ผ่าน GEE — เติมเฉพาะวันที่ FTP ก็ยังไม่มี เช่น
+         pentad ปัจจุบันยังไม่ปิดรอบ หรือ FTP เข้าไม่ได้วันนั้น — fallback สุดท้ายเท่านั้น)
 
-    gee_fetch_fn: จุด inject สำหรับเทส (ค่าเริ่มต้นคือ _fetch_chirps_daily_from_gee จริงที่ยิง GEE
-    จริง) — ให้เทสเรียกด้วยฟังก์ชันปลอมที่คืน DataFrame [date, precipitation] โดยไม่ต้องมี
-    Earth Engine credentials หรือยิง network จริงเลย
+    แต่ละชั้นดึงเฉพาะช่วงที่ชั้นก่อนหน้ายังไม่ครอบคลุม (ไม่ดึงซ้ำ) วันไหนมีข้อมูลจากหลายชั้นปนกัน
+    (ไม่ควรเกิดถ้า cutoff คำนวณถูก แต่กันเหนียวไว้) ให้ชั้นที่แม่นกว่าชนะเสมอตามลำดับข้างต้น
 
-    คืนค่า DataFrame [year, week, P_mm_week, n_days, data_type] โดย data_type ต่อสัปดาห์เป็น:
-      "final"   ถ้าทุกวันในสัปดาห์นั้นมาจาก CHIRPS Final
-      "prelim"  ถ้ามีอย่างน้อยหนึ่งวันมาจาก CHIRPS-Prelim (ผสมหรือทั้งหมด)
-      "missing" ถ้าไม่มีข้อมูลเลยทั้งสัปดาห์ (P_mm_week จะเป็น NaN)
+    gee_fetch_fn: จุด inject สำหรับเทส tier Final/Prelim-community (ค่าเริ่มต้นคือ
+    _fetch_chirps_daily_from_gee จริงที่ยิง GEE จริง)
+    prelim_ftp_fetch_fn: จุด inject แยกต่างหากสำหรับ tier Prelim FTP (ค่าเริ่มต้นคือ
+    _fetch_chirps_prelim_from_ftp จริงที่ยิง FTP จริง — แยกจาก gee_fetch_fn เพราะไม่ใช่ GEE call)
+    ทั้งสองให้เทสเรียกด้วยฟังก์ชันปลอมที่คืน DataFrame [date, precipitation] โดยไม่ต้องมี
+    credentials หรือยิง network จริงเลย
+
+    คืนค่า tuple (weekly, daily):
+      weekly: DataFrame [year, week, P_mm_week, n_days, data_type] โดย data_type ต่อสัปดาห์เป็น:
+        "final"      ถ้าทุกวันในสัปดาห์นั้นมาจาก CHIRPS Final
+        "prelim"     ถ้ามีอย่างน้อยหนึ่งวันมาจาก CHIRPS-Prelim เดิม (community, ความมั่นใจต่ำสุด)
+        "prelim_ftp" ถ้าไม่มี prelim (community) แต่มีอย่างน้อยหนึ่งวันมาจาก CHIRPS Prelim FTP
+        "missing"    ถ้าไม่มีข้อมูลเลยทั้งสัปดาห์ (P_mm_week จะเป็น NaN)
+      daily: DataFrame [date, precipitation, data_type, year, week] รายวันดิบก่อน groupby — เก็บไว้
+        ให้ get_chirps_feature() ใช้ทำ rolling-window fallback ตอนที่สัปดาห์ปฏิทิน ISO ของ as_of
+        เองไม่มีข้อมูลจริงเลยสักวัน (ดู _rolling_window_estimate())
     """
     final_cutoff = date.today() - timedelta(days=FINAL_DATA_SAFE_LAG_DAYS)
 
     frames = []
+    covered_dates: set = set()
 
-    # ── Final: ดึงเท่าที่คาดว่าจะมี (ถึง final_cutoff หรือ end_date แล้วแต่อันไหนถึงก่อน) ──────
+    # ── ชั้น 1: Final ────────────────────────────────────────────────────────────────────
     final_end = min(end_date, final_cutoff)
     if start_date < final_end:
         try:
@@ -397,16 +534,34 @@ def _fetch_chirps_weekly(
             )
             daily_final["data_type"] = "final"
             frames.append(daily_final)
+            covered_dates |= set(daily_final["date"])
         except Exception:
             logger.exception(
                 "ดึง CHIRPS Final จาก GEE (%s) ไม่สำเร็จ ช่วง %s ถึง %s",
                 final_collection_id, start_date, final_end,
             )
 
-    # ── Prelim: เติมช่วงตั้งแต่ final_cutoff ถึง end_date (ส่วนที่ final คาดว่ายังไม่ครอบคลุม) ──
-    # หมายเหตุ: asset ที่ CHIRPS_PRELIM_COLLECTION_ID ชี้ไปเป็นข้อมูล pentad (ราย 5 วัน) ไม่ใช่
-    # รายวัน (ยืนยันจากการทดสอบจริงกับ GEE) ต้อง _expand_pentad_to_daily() ก่อนเสมอ ไม่งั้นจะเอา
-    # ค่าฝนสะสม 5 วันไปนับเป็น 1 วันปนกับ Final ตรงๆ (ดู docstring ของ _expand_pentad_to_daily())
+    # ── ชั้น 2: Prelim FTP — เติมช่วงตั้งแต่ final_cutoff ถึง end_date ──────────────────────
+    prelim_ftp_start = max(start_date, final_cutoff)
+    if prelim_ftp_start < end_date:
+        try:
+            daily_prelim_ftp = prelim_ftp_fetch_fn(start_date=prelim_ftp_start, end_date=end_date)
+            daily_prelim_ftp = daily_prelim_ftp[~daily_prelim_ftp["date"].isin(covered_dates)]
+            daily_prelim_ftp["data_type"] = "prelim_ftp"
+            frames.append(daily_prelim_ftp)
+            covered_dates |= set(daily_prelim_ftp["date"])
+            logger.info(
+                "CHIRPS Prelim FTP: ดึงได้ %d วัน ในช่วง %s ถึง %s",
+                len(daily_prelim_ftp), prelim_ftp_start, end_date,
+            )
+        except Exception:
+            logger.exception(
+                "ดึง CHIRPS Prelim FTP ไม่สำเร็จ ช่วง %s ถึง %s — จะพึ่ง Prelim เดิม (community) "
+                "แทนสำหรับช่วงนี้ (ชั้นถัดไป)",
+                prelim_ftp_start, end_date,
+            )
+
+    # ── ชั้น 3: Prelim เดิม (community) — เติมเฉพาะวันที่ยังไม่มีข้อมูลจากชั้นก่อนหน้าเลย ────
     prelim_start = max(start_date, final_cutoff)
     if prelim_start < end_date:
         try:
@@ -415,8 +570,10 @@ def _fetch_chirps_weekly(
                 collection_id=prelim_collection_id, gee_project=gee_project,
             )
             daily_prelim = _expand_pentad_to_daily(daily_prelim_raw)
+            daily_prelim = daily_prelim[~daily_prelim["date"].isin(covered_dates)]
             daily_prelim["data_type"] = "prelim"
             frames.append(daily_prelim)
+            covered_dates |= set(daily_prelim["date"])
         except Exception:
             logger.exception(
                 "ดึง CHIRPS-Prelim จาก GEE (%s) ไม่สำเร็จ ช่วง %s ถึง %s — ตรวจสอบว่า asset ID "
@@ -425,20 +582,36 @@ def _fetch_chirps_weekly(
                 prelim_collection_id, prelim_start, end_date,
             )
 
-    if not frames:
-        return pd.DataFrame(columns=["year", "week", "P_mm_week", "n_days", "data_type"])
+    # เช็ค frames ว่างเฉยๆ ไม่พอ ต้องเช็คหลัง concat ด้วยว่าผลรวมมี 0 แถวจริงหรือไม่ (เช่นทุก tier
+    # คืน DataFrame ว่างเปล่าเพราะไม่มีข้อมูลเลย ไม่ใช่เพราะช่วงวันที่ถูกข้าม) เพราะ
+    # pd.DataFrame(columns=[...]) ว่างเปล่าจะมี dtype คอลัมน์ "date" เป็น object ไม่ใช่ datetime --
+    # เรียก .dt.isocalendar() ด้านล่างจะ raise AttributeError ทันที ถ้าไม่กันไว้ตรงนี้
+    daily = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=["date", "precipitation", "data_type"])
+    if daily.empty:
+        empty_weekly = pd.DataFrame(columns=["year", "week", "P_mm_week", "n_days", "data_type"])
+        empty_daily = pd.DataFrame(columns=["date", "precipitation", "data_type", "year", "week"])
+        return empty_weekly, empty_daily
 
-    daily = pd.concat(frames, ignore_index=True)
-    # ถ้าวันไหนมีทั้ง final และ prelim ซ้อนกัน (ไม่ควรเกิดถ้า cutoff คำนวณถูก แต่กันเหนียวไว้)
-    # ให้ final ชนะเสมอ (final แม่นกว่าเพราะผ่าน gauge correction แล้ว)
-    daily = daily.sort_values("data_type").drop_duplicates(subset=["date"], keep="first")
+    # ลำดับความน่าเชื่อถือ: final > prelim_ftp > prelim (ใช้ตอน dedup ถ้าวันไหนซ้อนกันข้ามชั้น)
+    priority = {"final": 0, "prelim_ftp": 1, "prelim": 2}
+    daily["_priority"] = daily["data_type"].map(priority)
+    daily = daily.sort_values("_priority").drop_duplicates(subset=["date"], keep="first").drop(columns="_priority")
 
     daily["precipitation"] = pd.to_numeric(daily["precipitation"], errors="coerce").clip(lower=0)
     daily["year"] = daily["date"].dt.isocalendar().year.astype(int)
     daily["week"] = daily["date"].dt.isocalendar().week.astype(int)
 
     def _week_data_type(types: pd.Series) -> str:
-        return "final" if (types == "final").all() else "prelim"
+        # ความมั่นใจของทั้งสัปดาห์ = แหล่งที่ "ด้อยที่สุด" ที่ปรากฏในสัปดาห์นั้น (ให้ผู้ใช้รู้ว่า
+        # ต้องระวังแค่ไหน) ลำดับ final (มั่นใจสุด) > prelim_ftp > prelim (มั่นใจน้อยสุด)
+        s = set(types)
+        if s == {"final"}:
+            return "final"
+        if "prelim" in s:
+            return "prelim"
+        if "prelim_ftp" in s:
+            return "prelim_ftp"
+        return "final"
 
     weekly = daily.groupby(["year", "week"]).agg(
         P_mm_week=("precipitation", "sum"),
@@ -446,7 +619,7 @@ def _fetch_chirps_weekly(
         data_type=("data_type", _week_data_type),
     ).reset_index()
 
-    return weekly
+    return weekly, daily
 
 
 # ---------------------------------------------------------------------------
@@ -471,9 +644,10 @@ def _build_combined_weekly_series(
     fresh: pd.DataFrame,
 ) -> pd.DataFrame:
     """
-    รวมประวัติ (จากไฟล์ training, ไม่มี data_type/n_days) กับข้อมูลสดจาก GEE (มี data_type/n_days)
-    เป็น series รายสัปดาห์ต่อเนื่องเดียว ถ้าสัปดาห์ไหนมีทั้งสองแหล่ง (ซ้อนทับกัน) ให้ข้อมูลสดชนะ
-    เสมอ (ประวัติอาจเป็นค่าที่ train ไว้นานแล้ว ข้อมูลสดใหม่กว่าและตรงกับที่จะใช้ inference จริง)
+    รวมประวัติ (จากไฟล์ training, ไม่มี data_type/n_days) กับข้อมูลสดจาก GEE/FTP (มี
+    data_type/n_days) เป็น series รายสัปดาห์ต่อเนื่องเดียว ถ้าสัปดาห์ไหนมีทั้งสองแหล่ง (ซ้อนทับกัน)
+    ให้ข้อมูลสดชนะเสมอ (ประวัติอาจเป็นค่าที่ train ไว้นานแล้ว ข้อมูลสดใหม่กว่าและตรงกับที่จะใช้
+    inference จริง)
 
     คืนค่า DataFrame [year, week, P_mm_week, n_days, data_type] เรียงตาม (year, week) —
     data_type ของแถวที่มาจากประวัติ (ไม่ใช่ fresh) จะเป็น "historical"
@@ -532,6 +706,51 @@ def _add_spi4_drought_flag(combined: pd.DataFrame) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
+# 2026-07-22 (รอบ 3): rolling 7-day window fallback
+# ---------------------------------------------------------------------------
+def _rolling_window_estimate(
+    daily: pd.DataFrame,
+    as_of: date,
+    window_days: int = 7,
+) -> Optional[dict]:
+    """
+    ใช้เมื่อสัปดาห์ปฏิทิน ISO ของ as_of เอง**ไม่มีข้อมูลจริงเลยสักวัน** (0/7 วัน) — เกิดขึ้นได้เสมอ
+    เพราะ Prelim FTP publish เป็นรอบ pentad (ทุก 5 วัน ที่ 2/7/12/17/22/27 ของเดือน) ไม่ใช่ทุกวัน
+    ดังนั้นสัปดาห์ที่กำลังดำเนินอยู่มักจะยังไม่มีวันไหนถูกครอบคลุมเลยจนกว่า pentad ถัดไปจะปิดรอบ
+
+    ⚠️ นี่คนละกรณีกับสัปดาห์ที่มีข้อมูล "ไม่ครบ 7 วัน" (เช่น 3/7 วัน) ซึ่งโค้ดเดิมรองรับอยู่แล้วโดย
+    ไม่ต้องผ่านฟังก์ชันนี้ (ดู n_days ในผลลัพธ์ปกติ) — ฟังก์ชันนี้ใช้เฉพาะกรณี 0/7 วันเท่านั้น ซึ่ง
+    "ผ่อนเกณฑ์ความครบ" ตรงๆ ช่วยไม่ได้ (0 ยังไงก็ไม่พอ) ต้องขยับกรอบเวลาที่มองแทน
+
+    วิธี: มองหาวันล่าสุดที่มีข้อมูลจริง (ไม่เกิน as_of) ใน `daily` แล้วรวมฝนของ window_days วัน
+    ปฏิทินล่าสุดนับถอยจากวันนั้น (ข้ามขอบเขตสัปดาห์ ISO ได้ — เป็น "รอบ 7 วันล่าสุด" ไม่ใช่
+    "สัปดาห์ปฏิทิน") เป็นค่าประมาณการของสัปดาห์ปัจจุบัน คืน None ถ้า `daily` ที่ส่งเข้ามาไม่มีข้อมูล
+    จริงเลยแม้แต่วันเดียว (เช่น ทุก tier ล้มเหลวทั้งหมดจริงๆ ไม่ใช่แค่ latency ปกติ — กรณีนี้ยังต้อง
+    คืน "missing" ตามเดิม)
+    """
+    if daily is None or daily.empty:
+        return None
+
+    valid = daily.dropna(subset=["precipitation"]).copy()
+    valid = valid[valid["date"].dt.date <= as_of]
+    if valid.empty:
+        return None
+
+    latest_date = valid["date"].max()
+    window_start = latest_date - pd.Timedelta(days=window_days - 1)
+    window = valid[(valid["date"] >= window_start) & (valid["date"] <= latest_date)]
+    if window.empty:
+        return None
+
+    return {
+        "p_mm_week": float(window["precipitation"].sum()),
+        "n_days": int(len(window)),
+        "window_start": window_start.date().isoformat(),
+        "window_end": latest_date.date().isoformat(),
+    }
+
+
+# ---------------------------------------------------------------------------
 # Step 5: จุดเรียกหลัก — get_chirps_feature()
 # ---------------------------------------------------------------------------
 def get_chirps_feature(
@@ -543,18 +762,19 @@ def get_chirps_feature(
     final_collection_id: str = CHIRPS_FINAL_COLLECTION_ID,
     prelim_collection_id: str = CHIRPS_PRELIM_COLLECTION_ID,
     gee_fetch_fn: Callable[..., pd.DataFrame] = _fetch_chirps_daily_from_gee,
+    prelim_ftp_fetch_fn: Callable[..., pd.DataFrame] = _fetch_chirps_prelim_from_ftp,
 ) -> dict:
     """
     จุดเรียกหลักของโมดูลนี้: โหลดประวัติ P_mm_week หลายปี + ดึง CHIRPS สดล่าสุด (weeks_fresh
-    สัปดาห์ย้อนหลังจาก as_of_date ผ่าน GEE) แล้วคำนวณ P_mm_week/P_eff_mm/lag1,2,4/SPI_4/
+    สัปดาห์ย้อนหลังจาก as_of_date ผ่าน GEE + FTP) แล้วคำนวณ P_mm_week/P_eff_mm/lag1,2,4/SPI_4/
     drought_flag ของสัปดาห์ as_of_date (ค่าเริ่มต้น = วันนี้) สำหรับ zone ที่ระบุ
 
     zone: "zone_A" (rainfed/upland) หรือ "zone_B" (irrigated/paddy) — ตรงตาม ZONE_CONFIG ใน
     feature_schema.md กำหนดว่าจะใช้สูตร P_eff ไหน
 
     ออกแบบให้ "ไม่ raise exception ออกไปนอกฟังก์ชันนี้" (สอดคล้องกับหลักการ error isolation ของ
-    data_pipeline.py/mei_feature.py) — ถ้าดึง GEE ไม่สำเร็จทั้งคู่ (final และ prelim) จะยังคำนวณ
-    ต่อได้จากประวัติอย่างเดียว (แค่ไม่มีสัปดาห์ล่าสุดจริงๆ) และ log ให้เห็นชัดเสมอว่าใช้แหล่งไหน
+    data_pipeline.py/mei_feature.py) — ถ้าดึงทุกแหล่งไม่สำเร็จ จะยังคำนวณต่อได้จากประวัติอย่างเดียว
+    (แค่ไม่มีสัปดาห์ล่าสุดจริงๆ) และ log ให้เห็นชัดเสมอว่าใช้แหล่งไหน
 
     คืนค่าเป็น dict:
       {
@@ -564,9 +784,11 @@ def get_chirps_feature(
         "p_mm_week_lag1": float | None, "p_mm_week_lag2": float | None, "p_mm_week_lag4": float | None,
         "spi_4": float | None,
         "drought_flag": int | None,
-        "data_type": "final" | "prelim" | "historical" | "missing" | None,  # แหล่งของสัปดาห์ as_of เอง
+        "data_type": "final" | "prelim_ftp" | "prelim" | "rolling_estimate" | "historical" | "missing" | None,
         "n_days_in_week": int | None,       # จำนวนวันที่มีข้อมูลจริงในสัปดาห์ as_of (7 = ครบสัปดาห์)
-        "is_partial_week": bool,            # True ถ้า as_of ยังไม่ใช่วันสุดท้ายของสัปดาห์ (ข้อมูลจะยังไม่ครบ 7 วัน แม้ final ก็ตาม)
+        "is_partial_week": bool,            # True ถ้า as_of ยังไม่ใช่วันสุดท้ายของสัปดาห์
+        "is_rolling_estimate": bool,        # True เฉพาะตอน data_type == "rolling_estimate"
+        "rolling_window": {"start": str, "end": str} | None,  # ช่วงวันที่ใช้จริงถ้าเป็น rolling estimate
         "history_years_available": int,     # จำนวนปีของสัปดาห์เดียวกันที่มีในฐานสำหรับคำนวณ SPI_4
         "historical_source": str,
         "fetch_error": str | None,
@@ -591,6 +813,11 @@ def get_chirps_feature(
         "data_type": None,
         "n_days_in_week": None,
         "is_partial_week": as_of_ts.dayofweek != 6,  # ISO weekday 7 (อาทิตย์) = สัปดาห์ครบ 7 วันแล้ว
+        # true เฉพาะตอนสัปดาห์ as_of เองไม่มีข้อมูลจริงเลย (0/7 วัน) และต้องใช้ rolling 7-day window
+        # แทน (ดู _rolling_window_estimate()) — ต่างจาก is_partial_week ที่ true แค่เพราะ as_of ยัง
+        # ไม่ใช่วันอาทิตย์ (สัปดาห์ยังไม่จบ)
+        "is_rolling_estimate": False,
+        "rolling_window": None,
         "history_years_available": 0,
         "historical_source": str(historical_csv_path),
         "fetch_error": None,
@@ -608,17 +835,60 @@ def get_chirps_feature(
     fresh_end = as_of + timedelta(days=1)  # GEE filterDate() เป็น exclusive ที่ปลาย ต้อง +1 ให้รวมวันนี้
 
     try:
-        fresh = _fetch_chirps_weekly(
+        fresh, fresh_daily = _fetch_chirps_weekly(
             start_date=fresh_start, end_date=fresh_end,
-            final_collection_id=final_collection_id, prelim_collection_id=prelim_collection_id,
+            final_collection_id=final_collection_id,
+            prelim_collection_id=prelim_collection_id,
             gee_project=gee_project, gee_fetch_fn=gee_fetch_fn,
+            prelim_ftp_fetch_fn=prelim_ftp_fetch_fn,
         )
     except Exception as exc:
-        logger.exception("ดึง CHIRPS สดจาก GEE ล้มเหลวทั้งหมด (ช่วง %s ถึง %s)", fresh_start, fresh_end)
+        logger.exception("ดึง CHIRPS สดล้มเหลวทั้งหมด (ช่วง %s ถึง %s)", fresh_start, fresh_end)
         fresh = pd.DataFrame(columns=["year", "week", "P_mm_week", "n_days", "data_type"])
+        fresh_daily = pd.DataFrame(columns=["date", "precipitation", "data_type", "year", "week"])
         result["fetch_error"] = str(exc)
 
     combined = _build_combined_weekly_series(historical, fresh)
+
+    # ถ้าสัปดาห์ as_of เอง (ปฏิทิน ISO Mon-Sun) ไม่มีข้อมูลจริงเลยสักวัน (0/7 วัน) ลอง rolling
+    # 7-day window ก่อนยอมแพ้เป็น "missing" — กรณี "ไม่ครบ 7 วัน" (เช่น 3/7) ไม่เข้าเงื่อนไขนี้
+    # (already_has_as_of = True อยู่แล้ว เพราะ groupby ของ _fetch_chirps_weekly() สร้างแถวให้แม้มี
+    # แค่ 1 วัน)
+    already_has_as_of = (
+        ((combined["year"] == as_of_year) & (combined["week"] == as_of_week)).any()
+        if not combined.empty else False
+    )
+    if not already_has_as_of:
+        rolling = _rolling_window_estimate(fresh_daily, as_of=as_of, window_days=7)
+        if rolling is not None:
+            rolling_row = pd.DataFrame([{
+                "year": int(as_of_year), "week": int(as_of_week),
+                "P_mm_week": float(rolling["p_mm_week"]), "n_days": int(rolling["n_days"]),
+                "data_type": "rolling_estimate",
+            }])
+            combined = pd.concat(
+                [f for f in (combined, rolling_row) if not f.empty], ignore_index=True
+            )
+            combined["year"] = combined["year"].astype(int)
+            combined["week"] = combined["week"].astype(int)
+            combined = combined.sort_values(["year", "week"]).reset_index(drop=True)
+            result["is_rolling_estimate"] = True
+            result["rolling_window"] = {"start": rolling["window_start"], "end": rolling["window_end"]}
+            logger.info(
+                "สัปดาห์ %d-W%02d (ปฏิทิน ISO) ไม่มีข้อมูลจริงเลยสักวัน — ใช้ rolling 7-day window "
+                "แทน (%s ถึง %s, มีข้อมูลจริง %d วันในช่วงนั้น, รวม %.2f mm) เป็นค่าประมาณการของ "
+                "สัปดาห์นี้ (data_type=rolling_estimate — ไม่ใช่ผลรวมของสัปดาห์ปฏิทินจริง)",
+                as_of_year, as_of_week, rolling["window_start"], rolling["window_end"],
+                rolling["n_days"], rolling["p_mm_week"],
+            )
+        else:
+            logger.warning(
+                "สัปดาห์ %d-W%02d ไม่มีข้อมูลจริงเลยสักวัน และไม่มีข้อมูลจริงในช่วง weeks_fresh=%d "
+                "สัปดาห์ย้อนหลังเลยแม้แต่วันเดียว (ทุก tier ล้มเหลวจริง ไม่ใช่แค่ latency ปกติ) — "
+                "rolling window ช่วยไม่ได้เช่นกัน",
+                as_of_year, as_of_week, weeks_fresh,
+            )
+
     if combined.empty:
         logger.error("ไม่มีข้อมูล P_mm_week เลยทั้งประวัติและข้อมูลสด — คำนวณ feature ของ CHIRPS ไม่ได้เลยรอบนี้")
         result["fetch_error"] = result["fetch_error"] or "no_data_available"
@@ -638,8 +908,9 @@ def get_chirps_feature(
 
     if as_of_row.empty:
         logger.warning(
-            "ไม่มีข้อมูล CHIRPS ของสัปดาห์ as_of เอง (%d-W%02d) เลย (ทั้งประวัติและสดจาก GEE) — "
-            "คืนค่า None สำหรับ feature ของสัปดาห์นี้ (ปีก่อนๆ ของสัปดาห์เดียวกันมี %d ปีในฐาน)",
+            "ไม่มีข้อมูล CHIRPS ของสัปดาห์ as_of เอง (%d-W%02d) เลย (ทั้งประวัติ, Final, Prelim FTP, "
+            "Prelim เดิม, และ rolling window) — คืนค่า None สำหรับ feature ของสัปดาห์นี้ (ปีก่อนๆ "
+            "ของสัปดาห์เดียวกันมี %d ปีในฐาน)",
             as_of_year, as_of_week, history_years_available,
         )
         result["data_type"] = "missing"
@@ -657,20 +928,37 @@ def get_chirps_feature(
     result["data_type"] = row["data_type"]
     result["n_days_in_week"] = int(row["n_days"])
 
-    # ── Log ชัดเจนว่า as_of week เป็น preliminary หรือ final (ข้อ 4 ของ requirement) ──────────
+    # ── Log ชัดเจนว่า as_of week มาจากแหล่งไหน ────────────────────────────────────────────
     if result["data_type"] == "final":
         logger.info(
             "CHIRPS สัปดาห์ %d-W%02d (zone=%s): P_mm_week=%.2f mm — ใช้ข้อมูล FINAL (ผ่าน gauge "
             "correction แล้ว, %d/7 วัน) มั่นใจได้เต็มที่",
             as_of_year, as_of_week, zone, result["p_mm_week"], result["n_days_in_week"],
         )
-    elif result["data_type"] == "prelim":
-        logger.warning(
-            "CHIRPS สัปดาห์ %d-W%02d (zone=%s): P_mm_week=%.2f mm — ใช้ข้อมูล PRELIMINARY เท่านั้น "
-            "(%d/7 วัน, ยังไม่ผ่าน gauge correction ที่ CHIRPS Final จะทำ ~20 วันหลังสิ้นเดือน) "
-            "ค่าอาจเปลี่ยนแปลงได้เมื่อ final ออกภายหลัง%s",
+    elif result["data_type"] == "prelim_ftp":
+        logger.info(
+            "CHIRPS สัปดาห์ %d-W%02d (zone=%s): P_mm_week=%.2f mm — ใช้ข้อมูล CHIRPS PRELIM FTP "
+            "(ตรงจาก CHC FTP, lag จริง ~7 วัน, %d/7 วัน) ยังไม่ผ่าน gauge correction แบบ Final "
+            "แต่เร็วกว่า Prelim เดิม (community) มาก%s",
             as_of_year, as_of_week, zone, result["p_mm_week"], result["n_days_in_week"],
             " — และสัปดาห์นี้ยังไม่ครบ 7 วัน (as_of_date อยู่กลางสัปดาห์)" if result["is_partial_week"] else "",
+        )
+    elif result["data_type"] == "prelim":
+        logger.warning(
+            "CHIRPS สัปดาห์ %d-W%02d (zone=%s): P_mm_week=%.2f mm — ใช้ข้อมูล PRELIMINARY (community "
+            "catalog เดิม, pentad) เท่านั้น (%d/7 วัน) — แปลว่า Prelim FTP ก็ยังไม่ครอบคลุมบางวันใน "
+            "สัปดาห์นี้ (เช่น pentad ล่าสุดยังไม่ปิดรอบ) ค่าอาจเปลี่ยนแปลงได้เมื่อ final ออกภายหลัง%s",
+            as_of_year, as_of_week, zone, result["p_mm_week"], result["n_days_in_week"],
+            " — และสัปดาห์นี้ยังไม่ครบ 7 วัน (as_of_date อยู่กลางสัปดาห์)" if result["is_partial_week"] else "",
+        )
+    elif result["data_type"] == "rolling_estimate":
+        logger.warning(
+            "CHIRPS สัปดาห์ %d-W%02d (zone=%s): P_mm_week=%.2f mm — เป็นค่า ROLLING ESTIMATE "
+            "(ไม่ใช่ผลรวมของสัปดาห์ปฏิทินจริง เพราะสัปดาห์นี้ไม่มีข้อมูลจริงเลยสักวัน ณ ตอนดึง) "
+            "รวมจาก %d วันล่าสุดที่มีข้อมูลจริงในช่วง %s ถึง %s — ใช้ระวังกว่า final/prelim_ftp/"
+            "prelim ตามปกติ เหมาะสำหรับ readiness signal เบื้องต้นเท่านั้น",
+            as_of_year, as_of_week, zone, result["p_mm_week"], result["n_days_in_week"],
+            result["rolling_window"]["start"], result["rolling_window"]["end"],
         )
     elif result["data_type"] == "historical":
         logger.info(
@@ -699,10 +987,8 @@ def get_chirps_feature(
 
 
 if __name__ == "__main__":
-    # รันไฟล์นี้ตรงๆ เพื่อดึง CHIRPS จริงจาก GEE แล้ว print ผลลัพธ์ — ใช้ DEFAULT_GEE_PROJECT
-    # ("maenaruea-water-pipeline") ที่ผู้ใช้ยืนยันแล้วว่า ee.Initialize()+ee.String('test').getInfo()
-    # ทำงานได้จริงบนเครื่องนี้ (project เดียวกับที่เคยตั้งค่าไว้สำหรับงาน Sentinel SAR/crop classification)
-    # ยังไม่เชื่อมกับโมเดล/pipeline หลัก ตามที่ระบุไว้ในขอบเขตงานนี้
+    # รันไฟล์นี้ตรงๆ เพื่อดึง CHIRPS จริง (GEE + FTP) แล้ว print ผลลัพธ์ — ต้องรันบนเครื่องที่มีทั้ง
+    # GEE credentials (Service Account หรือ personal) และอินเทอร์เน็ตออก FTP (ftp.chc.ucsb.edu) ได้
     import json
 
     for demo_zone in ("zone_A", "zone_B"):

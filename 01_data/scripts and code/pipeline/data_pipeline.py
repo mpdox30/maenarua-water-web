@@ -144,9 +144,17 @@ ML_FEATURES_LIVE_COLUMNS = [
     "run_timestamp", "as_of_date", "year", "week", "zone",
     "MEI", "MEI_lag4", "MEI_lag8", "mei_reporting_lag_risk", "mei_fetch_error",
     "P_mm_week", "P_eff_mm", "P_mm_week_lag1", "P_mm_week_lag2", "P_mm_week_lag4",
-    "SPI_4", "drought_flag", "chirps_data_type", "chirps_n_days_in_week", "chirps_fetch_error",
+    "SPI_4", "drought_flag", "chirps_data_type", "chirps_n_days_in_week",
+    # 2026-07-22 เพิ่ม: true ถ้า chirps_n_days_in_week==7 มาจาก rolling 7-day window fallback
+    # (data_type="rolling_estimate") ไม่ใช่ผลรวมของสัปดาห์ปฏิทิน ISO จริง — ใช้แยกแยะใน
+    # _wd_select_climate_features_for_prediction()/_backfill_incomplete_climate_weeks() ไม่ให้
+    # rolling estimate หลุดผ่านเป็น "ครบ 7/7 วันจริง" (out-of-distribution เทียบกับตอน train)
+    "chirps_is_rolling_estimate", "chirps_fetch_error",
     "ET0_mm_week", "T_mean", "RH_pct", "VPD_kPa", "u2_ms", "Rn_MJ",
-    "era5t_n_days_in_week", "era5t_fetch_error",
+    "era5t_n_days_in_week",
+    # 2026-07-22 เพิ่ม: เหมือน chirps_is_rolling_estimate แต่สำหรับ ERA5T (ดู era5t_worker.py
+    # _run_weekly_mode() rolling-window fallback)
+    "era5t_is_rolling_estimate", "era5t_fetch_error",
     "AI_week", "AI_week_status",
     # 2026-07-16 เพิ่ม (เฟส 3) -- NIR_A_m3/GIR_B_m3 สดต่อ zone (None ถ้าไม่ใช่ zone ของตัวเอง หรือ
     # คำนวณไม่ได้สัปดาห์นี้ -- ดู wd_nir_gir_status) + wd_area_basis บอกความโปร่งใสว่าใช้พื้นที่จาก
@@ -496,6 +504,86 @@ def _wd_compute_live_nir_gir(
         "irrigation_efficiency_applied": is_zone_b,
         "per_crop": per_crop,
         "skipped_crops_no_kc": skipped_no_kc,
+    }
+
+
+def _wd_get_zone_b_reservoir_areas(sar_result: Optional[dict]) -> Optional[dict]:
+    """
+    2026-07-22 เพิ่ม — เลือกพื้นที่ต่อ crop ต่อ "อ่าง" ของ zone_B (ไม่ใช่ทั้งโซนรวมแบบ
+    _wd_get_area_zone_ha()) ใช้แบ่งสัดส่วนตัวเลขพยากรณ์ Zone B (การ์ด KPI หน้าเว็บ) ตามอ่างที่ส่งน้ำจริง
+    (ดู sar_classification.compute_zone_b_reservoir_area_ha())
+
+    ต่างจาก _wd_get_area_zone_ha() ตรงที่ **ไม่มี fallback ไปพื้นที่ hardcode ปี 2020** เพราะ baseline
+    ปี 2020 ไม่เคยถูกแบ่งย่อยตามอ่างไว้เลย (มีแค่ตัวเลขรวมทั้งโซน) — ถ้า SAR classification ยังไม่เคย
+    รันสำเร็จ (หรือรันสำเร็จแต่เป็นก่อนฟีเจอร์นี้เพิ่ม 2026-07-22 เลยไม่มี key
+    zone_b_reservoir_area_ha) จะคืน None ตรงๆ ให้ผู้เรียกรู้ว่า "ยังคำนวณสัดส่วนไม่ได้" ไม่ใช่เดา
+    เอาพื้นที่รวมทั้งโซนมาหารเฉลี่ยเอง (จะให้สัดส่วนผิดเพี้ยนจากพื้นที่/crop mix จริงต่ออ่าง)
+
+    คืน dict {reservoir_name_th: {crop: area_ha, ...}, ...} หรือ None
+    """
+    if not sar_result:
+        return None
+    reservoir_areas = sar_result.get("zone_b_reservoir_area_ha")
+    if not reservoir_areas:
+        return None
+    return reservoir_areas
+
+
+def _wd_compute_zone_b_reservoir_gir_ratio(
+    sar_result: Optional[dict], iso_week: int,
+    et0_mm_week: Optional[float], p_eff_mm: Optional[float],
+) -> Optional[dict]:
+    """
+    2026-07-22 เพิ่ม — คำนวณ "สัดส่วน" ความต้องการใช้น้ำ FAO-56 ของ zone_B ต่ออ่าง (ไม่ใช่ตัวเลข m3
+    สุดท้ายที่จะโชว์) ใช้แบ่งตัวเลขพยากรณ์จริงจากโมเดล (final_m3 ของ demand_zone_b, h=1) ตามสัดส่วนนี้
+    ทีหลัง (ดู run_pipeline() จุดที่ผสานเป็น predictions["demand_zone_b"]["reservoir_breakdown"])
+
+    เหตุผลที่แบ่งตาม "สัดส่วน" แทนที่จะโชว์ตัวเลข FAO-56 ต่ออ่างตรงๆ: โมเดล ML สอง-stage
+    (catboost/lightgbm) คือตัวที่ validate/train ไว้จริงสำหรับพยากรณ์ทั้งโซน ไม่มีโมเดลแยกต่ออ่าง —
+    ใช้สัดส่วนพื้นที่/ชนิดพืชต่ออ่างจาก FAO-56 (แม่นกว่าแบ่งตามพื้นที่เฉยๆ เพราะคำนึงถึง crop mix ที่ต่าง
+    กันจริงต่ออ่างด้วย) เป็นตัวจัดสรรตัวเลขที่โมเดลทำนายไว้แล้วแทน (ยืนยันแนวทางนี้กับ user แล้ว
+    2026-07-22 — ดูสองรอบ AskUserQuestion ก่อนเริ่ม implement ฟีเจอร์นี้)
+
+    ใช้ et0_mm_week/p_eff_mm ของ "สัปดาห์นี้" ตัวเดียวกับที่ _fetch_climate_features_step() ใช้คำนวณ
+    GIR_B_m3 รวมทั้งโซน ให้สัดส่วนสอดคล้องกับตัวเลขที่บันทึกคู่กันในแถวเดียวกันของ ml_features_live.csv
+
+    คืน dict {"reservoirs": {reservoir_name_th: {"share": 0-1, "fao56_estimate_m3": float}, ...},
+    "fao56_total_m3": float, "basis": "sar_live", "note": str} หรือ None พร้อม log เหตุผล (climate
+    สัปดาห์นี้ยังไม่พร้อม, SAR ยังไม่เคยรันสำเร็จ, หรือผลรวม FAO-56 ทุกอ่างเป็น 0 หารสัดส่วนไม่ได้)
+    """
+    reservoir_areas = _wd_get_zone_b_reservoir_areas(sar_result)
+    if not reservoir_areas:
+        return None
+    if et0_mm_week is None or p_eff_mm is None:
+        return None
+
+    per_reservoir_m3: dict = {}
+    for reservoir_name, area_ha_by_crop in reservoir_areas.items():
+        nir_gir = _wd_compute_live_nir_gir(
+            zone="zone_B", iso_week=iso_week,
+            et0_mm_week=et0_mm_week, p_eff_mm=p_eff_mm,
+            area_ha_by_crop=area_ha_by_crop,
+        )
+        per_reservoir_m3[reservoir_name] = nir_gir["total_m3"] if nir_gir is not None else 0.0
+
+    grand_total = sum(per_reservoir_m3.values())
+    if grand_total <= 0:
+        logger.warning(
+            "คำนวณสัดส่วน GIR_B ต่ออ่างไม่ได้สัปดาห์นี้ (ผลรวม FAO-56 ทุกอ่าง = %.2f -- อาจเป็นสัปดาห์ที่ "
+            "P_eff >= ETc ทุกพืชทุกอ่าง ไม่มี deficit ต้องเติมน้ำเลย) -- reservoir_breakdown จะไม่แสดงรอบนี้",
+            grand_total,
+        )
+        return None
+
+    breakdown = {
+        name: {"share": round(m3 / grand_total, 6), "fao56_estimate_m3": round(m3, 2)}
+        for name, m3 in per_reservoir_m3.items()
+    }
+    return {
+        "reservoirs": breakdown,
+        "fao56_total_m3": round(grand_total, 2),
+        "basis": "sar_live",
+        "note": "สัดส่วนคำนวณจาก FAO-56 GIR ต่ออ่าง (พื้นที่ SAR classification ล่าสุด x climate สัปดาห์นี้)",
     }
 
 
@@ -880,6 +968,12 @@ def _backfill_incomplete_climate_weeks(
 
     import csv as csv_module
 
+    # 2026-07-22 เพิ่ม: "ครบ 7/7" ต้องไม่ใช่ rolling estimate ด้วย (ดู ML_FEATURES_LIVE_COLUMNS
+    # comment) — rolling estimate อาจรายงาน n_days_in_week==7 ได้ (ถ้ามีข้อมูลจริงครบ 7 วันใน
+    # rolling window) แต่ไม่ใช่ผลรวมของสัปดาห์ปฏิทิน ISO จริง ต้องไม่นับเป็น "ครบ" สำหรับ gate นี้
+    def _is_rolling(v: Any) -> bool:
+        return str(v).strip().lower() in ("true", "1")
+
     seen_complete: set = set()
     incomplete_keys: set = set()
     try:
@@ -893,6 +987,8 @@ def _backfill_incomplete_climate_weeks(
                 is_complete = (
                     _to_int(r.get("era5t_n_days_in_week")) == 7
                     and _to_int(r.get("chirps_n_days_in_week")) == 7
+                    and not _is_rolling(r.get("era5t_is_rolling_estimate"))
+                    and not _is_rolling(r.get("chirps_is_rolling_estimate"))
                 )
                 if is_complete:
                     seen_complete.add(key)
@@ -947,8 +1043,14 @@ def _backfill_incomplete_climate_weeks(
         chirps_days = _to_int((chirps_result or {}).get("n_days_in_week"))
         worker_output = (era5t_result or {}).get("worker_output") or {}
         era5t_days = _to_int(worker_output.get("n_days_in_week"))
+        # 2026-07-22 เพิ่ม: ไม่นับเป็น "ครบ 7/7" ถ้าเป็น rolling estimate (ดู comment เดียวกันที่
+        # is_complete ด้านบนฟังก์ชันนี้) — ในทางปฏิบัติแทบไม่เกิดตอน backfill เพราะ sunday ที่
+        # backfill เป็นสัปดาห์ที่ผ่านมา >= min_age_days วันแล้ว (ข้อมูลจริงควรมาครบตามปฏิทินแล้ว)
+        # แต่กันไว้เผื่อกรณี min_age_days ถูกตั้งค่าต่ำ หรือ provider latency นานผิดปกติ
+        chirps_is_rolling = bool((chirps_result or {}).get("is_rolling_estimate"))
+        era5t_is_rolling = bool(worker_output.get("is_rolling_estimate"))
 
-        if chirps_days == 7 and era5t_days == 7:
+        if chirps_days == 7 and era5t_days == 7 and not chirps_is_rolling and not era5t_is_rolling:
             et0_mm_week = worker_output.get("ET0_mm_week")
             p_mm_week = (chirps_result or {}).get("p_mm_week")
             row = {
@@ -967,6 +1069,7 @@ def _backfill_incomplete_climate_weeks(
                 "drought_flag": chirps_result.get("drought_flag"),
                 "chirps_data_type": chirps_result.get("data_type"),
                 "chirps_n_days_in_week": chirps_days,
+                "chirps_is_rolling_estimate": chirps_is_rolling,
                 "chirps_fetch_error": chirps_result.get("fetch_error"),
                 "ET0_mm_week": et0_mm_week,
                 "T_mean": worker_output.get("T_mean"),
@@ -975,6 +1078,7 @@ def _backfill_incomplete_climate_weeks(
                 "u2_ms": worker_output.get("u2_ms"),
                 "Rn_MJ": worker_output.get("Rn_MJ"),
                 "era5t_n_days_in_week": era5t_days,
+                "era5t_is_rolling_estimate": era5t_is_rolling,
                 "era5t_fetch_error": era5t_result.get("fetch_error"),
                 "AI_week": (et0_mm_week / p_mm_week) if (et0_mm_week is not None and p_mm_week) else None,
                 "AI_week_status": "backfilled 2026-07-18 (ดึงย้อนหลังหลังข้อมูล final ออกแล้ว)",
@@ -1016,6 +1120,9 @@ def _fetch_climate_features_step(as_of_date: Optional[Any] = None) -> dict:
         "chirps": {"zone_A": None, "zone_B": None},
         "era5t": None,
         "ai_week": {"zone_A": {"value": None, "status": None}, "zone_B": {"value": None, "status": None}},
+        # 2026-07-22 เพิ่ม -- สัดส่วน FAO-56 GIR ต่ออ่างของ zone_B (ดู _wd_compute_zone_b_reservoir_gir_ratio())
+        # None จนกว่าจะคำนวณสำเร็จด้านล่าง (ต้องมี SAR zone_b_reservoir_area_ha + climate สัปดาห์นี้พร้อม)
+        "gir_b_reservoir_ratio": None,
         "rows_appended": 0,
         "data_status": "ok",
         "prediction_readiness": {},
@@ -1093,7 +1200,22 @@ def _fetch_climate_features_step(as_of_date: Optional[Any] = None) -> dict:
             value, status = None, "AI_week unavailable (P_mm_week = 0, หารด้วยศูนย์ไม่ได้)"
         else:
             value = et0_mm_week / p_mm_week
-            if chirps_z.get("data_type") == "prelim":
+            # 2026-07-22 แก้: chirps_feature.py เพิ่ม data_type ใหม่ 2 ค่า ("prelim_ftp" จาก CHC FTP
+            # โดยตรง lag ~7 วัน, และ "rolling_estimate" ตอนสัปดาห์ปฏิทินยังไม่มีข้อมูลจริงเลยสักวัน)
+            # เดิมเช็คแค่ == "prelim" เฉยๆ ทำให้ 2 ค่าใหม่นี้หลุดรอดไปเป็น "ok" (confidence เต็ม) ทั้ง
+            # ที่จริงแล้วยังไม่ผ่าน gauge correction เหมือน final ทั้งคู่ (rolling_estimate ยิ่งต่ำกว่า
+            # prelim_ftp อีก เพราะไม่ใช่ผลรวมของสัปดาห์ปฏิทินจริงด้วยซ้ำ) เปลี่ยนเป็นเช็ค != "final"
+            # แทน ครอบคลุมทุกค่าที่ไม่ใช่ final โดยอัตโนมัติ (รวม prelim เดิม, prelim_ftp, และ
+            # rolling_estimate) พร้อมระบุ reason ให้ตรงกับแหล่งจริง
+            chirps_data_type = chirps_z.get("data_type")
+            if chirps_data_type == "rolling_estimate":
+                reasons.append(
+                    "CHIRPS เป็นค่า rolling estimate (สัปดาห์ปฏิทินยังไม่มีข้อมูลจริงเลย ใช้ค่า "
+                    "ประมาณจาก 7 วันล่าสุดที่มีข้อมูลจริงแทน)"
+                )
+            elif chirps_data_type == "prelim_ftp":
+                reasons.append("CHIRPS เป็นข้อมูล prelim_ftp (ตรงจาก CHC FTP, ยังไม่ใช่ final)")
+            elif chirps_data_type == "prelim":
                 reasons.append("CHIRPS เป็นข้อมูล prelim (ยังไม่ใช่ final)")
             if chirps_z.get("is_partial_week"):
                 reasons.append("CHIRPS ของสัปดาห์นี้ยังไม่ครบ 7 วัน (as_of ไม่ใช่วันอาทิตย์)")
@@ -1141,6 +1263,7 @@ def _fetch_climate_features_step(as_of_date: Optional[Any] = None) -> dict:
             "drought_flag": chirps_z.get("drought_flag"),
             "chirps_data_type": chirps_z.get("data_type"),
             "chirps_n_days_in_week": chirps_z.get("n_days_in_week"),
+            "chirps_is_rolling_estimate": bool(chirps_z.get("is_rolling_estimate")),
             "chirps_fetch_error": chirps_z.get("fetch_error"),
             "ET0_mm_week": et0_mm_week,
             "T_mean": worker_output.get("T_mean"),
@@ -1149,6 +1272,7 @@ def _fetch_climate_features_step(as_of_date: Optional[Any] = None) -> dict:
             "u2_ms": worker_output.get("u2_ms"),
             "Rn_MJ": worker_output.get("Rn_MJ"),
             "era5t_n_days_in_week": n_days_in_week,
+            "era5t_is_rolling_estimate": bool(worker_output.get("is_rolling_estimate")),
             "era5t_fetch_error": era5t_fetch_error,
             "AI_week": ai_week_z.get("value"),
             "AI_week_status": ai_week_z.get("status"),
@@ -1180,6 +1304,20 @@ def _fetch_climate_features_step(as_of_date: Optional[Any] = None) -> dict:
                 "NIR/GIR (%s) คำนวณไม่ได้สัปดาห์นี้: %s (area_basis=%s: %s)",
                 zone, row["wd_nir_gir_status"], area_info["basis"], area_info["note"],
             )
+
+        # 2026-07-22 เพิ่ม -- เฉพาะ zone_B: คำนวณสัดส่วน FAO-56 ต่ออ่าง (ใช้ allocate ตัวเลขพยากรณ์จริง
+        # จากโมเดลทีหลังใน run_pipeline() — ดู _wd_compute_zone_b_reservoir_gir_ratio() docstring)
+        if zone == "zone_B":
+            result["gir_b_reservoir_ratio"] = _wd_compute_zone_b_reservoir_gir_ratio(
+                sar_result=sar_result, iso_week=as_of_week,
+                et0_mm_week=et0_mm_week, p_eff_mm=chirps_z.get("p_eff_mm"),
+            )
+            if result["gir_b_reservoir_ratio"] is None:
+                logger.info(
+                    "zone_B: ยังคำนวณสัดส่วน GIR ต่ออ่างไม่ได้รอบนี้ (SAR ยังไม่มี "
+                    "zone_b_reservoir_area_ha, หรือ climate สัปดาห์นี้ยังไม่พร้อม, หรือผลรวม FAO-56 "
+                    "เป็น 0) -- reservoir_breakdown ใน latest.json จะไม่มีรอบนี้"
+                )
 
         rows_to_append.append(row)
 
@@ -1264,7 +1402,10 @@ def _wd_select_climate_features_for_prediction(zone: str, as_of_date: Optional[A
     """
     เลือกแถวข้อมูล climate ที่ "ปลอดภัย" พอจะป้อนเข้าโมเดล Water Demand จริงในอนาคต — ต้องครบ
     7/7 วันพอดี (era5t_n_days_in_week==7 และ chirps_n_days_in_week==7) ไม่ยอมรับ partial-week
-    ไม่ว่ากรณีใด (out-of-distribution เทียบกับตอน train)
+    ไม่ว่ากรณีใด (out-of-distribution เทียบกับตอน train) — และ (2026-07-22 เพิ่ม) ต้องไม่ใช่ rolling
+    estimate ด้วย (era5t_is_rolling_estimate/chirps_is_rolling_estimate ต้องเป็น false ทั้งคู่) เพราะ
+    แม้ n_days_in_week จะรายงาน 7 แต่ถ้ามาจาก rolling 7-day window fallback ก็ไม่ใช่ผลรวมของสัปดาห์
+    ปฏิทิน ISO จริง ยังนับเป็น out-of-distribution เหมือนกัน
 
     คืนค่า dict {zone, status: ok|fallback|blocked_insufficient_data, row, selected_year,
     selected_week, current_year, current_week, note}
@@ -1280,6 +1421,16 @@ def _wd_select_climate_features_for_prediction(zone: str, as_of_date: Optional[A
             return int(v)
         except (TypeError, ValueError):
             return None
+
+    # 2026-07-22 เพิ่ม: "ครบ 7/7" ต้องไม่ใช่ rolling estimate ด้วย (ดู ML_FEATURES_LIVE_COLUMNS
+    # comment / _backfill_incomplete_climate_weeks() comment เดียวกัน) — chirps_feature.py และ
+    # era5t_worker.py ทั้งคู่มี rolling 7-day window fallback ที่อาจรายงาน n_days_in_week==7 ได้
+    # (ถ้ามีข้อมูลจริงครบ 7 วันในช่วง rolling ที่ไม่ใช่สัปดาห์ปฏิทิน ISO) แต่นั่นไม่ใช่ผลรวมของ
+    # สัปดาห์ปฏิทินจริงแบบที่โมเดล train ไว้ (out-of-distribution) — gate นี้ต้องกันแถวแบบนั้นออก
+    # ไม่ให้ถูกเลือกเป็น "safe" row สำหรับป้อนโมเดล (rolling estimate ยังใช้ได้ปกติสำหรับ AI_week
+    # advisory metric ที่คำนวณแยกไว้แล้วใน _fetch_climate_features_step())
+    def _is_rolling(v: Any) -> bool:
+        return str(v).strip().lower() in ("true", "1")
 
     csv_path = Path(csv_path)
     if not csv_path.exists():
@@ -1299,6 +1450,8 @@ def _wd_select_climate_features_for_prediction(zone: str, as_of_date: Optional[A
             if r.get("zone") != zone:
                 continue
             if _to_int(r.get("era5t_n_days_in_week")) != 7 or _to_int(r.get("chirps_n_days_in_week")) != 7:
+                continue
+            if _is_rolling(r.get("era5t_is_rolling_estimate")) or _is_rolling(r.get("chirps_is_rolling_estimate")):
                 continue
             year_i = _to_int(r.get("year"))
             week_i = _to_int(r.get("week"))
@@ -1657,6 +1810,55 @@ def _wd_run_prediction(model: dict, features: dict) -> tuple[Optional[dict], Opt
         }
 
     return results.get("zone_A"), results.get("zone_B")
+
+
+def _wd_allocate_zone_b_reservoir_breakdown(
+    demand_zone_b: Optional[dict], gir_b_reservoir_ratio: Optional[dict],
+) -> Optional[dict]:
+    """
+    2026-07-22 เพิ่ม — แบ่งตัวเลขพยากรณ์จริงของโมเดล (demand_zone_b["horizons"]["h1"]["final_m3"])
+    ตามสัดส่วน FAO-56 ต่ออ่างที่คำนวณไว้แล้วใน _fetch_climate_features_step() (ดู
+    _wd_compute_zone_b_reservoir_gir_ratio() สำหรับเหตุผลที่ใช้ "สัดส่วน" แทนตัวเลข FAO-56 ตรงๆ —
+    โมเดล ML สอง-stage คือตัวที่ validate ไว้จริงสำหรับพยากรณ์ทั้งโซน ไม่มีโมเดลแยกต่ออ่าง)
+
+    เรียกจาก run_pipeline() หลัง Step 4 (predictions พร้อมแล้ว) — ผลรวม allocated_m3 ของทุกอ่างจะ
+    เท่ากับ final_m3 เป๊ะ (แค่คูณด้วย share ที่ normalize รวมเป็น 1 อยู่แล้วจาก
+    _wd_compute_zone_b_reservoir_gir_ratio()) เป็นการ "จัดสรร" ตัวเลขเดิม ไม่ใช่ตัวเลขอิสระใหม่
+
+    คืน dict {"reservoirs": {reservoir_name_th: {"allocated_m3", "share", "fao56_estimate_m3"}, ...},
+    "total_m3": float, "basis": str, "note": str} หรือ None ถ้า demand_zone_b หรือ
+    gir_b_reservoir_ratio ไม่พร้อมใช้ (ไม่ raise)
+    """
+    if not demand_zone_b or not gir_b_reservoir_ratio:
+        return None
+    try:
+        final_m3 = demand_zone_b["horizons"]["h1"]["final_m3"]
+    except (KeyError, TypeError):
+        return None
+    if final_m3 is None:
+        return None
+
+    breakdown = {
+        name: {
+            "allocated_m3": round(info["share"] * final_m3, 2),
+            "share": info["share"],
+            "fao56_estimate_m3": info["fao56_estimate_m3"],
+        }
+        for name, info in gir_b_reservoir_ratio.get("reservoirs", {}).items()
+    }
+    if not breakdown:
+        return None
+
+    return {
+        "reservoirs": breakdown,
+        "total_m3": round(final_m3, 2),
+        "basis": "model_final_m3_allocated_by_fao56_ratio",
+        "note": (
+            "จัดสรรตัวเลขพยากรณ์จริงจากโมเดล (final_m3, h=1) ตามสัดส่วนความต้องการใช้น้ำ FAO-56 ต่ออ่าง "
+            "(พื้นที่/ชนิดพืชจาก SAR classification ล่าสุด x climate สัปดาห์นี้) -- ผลรวมทุกอ่าง = "
+            "final_m3 เป๊ะ ไม่ใช่ตัวเลขอิสระจากโมเดลแยกต่ออ่าง (ยังไม่มีโมเดลแบบนั้น)"
+        ),
+    }
 
 
 def _ri_load_metadata() -> dict:
@@ -2315,6 +2517,10 @@ def run_pipeline() -> PipelineResult:
         errors.append("get_telemetry_data: " + str(exc))
 
     logger.info("Step 2/5: ดึง MEI + CHIRPS + ERA5T (climate features)")
+    # 2026-07-22 เพิ่ม default {} ไว้ก่อน try -- ถ้า _fetch_climate_features_step() raise (ไม่ควรเกิดขึ้น
+    # ปกติ แต่ except ด้านล่างก็ห่อไว้เผื่ออยู่แล้ว) climate_result ต้องยังอ้างอิงได้ตอน Step 4/5 ใช้
+    # climate_result.get("gir_b_reservoir_ratio") ไม่งั้นจะ NameError แทนที่จะ degrade แบบไม่ raise
+    climate_result: dict = {}
     try:
         climate_result = _fetch_climate_features_step()
         step_status["climate_features"] = climate_result["data_status"]
@@ -2391,6 +2597,25 @@ def run_pipeline() -> PipelineResult:
         step_status["prediction"] = "ok"
         step_status["prediction_water_demand"] = "ok" if (predictions["demand_zone_a"] is not None or predictions["demand_zone_b"] is not None) else "failed"
         step_status["prediction_reservoir_inflow"] = "ok" if predictions["inflow"] is not None else "failed"
+
+        # 2026-07-22 เพิ่ม -- แบ่งตัวเลขพยากรณ์ Zone B ตามอ่างที่ส่งน้ำ (ดู
+        # _wd_allocate_zone_b_reservoir_breakdown() docstring) ใช้ gir_b_reservoir_ratio ที่คำนวณไว้แล้ว
+        # ใน Step 2 (_fetch_climate_features_step()) -- ห่อ try/except แยก ไม่ให้พังกระทบ prediction หลัก
+        if predictions.get("demand_zone_b") is not None:
+            try:
+                reservoir_breakdown = _wd_allocate_zone_b_reservoir_breakdown(
+                    predictions["demand_zone_b"], climate_result.get("gir_b_reservoir_ratio"),
+                )
+                predictions["demand_zone_b"]["reservoir_breakdown"] = reservoir_breakdown
+                if reservoir_breakdown is None:
+                    logger.info(
+                        "demand_zone_b: ยังแบ่งตามอ่างไม่ได้รอบนี้ (gir_b_reservoir_ratio ไม่พร้อมใช้ "
+                        "-- ดู log Step 2/5 ประกอบ) -- reservoir_breakdown จะเป็น null ใน latest.json"
+                    )
+            except Exception as exc:
+                logger.exception("_wd_allocate_zone_b_reservoir_breakdown() ล้มเหลวไม่คาดคิด (ไม่กระทบ prediction หลัก)")
+                predictions["demand_zone_b"]["reservoir_breakdown"] = None
+                errors.append("reservoir_breakdown: " + str(exc))
     except Exception as exc:
         logger.exception("Step 4/5 ล้มเหลว (load_latest_model / run_prediction)")
         step_status["prediction"] = "failed"
