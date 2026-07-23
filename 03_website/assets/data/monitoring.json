@@ -1,7 +1,7 @@
 {
   "meta": {
     "source": "สถานีโทรมาตร สสน. (API) ผ่าน Google Sheet wide_log (poll ทุก 10 นาที) + 01_data/Reservoirs/reference (rating curve ต่ออ่าง)",
-    "updated": "2026-07-23T16:50:00",
+    "updated": "2026-07-23T18:00:00",
     "data_connected": true
   },
   "stations": [
@@ -10,17 +10,17 @@
       "name_th": "อ่างเก็บน้ำแม่นาเรือ",
       "name_en": "Mae Na Rua Reservoir",
       "spillway_msl": 489.54,
-      "water_level": 488.704,
+      "water_level": 488.679,
       "rainfall_1h": 0.0,
-      "temperature": 30.53,
-      "humidity": 78.88,
-      "pressure": 949.24,
-      "solar": 261.2,
-      "measure_datetime": "2026-07-23T16:50:00",
-      "storage_m3": 1379913.5,
+      "temperature": 28.17,
+      "humidity": 77.16,
+      "pressure": 949.87,
+      "solar": 33.8,
+      "measure_datetime": "2026-07-23T18:00:00",
+      "storage_m3": 1372680.4,
       "storage_max_m3": 1625463.8,
-      "capacity_pct": 84.9,
-      "distance_to_spillway_m": -0.836,
+      "capacity_pct": 84.4,
+      "distance_to_spillway_m": -0.861,
       "history": [
         {
           "t": "2026-07-10T18:00:00",
@@ -1265,6 +1265,14 @@
         {
           "t": "2026-07-23T16:00:00",
           "level": 488.692
+        },
+        {
+          "t": "2026-07-23T16:50:00",
+          "level": 488.704
+        },
+        {
+          "t": "2026-07-23T18:00:00",
+          "level": 488.679
         }
       ]
     },
@@ -1273,17 +1281,17 @@
       "name_th": "อ่างเก็บน้ำวิทยาลัยเกษตร",
       "name_en": "Phayao C.A.T. Reservoir",
       "spillway_msl": 457.07,
-      "water_level": 455.43,
+      "water_level": 455.436,
       "rainfall_1h": 0.0,
-      "temperature": 29.6,
-      "humidity": 75.26,
-      "pressure": 952.67,
-      "solar": 250.3,
-      "measure_datetime": "2026-07-23T16:50:00",
-      "storage_m3": 261555.7,
+      "temperature": 28.72,
+      "humidity": 74.33,
+      "pressure": 953.47,
+      "solar": 42.6,
+      "measure_datetime": "2026-07-23T18:00:00",
+      "storage_m3": 261848.6,
       "storage_max_m3": 347778.7,
-      "capacity_pct": 75.2,
-      "distance_to_spillway_m": -1.64,
+      "capacity_pct": 75.3,
+      "distance_to_spillway_m": -1.634,
       "history": [
         {
           "t": "2026-07-10T18:00:00",
@@ -2528,6 +2536,14 @@
         {
           "t": "2026-07-23T16:00:00",
           "level": 455.43
+        },
+        {
+          "t": "2026-07-23T16:50:00",
+          "level": 455.43
+        },
+        {
+          "t": "2026-07-23T18:00:00",
+          "level": 455.436
         }
       ]
     },
@@ -2538,11 +2554,11 @@
       "spillway_msl": 478.1,
       "water_level": 478.09,
       "rainfall_1h": 0.0,
-      "temperature": 28.3,
-      "humidity": 88.6,
-      "pressure": 950.2,
-      "solar": 227.6,
-      "measure_datetime": "2026-07-23T16:30:00",
+      "temperature": 27.1,
+      "humidity": 84.6,
+      "pressure": 950.7,
+      "solar": 56.4,
+      "measure_datetime": "2026-07-23T18:00:00",
       "storage_m3": 494593.7,
       "storage_max_m3": 495467.8,
       "capacity_pct": 99.8,
@@ -3787,6 +3803,14 @@
         {
           "t": "2026-07-23T16:00:00",
           "level": 478.1
+        },
+        {
+          "t": "2026-07-23T16:30:00",
+          "level": 478.09
+        },
+        {
+          "t": "2026-07-23T18:00:00",
+          "level": 478.09
         }
       ]
     },
@@ -3797,11 +3821,11 @@
       "spillway_msl": 508.0,
       "water_level": 508.055,
       "rainfall_1h": 0.0,
-      "temperature": 28.6,
-      "humidity": 81.08,
-      "pressure": 947.2,
-      "solar": 178.6,
-      "measure_datetime": "2026-07-23T16:50:00",
+      "temperature": 28.73,
+      "humidity": 75.67,
+      "pressure": 947.92,
+      "solar": 57.5,
+      "measure_datetime": "2026-07-23T18:00:00",
       "storage_m3": 120896.2,
       "storage_max_m3": 119007.2,
       "capacity_pct": 101.6,
@@ -5049,6 +5073,14 @@
         },
         {
           "t": "2026-07-23T16:00:00",
+          "level": 508.055
+        },
+        {
+          "t": "2026-07-23T16:50:00",
+          "level": 508.055
+        },
+        {
+          "t": "2026-07-23T18:00:00",
           "level": 508.055
         }
       ]
