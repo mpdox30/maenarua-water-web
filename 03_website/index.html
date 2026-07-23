@@ -586,7 +586,8 @@
           <label class="layer-toggle"><input type="checkbox" id="toggle-village" checked><span class="legend-dot" style="background:transparent; border:1.5px solid #9d7fe0;"></span>ขอบเขตหมู่บ้าน (18 แห่ง)</label>
           <label class="layer-toggle"><input type="checkbox" id="toggle-a" checked><span class="legend-dot" style="background:#e0a94f"></span>Zone A — Rainfed</label>
           <label class="layer-toggle"><input type="checkbox" id="toggle-b" checked><span class="legend-dot" style="background:#45c2ad"></span>Zone B — พื้นที่ใช้น้ำ</label>
-          <label class="layer-toggle"><input type="checkbox" id="toggle-res" checked><span class="legend-dot" style="background:#7fe0d1"></span>อ่างเก็บน้ำ (5 แห่ง)</label>
+          <label class="layer-toggle"><input type="checkbox" id="toggle-res" checked><span class="legend-dot" style="background:#7fe0d1"></span>อ่างเก็บน้ำ (7 แห่ง)</label>
+          <label class="layer-toggle"><input type="checkbox" id="toggle-canal" checked><span class="legend-dot" style="background:transparent; border:1.5px solid #4f9fe0;"></span>คลอง/เส้นทางส่งน้ำ (17 เส้น)</label>
         </div>
       </div>
     </div>
@@ -871,8 +872,29 @@ Promise.all([
   fetch('assets/data/villages.geojson.json').then(r => r.json()),
   fetch('assets/data/zone_a.geojson.json').then(r => r.json()),
   fetch('assets/data/zone_b.geojson.json').then(r => r.json()),
-  fetch('assets/data/reservoirs.geojson.json').then(r => r.json())
-]).then(([tambonBoundaryGeoJSON, villagesGeoJSON, zoneAGeoJSON, zoneBGeoJSON, reservoirsGeoJSON]) => {
+  fetch('assets/data/wmb_reservoirs7.geojson.json').then(r => r.json()),
+  fetch('assets/data/wmb_canals.geojson.json').then(r => r.json()),
+  fetch('assets/data/monitoring.json').then(r => r.json()).catch(() => null)
+]).then(([tambonBoundaryGeoJSON, villagesGeoJSON, zoneAGeoJSON, zoneBGeoJSON, reservoirsGeoJSON, canalsGeoJSON, monitoringData]) => {
+
+  // สร้าง lookup ชื่อไทยของอ่าง -> ข้อมูลโทรมาตรสด (ระดับน้ำ/%ความจุ/ปริมาณกักเก็บ) จาก monitoring.json
+  // (ย้อนอ้างอิงจาก reservoirs[].station_code -> stations[] ตาม pattern เดียวกับ monitoring.html)
+  const telemetryByNameTH = {};
+  if (monitoringData && Array.isArray(monitoringData.reservoirs) && Array.isArray(monitoringData.stations)) {
+    const stationByCode = {};
+    monitoringData.stations.forEach(s => { stationByCode[s.station_code] = s; });
+    monitoringData.reservoirs.forEach(r => {
+      const st = r.station_code ? stationByCode[r.station_code] : null;
+      if (st) {
+        telemetryByNameTH[r.name_th] = {
+          water_level: st.water_level,
+          capacity_pct: st.capacity_pct,
+          storage_m3: st.storage_m3,
+          measure_datetime: st.measure_datetime
+        };
+      }
+    });
+  }
 
   const tambonLayer = L.geoJSON(tambonBoundaryGeoJSON, {
     style: { color: '#c4d6d3', weight: 2, dashArray: '6,5', fillOpacity: 0 }
@@ -906,7 +928,25 @@ Promise.all([
     style: { color: '#7fe0d1', weight: 1.5, fillColor: '#7fe0d1', fillOpacity: 0.55 }
   }).bindPopup(function(layer){
     const p = layer.feature.properties;
-    return '<b>' + (p.Name_T || p.Name) + '</b><br>' + (p.Name || '');
+    const nameTH = p.Name_T || p.Name;
+    let html = '<b>' + nameTH + '</b><br>' + (p.Name || '');
+    const tel = telemetryByNameTH[nameTH];
+    if (tel) {
+      html += '<br><br>ระดับน้ำ: ' + (tel.water_level != null ? tel.water_level.toFixed(2) + ' ม.รทก.' : '-');
+      html += '<br>ความจุ: ' + (tel.capacity_pct != null ? tel.capacity_pct.toFixed(1) + '%' : '-');
+      html += '<br>ปริมาณกักเก็บ: ' + (tel.storage_m3 != null ? Math.round(tel.storage_m3).toLocaleString() + ' ลบ.ม.' : '-');
+      if (tel.measure_datetime) html += '<br><span style="font-size:11px; color:var(--text-500);">ข้อมูล ณ ' + tel.measure_datetime.replace('T', ' ') + '</span>';
+    } else {
+      html += '<br><span style="font-size:11px; color:var(--text-500);">ยังไม่มีสถานีโทรมาตร</span>';
+    }
+    return html;
+  }).addTo(map);
+
+  const canalLayer = L.geoJSON(canalsGeoJSON, {
+    style: { color: '#4f9fe0', weight: 2, opacity: 0.85 }
+  }).bindPopup(function(layer){
+    const p = layer.feature.properties;
+    return '<b>คลอง/เส้นทางส่งน้ำ</b><br>' + (p.name || '-');
   }).addTo(map);
 
   document.getElementById('toggle-tambon').addEventListener('change', e => {
@@ -923,6 +963,9 @@ Promise.all([
   });
   document.getElementById('toggle-res').addEventListener('change', e => {
     if (e.target.checked) map.addLayer(reservoirLayer); else map.removeLayer(reservoirLayer);
+  });
+  document.getElementById('toggle-canal').addEventListener('change', e => {
+    if (e.target.checked) map.addLayer(canalLayer); else map.removeLayer(canalLayer);
   });
 
 }).catch(err => {
