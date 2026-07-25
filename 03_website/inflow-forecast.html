@@ -102,6 +102,7 @@
   .badge-ok { background: rgba(69,194,173,0.14); color: var(--teal-300); border: 1px solid rgba(69,194,173,0.35); }
   .badge-low { background: rgba(224,169,79,0.16); color: var(--amber-300); border: 1px solid rgba(224,169,79,0.42); }
   .badge-blocked { background: rgba(226,102,90,0.16); color: #f3a89f; border: 1px solid rgba(226,102,90,0.42); }
+  .nse-sub { font-size: 10px; color: var(--muted, #8aa3a0); margin-left: 4px; cursor: help; }
 
   /* staleness banner (เพิ่ม 2026-07-05) — เตือนเมื่อข้อมูล Reservoir Inflow เก่ากว่าเกณฑ์ที่ตั้งไว้
      เพราะยังไม่มีการอัปโหลดไฟล์ "บัญชีน้ำ" ของเดือนใหม่ (ดู ARCHITECTURE.md > Manual Dependencies
@@ -305,7 +306,7 @@
       <div class="table-card">
         <table class="data-table">
           <thead>
-            <tr><th>Horizon</th><th>พยากรณ์ (ม³/วัน)</th><th>Prob. เป็นศูนย์</th><th>โมเดล</th><th>NSE (test)</th><th>ความเชื่อมั่น</th></tr>
+            <tr><th>Horizon</th><th>พยากรณ์ (ม³/วัน)</th><th>Prob. เป็นศูนย์</th><th>โมเดล</th><th>NSE (walk-forward CV)</th><th>ความเชื่อมั่น</th></tr>
           </thead>
           <tbody id="horizonTableBody">
             <tr><td colspan="6">กำลังโหลดข้อมูล…</td></tr>
@@ -558,8 +559,11 @@ function renderInflow(json) {
   const h1 = f.horizons.h1;
   if (h1) {
     document.getElementById('kpiH1').innerHTML = fmtNum(h1.prediction_m3_per_day, 2) + '<span class="kpi-unit">ม³/วัน</span>';
+    const h1NseVal = (h1.walkforward_cv_nse && h1.walkforward_cv_nse.mean != null)
+      ? h1.walkforward_cv_nse.mean : h1.hurdle_nse_on_test;
+    const h1NseLabel = (h1.walkforward_cv_nse && h1.walkforward_cv_nse.mean != null) ? 'NSE (walk-forward CV)' : 'NSE (test)';
     document.getElementById('kpiModelNse').textContent =
-      (h1.model_name || '—') + ' · NSE (test) ' + (h1.hurdle_nse_on_test != null ? h1.hurdle_nse_on_test.toFixed(3) : '—');
+      (h1.model_name || '—') + ' · ' + h1NseLabel + ' ' + (h1NseVal != null ? h1NseVal.toFixed(3) : '—');
   }
 
   document.getElementById('kpiLowConfCount').textContent = lowConf.filter(Boolean).length + ' / ' + horizonData.length;
@@ -600,12 +604,17 @@ function renderInflow(json) {
     const badge = lowConf[i]
       ? '<span class="badge badge-low">⚠ ความเชื่อมั่นต่ำ</span>'
       : '<span class="badge badge-ok">ปกติ</span>';
+    const wf = h.walkforward_cv_nse;
+    const wfMean = wf && wf.mean != null ? wf.mean : null;
+    const nseCell = wfMean != null
+      ? `${wfMean.toFixed(3)} <span class="nse-sub" title="hurdle_nse_on_test (single-split, less reliable): ${h.hurdle_nse_on_test != null ? h.hurdle_nse_on_test.toFixed(3) : '—'}">(test: ${h.hurdle_nse_on_test != null ? h.hurdle_nse_on_test.toFixed(3) : '—'})</span>`
+      : (h.hurdle_nse_on_test != null ? h.hurdle_nse_on_test.toFixed(3) : '—');
     return `<tr>
       <td>ล่วงหน้า ${i + 1} วัน</td>
       <td class="hl">${fmtNum(h.prediction_m3_per_day, 2)}</td>
       <td>${(h.prob_zero * 100).toFixed(2)}%</td>
       <td>${h.model_name || '—'}</td>
-      <td>${h.hurdle_nse_on_test != null ? h.hurdle_nse_on_test.toFixed(3) : '—'}</td>
+      <td>${nseCell}</td>
       <td>${badge}</td>
     </tr>`;
   }).join('');

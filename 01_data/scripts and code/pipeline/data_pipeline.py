@@ -2336,6 +2336,14 @@ def _ri_run_prediction(model: dict, features: dict) -> dict:
 
         info = deployment_info.get(str(h), {})
         hurdle_nse = info.get("hurdle_nse_on_test")
+        wf_cv = info.get("walkforward_cv_nse")
+        wf_mean = wf_cv.get("mean") if isinstance(wf_cv, dict) else None
+        # walk-forward (rolling-origin) CV mean is the more reliable quality signal --
+        # single-split hurdle_nse_on_test proved noisy/unstable across this project's
+        # evaluation history (a single test-set composition can flip the sign). Prefer
+        # walk-forward mean for the confidence flag when available, fall back to the
+        # single-split metric otherwise (e.g. for older metadata that predates this field).
+        confidence_nse = wf_mean if wf_mean is not None else hurdle_nse
 
         horizon_results[key] = {
             "prediction_m3_per_day": round(prediction, 2),
@@ -2344,7 +2352,8 @@ def _ri_run_prediction(model: dict, features: dict) -> dict:
             "stage_used": stage_used,
             "model_name": info.get("model_name"),
             "hurdle_nse_on_test": hurdle_nse,
-            "low_confidence": bool(hurdle_nse is not None and hurdle_nse < 0),
+            "walkforward_cv_nse": wf_cv,
+            "low_confidence": bool(confidence_nse is not None and confidence_nse < 0),
         }
 
     if staleness_status != "ok":
