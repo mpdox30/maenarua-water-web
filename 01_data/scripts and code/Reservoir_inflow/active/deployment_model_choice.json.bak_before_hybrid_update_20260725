@@ -1,0 +1,37 @@
+{
+  "1": {
+    "model_name": "CatBoost",
+    "hurdle_nse_on_test": 0.7338984757410334,
+    "target_column": "y1=Q_in_t+1 (m3/day)"
+  },
+  "2": {
+    "model_name": "CatBoost",
+    "hurdle_nse_on_test": 0.34454807979728475,
+    "target_column": "y2=Q_in_t+2 (m3/day)"
+  },
+  "3": {
+    "model_name": "CatBoost",
+    "hurdle_nse_on_test": -2.8450243065744956,
+    "target_column": "y3=Q_in_t+3 (m3/day)"
+  },
+  "4": {
+    "model_name": "CatBoost",
+    "hurdle_nse_on_test": -0.6729781001229029,
+    "target_column": "y4=Q_in_t+4 (m3/day)"
+  },
+  "5": {
+    "model_name": "CatBoost",
+    "hurdle_nse_on_test": -1.0014987095671315,
+    "target_column": "y5=Q_in_t+5 (m3/day)"
+  },
+  "6": {
+    "model_name": "CatBoost",
+    "hurdle_nse_on_test": -0.09492939701651837,
+    "target_column": "y6=Q_in_t+6 (m3/day)"
+  },
+  "7": {
+    "model_name": "CatBoost",
+    "hurdle_nse_on_test": 0.2530401333380593,
+    "target_column": "y7=Q_in_t+7 (m3/day)"
+  }
+}
