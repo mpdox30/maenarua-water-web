@@ -1,6 +1,6 @@
 {
   "exported_at": "2026-07-07T09:31:35.662662",
-  "target_reservoir": "ระบุชื่ออ่างเก็บน้ำที่ train ด้วยตรงนี้",
+  "target_reservoir": "อ่างเก็บน้ำแม่นาเรือ (Mae Na Rua Reservoir)",
   "feature_cols": [
     "Q_in_t (m3/day)",
     "Water_Level_t (m)",
