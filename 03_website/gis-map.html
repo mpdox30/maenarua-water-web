@@ -217,7 +217,7 @@
         <span class="tag"><span class="dot" style="background:#9d7fe0"></span>หมู่บ้าน 18 แห่ง</span>
         <span class="tag"><span class="dot" style="background:var(--amber-400)"></span>Zone A — Rainfed</span>
         <span class="tag"><span class="dot" style="background:var(--teal-400)"></span>Zone B — พื้นที่ใช้น้ำ</span>
-        <span class="tag"><span class="dot" style="background:#6fcf97"></span>อ่างเก็บน้ำ 5 แห่ง</span>
+        <span class="tag"><span class="dot" style="background:#3b82f6"></span>อ่างเก็บน้ำ 5 แห่ง</span>
       </div>
     </div>
   </section>
@@ -276,7 +276,7 @@
           <label class="layer-toggle"><input type="checkbox" id="toggle-village" checked><span class="legend-dot" style="background:transparent; border:1.5px solid #9d7fe0;"></span>ขอบเขตหมู่บ้าน (18 แห่ง)</label>
           <label class="layer-toggle"><input type="checkbox" id="toggle-a" checked><span class="legend-dot" style="background:#e0a94f"></span>Zone A — Rainfed</label>
           <label class="layer-toggle"><input type="checkbox" id="toggle-b" checked><span class="legend-dot" style="background:#45c2ad"></span>Zone B — พื้นที่ใช้น้ำ</label>
-          <label class="layer-toggle"><input type="checkbox" id="toggle-res" checked><span class="legend-dot" style="background:#7fe0d1"></span>อ่างเก็บน้ำ (5 แห่ง)</label>
+          <label class="layer-toggle"><input type="checkbox" id="toggle-res" checked><span class="legend-dot" style="background:#3b82f6"></span>อ่างเก็บน้ำ (5 แห่ง)</label>
         </div>
       </div>
     </div>
@@ -476,7 +476,7 @@ Promise.all([
 ]).then(([tambonBoundaryGeoJSON, villagesGeoJSON, zoneAGeoJSON, zoneBGeoJSON, reservoirsGeoJSON]) => {
 
   const tambonLayer = L.geoJSON(tambonBoundaryGeoJSON, {
-    style: { color: '#c4d6d3', weight: 2, dashArray: '6,5', fillOpacity: 0 }
+    style: { color: '#c4d6d3', weight: 3, dashArray: '6,5', fillOpacity: 0 }
   }).bindPopup(function(layer){
     const p = layer.feature.properties;
     return '<b>' + p.Name + '</b><br>พื้นที่: ' + p.Area_km2 + ' ตร.กม. (' + p.Area_rai.toLocaleString() + ' ไร่)';
@@ -488,6 +488,9 @@ Promise.all([
     const p = layer.feature.properties;
     return '<b>หมู่ ' + p.Moo + '</b><br>' + p.Name_TH;
   }).addTo(map);
+
+  // ตำบล (เส้นขอบเขตแม่แบบ) ต้องอยู่บนสุดเสมอ ไม่ให้เลเยอร์หมู่บ้าน/โซนมาทับจนมองเห็นเป็นเส้นขาด ๆ
+  tambonLayer.bringToFront();
 
   const zoneALayer = L.geoJSON(zoneAGeoJSON, {
     style: { color: '#e0a94f', weight: 1.5, fillColor: '#e0a94f', fillOpacity: 0.12 }
@@ -504,7 +507,7 @@ Promise.all([
   }).addTo(map);
 
   const reservoirLayer = L.geoJSON(reservoirsGeoJSON, {
-    style: { color: '#7fe0d1', weight: 1.5, fillColor: '#7fe0d1', fillOpacity: 0.55 }
+    style: { color: '#3b82f6', weight: 1.5, fillColor: '#3b82f6', fillOpacity: 0.55 }
   }).bindPopup(function(layer){
     const p = layer.feature.properties;
     return '<b>' + (p.Name_T || p.Name) + '</b><br>' + (p.Name || '');
