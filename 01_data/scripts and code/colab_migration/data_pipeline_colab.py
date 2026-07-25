@@ -1,0 +1,2646 @@
+"""
+data_pipeline.py
+==================
+โครง (skeleton) สำหรับ data pipeline ของโครงการบริหารจัดการน้ำ ตำบลแม่นาเรือ
+
+ขั้นตอนหลัก:
+  1. ดึงข้อมูลโทรมาตร (get_telemetry_data) — ดึงจาก API จริงถ้ามีการตั้งค่า URL, ไม่งั้น fallback เป็น mock data
+  2. เช็คว่ามีภาพ SAR ใหม่หรือไม่ ถ้ามี -> trigger การจำแนกพืชใหม่ (check_new_sar_image, trigger_crop_classification)
+  3. โหลดโมเดลที่มีอยู่ และทำนายด้วย input ล่าสุด (load_latest_model, run_prediction)
+  4. บันทึกผลเป็น JSON ไปที่ 01_data/forecasting_results/latest.json (save_results)
+
+การออกแบบสำคัญ:
+  - รันแบบ standalone ได้เต็มรูปแบบ ไม่มีจุดใดรอ input จากคน (เหมาะสำหรับ cron / Task Scheduler)
+  - ทุก step ห่อด้วย try/except ใน run_pipeline() — step ไหนพังจะ log แล้วข้ามไป ไม่ทำให้ทั้ง pipeline ค้าง/crash
+  - log ทุกครั้งที่รันทั้งขึ้นจอ (console) และไฟล์ logs/pipeline_log.txt (ดู setup_logging())
+  - save_results() เขียน latest.json แบบ overwrite ทุกรอบ (ไม่ append) พร้อม step_status
+    ต่อขั้นตอนไว้ debug ทีหลังว่ารอบนั้น step ไหนสำเร็จ/ล้มเหลวบ้าง
+
+สถานะการ implement:
+  - get_telemetry_data(): ทำงานได้จริง (mock mode)
+  - save_results(): ทำงานได้จริง เขียน latest.json overwrite ทุกรอบ
+  - Water Demand (_wd_* helpers): ทำงานได้จริงแล้ว รัน two-stage prediction
+    (stage1 classifier x stage2 CatBoost/LightGBM stack) ตาม
+    01_data/scripts and code/Water_demand/feature_schema.md
+    2026-07-16 เพิ่ม (เฟส 3): ต่อ live NIR_A_m3/GIR_B_m3 เข้ามาแล้ว — _fetch_climate_features_step()
+    คำนวณ FAO-56 NIR/GIR สดทุกสัปดาห์ (ดู _wd_compute_live_nir_gir()) โดยใช้พื้นที่ต่อ crop จากผล
+    SAR classification ล่าสุดถ้าใช้ได้ (ดู _wd_get_area_zone_ha()) ไม่งั้น fallback ไปใช้ hardcode
+    ปี 2020 (sar_classification.AREA_2020_HA_BY_ZONE) แล้ว append เข้า ml_features_live.csv
+    _wd_build_feature_vector() ลอง reconstruct feature vector สดจากไฟล์นี้ก่อนเสมอต่อ zone (ดู
+    _wd_build_live_df()) โดยตรวจสอบว่าชุด/ลำดับ feature ตรงกับที่โมเดล train ไว้เป๊ะก่อนเชื่อ (กัน
+    กรณีประวัติสดสั้นเกินไปจนบาง lag/rolling column หลุดออกจาก feature set ไปเงียบๆ) ถ้ายังไม่พร้อม
+    (ต้องการ 12 สัปดาห์ต่อเนื่องกันจริงสำหรับ lag12/roll8) จะ fallback ไปใช้ ml_features_phase4.csv
+    (static snapshot เดิม) แยกอิสระต่อ zone — ผลลัพธ์มี data_source ("live_reconstructed" |
+    "static_snapshot") บอกความโปร่งใสเสมอ ไม่แตะ/backfill ประวัติเก่าที่ผูกกับ area basis ปี 2020
+  - Reservoir Inflow (_ri_* helpers): ทำงานได้จริงแล้ว รัน hurdle prediction (stage1
+    classifier กรอง zero-inflow -> stage2 CatBoost regressor ทำนาย delta) ตาม
+    01_data/scripts and code/Reservoir_inflow/active/model_metadata.json ("final_prediction_logic")
+    — feature (Q_in_t/Water_Level_t/Storage_S_t/DeltaS_t/%Full_t/Rain_obs_t/API_t) คำนวณสด
+    จากไฟล์ "บัญชีน้ำ" รายเดือนจริงของอ่างเก็บน้ำแม่นาเรือ (01_data/Reservoirs/inflow/<year>/
+    <year>_<month>_MNR.xlsx อัปเดตทุกเดือนโดยผู้ใช้ — ดู _ri_load_raw_monthly_data()) เป็น live
+    data_source ("live_monthly_account_files") ถ้าโหลดไม่สำเร็จจะ fallback ไปใช้แถวล่าสุดของ
+    Training_Values_Nofct_7day_Final.csv แทน (data_source "static_snapshot_training_csv")
+    latest.json.forecasts.inflow.status เป็นหนึ่งใน 4 ค่า: "ok" (ทำนายสำเร็จ ข้อมูลไม่เก่าเกิน 3 วัน),
+    "stale_data_warning" (ทำนายสำเร็จ แต่ข้อมูลเก่า 4-14 วัน — มักเกิดเพราะยังไม่อัปโหลดไฟล์เดือนใหม่),
+    "stale_data_blocked" (ข้อมูลเก่าเกิน 14 วัน — ไม่ทำนายเลย .forecast.horizons เป็น null แต่ยังมี
+    gap_days/as_of_date/staleness_message ให้ตรวจสอบ), หรือ "model_missing_pending_retrain"
+    (หาไฟล์โมเดล/feature ไม่เจอทั้ง live และ fallback) — ดู _ri_compute_staleness()/
+    RESERVOIR_STALE_WARNING_THRESHOLD_DAYS/RESERVOIR_STALE_BLOCKED_THRESHOLD_DAYS (เพิ่ม 2026-07-05)
+  - load_latest_model()/build_feature_vector()/run_prediction(): แต่ละฟังก์ชันครอบคลุมทั้ง
+    Water Demand และ Reservoir Inflow พร้อม error isolation แยกต่อระบบ (ระบบหนึ่งพังไม่กระทบ
+    อีกระบบ)
+  - check_new_sar_image, trigger_crop_classification: ยังเป็น skeleton (มีคอมเมนต์ "# TODO:" กำกับ)
+
+หมายเหตุการกู้คืนไฟล์ (2026-07-07): ไฟล์นี้เคยถูกลบโดยไม่ได้ตั้งใจ (บั๊ก stale bash-mount cache
+ระหว่างการแก้ไข) แล้วสร้างใหม่จากความเข้าใจ/บริบทของบทสนทนา + เทียบสอบกับ __pycache__/*.pyc ที่มี
+อยู่ (bytecode cache ก่อนแก้ไขล่าสุด) — logic/threshold/ค่าคงที่ตรวจสอบแล้วว่าตรงกับต้นฉบับ แต่
+คอมเมนต์บางจุดอาจถูกเรียบเรียงใหม่เล็กน้อย (ไม่กระทบพฤติกรรมของโปรแกรม)
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import os
+import random
+import subprocess
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Optional
+
+
+# ---------------------------------------------------------------------------
+# Config
+# ---------------------------------------------------------------------------
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+
+TELEMETRY_API_URL: Optional[str] = None
+TELEMETRY_API_KEY: Optional[str] = None
+TELEMETRY_TIMEOUT_SEC = 10
+
+SAR_WATCH_DIR = PROJECT_ROOT / "01_data" / "gis" / "sar_incoming"
+SAR_LAST_PROCESSED_MARKER = PROJECT_ROOT / "01_data" / "gis" / ".sar_last_processed"
+
+WATER_DEMAND_MODEL_DIR = PROJECT_ROOT / "01_data" / "scripts and code" / "Water_demand" / "active"
+WATER_DEMAND_FEATURES_CSV = WATER_DEMAND_MODEL_DIR / "ml_features_phase4.csv"
+
+WD_HORIZON = 12
+WD_ZONES = {"zone_A": "NIR_A_m3", "zone_B": "GIR_B_m3"}
+WD_CLASSIFIER_FEATURES = [
+    "WoY_sin", "WoY_cos", "MoY_sin", "MoY_cos",
+    "ET0_mm_week", "P_mm_week", "P_eff_mm",
+    "SPI_4", "drought_flag", "MEI", "AI_week",
+]
+WD_TARGET_LAGS = [1, 2, 3, 4]
+
+# 2026-07-16 เพิ่ม (เฟส 3 -- live-wiring FAO-56 NIR/GIR เข้า Water Demand) ดู
+# feature_schema.md หัวข้อ 2 + combined_final_pipeline.py บรรทัด 2294-2418/2591-2728 สำหรับที่มา
+# ของค่าคงที่ชุดนี้ (ยืนยันกับ user แล้วก่อนเริ่ม implement — ดู task #46 ในบทสนทนา)
+WD_TARGET_LAG_WINDOWS_REG = [1, 2, 3, 4, 8, 12]  # LAG_WINDOWS เดิมใน build_feature_matrix()
+WD_ROLL_WINDOWS = [4, 8]  # ROLL_WINDOWS เดิมใน build_feature_matrix()
+WD_KC_LOOKUP_CSV = WATER_DEMAND_MODEL_DIR / "kc_weekly_lookup_all_crops.csv"
+WD_IRRIGATION_EFFICIENCY = 0.90  # IE เฉพาะ zone_B (irrigated) เท่านั้น -- zone_A (rainfed) ไม่มี term นี้
+
+RESERVOIR_INFLOW_MODEL_DIR = PROJECT_ROOT / "01_data" / "scripts and code" / "Reservoir_inflow" / "active"
+RESERVOIR_INFLOW_METADATA_PATH = RESERVOIR_INFLOW_MODEL_DIR / "model_metadata.json"
+RESERVOIR_INFLOW_TRAINING_CSV = RESERVOIR_INFLOW_MODEL_DIR / "Training_Values_Nofct_7day_Final.csv"
+
+RESERVOIR_INFLOW_RAW_DIR = PROJECT_ROOT / "01_data" / "Reservoirs" / "inflow"
+
+RESERVOIR_STORAGE_MAX_M3 = 1625463.7590197
+RESERVOIR_API_K = 0.95
+
+RESERVOIR_PLAUSIBLE_PERCENT_FULL_MAX = 105.0
+# (แก้ไข 2026-07-07: เดิม %Full_t คำนวณเป็นสัดส่วน 0-1.05 ผิดสเกลจาก training data ที่เป็นเปอร์เซ็นต์
+# 85-107 — แก้ %Full_t ให้คูณ 100 แล้ว (ดู _ri_load_raw_monthly_data) จึงต้องปรับ threshold นี้จาก
+# 1.05 เป็น 105.0 ให้คงความหมายเดิม "plausible ไม่เกิน 105% เต็ม" ไว้เหมือนเดิม)
+
+RESERVOIR_MONTH_NAME_TO_NUM = {
+    "January": 1, "February": 2, "March": 3, "April": 4, "May": 5, "June": 6,
+    "July": 7, "August": 8, "September": 9, "October": 10, "November": 11, "December": 12,
+}
+
+RESERVOIR_STALE_WARNING_THRESHOLD_DAYS = 3
+RESERVOIR_STALE_BLOCKED_THRESHOLD_DAYS = 14
+
+OUTPUT_PATH = PROJECT_ROOT / "01_data" / "forecasting_results" / "latest.json"
+
+WEBSITE_DATA_COPY_PATH = PROJECT_ROOT / "03_website" / "assets" / "data" / "latest.json"
+
+LOG_DIR = SCRIPT_DIR / "test_output"
+LOG_FILE = LOG_DIR / "data_pipeline_colab_log.txt"
+
+ERA5_GRIB_PYTHON_EXE = Path(
+    r"C:\Program Files\ArcGIS\Pro\bin\Python\envs\era5-grib\python.exe"
+)
+ERA5T_WORKER_SCRIPT = SCRIPT_DIR / "era5t_worker.py"
+ERA5T_OUTPUT_DIR = SCRIPT_DIR / "era5t_output"
+ERA5T_SUBPROCESS_TIMEOUT_SEC = 600
+
+ML_FEATURES_LIVE_CSV = SCRIPT_DIR / "ml_features_live.csv"
+ML_FEATURES_LIVE_COLUMNS = [
+    "run_timestamp", "as_of_date", "year", "week", "zone",
+    "MEI", "MEI_lag4", "MEI_lag8", "mei_reporting_lag_risk", "mei_fetch_error",
+    "P_mm_week", "P_eff_mm", "P_mm_week_lag1", "P_mm_week_lag2", "P_mm_week_lag4",
+    "SPI_4", "drought_flag", "chirps_data_type", "chirps_n_days_in_week",
+    # 2026-07-22 เพิ่ม: true ถ้า chirps_n_days_in_week==7 มาจาก rolling 7-day window fallback
+    # (data_type="rolling_estimate") ไม่ใช่ผลรวมของสัปดาห์ปฏิทิน ISO จริง — ใช้แยกแยะใน
+    # _wd_select_climate_features_for_prediction()/_backfill_incomplete_climate_weeks() ไม่ให้
+    # rolling estimate หลุดผ่านเป็น "ครบ 7/7 วันจริง" (out-of-distribution เทียบกับตอน train)
+    "chirps_is_rolling_estimate", "chirps_fetch_error",
+    "ET0_mm_week", "T_mean", "RH_pct", "VPD_kPa", "u2_ms", "Rn_MJ",
+    "era5t_n_days_in_week",
+    # 2026-07-22 เพิ่ม: เหมือน chirps_is_rolling_estimate แต่สำหรับ ERA5T (ดู era5t_worker_colab.py
+    # _run_weekly_mode() rolling-window fallback)
+    "era5t_is_rolling_estimate", "era5t_fetch_error",
+    "AI_week", "AI_week_status",
+    # 2026-07-16 เพิ่ม (เฟส 3) -- NIR_A_m3/GIR_B_m3 สดต่อ zone (None ถ้าไม่ใช่ zone ของตัวเอง หรือ
+    # คำนวณไม่ได้สัปดาห์นี้ -- ดู wd_nir_gir_status) + wd_area_basis บอกความโปร่งใสว่าใช้พื้นที่จาก
+    # SAR classification ล่าสุด ("sar_live") หรือ fallback ไปใช้ hardcode ปี 2020 ("hardcoded_2020")
+    "NIR_A_m3", "GIR_B_m3", "wd_area_basis", "wd_nir_gir_status",
+]
+
+
+def setup_logging() -> logging.Logger:
+    """ตั้งค่า logging ให้เขียนทั้งขึ้นจอ (console) และลงไฟล์ logs/pipeline_log.txt (append ทุกครั้งที่รัน)"""
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+    log = logging.getLogger("data_pipeline")
+    log.setLevel(logging.INFO)
+    log.propagate = False
+
+    if log.handlers:
+        return log
+
+    fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(fmt)
+    log.addHandler(console_handler)
+
+    file_handler = logging.FileHandler(LOG_FILE, mode="a", encoding="utf-8")
+    file_handler.setFormatter(fmt)
+    log.addHandler(file_handler)
+
+    return log
+
+
+logger = setup_logging()
+
+
+@dataclass
+class TelemetryReading:
+    """โครงสร้างข้อมูลดิบจากสถานีโทรมาตร 1 ชุด (ปรับ field ตาม schema จริงของ API)"""
+    station_id: str = ""
+    timestamp: str = ""
+    rainfall_mm: Optional[float] = None
+    water_level_m: Optional[float] = None
+    temperature_c: Optional[float] = None
+    raw: dict = field(default_factory=dict)
+
+
+@dataclass
+class PipelineResult:
+    """ผลลัพธ์รวมของ pipeline หนึ่งรอบ สำหรับ serialize เป็น JSON"""
+    run_timestamp: str
+    telemetry: list[dict]
+    telemetry_source: str
+    sar_triggered: bool
+    crop_classification: Optional[dict]
+    predictions: dict
+    model_version: Optional[str] = None
+    status: str = "ok"
+    errors: list[str] = field(default_factory=list)
+    step_status: dict[str, str] = field(default_factory=dict)
+
+
+def fetch_telemetry_from_api(
+    api_url: str,
+    api_key: Optional[str] = TELEMETRY_API_KEY,
+    timeout: int = TELEMETRY_TIMEOUT_SEC,
+) -> list[TelemetryReading]:
+    """ดึงข้อมูลล่าสุดจากสถานีโทรมาตรผ่าน API จริง (ไม่ raise, คืน list ว่างถ้าล้มเหลว)"""
+    logger.info("Fetching telemetry data from API: %s", api_url)
+    try:
+        readings: list[TelemetryReading] = []
+        return readings
+    except Exception as exc:
+        logger.warning("เรียก telemetry API ไม่สำเร็จ (%s) — ข้ามรอบนี้ไปโดยไม่มีข้อมูลโทรมาตร", exc)
+        return []
+
+
+def generate_mock_telemetry(num_stations: int = 3) -> list[TelemetryReading]:
+    """สร้างข้อมูลโทรมาตรจำลอง (mock) สำหรับใช้ตอนยังไม่ได้เชื่อม API จริง"""
+    logger.warning("ใช้ mock data - ยังไม่ได้เชื่อม API จริง (TELEMETRY_API_URL is None)")
+    now_iso = datetime.now(timezone.utc).isoformat()
+    readings: list[TelemetryReading] = []
+
+    for i in range(1, num_stations + 1):
+        has_rain = random.random() < 0.3
+        rainfall = round(random.uniform(0.5, 45.0), 1) if has_rain else 0.0
+
+        readings.append(
+            TelemetryReading(
+                station_id=f"MOCK-{i:02d}",
+                timestamp=now_iso,
+                rainfall_mm=rainfall,
+                water_level_m=round(random.uniform(0.5, 4.0), 2),
+                temperature_c=round(random.uniform(20.0, 38.0), 1),
+                raw={"mock": True, "note": "generated by generate_mock_telemetry()"},
+            )
+        )
+
+    return readings
+
+
+def get_telemetry_data() -> tuple[list[TelemetryReading], str]:
+    """จุดเรียกหลักสำหรับดึงข้อมูลโทรมาตร — mock หรือ api ตาม TELEMETRY_API_URL"""
+    if TELEMETRY_API_URL:
+        readings = fetch_telemetry_from_api(TELEMETRY_API_URL, TELEMETRY_API_KEY)
+        if readings:
+            return readings, "api"
+        logger.warning("API ไม่คืนข้อมูล หรือดึงไม่สำเร็จ — fallback ไปใช้ mock data แทน")
+        return generate_mock_telemetry(), "mock"
+
+    return generate_mock_telemetry(), "mock"
+
+
+def get_sar_crop_classification() -> Optional[dict]:
+    """
+    2026-07-11 เปลี่ยนจากเรียก check_new_sar_image()/trigger_crop_classification() ตรงๆ ในทุกรอบ
+    pipeline หลัก เป็นอ่านผลลัพธ์ล่าสุดที่ sar_background_job.py เขียนไว้แทน — เดิม
+    trigger_crop_classification() ใช้เวลาไม่กี่วินาที (sampleRegions() แบบ synchronous) แต่หลังแก้
+    ให้ export+download GeoTIFF จาก GEE แล้ว classify ทุก pixel local (แก้ปัญหา GEE 5,000-element
+    limit — ดู docstring ของ sar_classification.trigger_crop_classification()) ใช้เวลานานขึ้นมาก
+    (นาทีถึงหลายนาทีต่อ zone) ไม่เหมาะรันตรงในทุกรอบ pipeline หลักที่ต้องจบเร็วทุกสัปดาห์อีกต่อไป
+
+    SAR ควรอัปเดตแค่ ~ทุก 7-10 วันตาม revisit cycle ของ Sentinel-1 อยู่แล้ว (check_new_sar_image()
+    เองก็มี min_days_between_runs=30 gate อยู่แล้วด้วย) จึงแยกไปรันเป็น background job ต่างหาก
+    (sar_background_job.py ผ่าน Task Scheduler ของตัวเอง) เขียนผลลง
+    01_data/gis/sar_output/sar_result_latest.json — ฟังก์ชันนี้แค่อ่านไฟล์นั้น (เร็ว ไม่ต้องรอ GEE)
+
+    คืน dict (payload เต็มจาก background job รอบล่าสุด รวม "is_stale"/"age_days") หรือ None ถ้ายังไม่
+    เคยมีผลลัพธ์เลย (background job ยังไม่เคยรันสำเร็จ) — ไม่ raise (import sar_background_job
+    แบบ lazy เพื่อไม่ให้ทั้ง pipeline พังถ้า geopandas/earthengine-api/rasterio ยังไม่ได้ติดตั้ง)
+    """
+    logger.info("Reading latest cached SAR crop classification result (from sar_background_job.py)")
+    try:
+        import sar_background_job as sbj
+        return sbj.read_latest_sar_result()
+    except Exception:
+        logger.exception(
+            "read_latest_sar_result() ล้มเหลวไม่คาดคิด (ควร \"ไม่ raise\" อยู่แล้วปกติในตัว "
+            "sar_background_job.py เอง — ถ้าเห็น error นี้แปลว่าพังตั้งแต่ import/โหลด dependency)"
+        )
+        return None
+
+
+def _wd_get_feature_cols(df, df_zone) -> list[str]:
+    """คัดลอกตรงตัวจาก get_feature_cols() ใน combined_final_pipeline.py"""
+    exclude = {"year", "week", "month", "date", "zone", "target_col",
+               "NIR_A_m3", "GIR_B_m3", "P_4week"}
+    exclude |= {f"y_h{h}" for h in range(1, WD_HORIZON + 1)}
+    cols = [c for c in df.columns if c not in exclude]
+    return [c for c in cols if not df_zone[c].isna().all()]
+
+
+def _wd_get_clf_features(df_zone, target_col: str) -> list[str]:
+    """คัดลอกตรงตัวจาก get_clf_features() ใน combined_final_pipeline.py"""
+    lag_cols = [f"{target_col}_lag{k}" for k in WD_TARGET_LAGS]
+    roll_cols = [f"{target_col}_roll4_mean", f"{target_col}_roll8_mean"]
+    wanted = WD_CLASSIFIER_FEATURES + lag_cols + roll_cols
+    return [c for c in wanted
+            if c in df_zone.columns and not df_zone[c].isna().all()]
+
+
+def _wd_load_models(model_dir: Path = WATER_DEMAND_MODEL_DIR) -> dict:
+    """โหลดโมเดล Water Demand ทั้งหมดจาก Water_demand/active/"""
+    import joblib
+
+    model_dir = Path(model_dir)
+    logger.info("Loading Water Demand models from %s", model_dir)
+
+    models = {
+        "catboost": joblib.load(model_dir / "catboost_models.pkl"),
+        "lightgbm": joblib.load(model_dir / "lightgbm_models.pkl"),
+        "stage1_classifiers": joblib.load(model_dir / "stage1_classifiers.pkl"),
+        "stage1_thresholds": joblib.load(model_dir / "stage1_thresholds.pkl"),
+        "stack_weights": joblib.load(model_dir / "stack_weights.pkl"),
+    }
+
+    logger.info(
+        "Loaded Water Demand models: catboost=%d lightgbm=%d stage1_classifiers=%d stack_weights=%d",
+        len(models["catboost"]), len(models["lightgbm"]),
+        len(models["stage1_classifiers"]), len(models["stack_weights"]),
+    )
+    return models
+
+
+# ---------------------------------------------------------------------------
+# Water Demand -- เฟส 3: live FAO-56 NIR/GIR (แทนที่ static hardcode ปี 2020)
+# ---------------------------------------------------------------------------
+# ยืนยันสูตรกับ user แล้วก่อน implement (ดู feature_schema.md หัวข้อ 2 +
+# combined_final_pipeline.py บรรทัด 2294-2418): ETc = Kc x ET0_mm_week ต่อ crop, deficit =
+# max(0, ETc - P_eff) floor ต่อ "crop" ก่อน sum ข้าม crop, zone_B (irrigated) หารด้วย IE=0.90
+# เพิ่ม zone_A (rainfed) ไม่มี term นี้, 'etc' ถูก skip เสมอ (ไม่มี Kc นิยามไว้)
+
+_wd_kc_lookup_cache: Optional[dict] = None
+
+
+def _wd_load_kc_lookup(csv_path: Path = WD_KC_LOOKUP_CSV) -> dict:
+    """
+    โหลด kc_weekly_lookup_all_crops.csv (สร้างไว้แล้วจาก task ก่อนหน้า -- week 1-52 x crop -> Kc)
+    เป็น dict {(crop, week): Kc} cache ไว้ใน module-level variable (ไฟล์นี้ static ไม่เปลี่ยนระหว่าง
+    รัน pipeline หนึ่งรอบ ไม่ต้องอ่านซ้ำทุก zone/ทุกครั้งที่เรียก)
+    """
+    global _wd_kc_lookup_cache
+    if _wd_kc_lookup_cache is not None:
+        return _wd_kc_lookup_cache
+
+    import csv as csv_module
+
+    csv_path = Path(csv_path)
+    lookup: dict = {}
+    with open(csv_path, newline="", encoding="utf-8") as f:
+        for r in csv_module.DictReader(f):
+            lookup[(r["crop"], int(r["week"]))] = float(r["Kc"])
+
+    _wd_kc_lookup_cache = lookup
+    logger.info("โหลด Kc lookup จาก %s สำเร็จ (%d รายการ)", csv_path, len(lookup))
+    return lookup
+
+
+def _wd_season_enc(iso_week: int) -> int:
+    """
+    เข้ารหัสฤดูกาลจากสัปดาห์ปฏิทิน (ISO week) -- ไม่ได้เดา สูตรนี้ reverse-engineer จาก season_enc
+    ตัวจริงใน ml_features_phase4.csv (ยืนยันด้วย df.groupby('week')['season_enc'].unique() --
+    ทุก week มีค่า season_enc เดียวไม่มี ambiguity เลยตลอดทั้งไฟล์ 2020-2024): week 10-18 -> 1
+    (ตรงกับ "Dry-hot" ที่เห็นในคอมเมนต์ diagnostic ของ combined_final_pipeline.py), week 19-44 -> 2
+    ("Wet"), week อื่น (1-9, 45-53) -> 0 ("Dry-cool") -- คงที่ทุกปี ไม่ขึ้นกับปี/เดือนเพิ่มเติม
+    """
+    if 10 <= iso_week <= 18:
+        return 1
+    if 19 <= iso_week <= 44:
+        return 2
+    return 0
+
+
+def _wd_get_area_zone_ha(zone: str, sar_result: Optional[dict]) -> dict:
+    """
+    เลือกพื้นที่ (ha) ต่อ crop ของ zone ที่จะใช้คำนวณ NIR/GIR สด -- ใช้ผล SAR crop classification
+    ล่าสุด (จาก get_sar_crop_classification()) ถ้ามีและใช้ได้ (status ok/partial และมีข้อมูล zone
+    นี้จริง) ไม่งั้น fallback ไปใช้ AREA_2020_HA_BY_ZONE (import จาก sar_classification.py --
+    2026-07-16 ย้ายเป็น module-level constant แล้วเพื่อไม่ต้อง hardcode ซ้ำเป็นชุดที่ 3 ที่นี่)
+
+    หมายเหตุ (ยืนยันแนวทางกับ user แล้ว "ไม่แตะประวัติเก่า"): ฟังก์ชันนี้ใช้เฉพาะกับแถวใหม่ที่กำลัง
+    จะ append เข้า ml_features_live.csv เท่านั้น ไม่ retroactive แก้ประวัติเก่าที่ผูกกับ area ปี 2020
+    เดิม -- ยอมรับ transient period ~12 สัปดาห์ที่ lag window คาบเกี่ยวระหว่าง area basis 2 ชุด
+    (ตามที่ตกลงไว้)
+
+    ยอมรับผล SAR ที่ "stale" (is_stale=True, เกิน 45 วันตาม SAR_RESULT_STALE_AFTER_DAYS) ด้วย --
+    ยังแม่นกว่า baseline ปี 2020 ที่แข็งอยู่กับที่มาก แต่ log ให้เห็นชัดเจนเสมอว่าใช้แหล่งไหน
+
+    คืน dict {"area_ha_by_crop": dict, "basis": "sar_live"|"hardcoded_2020", "sar_status": ...,
+    "sar_is_stale": ..., "sar_age_days": ..., "note": str}
+    """
+    import sar_classification as sc
+
+    fallback_area = sc.AREA_2020_HA_BY_ZONE.get(zone, {})
+
+    if not sar_result:
+        return {
+            "area_ha_by_crop": fallback_area, "basis": "hardcoded_2020",
+            "sar_status": None, "sar_is_stale": None, "sar_age_days": None,
+            "note": "ยังไม่มีผล SAR classification เลย (background job ยังไม่เคยรันสำเร็จ) -- ใช้พื้นที่ hardcode ปี 2020",
+        }
+
+    zone_area = (sar_result.get("zone_crop_area_ha") or {}).get(zone)
+    sar_status = sar_result.get("status")
+    if not zone_area or sar_status not in ("ok", "partial"):
+        return {
+            "area_ha_by_crop": fallback_area, "basis": "hardcoded_2020",
+            "sar_status": sar_status, "sar_is_stale": sar_result.get("is_stale"),
+            "sar_age_days": sar_result.get("age_days"),
+            "note": (
+                "ผล SAR classification ล่าสุดใช้ไม่ได้ (status=" + str(sar_status) + ", zone_crop_area_ha["
+                + zone + "]=" + ("ว่าง" if not zone_area else "มี") + ") -- fallback ไปใช้พื้นที่ hardcode ปี 2020"
+            ),
+        }
+
+    return {
+        "area_ha_by_crop": zone_area, "basis": "sar_live",
+        "sar_status": sar_status, "sar_is_stale": sar_result.get("is_stale"),
+        "sar_age_days": sar_result.get("age_days"),
+        "note": (
+            "ใช้ผล SAR classification ล่าสุด" +
+            (" (stale เกิน 45 วัน แต่ยังแม่นกว่า baseline ปี 2020)" if sar_result.get("is_stale") else "")
+        ),
+    }
+
+
+def _wd_compute_live_nir_gir(
+    zone: str, iso_week: int,
+    et0_mm_week: Optional[float], p_eff_mm: Optional[float],
+    area_ha_by_crop: dict,
+) -> Optional[dict]:
+    """
+    คำนวณ NIR_A_m3 (zone_A)/GIR_B_m3 (zone_B) สดจากสูตร FAO-56 ที่ยืนยันแล้วกับต้นฉบับ (ดู
+    feature_schema.md หัวข้อ 2 + combined_final_pipeline.py บรรทัด 2294-2418):
+
+        ETc(crop, week)     = Kc(crop, week) x ET0_mm_week
+        deficit(crop, week) = max(0, ETc - P_eff(zone, week))    <- floor ต่อ "crop" ก่อน sum
+        mm(crop, week)      = deficit                             (zone_A, rainfed -- ไม่มี IE)
+                             = deficit / IE   (IE = WD_IRRIGATION_EFFICIENCY = 0.90)  (zone_B, irrigated)
+        total_m3            = sum(crop != 'etc') mm(crop) x (area_ha(crop) x 10000) / 1000
+
+    'etc' ถูก skip เสมอ (catch-all พืชอื่นที่ไม่ใช่ target crop -- ไม่มี Kc นิยามไว้ใน
+    kc_weekly_lookup_all_crops.csv)
+
+    iso_week > 52 (สัปดาห์ที่ 53 ที่เกิดขึ้นบางปีตาม ISO calendar) จะ clamp ลงเหลือ 52 (ตาราง Kc มี
+    แค่ 52 สัปดาห์ตาม calendar-week granularity ตอน train -- สัปดาห์ 53 ใกล้เคียงปลายปีที่สุดคือ 52)
+
+    คืน None ทั้งชุดถ้า et0_mm_week/p_eff_mm เป็น None (climate สัปดาห์นี้ยังไม่พร้อม) หรือไม่มีพื้นที่
+    ให้คำนวณเลย -- ไม่ raise ตาม convention เดียวกับฟังก์ชันอื่นในไฟล์นี้
+    """
+    if et0_mm_week is None or p_eff_mm is None or not area_ha_by_crop:
+        return None
+
+    lookup_week = min(iso_week, 52) if iso_week else None
+    if not lookup_week:
+        return None
+
+    kc_lookup = _wd_load_kc_lookup()
+    is_zone_b = (zone == "zone_B")
+
+    total_m3 = 0.0
+    per_crop: dict = {}
+    skipped_no_kc = []
+    for crop, area_ha in area_ha_by_crop.items():
+        if crop == "etc":
+            continue
+        kc = kc_lookup.get((crop, lookup_week))
+        if kc is None:
+            skipped_no_kc.append(crop)
+            continue
+
+        etc_mm = kc * et0_mm_week
+        deficit_mm = max(0.0, etc_mm - p_eff_mm)
+        mm = (deficit_mm / WD_IRRIGATION_EFFICIENCY) if is_zone_b else deficit_mm
+        area_m2 = area_ha * 10000.0
+        crop_m3 = mm * area_m2 / 1000.0
+        total_m3 += crop_m3
+
+        per_crop[crop] = {
+            "kc": kc, "etc_mm": round(etc_mm, 4), "deficit_mm": round(deficit_mm, 4),
+            "mm_after_ie": round(mm, 4), "area_ha": area_ha, "m3": round(crop_m3, 2),
+        }
+
+    return {
+        "total_m3": round(total_m3, 2),
+        "zone": zone, "iso_week": iso_week, "lookup_week": lookup_week,
+        "iso_week_clamped": lookup_week != iso_week,
+        "irrigation_efficiency_applied": is_zone_b,
+        "per_crop": per_crop,
+        "skipped_crops_no_kc": skipped_no_kc,
+    }
+
+
+def _wd_get_zone_b_reservoir_areas(sar_result: Optional[dict]) -> Optional[dict]:
+    """
+    2026-07-22 เพิ่ม — เลือกพื้นที่ต่อ crop ต่อ "อ่าง" ของ zone_B (ไม่ใช่ทั้งโซนรวมแบบ
+    _wd_get_area_zone_ha()) ใช้แบ่งสัดส่วนตัวเลขพยากรณ์ Zone B (การ์ด KPI หน้าเว็บ) ตามอ่างที่ส่งน้ำจริง
+    (ดู sar_classification.compute_zone_b_reservoir_area_ha())
+
+    ต่างจาก _wd_get_area_zone_ha() ตรงที่ **ไม่มี fallback ไปพื้นที่ hardcode ปี 2020** เพราะ baseline
+    ปี 2020 ไม่เคยถูกแบ่งย่อยตามอ่างไว้เลย (มีแค่ตัวเลขรวมทั้งโซน) — ถ้า SAR classification ยังไม่เคย
+    รันสำเร็จ (หรือรันสำเร็จแต่เป็นก่อนฟีเจอร์นี้เพิ่ม 2026-07-22 เลยไม่มี key
+    zone_b_reservoir_area_ha) จะคืน None ตรงๆ ให้ผู้เรียกรู้ว่า "ยังคำนวณสัดส่วนไม่ได้" ไม่ใช่เดา
+    เอาพื้นที่รวมทั้งโซนมาหารเฉลี่ยเอง (จะให้สัดส่วนผิดเพี้ยนจากพื้นที่/crop mix จริงต่ออ่าง)
+
+    คืน dict {reservoir_name_th: {crop: area_ha, ...}, ...} หรือ None
+    """
+    if not sar_result:
+        return None
+    reservoir_areas = sar_result.get("zone_b_reservoir_area_ha")
+    if not reservoir_areas:
+        return None
+    return reservoir_areas
+
+
+def _wd_compute_zone_b_reservoir_gir_ratio(
+    sar_result: Optional[dict], iso_week: int,
+    et0_mm_week: Optional[float], p_eff_mm: Optional[float],
+) -> Optional[dict]:
+    """
+    2026-07-22 เพิ่ม — คำนวณ "สัดส่วน" ความต้องการใช้น้ำ FAO-56 ของ zone_B ต่ออ่าง (ไม่ใช่ตัวเลข m3
+    สุดท้ายที่จะโชว์) ใช้แบ่งตัวเลขพยากรณ์จริงจากโมเดล (final_m3 ของ demand_zone_b, h=1) ตามสัดส่วนนี้
+    ทีหลัง (ดู run_pipeline() จุดที่ผสานเป็น predictions["demand_zone_b"]["reservoir_breakdown"])
+
+    เหตุผลที่แบ่งตาม "สัดส่วน" แทนที่จะโชว์ตัวเลข FAO-56 ต่ออ่างตรงๆ: โมเดล ML สอง-stage
+    (catboost/lightgbm) คือตัวที่ validate/train ไว้จริงสำหรับพยากรณ์ทั้งโซน ไม่มีโมเดลแยกต่ออ่าง —
+    ใช้สัดส่วนพื้นที่/ชนิดพืชต่ออ่างจาก FAO-56 (แม่นกว่าแบ่งตามพื้นที่เฉยๆ เพราะคำนึงถึง crop mix ที่ต่าง
+    กันจริงต่ออ่างด้วย) เป็นตัวจัดสรรตัวเลขที่โมเดลทำนายไว้แล้วแทน (พอร์ตมาจาก pipeline/data_pipeline.py
+    ตัวจริง — ยืนยันแนวทางนี้กับ user แล้ว 2026-07-22)
+
+    ใช้ et0_mm_week/p_eff_mm ของ "สัปดาห์นี้" ตัวเดียวกับที่ _fetch_climate_features_step() ใช้คำนวณ
+    GIR_B_m3 รวมทั้งโซน ให้สัดส่วนสอดคล้องกับตัวเลขที่บันทึกคู่กันในแถวเดียวกันของ ml_features_live.csv
+
+    คืน dict {"reservoirs": {reservoir_name_th: {"share": 0-1, "fao56_estimate_m3": float}, ...},
+    "fao56_total_m3": float, "basis": "sar_live", "note": str} หรือ None พร้อม log เหตุผล (climate
+    สัปดาห์นี้ยังไม่พร้อม, SAR ยังไม่เคยรันสำเร็จ, หรือผลรวม FAO-56 ทุกอ่างเป็น 0 หารสัดส่วนไม่ได้)
+    """
+    reservoir_areas = _wd_get_zone_b_reservoir_areas(sar_result)
+    if not reservoir_areas:
+        return None
+    if et0_mm_week is None or p_eff_mm is None:
+        return None
+
+    per_reservoir_m3: dict = {}
+    for reservoir_name, area_ha_by_crop in reservoir_areas.items():
+        nir_gir = _wd_compute_live_nir_gir(
+            zone="zone_B", iso_week=iso_week,
+            et0_mm_week=et0_mm_week, p_eff_mm=p_eff_mm,
+            area_ha_by_crop=area_ha_by_crop,
+        )
+        per_reservoir_m3[reservoir_name] = nir_gir["total_m3"] if nir_gir is not None else 0.0
+
+    grand_total = sum(per_reservoir_m3.values())
+    if grand_total <= 0:
+        logger.warning(
+            "คำนวณสัดส่วน GIR_B ต่ออ่างไม่ได้สัปดาห์นี้ (ผลรวม FAO-56 ทุกอ่าง = %.2f -- อาจเป็นสัปดาห์ที่ "
+            "P_eff >= ETc ทุกพืชทุกอ่าง ไม่มี deficit ต้องเติมน้ำเลย) -- reservoir_breakdown จะไม่แสดงรอบนี้",
+            grand_total,
+        )
+        return None
+
+    breakdown = {
+        name: {"share": round(m3 / grand_total, 6), "fao56_estimate_m3": round(m3, 2)}
+        for name, m3 in per_reservoir_m3.items()
+    }
+    return {
+        "reservoirs": breakdown,
+        "fao56_total_m3": round(grand_total, 2),
+        "basis": "sar_live",
+        "note": "สัดส่วนคำนวณจาก FAO-56 GIR ต่ออ่าง (พื้นที่ SAR classification ล่าสุด x climate สัปดาห์นี้)",
+    }
+
+
+def _fetch_era5t_via_subprocess(
+    as_of_date: Optional[Any] = None,
+    timeout_sec: int = ERA5T_SUBPROCESS_TIMEOUT_SEC,
+    grib_in: Optional[Path] = None,
+    weekly: bool = False,
+    grib_in_week: Optional[list] = None,
+) -> dict:
+    """
+    2026-07-19 (Colab migration, Phase 5) — ต้นฉบับเรียก era5t_worker.py ผ่าน subprocess โดยใช้
+    python.exe ของ conda environment "era5-grib" (มากับ ArcGIS Pro) เพราะ .venv หลักของ
+    data_pipeline.py บน Windows ติดตั้ง cdsapi/cfgrib ไม่ได้ (ขาด eccodes library ตัวจริง — ปัญหา
+    เฉพาะ pip-on-Windows) บน Colab (Linux) ยืนยันแล้วว่า pip install cdsapi/cfgrib/eccodes ได้ตรงใน
+    environment เดียวกับส่วนอื่นของ pipeline (ดู era5t_worker_colab.py docstring) จึงไม่ต้องแยก
+    process/environment อีกต่อไป — เปลี่ยนจาก subprocess.run() เป็นเรียก
+    era5t_worker_colab.main(argv) ตรงในโปรเซสเดียวกัน (ยังคงสร้าง cmd/argv แบบเดียวกับเดิม 100% แค่
+    ไม่ผ่าน python.exe/subprocess แล้วส่ง argv ตรงเข้า main() แทน) contract การคืนค่าเดิมไว้ทุกจุด
+    (as_of_date/worker_output/fetch_error ฯลฯ) เพื่อไม่ต้องแก้ caller
+    (_fetch_climate_features_step()/_backfill_incomplete_climate_weeks()) เลย
+    """
+    import era5t_worker_colab as ew
+
+    as_of = as_of_date or datetime.now(timezone.utc).date()
+    ERA5T_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    if grib_in_week is not None:
+        stems = "_".join(Path(p).stem for p in grib_in_week)
+        out_json_path = ERA5T_OUTPUT_DIR / f"era5t_week_test_{stems}.json"
+    elif grib_in is not None:
+        out_json_path = ERA5T_OUTPUT_DIR / f"era5t_test_{Path(grib_in).stem}.json"
+    elif weekly:
+        out_json_path = ERA5T_OUTPUT_DIR / f"era5t_week_{as_of.isoformat()}.json"
+    else:
+        out_json_path = ERA5T_OUTPUT_DIR / f"era5t_{as_of.isoformat()}.json"
+
+    result: dict = {
+        "as_of_date": as_of.isoformat(),
+        "python_exe": "in_process (Colab — era5t_worker_colab.main() เรียกตรง ไม่ผ่าน subprocess)",
+        "worker_script": "era5t_worker_colab.py",
+        "out_json_path": str(out_json_path),
+        "weekly": bool(weekly or grib_in_week is not None),
+        "grib_in": str(grib_in) if grib_in is not None else None,
+        "grib_in_week": [str(p) for p in grib_in_week] if grib_in_week is not None else None,
+        "returncode": None,
+        "stdout": None,
+        "stderr": None,
+        "worker_output": None,
+        "fetch_error": None,
+    }
+
+    if grib_in is not None and not Path(grib_in).exists():
+        msg = f"grib_in ระบุไฟล์ที่ไม่มีอยู่จริง: {grib_in}"
+        logger.error(msg)
+        result["fetch_error"] = msg
+        return result
+
+    if grib_in_week is not None:
+        missing_gribs = [str(p) for p in grib_in_week if not Path(p).exists()]
+        if missing_gribs:
+            msg = f"grib_in_week ระบุไฟล์ที่ไม่มีอยู่จริง: {missing_gribs}"
+            logger.error(msg)
+            result["fetch_error"] = msg
+            return result
+
+    if grib_in_week is not None:
+        cmd = [
+            "era5t_worker_colab.py",
+            "--as-of-date", as_of.isoformat(),
+            "--grib-in-week", *[str(p) for p in grib_in_week],
+            "--out-json", str(out_json_path),
+        ]
+    elif grib_in is not None:
+        cmd = [
+            "era5t_worker_colab.py",
+            "--grib-in", str(grib_in),
+            "--out-json", str(out_json_path),
+        ]
+    elif weekly:
+        cmd = [
+            "era5t_worker_colab.py",
+            "--as-of-date", as_of.isoformat(),
+            "--out-json", str(out_json_path),
+        ]
+    else:
+        cmd = [
+            "era5t_worker_colab.py",
+            "--date", as_of.isoformat(),
+            "--out-json", str(out_json_path),
+        ]
+
+    logger.info("เรียก ERA5T worker ตรงในโปรเซสเดียวกัน (Colab, ไม่ผ่าน subprocess): %s", cmd)
+
+    try:
+        returncode = ew.main(cmd[1:])
+    except Exception as exc:
+        msg = f"เรียก era5t_worker_colab.main() ไม่สำเร็จ: {type(exc).__name__}: {exc}"
+        logger.error(msg)
+        result["fetch_error"] = msg
+        return result
+
+    result["returncode"] = returncode
+
+    if not out_json_path.exists():
+        msg = (
+            f"era5t_worker_colab.main() จบด้วย returncode={returncode} แต่ไม่พบไฟล์ output "
+            f"{out_json_path}"
+        )
+        logger.error(msg)
+        result["fetch_error"] = msg
+        return result
+
+    try:
+        with open(out_json_path, encoding="utf-8") as f:
+            worker_output = json.load(f)
+    except Exception as exc:
+        msg = f"อ่าน/parse {out_json_path} ไม่สำเร็จ: {type(exc).__name__}: {exc}"
+        logger.error(msg)
+        result["fetch_error"] = msg
+        return result
+
+    result["worker_output"] = worker_output
+
+    if worker_output.get("fetch_error"):
+        logger.error("era5t_worker_colab.py รายงาน fetch_error ของตัวเอง: %s", worker_output["fetch_error"])
+        result["fetch_error"] = worker_output["fetch_error"]
+        return result
+
+    if result["weekly"]:
+        if returncode != 0:
+            logger.warning(
+                "era5t_worker_colab (weekly) returncode=%d — มักหมายถึง n_days_in_week=0 หรือบางวันข้อมูลไม่ครบ "
+                "(ไม่ใช่ fetch_error เสมอไป ดู n_days_in_week/ET0_mm_week ใน worker_output ประกอบ)",
+                returncode,
+            )
+        logger.info(
+            "ERA5T weekly feature เสร็จสิ้น (as_of=%s, iso_year=%s, iso_week=%s, n_days_in_week=%s, "
+            "ET0_mm_week=%s)",
+            as_of.isoformat(),
+            worker_output.get("iso_year"), worker_output.get("iso_week"),
+            worker_output.get("n_days_in_week"), worker_output.get("ET0_mm_week"),
+        )
+        if not worker_output.get("n_days_in_week"):
+            logger.warning(
+                "ERA5T weekly: n_days_in_week=%s (ยังไม่มีวันไหนของสัปดาห์นี้พร้อมใช้จริง) — "
+                "ET0_mm_week ไม่ควรถูกนำไปใช้เป็นค่าจริง แม้ fetch_error ของ worker เองจะเป็น None ก็ตาม",
+                worker_output.get("n_days_in_week"),
+            )
+    else:
+        if returncode != 0:
+            logger.warning(
+                "era5t_worker_colab (single-day) returncode=%d (อาจมาจาก missing_variables warning) — "
+                "ดู worker_output ประกอบ",
+                returncode,
+            )
+        logger.info(
+            "ERA5T single-day feature ดึงสำเร็จ (as_of=%s, valid_time=%s, n_variables=%d)",
+            as_of.isoformat(), worker_output.get("valid_time"), len(worker_output.get("variables") or {}),
+        )
+
+    return result
+
+
+def _migrate_ml_features_live_schema(csv_path: Path, current_columns: list) -> bool:
+    """
+    2026-07-16 เพิ่ม -- แก้บั๊กจริงที่ user เจอ: ตอน task #50 เพิ่ม NIR_A_m3/GIR_B_m3/wd_area_basis/
+    wd_nir_gir_status เข้า ML_FEATURES_LIVE_COLUMNS แล้ว _append_ml_features_live() เขียนแถวใหม่
+    ตาม fieldnames ปัจจุบันต่อท้ายไฟล์เดิมทันที โดยไม่เคยเช็คว่า header ที่เขียนไว้บรรทัดแรกของไฟล์
+    (ตอน "write_header ครั้งแรก" นานมาแล้ว ก่อนมีคอลัมน์ใหม่พวกนี้) ยังตรงกับ ML_FEATURES_LIVE_COLUMNS
+    ปัจจุบันหรือไม่ -- ผลคือแถวเก่า (schema เดิม 30 คอลัมน์) กับแถวใหม่ (schema ใหม่ 34 คอลัมน์) อยู่ใน
+    ไฟล์เดียวกันคนละจำนวนคอลัมน์ ทำให้ pandas.read_csv()/_wd_build_live_df() parse ไม่ได้เลย
+
+    เลือก migrate-in-place (เติมค่าว่างในแถวเก่าให้มีคอลัมน์ใหม่ครบ) แทนการย้ายไฟล์เดิมไปเก็บเป็น
+    archive แล้วเริ่มไฟล์ใหม่ -- เพราะ live path ต้องการประวัติต่อเนื่อง 12 สัปดาห์เต็มสำหรับ lag12/
+    roll8 การทิ้งประวัติทุกครั้งที่ schema เปลี่ยนจะทำให้ live path ไม่มีทางสะสมพอสักที (ระยะยาวสำคัญ
+    กว่าความสะดวกตอนนี้ที่มีแค่ไม่กี่แถว)
+
+    รองรับทั้ง 2 กรณีต่อแถว: (1) แถว schema เก่า (จำนวนคอลัมน์ตรงกับ header เดิม) -> map ตามชื่อคอลัมน์
+    เดิม เติมคอลัมน์ใหม่เป็นค่าว่าง (2) แถวที่ดันเขียนด้วย schema ใหม่ไปแล้วก่อนไฟล์จะถูก migrate จริง
+    (เหมือนที่เกิดขึ้นจริง 2 แถวสุดท้ายตอนเจอบั๊กนี้ -- จำนวนคอลัมน์ตรงกับ current_columns พอดี) ->
+    map ตาม current_columns ตรงๆ ไม่ต้องเติมอะไร แถวที่ยาวไม่ตรงทั้งคู่ (ไม่ควรเกิดแต่กันไว้) จะ
+    best-effort map กับ header เดิมแล้ว log คำเตือนไว้ ไม่ raise/ไม่ทิ้งแถว
+
+    สำรองไฟล์เดิมไว้เป็น .pre_migration_<timestamp> เสมอก่อนเขียนทับ (กู้คืนได้ถ้า migrate ผิดพลาด)
+
+    คืน True ถ้า migrate จริง (schema ไม่ตรงและแก้แล้ว), False ถ้าไม่ต้องทำอะไร (ไฟล์ไม่มี/ว่างเปล่า/
+    schema ตรงอยู่แล้ว)
+    """
+    import csv as csv_module
+
+    csv_path = Path(csv_path)
+    if not csv_path.exists():
+        return False
+
+    with open(csv_path, newline="", encoding="utf-8") as f:
+        raw_rows = list(csv_module.reader(f))
+
+    if not raw_rows:
+        return False
+
+    existing_header = raw_rows[0]
+    data_rows = [r for r in raw_rows[1:] if r]
+
+    if existing_header == current_columns:
+        return False
+
+    n_old_len = len(existing_header)
+    n_new_len = len(current_columns)
+    logger.warning(
+        "ml_features_live.csv schema ไม่ตรงกับ ML_FEATURES_LIVE_COLUMNS ปัจจุบัน (header เดิม %d "
+        "คอลัมน์, ปัจจุบัน %d คอลัมน์) -- migrate ไฟล์เดิมทั้งหมดให้มีคอลัมน์ใหม่ครบ (เติมค่าว่างใน "
+        "แถวเก่า) ก่อน append ต่อ ไม่ทิ้งประวัติเดิม",
+        n_old_len, n_new_len,
+    )
+
+    migrated_rows = []
+    n_old_schema = n_already_new = n_unexpected = 0
+    for row in data_rows:
+        if len(row) == n_old_len:
+            src = dict(zip(existing_header, row))
+            n_old_schema += 1
+        elif len(row) == n_new_len:
+            src = dict(zip(current_columns, row))
+            n_already_new += 1
+        else:
+            src = dict(zip(existing_header, row))
+            n_unexpected += 1
+            logger.warning(
+                "แถวความยาวไม่ตรงทั้ง schema เก่า (%d คอลัมน์) และใหม่ (%d คอลัมน์) เจอ %d ค่า -- "
+                "best-effort map กับ header เดิม (แถว: %s)",
+                n_old_len, n_new_len, len(row), row,
+            )
+        migrated_rows.append({col: src.get(col, "") for col in current_columns})
+
+    backup_path = csv_path.with_name(
+        csv_path.stem + "_pre_migration_" + datetime.now().strftime("%Y%m%dT%H%M%S") + csv_path.suffix
+    )
+    csv_path.replace(backup_path)
+    logger.info(
+        "สำรองไฟล์เดิมไว้ที่ %s ก่อน migrate (%d แถว: schema เก่า=%d, schema ใหม่แล้ว=%d, ไม่คาดคิด=%d)",
+        backup_path, len(migrated_rows), n_old_schema, n_already_new, n_unexpected,
+    )
+
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv_module.DictWriter(f, fieldnames=current_columns)
+        writer.writeheader()
+        for r in migrated_rows:
+            writer.writerow(r)
+
+    logger.info(
+        "Migrate ml_features_live.csv สำเร็จ: %d แถว -> schema ใหม่ %d คอลัมน์ (%s)",
+        len(migrated_rows), n_new_len, csv_path,
+    )
+    return True
+
+
+def _append_ml_features_live(rows: list, csv_path: Path = ML_FEATURES_LIVE_CSV) -> None:
+    """
+    Append แถวใหม่เข้า ml_features_live.csv (เขียน header เฉพาะครั้งแรก)
+
+    2026-07-16 เพิ่ม schema migration check ก่อน append ทุกครั้ง (ดู _migrate_ml_features_live_schema()
+    ด้านบน) -- ป้องกันบั๊กที่เกิดขึ้นจริง (เพิ่มคอลัมน์ใหม่ใน ML_FEATURES_LIVE_COLUMNS กลางทางแล้วไฟล์
+    เดิมมี header เก่าค้างอยู่ ทำให้แถวเก่า/ใหม่มีจำนวนคอลัมน์ไม่เท่ากันในไฟล์เดียวกัน -> parse ไม่ได้เลย)
+    """
+    import csv
+
+    csv_path = Path(csv_path)
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        _migrate_ml_features_live_schema(csv_path, ML_FEATURES_LIVE_COLUMNS)
+    except Exception:
+        logger.exception(
+            "_migrate_ml_features_live_schema() ล้มเหลวไม่คาดคิด -- จะพยายาม append ต่อไปตามเดิม "
+            "(เสี่ยง schema ไม่ตรงกันถ้าไฟล์เดิมยังมี header เก่าอยู่ -- ตรวจสอบ log ก่อนหน้านี้)"
+        )
+
+    write_header = not csv_path.exists()
+
+    with open(csv_path, "a", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=ML_FEATURES_LIVE_COLUMNS)
+        if write_header:
+            writer.writeheader()
+        for row in rows:
+            writer.writerow({col: row.get(col) for col in ML_FEATURES_LIVE_COLUMNS})
+
+
+def _backfill_incomplete_climate_weeks(
+    as_of_date: Optional[Any] = None,
+    csv_path: Path = ML_FEATURES_LIVE_CSV,
+    min_age_days: int = 14,
+    max_weeks_to_check: int = 12,
+    max_weeks_to_backfill: int = 2,
+) -> dict:
+    """
+    2026-07-18 เพิ่ม — แก้ปัญหาที่ตรวจพบว่า ml_features_live.csv ไม่มีสัปดาห์ไหนครบ 7/7 วันเลยแม้แต่
+    สัปดาห์เดียว (พบตอนเช็คว่า climate_prediction_readiness จะ "หาย" ไปเองตามที่เคยสันนิษฐานไว้จริง
+    หรือไม่ — คำตอบคือไม่จริง ถ้าไม่มีฟังก์ชันนี้)
+
+    ต้นเหตุ: `_fetch_climate_features_step()` ดึงข้อมูลของ "สัปดาห์นี้" (as_of=วันนี้) ทุกครั้งที่รัน
+    ซึ่ง ERA5T/CHIRPS มี publish latency เสมอ (ธรรมชาติของข้อมูล reanalysis/near-real-time — ดู
+    chirps_feature.py docstring หัวข้อ latency) ทำให้สัปดาห์ปัจจุบันไม่ครบ 7 วันโดยธรรมชาติ (ยิ่งรัน
+    ต้นสัปดาห์ยิ่งชัด) และไม่มีขั้นตอนไหนย้อนไปดึงสัปดาห์เก่าซ้ำตอนข้อมูล final ออกแล้วจริง ทำให้แถวเก่า
+    ค้าง partial (era5t/chirps_n_days_in_week < 7) ตลอดไปแม้เวลาผ่านไปนานแค่ไหนก็ตาม
+
+    ฟังก์ชันนี้: สแกน ml_features_live.csv หาคู่ (zone, year, week) ที่เคย fetch ได้ไม่ครบ 7/7 (ทั้ง
+    era5t และ/หรือ chirps) และยังไม่มีแถวไหนของคู่นั้นครบ 7/7 อยู่แล้ว แล้วกรองเอาเฉพาะสัปดาห์ที่ผ่าน
+    ไปนานพอ (>= min_age_days วันจากวันอาทิตย์ของสัปดาห์นั้น) ที่ provider ควรจะเผยแพร่ข้อมูล final
+    แล้วจริง จากนั้น re-fetch สัปดาห์นั้นใหม่ (as_of = วันอาทิตย์ของสัปดาห์) — ถ้าได้ 7/7 ทั้งคู่แล้ว
+    จะ **append แถวใหม่** (ไม่แก้/ลบแถวเดิม เก็บไว้เป็น audit trail คู่กันตามธรรมเนียมไฟล์นี้) ให้
+    `_wd_select_climate_features_for_prediction()` มีแถวสมบูรณ์ให้เลือกใช้ในรอบต่อไป
+
+    จำกัดจำนวนสัปดาห์ที่ backfill จริงต่อรอบด้วย max_weeks_to_backfill (ค่าเริ่มต้น 2) เพราะ ERA5T
+    ต้องเรียก subprocess แยก environment ทีละสัปดาห์ (ช้า อาจกินเวลาหลายนาทีต่อสัปดาห์) — ถ้ามีสัปดาห์
+    ค้างมากกว่านี้จะทยอยไล่ backfill ต่อในรอบถัดๆไปเอง ไม่จำเป็นต้องทำครบในรอบเดียว
+
+    **ข้อจำกัดของแถวที่ backfill**: ไม่ได้ re-fetch MEI (ไม่เกี่ยวกับ n_days_in_week completeness) และ
+    ไม่ได้คำนวณ NIR_A_m3/GIR_B_m3 ย้อนหลัง (ต้องใช้พื้นที่ SAR classification ณ ตอนนั้นซึ่งอาจต่างจาก
+    ปัจจุบันแล้ว) — เพียงพอสำหรับให้ readiness check ผ่าน (ต้องการแค่ era5t/chirps ครบ 7/7) แต่ถ้าจะ
+    เอาแถวนี้ไปใช้ป้อนโมเดลจริงในอนาคตต้องพิจารณาช่องว่างนี้ก่อน (ตอนนี้ยังไม่กระทบเพราะ
+    _wd_build_feature_vector()/_wd_run_prediction() ยังไม่ได้เรียกใช้ live path นี้จริง)
+
+    ออกแบบให้ "ไม่ raise" เหมือนฟังก์ชันอื่นในไฟล์นี้ — ห่อแต่ละสัปดาห์ด้วย try/except แยกกัน สัปดาห์
+    หนึ่งพังไม่กระทบสัปดาห์อื่น เรียกจาก `_fetch_climate_features_step()` ต่อจาก append สัปดาห์ปัจจุบัน
+
+    คืนค่า dict {checked, backfilled, skipped_too_recent, still_incomplete, errors} (list ของ dict
+    ต่อสัปดาห์ในแต่ละ key ยกเว้น errors เป็น list ของ str)
+    """
+    from datetime import date
+
+    result: dict = {
+        "checked": [], "backfilled": [], "skipped_too_recent": [],
+        "still_incomplete": [], "errors": [],
+    }
+
+    as_of = as_of_date or datetime.now(timezone.utc).date()
+    csv_path = Path(csv_path)
+    if not csv_path.exists():
+        return result
+
+    def _to_int(v: Any) -> Optional[int]:
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            return None
+
+    # 2026-07-22 เพิ่ม: "ครบ 7/7" ต้องไม่ใช่ rolling estimate ด้วย (ดู ML_FEATURES_LIVE_COLUMNS
+    # comment) — chirps_feature.py และ era5t_worker_colab.py ทั้งคู่มี rolling 7-day window
+    # fallback ที่อาจรายงาน n_days_in_week==7 ได้โดยไม่ใช่สัปดาห์ปฏิทิน ISO จริง
+    def _is_rolling(v: Any) -> bool:
+        return str(v).strip().lower() in ("true", "1")
+
+    import csv as csv_module
+
+    seen_complete: set = set()
+    incomplete_keys: set = set()
+    try:
+        with open(csv_path, newline="", encoding="utf-8") as f:
+            for r in csv_module.DictReader(f):
+                zone = r.get("zone")
+                year_i, week_i = _to_int(r.get("year")), _to_int(r.get("week"))
+                if not zone or year_i is None or week_i is None:
+                    continue
+                key = (zone, year_i, week_i)
+                is_complete = (
+                    _to_int(r.get("era5t_n_days_in_week")) == 7
+                    and _to_int(r.get("chirps_n_days_in_week")) == 7
+                    and not _is_rolling(r.get("era5t_is_rolling_estimate"))
+                    and not _is_rolling(r.get("chirps_is_rolling_estimate"))
+                )
+                if is_complete:
+                    seen_complete.add(key)
+                else:
+                    incomplete_keys.add(key)
+    except Exception as exc:
+        logger.exception("_backfill_incomplete_climate_weeks: อ่าน %s ไม่สำเร็จ", csv_path)
+        result["errors"].append(f"read {csv_path}: {exc}")
+        return result
+
+    candidate_keys = sorted(incomplete_keys - seen_complete, key=lambda k: (k[1], k[2]), reverse=True)
+    candidate_keys = candidate_keys[:max_weeks_to_check]
+
+    backfilled_count = 0
+    for zone, year_i, week_i in candidate_keys:
+        result["checked"].append({"zone": zone, "year": year_i, "week": week_i})
+        try:
+            sunday = date.fromisocalendar(year_i, week_i, 7)
+        except ValueError as exc:
+            result["errors"].append(f"{zone} {year_i}-W{week_i:02d}: year/week ไม่ valid ({exc})")
+            continue
+
+        age_days = (as_of - sunday).days
+        if age_days < min_age_days:
+            result["skipped_too_recent"].append(
+                {"zone": zone, "year": year_i, "week": week_i, "age_days": age_days}
+            )
+            continue
+
+        if backfilled_count >= max_weeks_to_backfill:
+            result["still_incomplete"].append({
+                "zone": zone, "year": year_i, "week": week_i,
+                "reason": "ครบ quota backfill ของรอบนี้แล้ว (max_weeks_to_backfill) -- รอบถัดไปไล่ต่อ",
+            })
+            continue
+
+        try:
+            import chirps_feature
+            chirps_result = chirps_feature.get_chirps_feature(zone=zone, as_of_date=sunday)
+        except Exception as exc:
+            logger.exception("Backfill CHIRPS ล้มเหลว (%s %s-W%02d)", zone, year_i, week_i)
+            result["errors"].append(f"chirps backfill {zone} {year_i}-W{week_i:02d}: {exc}")
+            continue
+
+        try:
+            era5t_result = _fetch_era5t_via_subprocess(as_of_date=sunday, weekly=True)
+        except Exception as exc:
+            logger.exception("Backfill ERA5T ล้มเหลว (%s %s-W%02d)", zone, year_i, week_i)
+            result["errors"].append(f"era5t backfill {zone} {year_i}-W{week_i:02d}: {exc}")
+            continue
+
+        chirps_days = _to_int((chirps_result or {}).get("n_days_in_week"))
+        worker_output = (era5t_result or {}).get("worker_output") or {}
+        era5t_days = _to_int(worker_output.get("n_days_in_week"))
+        chirps_is_rolling = bool((chirps_result or {}).get("is_rolling_estimate"))
+        era5t_is_rolling = bool(worker_output.get("is_rolling_estimate"))
+
+        if chirps_days == 7 and era5t_days == 7 and not chirps_is_rolling and not era5t_is_rolling:
+            et0_mm_week = worker_output.get("ET0_mm_week")
+            p_mm_week = (chirps_result or {}).get("p_mm_week")
+            row = {
+                "run_timestamp": datetime.now(timezone.utc).isoformat(),
+                "as_of_date": sunday.isoformat(),
+                "year": year_i, "week": week_i, "zone": zone,
+                "MEI": None, "MEI_lag4": None, "MEI_lag8": None,
+                "mei_reporting_lag_risk": None,
+                "mei_fetch_error": "backfill row -- ไม่ได้ re-fetch MEI (ดู docstring ฟังก์ชันนี้)",
+                "P_mm_week": p_mm_week,
+                "P_eff_mm": chirps_result.get("p_eff_mm"),
+                "P_mm_week_lag1": chirps_result.get("p_mm_week_lag1"),
+                "P_mm_week_lag2": chirps_result.get("p_mm_week_lag2"),
+                "P_mm_week_lag4": chirps_result.get("p_mm_week_lag4"),
+                "SPI_4": chirps_result.get("spi_4"),
+                "drought_flag": chirps_result.get("drought_flag"),
+                "chirps_data_type": chirps_result.get("data_type"),
+                "chirps_n_days_in_week": chirps_days,
+                "chirps_is_rolling_estimate": chirps_is_rolling,
+                "chirps_fetch_error": chirps_result.get("fetch_error"),
+                "ET0_mm_week": et0_mm_week,
+                "T_mean": worker_output.get("T_mean"),
+                "RH_pct": worker_output.get("RH_pct"),
+                "VPD_kPa": worker_output.get("VPD_kPa"),
+                "u2_ms": worker_output.get("u2_ms"),
+                "Rn_MJ": worker_output.get("Rn_MJ"),
+                "era5t_n_days_in_week": era5t_days,
+                "era5t_is_rolling_estimate": era5t_is_rolling,
+                "era5t_fetch_error": era5t_result.get("fetch_error"),
+                "AI_week": (et0_mm_week / p_mm_week) if (et0_mm_week is not None and p_mm_week) else None,
+                "AI_week_status": "backfilled 2026-07-18 (ดึงย้อนหลังหลังข้อมูล final ออกแล้ว)",
+                "NIR_A_m3": None, "GIR_B_m3": None,
+                "wd_area_basis": None,
+                "wd_nir_gir_status": "backfill row -- ไม่ได้คำนวณ NIR/GIR ย้อนหลัง (ดู docstring ฟังก์ชันนี้)",
+            }
+            try:
+                _append_ml_features_live([row], csv_path)
+                result["backfilled"].append({"zone": zone, "year": year_i, "week": week_i})
+                backfilled_count += 1
+                logger.info(
+                    "Backfill climate week สำเร็จ: %s %s-W%02d (era5t=%s/7, chirps=%s/7)",
+                    zone, year_i, week_i, era5t_days, chirps_days,
+                )
+            except Exception as exc:
+                logger.exception("Backfill append ล้มเหลว (%s %s-W%02d)", zone, year_i, week_i)
+                result["errors"].append(f"append backfill row {zone} {year_i}-W{week_i:02d}: {exc}")
+        else:
+            result["still_incomplete"].append({
+                "zone": zone, "year": year_i, "week": week_i,
+                "era5t_n_days_in_week": era5t_days, "chirps_n_days_in_week": chirps_days,
+                "reason": "re-fetch แล้วยังไม่ครบ 7/7 (provider อาจยังไม่ final จริง หรือมี gap จริงในสัปดาห์นั้น)",
+            })
+
+    return result
+
+
+def _fetch_climate_features_step(as_of_date: Optional[Any] = None) -> dict:
+    """
+    Integration step ที่เรียกต่อจาก Step 1 (telemetry) ใน run_pipeline() — เรียก MEI -> CHIRPS ->
+    ERA5T ตามลำดับ เก็บผลลัพธ์รวมกัน คำนวณ AI_week ต่อ zone แล้ว append เข้า ml_features_live.csv
+    ออกแบบให้ "ไม่ raise" — ห่อแต่ละการเรียกด้วย try/except แยกกัน
+    """
+    as_of = as_of_date or datetime.now(timezone.utc).date()
+    result: dict = {
+        "as_of_date": as_of.isoformat() if hasattr(as_of, "isoformat") else str(as_of),
+        "mei": None,
+        "chirps": {"zone_A": None, "zone_B": None},
+        "era5t": None,
+        "ai_week": {"zone_A": {"value": None, "status": None}, "zone_B": {"value": None, "status": None}},
+        # 2026-07-22 เพิ่ม -- สัดส่วน FAO-56 GIR ต่ออ่างของ zone_B (ดู _wd_compute_zone_b_reservoir_gir_ratio())
+        # None จนกว่าจะคำนวณสำเร็จด้านล่าง (ต้องมี SAR zone_b_reservoir_area_ha + climate สัปดาห์นี้พร้อม)
+        "gir_b_reservoir_ratio": None,
+        "rows_appended": 0,
+        "data_status": "ok",
+        "prediction_readiness": {},
+        "errors": [],
+    }
+
+    mei_result = None
+    try:
+        import mei_feature
+        mei_result = mei_feature.get_mei_feature(as_of_date=as_of)
+        if mei_result.get("fetch_error"):
+            logger.warning(
+                "MEI feature ดึงไม่สำเร็จ (fetch_error=%s) — ค่า MEI จะเป็น None ในแถวที่ append",
+                mei_result["fetch_error"],
+            )
+    except Exception as exc:
+        logger.exception("mei_feature.get_mei_feature() raise ออกมาโดยไม่คาดคิด (ควร \"ไม่ raise\" อยู่แล้วปกติ)")
+        result["errors"].append("mei_feature: " + str(exc))
+    result["mei"] = mei_result
+
+    chirps_results = {}
+    for zone in ("zone_A", "zone_B"):
+        try:
+            import chirps_feature
+            chirps_result = chirps_feature.get_chirps_feature(zone=zone, as_of_date=as_of)
+            if chirps_result.get("fetch_error"):
+                logger.warning(
+                    "CHIRPS feature (%s) ดึงไม่สำเร็จ (fetch_error=%s)",
+                    zone, chirps_result["fetch_error"],
+                )
+        except Exception as exc:
+            logger.exception("chirps_feature.get_chirps_feature(zone=%s) raise ออกมาโดยไม่คาดคิด", zone)
+            result["errors"].append("chirps_feature[" + zone + "]: " + str(exc))
+            chirps_result = None
+        chirps_results[zone] = chirps_result
+    result["chirps"] = chirps_results
+
+    era5t_result = None
+    try:
+        era5t_result = _fetch_era5t_via_subprocess(as_of_date=as_of, weekly=True)
+        if era5t_result.get("fetch_error"):
+            logger.warning("ERA5T feature ดึงไม่สำเร็จ (fetch_error=%s)", era5t_result["fetch_error"])
+    except Exception as exc:
+        logger.exception("_fetch_era5t_via_subprocess(weekly=True) raise ออกมาโดยไม่คาดคิด")
+        result["errors"].append("era5t: " + str(exc))
+    result["era5t"] = era5t_result
+
+    worker_output = (era5t_result or {}).get("worker_output") or {}
+    n_days_in_week = worker_output.get("n_days_in_week")
+    et0_mm_week = worker_output.get("ET0_mm_week")
+    era5t_fetch_error = (era5t_result or {}).get("fetch_error")
+    if not n_days_in_week:
+        et0_mm_week = None
+        if era5t_fetch_error is None:
+            era5t_fetch_error = (
+                "n_days_in_week=" + str(n_days_in_week) +
+                " — ยังไม่มีวันไหนของสัปดาห์นี้ที่ ERA5T ดึงข้อมูลได้จริง (มักเกิดตอนต้นสัปดาห์ "
+                "ที่ ERA5T latency ยังไม่ทันข้อมูลของวันก่อนหน้า) — ET0_mm_week/AI_week ของรอบนี้จึงไม่พร้อมใช้"
+            )
+            logger.warning("ERA5T weekly (integration step): %s", era5t_fetch_error)
+
+    ai_week_results = {}
+    for zone in ("zone_A", "zone_B"):
+        chirps_z = chirps_results.get(zone) or {}
+        p_mm_week = chirps_z.get("p_mm_week")
+
+        reasons = []
+        if et0_mm_week is None and p_mm_week is None:
+            value, status = None, "AI_week unavailable (ทั้ง ET0_mm_week และ P_mm_week ไม่พร้อมใช้)"
+        elif et0_mm_week is None:
+            value, status = None, "AI_week unavailable (ET0_mm_week ไม่พร้อมใช้ — ERA5T ของสัปดาห์นี้ยังไม่ครบ)"
+        elif p_mm_week is None:
+            value, status = None, "AI_week unavailable (P_mm_week ไม่พร้อมใช้ — CHIRPS ของสัปดาห์นี้ยังไม่ครบ)"
+        elif p_mm_week == 0:
+            value, status = None, "AI_week unavailable (P_mm_week = 0, หารด้วยศูนย์ไม่ได้)"
+        else:
+            value = et0_mm_week / p_mm_week
+            # 2026-07-22 แก้ (พอร์ตมาจาก pipeline/data_pipeline.py ตัวจริง): chirps_feature.py
+            # เพิ่ม data_type ใหม่ 2 ค่า ("prelim_ftp" จาก CHC FTP โดยตรง lag ~7 วัน, และ
+            # "rolling_estimate" ตอนสัปดาห์ปฏิทินยังไม่มีข้อมูลจริงเลยสักวัน) เดิมเช็คแค่
+            # == "prelim" เฉยๆ ทำให้ 2 ค่าใหม่นี้หลุดรอดไปเป็น "ok" (confidence เต็ม) ทั้งที่จริง
+            # แล้วยังไม่ผ่าน gauge correction เหมือน final ทั้งคู่ (rolling_estimate ยิ่งต่ำกว่า
+            # prelim_ftp อีก เพราะไม่ใช่ผลรวมของสัปดาห์ปฏิทินจริงด้วยซ้ำ)
+            chirps_data_type = chirps_z.get("data_type")
+            if chirps_data_type == "rolling_estimate":
+                reasons.append(
+                    "CHIRPS เป็นค่า rolling estimate (สัปดาห์ปฏิทินยังไม่มีข้อมูลจริงเลย ใช้ค่า "
+                    "ประมาณจาก 7 วันล่าสุดที่มีข้อมูลจริงแทน)"
+                )
+            elif chirps_data_type == "prelim_ftp":
+                reasons.append("CHIRPS เป็นข้อมูล prelim_ftp (ตรงจาก CHC FTP, ยังไม่ใช่ final)")
+            elif chirps_data_type == "prelim":
+                reasons.append("CHIRPS เป็นข้อมูล prelim (ยังไม่ใช่ final)")
+            if chirps_z.get("is_partial_week"):
+                reasons.append("CHIRPS ของสัปดาห์นี้ยังไม่ครบ 7 วัน (as_of ไม่ใช่วันอาทิตย์)")
+            if n_days_in_week is not None and n_days_in_week != 7:
+                reasons.append("ERA5T มีข้อมูลแค่ " + str(n_days_in_week) + "/7 วันของสัปดาห์")
+            status = "low_confidence: " + "; ".join(reasons) if reasons else "ok"
+
+        ai_week_results[zone] = {"value": value, "status": status}
+    result["ai_week"] = ai_week_results
+
+    as_of_year, as_of_week, _ = as_of.isocalendar() if hasattr(as_of, "isocalendar") else (None, None, None)
+
+    # 2026-07-16 เพิ่ม (เฟส 3) -- อ่านผล SAR crop classification ล่าสุด (แค่ครั้งเดียว ใช้ร่วมกันทั้ง
+    # 2 zone ในลูปด้านล่าง ไม่ใช่คนละครั้งต่อ zone) เพื่อเลือกพื้นที่ต่อ crop ที่จะใช้คำนวณ NIR/GIR สด
+    # -- get_sar_crop_classification() ออกแบบไว้แล้วว่า "ไม่ raise" (อ่านไฟล์ cache เร็ว ไม่ต้องรอ GEE)
+    # แต่ยังห่อ try/except ไว้อีกชั้นกันพลาดไม่คาดคิด (เช่น sar_background_job.py import ไม่สำเร็จ)
+    sar_result = None
+    try:
+        sar_result = get_sar_crop_classification()
+    except Exception as exc:
+        logger.exception("get_sar_crop_classification() raise ออกมาโดยไม่คาดคิด (ควรไม่ raise ปกติ)")
+        result["errors"].append("get_sar_crop_classification: " + str(exc))
+
+    rows_to_append = []
+    for zone in ("zone_A", "zone_B"):
+        chirps_z = chirps_results.get(zone) or {}
+        ai_week_z = ai_week_results.get(zone) or {}
+        row = {
+            "run_timestamp": datetime.now(timezone.utc).isoformat(),
+            "as_of_date": result["as_of_date"],
+            "year": as_of_year,
+            "week": as_of_week,
+            "zone": zone,
+            "MEI": (mei_result or {}).get("mei_current"),
+            "MEI_lag4": (mei_result or {}).get("mei_lag4"),
+            "MEI_lag8": (mei_result or {}).get("mei_lag8"),
+            "mei_reporting_lag_risk": (mei_result or {}).get("mei_reporting_lag_risk"),
+            "mei_fetch_error": (mei_result or {}).get("fetch_error"),
+            "P_mm_week": chirps_z.get("p_mm_week"),
+            "P_eff_mm": chirps_z.get("p_eff_mm"),
+            "P_mm_week_lag1": chirps_z.get("p_mm_week_lag1"),
+            "P_mm_week_lag2": chirps_z.get("p_mm_week_lag2"),
+            "P_mm_week_lag4": chirps_z.get("p_mm_week_lag4"),
+            "SPI_4": chirps_z.get("spi_4"),
+            "drought_flag": chirps_z.get("drought_flag"),
+            "chirps_data_type": chirps_z.get("data_type"),
+            "chirps_n_days_in_week": chirps_z.get("n_days_in_week"),
+            "chirps_is_rolling_estimate": bool(chirps_z.get("is_rolling_estimate")),
+            "chirps_fetch_error": chirps_z.get("fetch_error"),
+            "ET0_mm_week": et0_mm_week,
+            "T_mean": worker_output.get("T_mean"),
+            "RH_pct": worker_output.get("RH_pct"),
+            "VPD_kPa": worker_output.get("VPD_kPa"),
+            "u2_ms": worker_output.get("u2_ms"),
+            "Rn_MJ": worker_output.get("Rn_MJ"),
+            "era5t_n_days_in_week": n_days_in_week,
+            "era5t_is_rolling_estimate": bool(worker_output.get("is_rolling_estimate")),
+            "era5t_fetch_error": era5t_fetch_error,
+            "AI_week": ai_week_z.get("value"),
+            "AI_week_status": ai_week_z.get("status"),
+        }
+
+        # 2026-07-16 เพิ่ม (เฟส 3) -- คำนวณ NIR_A_m3/GIR_B_m3 สดต่อ zone จากสูตร FAO-56 ที่ยืนยัน
+        # แล้ว (ดู _wd_compute_live_nir_gir()) ใช้พื้นที่จาก SAR classification ล่าสุดถ้าใช้ได้ ไม่งั้น
+        # fallback ไปใช้ hardcode ปี 2020 (ดู _wd_get_area_zone_ha()) -- เขียนแค่คอลัมน์ของ zone
+        # ตัวเอง (NIR_A_m3 สำหรับ zone_A, GIR_B_m3 สำหรับ zone_B) อีก target หนึ่งเป็น None เสมอ
+        # เหมือน convention เดิมของ ml_features_phase4.csv (target ของอีก zone เป็นค่าว่าง)
+        area_info = _wd_get_area_zone_ha(zone, sar_result)
+        nir_gir = _wd_compute_live_nir_gir(
+            zone=zone, iso_week=as_of_week,
+            et0_mm_week=et0_mm_week, p_eff_mm=chirps_z.get("p_eff_mm"),
+            area_ha_by_crop=area_info["area_ha_by_crop"],
+        )
+        row["wd_area_basis"] = area_info["basis"]
+        row["NIR_A_m3"] = None
+        row["GIR_B_m3"] = None
+        if nir_gir is not None:
+            row["wd_nir_gir_status"] = "ok"
+            if zone == "zone_A":
+                row["NIR_A_m3"] = nir_gir["total_m3"]
+            else:
+                row["GIR_B_m3"] = nir_gir["total_m3"]
+        else:
+            row["wd_nir_gir_status"] = "blocked (ET0_mm_week หรือ P_eff_mm ยังไม่พร้อมใช้ในสัปดาห์นี้ หรือไม่มีพื้นที่ crop ให้คำนวณ)"
+            logger.warning(
+                "NIR/GIR (%s) คำนวณไม่ได้สัปดาห์นี้: %s (area_basis=%s: %s)",
+                zone, row["wd_nir_gir_status"], area_info["basis"], area_info["note"],
+            )
+
+        # 2026-07-22 เพิ่ม -- เฉพาะ zone_B: คำนวณสัดส่วน FAO-56 ต่ออ่าง (ใช้ allocate ตัวเลขพยากรณ์จริง
+        # จากโมเดลทีหลังใน run_pipeline() — ดู _wd_compute_zone_b_reservoir_gir_ratio() docstring)
+        if zone == "zone_B":
+            result["gir_b_reservoir_ratio"] = _wd_compute_zone_b_reservoir_gir_ratio(
+                sar_result=sar_result, iso_week=as_of_week,
+                et0_mm_week=et0_mm_week, p_eff_mm=chirps_z.get("p_eff_mm"),
+            )
+            if result["gir_b_reservoir_ratio"] is None:
+                logger.info(
+                    "zone_B: ยังคำนวณสัดส่วน GIR ต่ออ่างไม่ได้รอบนี้ (SAR ยังไม่มี "
+                    "zone_b_reservoir_area_ha, หรือ climate สัปดาห์นี้ยังไม่พร้อม, หรือผลรวม FAO-56 "
+                    "เป็น 0) -- reservoir_breakdown ใน latest.json จะไม่มีรอบนี้"
+                )
+
+        rows_to_append.append(row)
+
+    try:
+        _append_ml_features_live(rows_to_append)
+        result["rows_appended"] = len(rows_to_append)
+    except Exception as exc:
+        logger.exception("append เข้า ml_features_live.csv ไม่สำเร็จ")
+        result["errors"].append("append_ml_features_live: " + str(exc))
+
+    # 2026-07-18 เพิ่ม -- ไล่ backfill สัปดาห์เก่าที่เคย fetch ได้ไม่ครบ 7/7 วัน แต่ผ่านมานานพอที่
+    # ERA5T/CHIRPS ควรมีข้อมูล final ให้ดึงซ้ำได้แล้ว (ดู docstring _backfill_incomplete_climate_weeks())
+    # วางไว้ก่อน prediction_readiness ด้านล่างตั้งใจ -- ถ้า backfill สำเร็จรอบนี้ readiness จะเห็นผลทันที
+    try:
+        backfill_result = _backfill_incomplete_climate_weeks(as_of_date=as_of)
+        result["backfill"] = backfill_result
+        if backfill_result["backfilled"]:
+            logger.info(
+                "Backfill climate weeks: เติมสำเร็จ %d สัปดาห์ (%s)",
+                len(backfill_result["backfilled"]), backfill_result["backfilled"],
+            )
+        if backfill_result["errors"]:
+            logger.warning("Backfill climate weeks มี error บางส่วน: %s", backfill_result["errors"])
+    except Exception as exc:
+        logger.exception("_backfill_incomplete_climate_weeks() raise ออกมาโดยไม่คาดคิด (ควรไม่ raise ปกติ)")
+        result["errors"].append("backfill_climate_weeks: " + str(exc))
+        result["backfill"] = None
+
+    prediction_readiness = {}
+    for zone in ("zone_A", "zone_B"):
+        try:
+            readiness = _wd_select_climate_features_for_prediction(zone=zone, as_of_date=as_of)
+        except Exception as exc:
+            logger.exception("_wd_select_climate_features_for_prediction(zone=%s) raise ออกมาโดยไม่คาดคิด", zone)
+            readiness = {"zone": zone, "status": "blocked_insufficient_data", "row": None,
+                         "selected_year": None, "selected_week": None,
+                         "current_year": as_of_year, "current_week": as_of_week,
+                         "note": "เกิดข้อผิดพลาดไม่คาดคิดตอนเลือกข้อมูล: " + str(exc)}
+        prediction_readiness[zone] = readiness
+        if readiness["status"] == "blocked_insufficient_data":
+            logger.warning("Climate prediction readiness (%s): blocked_insufficient_data — %s", zone, readiness.get("note"))
+        elif readiness["status"] == "fallback":
+            logger.warning("Climate prediction readiness (%s): fallback — %s", zone, readiness.get("note"))
+        else:
+            logger.info(
+                "Climate prediction readiness (%s): ok (as_of=%s-W%02d ตรงกับสัปดาห์ปัจจุบัน)",
+                zone, readiness.get("selected_year"), readiness.get("selected_week") or 0,
+            )
+    result["prediction_readiness"] = prediction_readiness
+
+    any_fetch_error = (
+        (mei_result or {}).get("fetch_error") is not None
+        or any((c or {}).get("fetch_error") is not None for c in chirps_results.values())
+        or era5t_fetch_error is not None
+    )
+    any_ai_not_ok = any(v.get("status") != "ok" for v in ai_week_results.values())
+    if result["errors"]:
+        result["data_status"] = "failed"
+    elif any_fetch_error or any_ai_not_ok:
+        result["data_status"] = "partial"
+    else:
+        result["data_status"] = "ok"
+
+    logger.info(
+        "Climate features step เสร็จสิ้น (as_of=%s, data_status=%s): MEI fetch_error=%s, "
+        "CHIRPS zone_A/B fetch_error=%s/%s, ERA5T n_days_in_week=%s fetch_error=%s, "
+        "AI_week zone_A=%s (%s), zone_B=%s (%s), rows_appended=%d",
+        result["as_of_date"], result["data_status"],
+        (mei_result or {}).get("fetch_error"),
+        (chirps_results.get("zone_A") or {}).get("fetch_error"),
+        (chirps_results.get("zone_B") or {}).get("fetch_error"),
+        n_days_in_week, era5t_fetch_error,
+        ai_week_results["zone_A"]["value"], ai_week_results["zone_A"]["status"],
+        ai_week_results["zone_B"]["value"], ai_week_results["zone_B"]["status"],
+        result["rows_appended"],
+    )
+
+    return result
+
+
+def _wd_select_climate_features_for_prediction(zone: str, as_of_date: Optional[Any] = None, csv_path: Path = ML_FEATURES_LIVE_CSV) -> dict:
+    """
+    เลือกแถวข้อมูล climate ที่ "ปลอดภัย" พอจะป้อนเข้าโมเดล Water Demand จริงในอนาคต — ต้องครบ
+    7/7 วันพอดี (era5t_n_days_in_week==7 และ chirps_n_days_in_week==7) ไม่ยอมรับ partial-week
+    ไม่ว่ากรณีใด (out-of-distribution เทียบกับตอน train) — และ (2026-07-22 เพิ่ม) ต้องไม่ใช่ rolling
+    estimate ด้วย (era5t_is_rolling_estimate/chirps_is_rolling_estimate ต้องเป็น false ทั้งคู่) เพราะ
+    แม้ n_days_in_week จะรายงาน 7 แต่ถ้ามาจาก rolling 7-day window fallback ก็ไม่ใช่ผลรวมของสัปดาห์
+    ปฏิทิน ISO จริง ยังนับเป็น out-of-distribution เหมือนกัน
+
+    คืนค่า dict {zone, status: ok|fallback|blocked_insufficient_data, row, selected_year,
+    selected_week, current_year, current_week, note}
+
+    หมายเหตุ: ยังไม่ได้ถูกเรียกจาก _wd_build_feature_vector()/_wd_run_prediction() จริง — ทั้งสอง
+    ยังคงอ่านจาก ml_features_phase4.csv แบบ static เหมือนเดิม
+    """
+    as_of = as_of_date or datetime.now(timezone.utc).date()
+    current_year, current_week, _ = as_of.isocalendar()
+
+    def _to_int(v: Any) -> Optional[int]:
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            return None
+
+    # 2026-07-22 เพิ่ม: "ครบ 7/7" ต้องไม่ใช่ rolling estimate ด้วย (ดู ML_FEATURES_LIVE_COLUMNS
+    # comment / _backfill_incomplete_climate_weeks() comment เดียวกัน) — chirps_feature.py และ
+    # era5t_worker_colab.py ทั้งคู่มี rolling 7-day window fallback ที่อาจรายงาน
+    # n_days_in_week==7 ได้ (ถ้ามีข้อมูลจริงครบ 7 วันในช่วง rolling ที่ไม่ใช่สัปดาห์ปฏิทิน ISO)
+    # แต่นั่นไม่ใช่ผลรวมของสัปดาห์ปฏิทินจริงแบบที่โมเดล train ไว้ (out-of-distribution) — gate นี้
+    # ต้องกันแถวแบบนั้นออก ไม่ให้ถูกเลือกเป็น "safe" row สำหรับป้อนโมเดล (rolling estimate ยังใช้ได้
+    # ปกติสำหรับ AI_week advisory metric ที่คำนวณแยกไว้แล้วใน _fetch_climate_features_step())
+    def _is_rolling(v: Any) -> bool:
+        return str(v).strip().lower() in ("true", "1")
+
+    csv_path = Path(csv_path)
+    if not csv_path.exists():
+        return {
+            "zone": zone, "status": "blocked_insufficient_data", "row": None,
+            "selected_year": None, "selected_week": None,
+            "current_year": current_year, "current_week": current_week,
+            "note": "ยังไม่พบ " + str(csv_path) + " เลย (pipeline ยังไม่เคย append สำเร็จสักครั้ง) — ไม่มีประวัติให้เลือกใช้",
+        }
+
+    import csv as csv_module
+
+    best_row = None
+    best_key = None
+    with open(csv_path, newline="", encoding="utf-8") as f:
+        for r in csv_module.DictReader(f):
+            if r.get("zone") != zone:
+                continue
+            if _to_int(r.get("era5t_n_days_in_week")) != 7 or _to_int(r.get("chirps_n_days_in_week")) != 7:
+                continue
+            if _is_rolling(r.get("era5t_is_rolling_estimate")) or _is_rolling(r.get("chirps_is_rolling_estimate")):
+                continue
+            year_i = _to_int(r.get("year"))
+            week_i = _to_int(r.get("week"))
+            if year_i is None or week_i is None:
+                continue
+            key = (year_i, week_i)
+            if best_key is None or key > best_key:
+                best_key = key
+                best_row = r
+
+    if best_row is None:
+        return {
+            "zone": zone, "status": "blocked_insufficient_data", "row": None,
+            "selected_year": None, "selected_week": None,
+            "current_year": current_year, "current_week": current_week,
+            "note": (
+                "ไม่มีสัปดาห์ไหนใน " + str(csv_path) + " (zone=" + zone + ") ที่ ERA5T และ CHIRPS "
+                "ครบ 7/7 วันพร้อมกันเลย แม้แต่สัปดาห์เดียว — block การทำนายไว้ก่อน "
+                "ไม่ใช้ข้อมูลที่ไม่ครบป้อนเข้าโมเดลไม่ว่ากรณีใด"
+            ),
+        }
+
+    selected_year, selected_week = best_key
+    if (selected_year, selected_week) == (current_year, current_week):
+        status, note = "ok", None
+    else:
+        status = "fallback"
+        note = (
+            "climate data as_of สัปดาห์ " + str(selected_year) + "-W" + f"{selected_week:02d}" +
+            " ไม่ใช่สัปดาห์ปัจจุบัน (" + str(current_year) + "-W" + f"{current_week:02d}" +
+            ") เพราะสัปดาห์ปัจจุบันยังไม่มีข้อมูลครบ 7/7 วัน — ใช้สัปดาห์ล่าสุดที่ปิดแล้วและครบข้อมูลจริงแทน"
+        )
+
+    return {
+        "zone": zone, "status": status, "row": best_row,
+        "selected_year": selected_year, "selected_week": selected_week,
+        "current_year": current_year, "current_week": current_week,
+        "note": note,
+    }
+
+
+def _wd_extract_feature_row_for_zone(df, zone: str, target_col: str) -> Optional[dict]:
+    """
+    ดึงแถวล่าสุดที่ feature ครบ (ไม่มี NaN ใน reg_feats) ของ zone จาก DataFrame ที่กำหนด -- ใช้ได้ทั้ง
+    static ml_features_phase4.csv และ live-reconstructed DataFrame จาก _wd_build_live_df() (ต้องมี
+    คอลัมน์ตรงกันแบบเดียวกันเท่านั้น) reg_feats/clf_feats คำนวณผ่าน _wd_get_feature_cols()/
+    _wd_get_clf_features() เดิม (ไม่แก้ logic ที่ผ่านการใช้งานจริงมาแล้ว) เพื่อรับประกันว่าชุด/ลำดับ
+    feature ที่ป้อนเข้าโมเดลจะตรงกับตอน train เสมอไม่ว่าจะมาจากแหล่งไหน (คอลัมน์ของ DataFrame ที่ส่ง
+    เข้ามาต้องเรียงเหมือนกับ ml_features_phase4.csv เป๊ะ -- เป็นหน้าที่ของ caller ที่ต้อง reindex ตาม
+    นั้นก่อนเสมอ ดู _wd_build_live_df())
+
+    คืน None ถ้าไม่มีแถวไหน feature ครบเลย (ให้ caller ตัดสินใจว่าจะ fallback ไปแหล่งอื่นหรือ raise)
+    """
+    df_zone = df[df["zone"] == zone]
+    if df_zone.empty:
+        return None
+
+    df_zone = df_zone.sort_values(["year", "week"])
+    reg_feats = _wd_get_feature_cols(df, df_zone)
+    clf_feats = _wd_get_clf_features(df_zone, target_col)
+
+    subset = df_zone.dropna(subset=reg_feats)
+    if subset.empty:
+        return None
+
+    latest_row = subset.iloc[-1]
+    as_of_year = int(latest_row["year"])
+    as_of_week = int(latest_row["week"])
+
+    X_reg = latest_row[reg_feats].to_numpy(dtype=float).reshape(1, -1)
+    X_clf = latest_row[clf_feats].to_numpy(dtype=float).reshape(1, -1)
+
+    return {
+        "target_col": target_col,
+        "as_of_year": as_of_year,
+        "as_of_week": as_of_week,
+        "X_reg": X_reg,
+        "X_clf": X_clf,
+        "reg_feature_count": len(reg_feats),
+        "clf_feature_count": len(clf_feats),
+    }
+
+
+def _wd_build_live_df():
+    """
+    2026-07-16 เพิ่ม (เฟส 3) -- สร้าง DataFrame จาก ml_features_live.csv ให้มีคอลัมน์/ลำดับตรงกับ
+    ml_features_phase4.csv (static training file) เป๊ะ โดยอ่านลำดับคอลัมน์จริงจากไฟล์ static มาเป็น
+    ต้นแบบตรงๆ (ไม่เดา/hand-code ลำดับเอง) เพื่อรับประกันว่า _wd_get_feature_cols()/
+    _wd_get_clf_features() (โค้ดเดิมที่ผ่านการใช้งานจริงแล้ว ไม่ได้แก้) จะเลือก/เรียง feature ตรงกับ
+    ตอน train เป๊ะไม่ว่าจะประมวลผลจาก DataFrame นี้หรือไฟล์ static ก็ตาม -- จุดนี้สำคัญมาก: ถ้าลำดับ
+    ไม่ตรง โมเดล (predict บน numpy array เปล่าๆ ไม่เช็คชื่อ column) จะทำนายผิดแบบเงียบๆ (ค่า feature
+    ไปตกที่ตำแหน่งผิด) เหมือนบั๊ก band-order ที่เจอใน SAR classification (ดู task #38-40)
+
+    lag/rolling ของ target (NIR_A_m3/GIR_B_m3) และของ ET0_mm_week/VPD_kPa คำนวณแบบ "calendar-based"
+    (เทียบ ISO week จริงผ่าน date.fromisocalendar() ไม่ใช่ shift() ตามตำแหน่งแถว) -- ถ้าขาดสัปดาห์ไหน
+    ไปเลย (pipeline ไม่ได้รันสัปดาห์นั้น) lag/roll ที่ต้องพึ่งสัปดาห์นั้นจะเป็น NaN แทนที่จะคำนวณผิด
+    เงียบๆ จากแถวที่ไม่ใช่ lag ที่ต้องการจริง (ป้องกัน silent corruption แบบเดียวกับที่ระวังมาตลอด
+    โปรเจกต์นี้) ส่วน P_mm_week_lag1/2/4 และ MEI_lag4/8 ใช้ค่าที่ chirps_feature.py/mei_feature.py
+    คำนวณมาให้ตรงๆ อยู่แล้วในไฟล์ (เชื่อ calendar-correctness ของ module เฉพาะทางเหล่านั้น ไม่คำนวณซ้ำ)
+
+    คืน None ถ้าไฟล์ยังไม่มีเลย หรือไม่มีข้อมูล zone ไหนเลย (ให้ caller fallback ไปใช้ static ทุก zone)
+    """
+    import numpy as np
+    import pandas as pd
+    from datetime import date, timedelta
+
+    if not ML_FEATURES_LIVE_CSV.exists() or not WATER_DEMAND_FEATURES_CSV.exists():
+        return None
+
+    canonical_cols = pd.read_csv(WATER_DEMAND_FEATURES_CSV, nrows=0).columns.tolist()
+
+    raw = pd.read_csv(ML_FEATURES_LIVE_CSV)
+    if raw.empty:
+        return None
+
+    # กันแถวซ้ำ (pipeline อาจรันมากกว่า 1 ครั้งต่อสัปดาห์ เช่น รัน manual ซ้ำตอน debug) -- เก็บแค่ run
+    # ล่าสุดต่อ (zone, year, week)
+    raw = raw.sort_values("run_timestamp")
+    raw = raw.drop_duplicates(subset=["zone", "year", "week"], keep="last")
+
+    def _calendar_lag(date_to_row: dict, week_start, col: str, lag_weeks: int):
+        r = date_to_row.get(week_start - timedelta(weeks=lag_weeks))
+        if r is None:
+            return np.nan
+        v = r.get(col)
+        return v if pd.notna(v) else np.nan
+
+    def _calendar_roll(date_to_row: dict, week_start, col: str, window: int, stat: str):
+        vals = []
+        for k in range(1, window + 1):
+            v = _calendar_lag(date_to_row, week_start, col, k)
+            if pd.isna(v):
+                return np.nan
+            vals.append(v)
+        return float(np.mean(vals)) if stat == "mean" else float(np.std(vals, ddof=1))
+
+    zone_frames = []
+    for zone, target_col in WD_ZONES.items():
+        zdf = raw[raw["zone"] == zone].copy()
+        if zdf.empty:
+            continue
+
+        zdf["year"] = zdf["year"].astype(int)
+        zdf["week"] = zdf["week"].astype(int)
+        # date.fromisocalendar() รองรับ week=53 เองอยู่แล้วถ้าปีนั้นมีจริงตาม ISO calendar (จะ error
+        # ถ้า year/week ไม่ valid จริง ซึ่งควร surface ออกมาเป็น exception ไม่ควร silently ข้าม)
+        zdf["_week_start"] = zdf.apply(lambda r: date.fromisocalendar(r["year"], r["week"], 1), axis=1)
+        zdf = zdf.sort_values("_week_start").reset_index(drop=True)
+
+        date_to_row = {r["_week_start"]: r for _, r in zdf.iterrows()}
+
+        for lag in WD_TARGET_LAG_WINDOWS_REG:
+            zdf[f"{target_col}_lag{lag}"] = zdf["_week_start"].apply(
+                lambda ws: _calendar_lag(date_to_row, ws, target_col, lag)
+            )
+        for w in WD_ROLL_WINDOWS:
+            zdf[f"{target_col}_roll{w}_mean"] = zdf["_week_start"].apply(
+                lambda ws: _calendar_roll(date_to_row, ws, target_col, w, "mean")
+            )
+            zdf[f"{target_col}_roll{w}_std"] = zdf["_week_start"].apply(
+                lambda ws: _calendar_roll(date_to_row, ws, target_col, w, "std")
+            )
+
+        # ET0_mm_week_lag*/VPD_kPa_lag* ไม่มีสดจาก module อื่น (ไม่เหมือน P_mm_week_lag*/MEI_lag*
+        # ที่ chirps_feature.py/mei_feature.py คำนวณมาให้แล้ว) -- คำนวณเองแบบ calendar-based เดียวกัน
+        for lag in (1, 2, 4):
+            zdf[f"ET0_mm_week_lag{lag}"] = zdf["_week_start"].apply(
+                lambda ws: _calendar_lag(date_to_row, ws, "ET0_mm_week", lag)
+            )
+        for lag in (1, 2):
+            zdf[f"VPD_kPa_lag{lag}"] = zdf["_week_start"].apply(
+                lambda ws: _calendar_lag(date_to_row, ws, "VPD_kPa", lag)
+            )
+
+        zdf["season_enc"] = zdf["week"].apply(_wd_season_enc)
+        zdf["WoY_sin"] = np.sin(2 * np.pi * zdf["week"] / 52)
+        zdf["WoY_cos"] = np.cos(2 * np.pi * zdf["week"] / 52)
+        zdf["month"] = zdf["_week_start"].apply(lambda d: d.month)
+        zdf["MoY_sin"] = np.sin(2 * np.pi * zdf["month"] / 12)
+        zdf["MoY_cos"] = np.cos(2 * np.pi * zdf["month"] / 12)
+        zdf["date"] = zdf["_week_start"].apply(lambda d: d.isoformat())
+        zdf["zone"] = zone
+        zdf["target_col"] = target_col
+        # P_eff_mm ชื่อคอลัมน์เดียวกันอยู่แล้วใน ml_features_live.csv (chirps_feature.py เขียนชื่อนี้
+        # ตรงๆ ต่างจาก build_feature_matrix() เดิมที่ต้อง rename จาก P_eff_upland/P_eff_paddy)
+
+        # reindex ตาม canonical_cols เป๊ะ -- คอลัมน์ที่ไม่มีใน zdf (เช่น target_col ของอีก zone หนึ่ง)
+        # จะกลายเป็น NaN อัตโนมัติ, คอลัมน์ที่เราสร้างเองไว้คำนวณ (_week_start) จะถูกตัดทิ้งเพราะไม่อยู่
+        # ใน canonical_cols
+        zdf = zdf.reindex(columns=canonical_cols)
+        zone_frames.append(zdf)
+
+    if not zone_frames:
+        return None
+
+    return pd.concat(zone_frames, ignore_index=True)
+
+
+def _wd_build_feature_vector() -> dict:
+    """
+    เตรียม feature vector สำหรับ Water Demand ต่อ zone
+
+    2026-07-16 แก้ (เฟส 3) -- เดิมอ่านจาก ml_features_phase4.csv (static snapshot) เสมอ ตอนนี้ลอง
+    live path ก่อนต่อ zone: สร้าง DataFrame จาก ml_features_live.csv (climate สด + NIR/GIR ที่คำนวณ
+    สดจากพื้นที่ SAR ล่าสุด -- ดู _wd_compute_live_nir_gir()/_wd_get_area_zone_ha() ใน
+    _fetch_climate_features_step()) ผ่าน _wd_build_live_df() ถ้ายังไม่มีประวัติสดพอ (lag12/roll8
+    ต้องการ 12 สัปดาห์ต่อเนื่องกันจริง -- ตอนนี้มีแค่ ~12 สัปดาห์เป็นส่วนใหญ่ยังไม่ครบ) จะ fallback
+    ไปใช้ ml_features_phase4.csv (static, เหมือนเดิมทุกประการ) แยกอิสระต่อ zone (ไม่ใช่ all-or-
+    nothing ทั้งสอง zone พร้อมกัน -- zone หนึ่งอาจมี live history ครบก่อนอีก zone หนึ่งได้ เพราะ SAR/
+    climate data พร้อมไม่พร้อมกันได้)
+
+    ผลลัพธ์แต่ละ zone มี key "data_source" เพิ่มเข้ามา ("live_reconstructed" | "static_snapshot")
+    ให้ downstream (save_results -> latest.json) โชว์ความโปร่งใสได้ เหมือน pattern ของ Reservoir
+    Inflow's data_source field
+
+    2026-07-16 พบและแก้บั๊กระหว่างทดสอบด้วยตัวเอง (ก่อนส่งให้ user รัน): _wd_get_feature_cols() ตัด
+    คอลัมน์ที่ all-NaN ทั้งคอลัมน์ต่อ zone ออกจาก reg_feats ไปเลย (ไม่ใช่แค่ทำให้แถวนั้น NaN แล้วถูก
+    dropna กรองทิ้ง) -- แปลว่าถ้า live_df มีประวัติสั้นเกินไป (เช่น 3 สัปดาห์) จน lag8/lag12 เป็น NaN
+    ทั้งคอลัมน์ reg_feats ที่คำนวณได้จาก live_df จะ "หด" เหลือน้อยกว่า 37 ตัวโดยไม่ error เลย ถ้าเอา
+    X_reg ที่ shape ผิดนี้ไปเข้าโมเดลตรงๆ จะพังแบบ shape mismatch หรือแย่กว่านั้นคือ values หลุด
+    ตำแหน่งแบบเงียบๆ (เหมือนบั๊ก band-order ของ SAR classification) จึงต้องตรวจสอบเพิ่มว่า reg_feats/
+    clf_feats ที่ได้จาก live_df ตรงกับชุดที่โมเดล train ไว้จริง (คำนวณจาก static_df ต่อ zone เดียวกัน
+    ด้วยฟังก์ชันเดิมเป๊ะ) ก่อนจะเชื่อ live path -- ถ้าไม่ตรง (ไม่ว่าจะเซ็ตต่างหรือลำดับต่าง) fallback
+    ไปใช้ static ทันที ไม่เสี่ยงป้อน feature vector ที่ไม่ตรงสเปกเข้าโมเดล
+    """
+    import pandas as pd
+
+    if not WATER_DEMAND_FEATURES_CSV.exists():
+        raise FileNotFoundError("ไม่พบไฟล์ feature: " + str(WATER_DEMAND_FEATURES_CSV))
+    # โหลด static เสมอ (ไม่ใช่แค่ lazy fallback) -- ใช้เป็นทั้ง fallback และเป็น "ground truth" ของ
+    # ชุด/ลำดับ feature ที่โมเดล train ไว้จริง สำหรับตรวจสอบ live path ก่อนเชื่อ (ไฟล์เล็ก ~500 แถว
+    # โหลดเร็ว ไม่ใช่ bottleneck)
+    static_df = pd.read_csv(WATER_DEMAND_FEATURES_CSV)
+
+    live_df = None
+    try:
+        live_df = _wd_build_live_df()
+    except Exception:
+        logger.exception("_wd_build_live_df() ล้มเหลวไม่คาดคิด -- จะใช้ static fallback ทุก zone แทน")
+
+    results = {}
+
+    for zone, target_col in WD_ZONES.items():
+        static_zone_df = static_df[static_df["zone"] == zone].sort_values(["year", "week"])
+        expected_reg_feats = _wd_get_feature_cols(static_df, static_zone_df)
+        expected_clf_feats = _wd_get_clf_features(static_zone_df, target_col)
+
+        feat = None
+        source = None
+
+        if live_df is not None:
+            candidate = None
+            try:
+                candidate = _wd_extract_feature_row_for_zone(live_df, zone, target_col)
+            except Exception:
+                logger.exception("ดึง live feature row ของ %s ล้มเหลวไม่คาดคิด", zone)
+
+            if candidate is not None:
+                live_zone_df = live_df[live_df["zone"] == zone].sort_values(["year", "week"])
+                live_reg_feats = _wd_get_feature_cols(live_df, live_zone_df)
+                live_clf_feats = _wd_get_clf_features(live_zone_df, target_col)
+                if live_reg_feats == expected_reg_feats and live_clf_feats == expected_clf_feats:
+                    feat = candidate
+                    source = "live_reconstructed"
+                else:
+                    logger.warning(
+                        "Zone %s: ชุด/ลำดับ feature จาก live_df ไม่ตรงกับที่โมเดล train ไว้ "
+                        "(reg_feats live=%d ตรงกับ static=%d ตัว: %d ตัว, clf_feats live=%d "
+                        "ตรงกับ static=%d ตัว: %d ตัว) -- มักเกิดตอนประวัติสดยังสั้นเกินไป จนบาง lag/"
+                        "rolling column เป็น NaN ทั้งคอลัมน์แล้วถูกตัดออกจาก reg_feats ไปทั้งดุ้น "
+                        "(ดู docstring ของฟังก์ชันนี้) ยังไม่เชื่อ live path รอบนี้ -- fallback ไปใช้ "
+                        "static แทน",
+                        zone, len(live_reg_feats), len(expected_reg_feats),
+                        len(set(live_reg_feats) & set(expected_reg_feats)),
+                        len(live_clf_feats), len(expected_clf_feats),
+                        len(set(live_clf_feats) & set(expected_clf_feats)),
+                    )
+
+        if feat is None:
+            logger.info(
+                "Zone %s: ใช้ static snapshot (%s) -- live path ยังไม่พร้อม (ไม่มีประวัติพอ หรือ "
+                "feature set ยังไม่ตรงสเปกโมเดล)",
+                zone, WATER_DEMAND_FEATURES_CSV,
+            )
+            feat = _wd_extract_feature_row_for_zone(static_df, zone, target_col)
+            if feat is None:
+                raise ValueError(
+                    "ไม่มีแถวที่ feature ครบ (ไม่มี NaN) สำหรับ zone=" + zone +
+                    " ทั้งจาก live และ static — ตรวจสอบ warm-up period ของ lag/rolling"
+                )
+            source = "static_snapshot"
+
+        feat["data_source"] = source
+        results[zone] = feat
+        logger.info(
+            "Zone %s: as_of=%d-W%02d, source=%s, reg_features=%d, clf_features=%d",
+            zone, feat["as_of_year"], feat["as_of_week"], source,
+            feat["reg_feature_count"], feat["clf_feature_count"],
+        )
+
+    return results
+
+
+def _wd_run_prediction(model: dict, features: dict) -> tuple[Optional[dict], Optional[dict]]:
+    """
+    รัน two-stage prediction สำหรับ Water Demand (zone A/B):
+      1. Stage 1 classifier  -> prob      = P(demand > 0)
+      2. Stage 2 regressor   -> magnitude = w_cat * catboost.predict(X_reg) + w_lgb * lightgbm.predict(X_reg), clip(min=0)
+      3. Final                -> final    = prob * magnitude
+    คืนค่า tuple (zone_a_result, zone_b_result)
+    """
+    results = {}
+    for zone in ("zone_A", "zone_B"):
+        feat = features.get(zone)
+        if feat is None:
+            results[zone] = None
+            continue
+
+        target_col = feat["target_col"]
+        h = 1
+        key = (zone, h)
+
+        clf = model["stage1_classifiers"].get(key)
+        cat_model = model["catboost"].get(key)
+        lgb_model = model["lightgbm"].get(key)
+        weights = model["stack_weights"].get(key)
+
+        if clf is None or cat_model is None or lgb_model is None or weights is None:
+            results[zone] = None
+            continue
+
+        prob_active = float(clf.predict_proba(feat["X_clf"])[:, 1][0])
+
+        cat_pred = float(cat_model.predict(feat["X_reg"])[0])
+        lgb_pred = float(lgb_model.predict(feat["X_reg"])[0])
+        magnitude = weights["w_cat"] * cat_pred + weights["w_lgb"] * lgb_pred
+        magnitude = max(magnitude, 0.0)
+
+        final = prob_active * magnitude
+
+        results[zone] = {
+            "as_of": {"year": feat["as_of_year"], "week": feat["as_of_week"]},
+            "unit": "m3_per_week",
+            # 2026-07-16 เพิ่ม (เฟส 3) -- โชว์ว่า feature ที่ใช้ทำนายรอบนี้มาจาก live-reconstructed
+            # (ml_features_live.csv, NIR/GIR คำนวณสดจากพื้นที่ SAR ล่าสุด) หรือ static_snapshot
+            # (ml_features_phase4.csv เดิม, ยังไม่ครบ 12 สัปดาห์ต่อเนื่องสำหรับ live) เหมือน pattern
+            # data_source ของ Reservoir Inflow
+            "data_source": feat.get("data_source"),
+            "horizons": {
+                "h1": {
+                    "probability_active": round(prob_active, 4),
+                    "magnitude_m3": round(magnitude, 2),
+                    "final_m3": round(final, 2),
+                },
+            },
+        }
+
+    return results.get("zone_A"), results.get("zone_B")
+
+
+def _wd_allocate_zone_b_reservoir_breakdown(
+    demand_zone_b: Optional[dict], gir_b_reservoir_ratio: Optional[dict],
+) -> Optional[dict]:
+    """
+    2026-07-22 เพิ่ม — แบ่งตัวเลขพยากรณ์จริงของโมเดล (demand_zone_b["horizons"]["h1"]["final_m3"])
+    ตามสัดส่วน FAO-56 ต่ออ่างที่คำนวณไว้แล้วใน _fetch_climate_features_step() (ดู
+    _wd_compute_zone_b_reservoir_gir_ratio() สำหรับเหตุผลที่ใช้ "สัดส่วน" แทนตัวเลข FAO-56 ตรงๆ —
+    โมเดล ML สอง-stage คือตัวที่ validate ไว้จริงสำหรับพยากรณ์ทั้งโซน ไม่มีโมเดลแยกต่ออ่าง)
+
+    เรียกจาก run_pipeline() หลัง Step 4 (predictions พร้อมแล้ว) — ผลรวม allocated_m3 ของทุกอ่างจะ
+    เท่ากับ final_m3 เป๊ะ (แค่คูณด้วย share ที่ normalize รวมเป็น 1 อยู่แล้วจาก
+    _wd_compute_zone_b_reservoir_gir_ratio()) เป็นการ "จัดสรร" ตัวเลขเดิม ไม่ใช่ตัวเลขอิสระใหม่
+    (พอร์ตมาจาก pipeline/data_pipeline.py ตัวจริง)
+
+    คืน dict {"reservoirs": {reservoir_name_th: {"allocated_m3", "share", "fao56_estimate_m3"}, ...},
+    "total_m3": float, "basis": str, "note": str} หรือ None ถ้า demand_zone_b หรือ
+    gir_b_reservoir_ratio ไม่พร้อมใช้ (ไม่ raise)
+    """
+    if not demand_zone_b or not gir_b_reservoir_ratio:
+        return None
+    try:
+        final_m3 = demand_zone_b["horizons"]["h1"]["final_m3"]
+    except (KeyError, TypeError):
+        return None
+    if final_m3 is None:
+        return None
+
+    breakdown = {
+        name: {
+            "allocated_m3": round(info["share"] * final_m3, 2),
+            "share": info["share"],
+            "fao56_estimate_m3": info["fao56_estimate_m3"],
+        }
+        for name, info in gir_b_reservoir_ratio.get("reservoirs", {}).items()
+    }
+    if not breakdown:
+        return None
+
+    return {
+        "reservoirs": breakdown,
+        "total_m3": round(final_m3, 2),
+        "basis": "model_final_m3_allocated_by_fao56_ratio",
+        "note": (
+            "จัดสรรตัวเลขพยากรณ์จริงจากโมเดล (final_m3, h=1) ตามสัดส่วนความต้องการใช้น้ำ FAO-56 ต่ออ่าง "
+            "(พื้นที่/ชนิดพืชจาก SAR classification ล่าสุด x climate สัปดาห์นี้) -- ผลรวมทุกอ่าง = "
+            "final_m3 เป๊ะ ไม่ใช่ตัวเลขอิสระจากโมเดลแยกต่ออ่าง (ยังไม่มีโมเดลแบบนั้น)"
+        ),
+    }
+
+
+def _ri_load_metadata() -> dict:
+    """โหลด model_metadata.json ของ Reservoir Inflow — แหล่งความจริงเดียวสำหรับ feature_cols/targets/threshold logic"""
+    if not RESERVOIR_INFLOW_METADATA_PATH.exists():
+        raise FileNotFoundError("ไม่พบ model_metadata.json ที่ " + str(RESERVOIR_INFLOW_METADATA_PATH))
+    with open(RESERVOIR_INFLOW_METADATA_PATH, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _ri_load_models(model_dir: Path = RESERVOIR_INFLOW_MODEL_DIR) -> dict:
+    """
+    โหลดโมเดล Reservoir Inflow ตาม model_metadata.json — โหลดเฉพาะไฟล์ deployment จริงตามที่
+    deployment_model_choice.json เลือกไว้ (CatBoost ทุก horizon) ไม่โหลด
+    stage2_regressors_all_models.pkl ซึ่งต้องพึ่ง xgboost/lightgbm เพิ่มโดยไม่จำเป็น
+    """
+    import joblib
+
+    model_dir = Path(model_dir)
+    logger.info("Loading Reservoir Inflow models from %s", model_dir)
+
+    metadata = _ri_load_metadata()
+    stage1_classifiers = joblib.load(model_dir / "stage1_classifiers.pkl")
+    stage1_thresholds = joblib.load(model_dir / "stage1_thresholds.pkl")
+    stage2_regressors = joblib.load(model_dir / "deployment_stage2_regressors.pkl")
+
+    models = {
+        "metadata": metadata,
+        "stage1_classifiers": stage1_classifiers,
+        "stage1_thresholds": stage1_thresholds,
+        "stage2_regressors": stage2_regressors,
+    }
+
+    logger.info(
+        "Loaded Reservoir Inflow models: stage1_classifiers=%d stage1_thresholds=%d stage2_regressors=%d",
+        len(models["stage1_classifiers"]), len(models["stage1_thresholds"]), len(models["stage2_regressors"]),
+    )
+    return models
+
+
+def _ri_compute_staleness(as_of_date: Any, run_date: Optional[Any] = None) -> dict:
+    """
+    คำนวณ gap_days = (วันที่รันจริง) - (as_of_date ของแถวข้อมูลล่าสุดที่ใช้ทำนาย) แล้วจัดสถานะ:
+      gap_days <= 3   -> "ok"
+      gap_days 4-14   -> "stale_data_warning"
+      gap_days > 14   -> "stale_data_blocked"
+    """
+    if isinstance(as_of_date, str):
+        as_of = datetime.strptime(as_of_date, "%Y-%m-%d").date()
+    elif hasattr(as_of_date, "date") and not hasattr(as_of_date, "isocalendar"):
+        as_of = as_of_date.date()
+    else:
+        as_of = as_of_date
+
+    run = run_date or datetime.now(timezone.utc).date()
+    if isinstance(run, str):
+        run = datetime.strptime(run, "%Y-%m-%d").date()
+    elif hasattr(run, "date") and not hasattr(run, "isocalendar"):
+        run = run.date()
+
+    gap_days = (run - as_of).days
+
+    if gap_days <= RESERVOIR_STALE_WARNING_THRESHOLD_DAYS:
+        return {
+            "gap_days": gap_days, "run_date": run.isoformat(),
+            "staleness_status": "ok", "staleness_message": None,
+        }
+    elif gap_days <= RESERVOIR_STALE_BLOCKED_THRESHOLD_DAYS:
+        message = (
+            "ข้อมูลที่ใช้ทำนาย (as_of=" + as_of.isoformat() + ") เก่ากว่าวันที่รันจริง (" +
+            run.isoformat() + ") อยู่ " + str(gap_days) +
+            " วัน — มักเกิดเพราะยังไม่มีการอัปโหลด ไฟล์ 'บัญชีน้ำ' ของเดือนใหม่ "
+            "(ดู ARCHITECTURE.md > Manual Dependencies) ยังคำนวณผลทำนายให้ตามปกติ "
+            "แต่ควรพิจารณาด้วยความระมัดระวังเพิ่มขึ้น"
+        )
+        return {
+            "gap_days": gap_days, "run_date": run.isoformat(),
+            "staleness_status": "stale_data_warning", "staleness_message": message,
+        }
+    else:
+        message = (
+            "ข้อมูลที่มีล่าสุด (as_of=" + as_of.isoformat() + ") ถึง " + run.isoformat() + " อยู่ " +
+            str(gap_days) + " วัน (เกิน " + str(RESERVOIR_STALE_BLOCKED_THRESHOLD_DAYS) +
+            " วัน) — บล็อกการทำนายไว้ก่อน ไม่ใช้ข้อมูลที่เก่าเกินไปทำนาย "
+            "(ดู ARCHITECTURE.md > Manual Dependencies — ตรวจสอบว่ามีการอัปโหลดไฟล์ 'บัญชีน้ำ' "
+            "เดือนล่าสุดหรือยัง)"
+        )
+        return {
+            "gap_days": gap_days, "run_date": run.isoformat(),
+            "staleness_status": "stale_data_blocked", "staleness_message": message,
+        }
+
+
+def _ri_load_raw_monthly_data(raw_dir: Path = RESERVOIR_INFLOW_RAW_DIR):
+    """
+    โหลดและรวมไฟล์ "บัญชีน้ำ" รายเดือนทั้งหมด (เช่น 01_data/Reservoirs/inflow/2026/2026_June_MNR.xlsx)
+    เป็นข้อมูลดิบรายวันต่อเนื่อง แล้วคำนวณ 7 feature ด้วยสูตรที่คัดลอกตรงตัวจาก sheet
+    "Training_Ready"/"Data_Dictionary" ของ inflow_ml_training_template_3d.xlsx:
+
+      Q_in_t        = คอลัมน์ "Inflow (M3)" ตรงตัว
+      Water_Level_t = คอลัมน์ "Water Level (MSL)" ตรงตัว
+      Storage_S_t   = คอลัมน์ "Water Volume (M3)" ตรงตัว
+      DeltaS_t      = Storage_S_t(แถวนี้) - Storage_S_t(แถวก่อนหน้าที่มีข้อมูล)
+      %Full_t       = Storage_S_t / RESERVOIR_STORAGE_MAX_M3 * 100 (หน่วยเปอร์เซ็นต์ ตรงกับสเกล
+                      ที่ training data ใช้ 85-107 — แก้ไข 2026-07-05→2026-07-07 จากบั๊ก scale-mismatch)
+      Rain_obs_t    = คอลัมน์ "Cumulative rainfall over the past 24 hours (mm.)" ตรงตัว
+      API_t         = self-initializing: แถวแรกสุด = Rain_obs_t, แถวถัดไป =
+                      RESERVOIR_API_K * API(แถวก่อนหน้า) + Rain_obs_t(แถวนี้)
+
+    คืนค่าเป็น DataFrame เรียงตามวันที่ พร้อมคอลัมน์ feature ทั้ง 7 + "valid"
+    """
+    import re
+    import pandas as pd
+
+    raw_dir = Path(raw_dir)
+    if not raw_dir.exists():
+        raise FileNotFoundError("ไม่พบโฟลเดอร์ข้อมูลดิบรายเดือน: " + str(raw_dir))
+
+    pattern = re.compile(r"^(\d{4})_([A-Za-z]+)_MNR\.xlsx$")
+    xlsx_files = sorted(raw_dir.glob("*/*.xlsx"))
+    if not xlsx_files:
+        raise FileNotFoundError("ไม่พบไฟล์ <year>_<month>_MNR.xlsx ใน " + str(raw_dir) + "/<year>/")
+
+    rows = []
+    for fpath in xlsx_files:
+        m = pattern.match(fpath.name)
+        if not m:
+            logger.warning("ข้ามไฟล์ที่ชื่อไม่ตรง pattern <year>_<month>_MNR.xlsx: %s", fpath.name)
+            continue
+        year_str, month_name = m.group(1), m.group(2)
+        month_num = RESERVOIR_MONTH_NAME_TO_NUM.get(month_name)
+        if month_num is None:
+            logger.warning("ไม่รู้จักชื่อเดือน '%s' ในไฟล์ %s — ข้ามไฟล์นี้", month_name, fpath.name)
+            continue
+
+        raw_preview = pd.read_excel(fpath, sheet_name="บัญชีน้ำ", header=None, nrows=15)
+        header_row = None
+        for i in range(len(raw_preview)):
+            if raw_preview.iloc[i].astype(str).str.strip().eq("Date").any():
+                header_row = i
+                break
+        if header_row is None:
+            logger.warning("หา header แถว 'Date' ไม่เจอใน %s — ข้ามไฟล์นี้", fpath.name)
+            continue
+
+        df_month = pd.read_excel(fpath, sheet_name="บัญชีน้ำ", header=header_row)
+        df_month.columns = [str(c).strip() for c in df_month.columns]
+
+        date_col = next((c for c in df_month.columns if c == "Date"), None)
+        level_col = next((c for c in df_month.columns if "Water Level" in c), None)
+        storage_col = next((c for c in df_month.columns if "Water Volume" in c), None)
+        inflow_col = next((c for c in df_month.columns if c.startswith("Inflow")), None)
+        rain_col = next((c for c in df_month.columns if "Cumulative rainfall" in c), None)
+
+        if date_col is None:
+            continue
+
+        # หมายเหตุ (แก้ไข 2026-07-07): คอลัมน์ "Date" ในไฟล์จริงเก็บแค่ "วันที่ในเดือน" (1, 2, 3, ...)
+        # ไม่ใช่ full date — ต้องประกอบวันที่จริงเองจาก year_str/month_num ที่ได้จากชื่อไฟล์
+        # (ยืนยันจากการเปิดไฟล์จริงตรวจสอบ: row header อยู่ที่ index 4, แถวข้อมูลคอลัมน์ Date มีค่า
+        # เป็นเลขวันที่ (day-of-month) ธรรมดา)
+        day_numeric = pd.to_numeric(df_month[date_col], errors="coerce")
+        valid_mask = day_numeric.notna()
+
+        for idx in df_month.index[valid_mask]:
+            day_int = int(day_numeric.loc[idx])
+            try:
+                date_val = pd.Timestamp(year=int(year_str), month=month_num, day=day_int)
+            except (ValueError, TypeError):
+                continue
+            rows.append({
+                "date": date_val,
+                "water_level": df_month.loc[idx, level_col] if level_col else None,
+                "storage": df_month.loc[idx, storage_col] if storage_col else None,
+                "inflow": df_month.loc[idx, inflow_col] if inflow_col else None,
+                "rain_mm": df_month.loc[idx, rain_col] if rain_col else None,
+                "source_file": fpath.name,
+            })
+
+    if not rows:
+        raise ValueError("ไม่มีแถวข้อมูลที่อ่านได้จากไฟล์รายเดือนใน " + str(raw_dir))
+
+    df = pd.DataFrame(rows)
+    df = df.drop_duplicates(subset="date", keep="last")
+    df = df.sort_values("date").reset_index(drop=True)
+
+    df["Q_in_t"] = df["inflow"]
+    df["Water_Level_t"] = df["water_level"]
+    df["Storage_S_t"] = df["storage"]
+    df["DeltaS_t"] = df["Storage_S_t"].diff()
+    # (แก้ไข 2026-07-07: เดิมคำนวณเป็นสัดส่วน 0-1.05 ไม่ตรงกับ training data ที่เก็บเป็นเปอร์เซ็นต์
+    # 85-107 — คูณ 100 ให้สเกลตรงกัน มิฉะนั้นค่าที่ป้อนเข้าโมเดล live จะ out-of-distribution ทุกครั้ง)
+    df["%Full_t"] = df["Storage_S_t"] / RESERVOIR_STORAGE_MAX_M3 * 100
+    df["Rain_obs_t"] = df["rain_mm"]
+
+    api_values = []
+    api_t_reset_dates = []
+    api_t_undefined_dates = []
+    prev_api = None
+    for idx, row in df.iterrows():
+        rain = row["Rain_obs_t"]
+        date_iso = row["date"].isoformat() if hasattr(row["date"], "isoformat") else str(row["date"])
+        if pd.isna(rain):
+            if prev_api is None:
+                logger.warning("API_t คำนวณไม่ได้ที่ %s เพราะ Rain_obs_t เป็น NaN (ต้นฉบับไม่มี logic รองรับ)", date_iso)
+                api_values.append(float("nan"))
+                api_t_undefined_dates.append(date_iso)
+                continue
+            else:
+                api_values.append(float("nan"))
+                api_t_undefined_dates.append(date_iso)
+                continue
+        if prev_api is None:
+            api_val = rain
+        elif pd.isna(prev_api):
+            logger.warning(
+                "API_t reset (fallback ที่ไม่ตรงสูตรต้นฉบับ) ที่ %s เพราะวันก่อนหน้าไม่มี "
+                "ข้อมูลฝน (Rain_obs_t เป็น NaN) — ใช้ rain ของวันนี้ตรงๆ แทนการสะสมประวัติ",
+                date_iso,
+            )
+            api_val = rain
+            api_t_reset_dates.append(date_iso)
+        else:
+            api_val = RESERVOIR_API_K * prev_api + rain
+        api_values.append(api_val)
+        prev_api = api_val
+
+    df["API_t"] = api_values
+
+    feature_cols_clean = ["Q_in_t", "Water_Level_t", "Storage_S_t", "DeltaS_t", "%Full_t", "Rain_obs_t", "API_t"]
+    complete = df[feature_cols_clean].notna().all(axis=1)
+    plausible = df["%Full_t"].le(RESERVOIR_PLAUSIBLE_PERCENT_FULL_MAX)
+    df["valid"] = complete & plausible
+
+    df.attrs["api_t_undefined_dates"] = api_t_undefined_dates
+    df.attrs["api_t_reset_dates"] = api_t_reset_dates
+    if api_t_reset_dates:
+        logger.warning(
+            "รวม %d วันที่ API_t ใช้ fallback logic (reset) ที่ไม่ตรงสูตรต้นฉบับ Excel — "
+            "ดูรายละเอียดใน latest.json.forecasts.inflow.forecast.api_t_deviation",
+            len(api_t_reset_dates),
+        )
+
+    return df
+
+
+def _ri_build_feature_vector_from_static_csv() -> dict:
+    """
+    Fallback: ใช้แถวล่าสุดของ Training_Values_Nofct_7day_Final.csv เรียกใช้เฉพาะตอนที่
+    _ri_load_raw_monthly_data() ล้มเหลว — ไม่ใช่ live แต่เป็น static snapshot ล่าสุดที่มี
+    """
+    import numpy as np
+    import pandas as pd
+
+    metadata = _ri_load_metadata()
+    feature_cols: list[str] = metadata["feature_cols"]
+    date_col_raw = metadata["date_col_raw"]
+    qin_col = metadata["qin_col"]
+
+    logger.info("Building feature vector from %s", RESERVOIR_INFLOW_TRAINING_CSV)
+    if not RESERVOIR_INFLOW_TRAINING_CSV.exists():
+        raise FileNotFoundError("ไม่พบไฟล์ feature: " + str(RESERVOIR_INFLOW_TRAINING_CSV))
+
+    df = pd.read_csv(RESERVOIR_INFLOW_TRAINING_CSV)
+
+    missing_cols = [c for c in feature_cols if c not in df.columns]
+    if missing_cols:
+        raise ValueError(
+            "model_metadata.json ระบุ feature_cols ที่ไม่มีใน " + RESERVOIR_INFLOW_TRAINING_CSV.name + ": " + str(missing_cols)
+        )
+
+    valid = df.dropna(subset=feature_cols)
+    if valid.empty:
+        raise ValueError("ไม่มีแถวที่feature ครบใน " + str(RESERVOIR_INFLOW_TRAINING_CSV))
+
+    df_sorted = valid.copy()
+    df_sorted[date_col_raw] = pd.to_datetime(df_sorted[date_col_raw])
+    df_sorted = df_sorted.sort_values(date_col_raw)
+    latest_row = df_sorted.iloc[-1]
+
+    as_of_date_str = latest_row[date_col_raw].strftime("%Y-%m-%d")
+    staleness = _ri_compute_staleness(as_of_date_str)
+
+    result = {
+        "as_of_date": as_of_date_str,
+        "current_qin": float(latest_row[qin_col]),
+        "X": latest_row[feature_cols].to_numpy(dtype=float).reshape(1, -1),
+        "data_source": "static_snapshot_training_csv",
+        "api_t_deviation": {
+            "deviates_from_original_excel_formula": False,
+            "reset_event_dates": [],
+            "undefined_event_dates": [],
+            "note": "ใช้ static snapshot CSV (ไม่ได้คำนวณ API_t เอง) จึงไม่มี deviation นี้",
+        },
+        "gap_days": staleness["gap_days"],
+        "staleness_status": staleness["staleness_status"],
+        "staleness_message": staleness["staleness_message"],
+    }
+
+    logger.info(
+        "Reservoir Inflow (fallback): as_of=%s, current_qin=%.2f, n_features=%d (data_source=%s, "
+        "gap_days=%d, staleness_status=%s)",
+        result["as_of_date"], result["current_qin"], len(feature_cols), result["data_source"],
+        result["gap_days"], result["staleness_status"],
+    )
+    if staleness["staleness_status"] != "ok":
+        logger.warning("Reservoir Inflow (fallback) staleness: %s", staleness["staleness_message"])
+
+    return result
+
+
+def _ri_build_feature_vector() -> dict:
+    """
+    จุดเรียกหลักสำหรับเตรียม feature vector ของ Reservoir Inflow:
+      1. พยายามโหลดจากไฟล์ "บัญชีน้ำ" รายเดือนจริงก่อน (_ri_load_raw_monthly_data() — live)
+         แล้วใช้แถวล่าสุดที่ "valid"
+      2. ถ้าล้มเหลว จะ fallback ไปใช้ _ri_build_feature_vector_from_static_csv() แทน
+
+    การ map ค่าที่คำนวณได้เข้ากับ feature_cols ใน model_metadata.json ใช้วิธี "startswith"
+    """
+    try:
+        raw_df = _ri_load_raw_monthly_data()
+        valid_df = raw_df[raw_df["valid"]]
+        if valid_df.empty:
+            raise ValueError("ไม่มีแถวข้อมูลรายเดือนที่ครบและสมเหตุสมผลเลยสักแถว")
+
+        latest = valid_df.iloc[-1]
+        feature_values = {
+            "Q_in_t": float(latest["Q_in_t"]),
+            "Water_Level_t": float(latest["Water_Level_t"]),
+            "Storage_S_t": float(latest["Storage_S_t"]),
+            "DeltaS_t": float(latest["DeltaS_t"]),
+            "%Full_t": float(latest["%Full_t"]),
+            "Rain_obs_t": float(latest["Rain_obs_t"]),
+            "API_t": float(latest["API_t"]),
+        }
+
+        metadata = _ri_load_metadata()
+        feature_cols: list[str] = metadata["feature_cols"]
+        ordered_values: list[float] = []
+        for col in feature_cols:
+            match_key = next((k for k in feature_values if col.startswith(k)), None)
+            if match_key is None:
+                raise ValueError(f"model_metadata.json ระบุ feature_cols '{col}' ที่ไม่รู้จักจากข้อมูลรายเดือน")
+            ordered_values.append(feature_values[match_key])
+
+        import numpy as np
+
+        api_t_reset_dates: list[str] = raw_df.attrs.get("api_t_reset_dates", [])
+        api_t_undefined_dates: list[str] = raw_df.attrs.get("api_t_undefined_dates", [])
+        api_t_deviation = {
+            "deviates_from_original_excel_formula": bool(api_t_reset_dates or api_t_undefined_dates),
+            "reset_event_dates": api_t_reset_dates,
+            "undefined_event_dates": api_t_undefined_dates,
+            "note": (
+                "API_t ในบางวันคำนวณด้วย fallback logic ที่ผู้ implement เพิ่มเอง (reset กลับไปเริ่ม "
+                "นับจาก Rain_obs_t ของวันนั้นตรงๆ เมื่อวันก่อนหน้าไม่มีข้อมูลฝน) ซึ่งไม่มีอยู่ในสูตร Excel "
+                "ต้นฉบับ (Training_Ready!API_t ใน inflow_ml_training_template_3d.xlsx) — ดูรายละเอียดใน "
+                "model_metadata.json > known_deviations_from_original_template"
+                if (api_t_reset_dates or api_t_undefined_dates)
+                else None
+            ),
+        }
+
+        latest_date = latest["date"]
+        as_of_date_str = (
+            latest_date.strftime("%Y-%m-%d") if hasattr(latest_date, "strftime") else str(latest_date)
+        )
+
+        staleness = _ri_compute_staleness(as_of_date_str)
+
+        result = {
+            "as_of_date": as_of_date_str,
+            "current_qin": feature_values["Q_in_t"],
+            "X": np.array(ordered_values, dtype=float).reshape(1, -1),
+            "data_source": "live_monthly_account_files",
+            "api_t_deviation": api_t_deviation,
+            "gap_days": staleness["gap_days"],
+            "staleness_status": staleness["staleness_status"],
+            "staleness_message": staleness["staleness_message"],
+        }
+
+        logger.info(
+            "Reservoir Inflow (live): as_of=%s, current_qin=%.2f, n_valid_days=%d/%d (data_source=%s, "
+            "gap_days=%d, staleness_status=%s)",
+            result["as_of_date"], result["current_qin"], len(valid_df), len(raw_df), result["data_source"],
+            result["gap_days"], result["staleness_status"],
+        )
+        if staleness["staleness_status"] != "ok":
+            logger.warning("Reservoir Inflow (live) staleness: %s", staleness["staleness_message"])
+        return result
+
+    except Exception as exc:
+        logger.warning(
+            "โหลด feature จากไฟล์ข้อมูลดิบรายเดือนไม่สำเร็จ (%s) — fallback ไปใช้ static snapshot CSV แทน",
+            exc,
+        )
+        return _ri_build_feature_vector_from_static_csv()
+
+
+def _ri_run_prediction(model: dict, features: dict) -> dict:
+    """
+    รัน hurdle prediction สำหรับ Reservoir Inflow ตาม "final_prediction_logic" ใน model_metadata.json:
+      ถ้า stage1_classifier.predict_proba(X)[:,1] >= stage1_thresholds[h] => prediction = 0
+      มิฉะนั้น => prediction = clip(Q_in_t(ปัจจุบัน) + stage2_regressor.predict(X), 0, None)
+
+    predict_proba(X)[:,1] คือ "P(Q_in_t+h = 0)" — ทิศทางตรงข้ามกับ classifier ของ Water Demand
+
+    Staleness gate: ถ้า staleness_status == "stale_data_blocked" จะไม่รัน prediction เลย
+    คืนค่า horizons=None พร้อม gap_days/staleness_message
+    """
+    metadata = model["metadata"]
+    staleness_status: str = features.get("staleness_status", "ok")
+    gap_days = features.get("gap_days")
+    staleness_message = features.get("staleness_message")
+
+    if staleness_status == "stale_data_blocked":
+        logger.warning(
+            "Reservoir Inflow: ข้ามการทำนายทั้งหมด (staleness_status=stale_data_blocked, "
+            "gap_days=%s) — %s",
+            gap_days, staleness_message,
+        )
+        return {
+            "as_of_date": features["as_of_date"],
+            "current_qin_m3_per_day": round(float(features["current_qin"]), 2),
+            "unit": "m3_per_day",
+            "data_source": features["data_source"],
+            "target_reservoir": metadata.get("target_reservoir"),
+            "horizons": None,
+            "known_limitations": metadata.get("known_limitations", []),
+            "known_deviations_from_original_template": metadata.get(
+                "known_deviations_from_original_template", []
+            ),
+            "threshold_instability_from_correction": metadata.get(
+                "threshold_instability_from_correction"
+            ),
+            "api_t_deviation": features.get("api_t_deviation"),
+            "gap_days": gap_days,
+            "staleness_status": staleness_status,
+            "staleness_message": staleness_message,
+        }
+
+    stage1_classifiers = model["stage1_classifiers"]
+    stage1_thresholds = model["stage1_thresholds"]
+    stage2_regressors = model["stage2_regressors"]
+
+    targets: list[str] = metadata["targets"]
+    horizons: list[int] = metadata["horizons"]
+    deployment_info: dict = metadata.get("deployment_model_per_horizon", {})
+
+    X = features["X"]
+    current_qin = features["current_qin"]
+
+    horizon_results: dict = {}
+    for h, target_col in zip(horizons, targets):
+        key = f"h{h}"
+
+        if target_col not in stage1_classifiers or target_col not in stage1_thresholds \
+                or h not in stage2_regressors:
+            horizon_results[key] = None
+            continue
+
+        clf = stage1_classifiers[target_col]
+        threshold = float(stage1_thresholds[target_col])
+
+        prob_zero = float(clf.predict_proba(X)[:, 1][0])
+
+        if prob_zero >= threshold:
+            prediction = 0.0
+            stage_used = "stage1_zero"
+        else:
+            delta = float(stage2_regressors[h].predict(X)[0])
+            prediction = max(current_qin + delta, 0.0)
+            stage_used = "stage2_regressor"
+
+        info = deployment_info.get(str(h), {})
+        hurdle_nse = info.get("hurdle_nse_on_test")
+        wf_cv = info.get("walkforward_cv_nse")
+        wf_mean = wf_cv.get("mean") if isinstance(wf_cv, dict) else None
+        # walk-forward (rolling-origin) CV mean is the more reliable quality signal --
+        # single-split hurdle_nse_on_test proved noisy/unstable (a single test-set
+        # composition can flip the sign). Prefer walk-forward mean for the confidence
+        # flag when available, fall back to the single-split metric otherwise.
+        confidence_nse = wf_mean if wf_mean is not None else hurdle_nse
+
+        horizon_results[key] = {
+            "prediction_m3_per_day": round(prediction, 2),
+            "prob_zero": round(prob_zero, 4),
+            "threshold": round(threshold, 4),
+            "stage_used": stage_used,
+            "model_name": info.get("model_name"),
+            "hurdle_nse_on_test": hurdle_nse,
+            "walkforward_cv_nse": wf_cv,
+            "low_confidence": bool(confidence_nse is not None and confidence_nse < 0),
+        }
+
+    if staleness_status != "ok":
+        logger.warning(
+            "Reservoir Inflow: staleness_status=%s (gap_days=%s) — %s (ยังคำนวณผลทำนายต่อ "
+            "เพราะยังไม่เกินเกณฑ์ blocked)",
+            staleness_status, gap_days, staleness_message,
+        )
+
+    return {
+        "as_of_date": features["as_of_date"],
+        "current_qin_m3_per_day": round(current_qin, 2),
+        "unit": "m3_per_day",
+        "data_source": features["data_source"],
+        "target_reservoir": metadata.get("target_reservoir"),
+        "horizons": horizon_results,
+        "known_limitations": metadata.get("known_limitations", []),
+        "known_deviations_from_original_template": metadata.get(
+            "known_deviations_from_original_template", []
+        ),
+        "threshold_instability_from_correction": metadata.get(
+            "threshold_instability_from_correction"
+        ),
+        "api_t_deviation": features.get("api_t_deviation"),
+        "gap_days": gap_days,
+        "staleness_status": staleness_status,
+        "staleness_message": staleness_message,
+    }
+
+
+def load_latest_model() -> dict:
+    """โหลดโมเดลทั้งสองระบบ (Water Demand + Reservoir Inflow) แยก try/except ต่อระบบ"""
+    models: dict = {"water_demand": None, "reservoir_inflow": None}
+
+    try:
+        models["water_demand"] = _wd_load_models()
+    except Exception:
+        logger.exception("โหลดโมเดล Water Demand ไม่สำเร็จ")
+
+    try:
+        models["reservoir_inflow"] = _ri_load_models()
+    except Exception:
+        logger.exception("โหลดโมเดล Reservoir Inflow ไม่สำเร็จ")
+
+    return models
+
+
+def build_feature_vector(telemetry: list[TelemetryReading], crop_classification: Optional[dict]) -> dict:
+    """เตรียม feature vector ของทั้งสองระบบ แยก try/except ต่อระบบเช่นเดียวกับ load_latest_model()"""
+    features: dict = {"water_demand": None, "reservoir_inflow": None}
+
+    try:
+        features["water_demand"] = _wd_build_feature_vector()
+    except Exception:
+        logger.exception("เตรียม feature vector Water Demand ไม่สำเร็จ")
+
+    try:
+        features["reservoir_inflow"] = _ri_build_feature_vector()
+    except Exception:
+        logger.exception("เตรียม feature vector Reservoir Inflow ไม่สำเร็จ")
+
+    return features
+
+
+def run_prediction(model: dict, features: dict) -> dict:
+    """
+    รันทำนายทั้งสองระบบ แยก try/except ต่อระบบ คืนค่าเป็น dict ที่มี key ตายตัวสามชุดเสมอ
+    (demand_zone_a, demand_zone_b, inflow)
+    """
+    logger.info("Running prediction with latest features")
+    predictions: dict = {"demand_zone_a": None, "demand_zone_b": None, "inflow": None}
+
+    wd_model = model.get("water_demand")
+    wd_features = features.get("water_demand")
+    if wd_model is not None and wd_features is not None:
+        try:
+            zone_a, zone_b = _wd_run_prediction(wd_model, wd_features)
+            predictions["demand_zone_a"] = zone_a
+            predictions["demand_zone_b"] = zone_b
+        except Exception:
+            logger.exception("ทำนาย Water Demand ไม่สำเร็จ")
+    else:
+        logger.warning("ข้าม prediction ของ Water Demand (ไม่มีโมเดลหรือ feature พร้อมใช้)")
+
+    ri_model = model.get("reservoir_inflow")
+    ri_features = features.get("reservoir_inflow")
+    if ri_model is not None and ri_features is not None:
+        try:
+            predictions["inflow"] = _ri_run_prediction(ri_model, ri_features)
+        except Exception:
+            logger.exception("ทำนาย Reservoir Inflow ไม่สำเร็จ")
+    else:
+        logger.warning("ข้าม prediction ของ Reservoir Inflow (ไม่มีโมเดลหรือ feature พร้อมใช้)")
+
+    return predictions
+
+
+def save_results(result: PipelineResult, output_path: Path = OUTPUT_PATH, website_copy_path: Optional[Path] = WEBSITE_DATA_COPY_PATH) -> None:
+    """
+    บันทึกผลลัพธ์ของ pipeline รอบนี้เป็นไฟล์ JSON ที่ output_path (overwrite ทุกครั้งที่รัน)
+    เขียนแบบ atomic (.tmp แล้วค่อย replace) และสำเนาไปที่ website_copy_path ด้วย
+    """
+    logger.info("Saving pipeline results to %s", output_path)
+
+    inflow_pred = result.predictions.get("inflow")
+    if inflow_pred is not None:
+        forecast_status = inflow_pred.get("staleness_status") or "ok"
+    else:
+        forecast_status = "model_missing_pending_retrain"
+
+    demand_zone_a = result.predictions.get("demand_zone_a")
+    demand_zone_b = result.predictions.get("demand_zone_b")
+
+    payload = {
+        "run_timestamp": result.run_timestamp,
+        "telemetry": {
+            "source": result.telemetry_source,
+            "is_mock": result.telemetry_source == "mock",
+            "readings": result.telemetry,
+        },
+        "forecasts": {
+            "demand_zone_a": demand_zone_a,
+            "demand_zone_b": demand_zone_b,
+            "inflow": {"status": forecast_status, "forecast": inflow_pred} if inflow_pred is not None else {"status": forecast_status, "forecast": None},
+        },
+        "sar_triggered": result.sar_triggered,
+        "crop_classification": result.crop_classification,
+        "model_version": result.model_version,
+        "status": result.status,
+        "step_status": result.step_status,
+        "errors": result.errors,
+    }
+
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = output_path.with_suffix(output_path.suffix + ".tmp")
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+    tmp_path.replace(output_path)
+
+    if website_copy_path is not None:
+        try:
+            website_copy_path = Path(website_copy_path)
+            website_copy_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(website_copy_path, "w", encoding="utf-8") as f:
+                json.dump(payload, f, ensure_ascii=False, indent=2)
+            logger.info("Copied pipeline results to website data folder: %s", website_copy_path)
+        except Exception:
+            logger.warning(
+                "คัดลอก latest.json ไปที่ %s ไม่สำเร็จ — หน้าเว็บอาจแสดงข้อมูลเก่าค้างอยู่ "
+                "(output_path หลักที่ %s เขียนสำเร็จแล้วตามปกติ ไม่กระทบ)",
+                website_copy_path, output_path,
+            )
+
+
+def run_pipeline() -> PipelineResult:
+    """เรียกทุกขั้นตอนของ pipeline ตามลำดับ พร้อม error handling แยกต่อ step"""
+    run_timestamp = datetime.now(timezone.utc).isoformat()
+    step_status: dict[str, str] = {}
+    errors: list[str] = []
+
+    logger.info("Step 1/5: ดึงข้อมูลโทรมาตร")
+    try:
+        telemetry, telemetry_source = get_telemetry_data()
+        step_status["telemetry"] = "ok"
+    except Exception as exc:
+        logger.exception("Step 1/5 ล้มเหลว (get_telemetry_data)")
+        telemetry, telemetry_source = [], "unknown"
+        step_status["telemetry"] = "failed"
+        errors.append("get_telemetry_data: " + str(exc))
+
+    logger.info("Step 2/5: ดึง MEI + CHIRPS + ERA5T (climate features)")
+    # 2026-07-22 เพิ่ม default {} ไว้ก่อน try -- ถ้า _fetch_climate_features_step() raise (ไม่ควรเกิดขึ้น
+    # ปกติ แต่ except ด้านล่างก็ห่อไว้เผื่ออยู่แล้ว) climate_result ต้องยังอ้างอิงได้ตอน Step 4/5 ใช้
+    # climate_result.get("gir_b_reservoir_ratio") ไม่งั้นจะ NameError แทนที่จะ degrade แบบไม่ raise
+    climate_result: dict = {}
+    try:
+        climate_result = _fetch_climate_features_step()
+        step_status["climate_features"] = climate_result["data_status"]
+        if climate_result.get("errors"):
+            errors.extend("climate_features: " + e for e in climate_result["errors"])
+        readiness = climate_result.get("prediction_readiness", {})
+        readiness_statuses = [v.get("status") for v in readiness.values()]
+        if any(s == "blocked_insufficient_data" for s in readiness_statuses):
+            step_status["climate_prediction_readiness"] = "blocked_insufficient_data"
+        elif any(s == "fallback" for s in readiness_statuses):
+            step_status["climate_prediction_readiness"] = "fallback"
+        else:
+            step_status["climate_prediction_readiness"] = "ok"
+    except Exception as exc:
+        logger.exception(
+            "Step 2/5 ล้มเหลว (_fetch_climate_features_step) — ไม่ควรเกิดขึ้นปกติเพราะฟังก์ชันนี้ออกแบบให้ไม่ raise"
+        )
+        step_status["climate_features"] = "failed"
+        errors.append("climate_features: " + str(exc))
+
+    logger.info("Step 3/5: อ่านผล SAR crop classification ล่าสุด (sar_background_job.py แยกต่างหาก)")
+    sar_triggered = False
+    crop_classification: Optional[dict] = None
+    try:
+        cached_sar_result = get_sar_crop_classification()
+        if cached_sar_result is not None:
+            crop_classification = cached_sar_result
+            sar_triggered = True
+            if cached_sar_result.get("is_stale"):
+                step_status["sar_classification"] = "stale"
+                logger.warning(
+                    "ผล SAR classification ล่าสุด stale (age=%s วัน) -- ยังใช้ค่าเดิมต่อไปได้ "
+                    "(ไม่ block pipeline หลัก) แต่ควรเช็คว่า sar_background_job.py Task Scheduler "
+                    "ยังรันอยู่จริง",
+                    cached_sar_result.get("age_days"),
+                )
+            else:
+                step_status["sar_classification"] = "ok"
+        else:
+            logger.info(
+                "ยังไม่มีผล SAR classification เลย (sar_background_job.py ยังไม่เคยรันสำเร็จ) — ข้าม "
+                "(ไม่ใช่ error ของรอบ pipeline นี้)"
+            )
+            step_status["sar_classification"] = "no_data_yet"
+    except Exception as exc:
+        logger.exception("Step 3/5 ล้มเหลว (อ่านผล SAR ที่แคชไว้)")
+        step_status["sar_classification"] = "failed"
+        errors.append("sar_pipeline: " + str(exc))
+
+    logger.info("Step 4/5: โหลดโมเดล และทำนาย")
+    predictions: dict = {"demand_zone_a": None, "demand_zone_b": None, "inflow": None}
+    model_version_parts: list[str] = []
+    try:
+        model = load_latest_model()
+        features = build_feature_vector(telemetry, crop_classification)
+        predictions = run_prediction(model, features)
+
+        wd_model = model.get("water_demand")
+        if wd_model is not None:
+            model_version_parts.append(
+                "water_demand_2stage(n_zone_horizon_models=" + str(len(wd_model["catboost"])) + ")"
+            )
+        else:
+            model_version_parts.append("water_demand=unavailable")
+
+        ri_model = model.get("reservoir_inflow")
+        if ri_model is not None:
+            model_version_parts.append(
+                "reservoir_inflow_hurdle(n_horizon_models=" + str(len(ri_model["stage2_regressors"])) + ")"
+            )
+        else:
+            model_version_parts.append("reservoir_inflow=unavailable")
+
+        step_status["prediction"] = "ok"
+        step_status["prediction_water_demand"] = "ok" if (predictions["demand_zone_a"] is not None or predictions["demand_zone_b"] is not None) else "failed"
+        step_status["prediction_reservoir_inflow"] = "ok" if predictions["inflow"] is not None else "failed"
+
+        # 2026-07-22 เพิ่ม -- แบ่งตัวเลขพยากรณ์ Zone B ตามอ่างที่ส่งน้ำ (ดู
+        # _wd_allocate_zone_b_reservoir_breakdown() docstring) ใช้ gir_b_reservoir_ratio ที่คำนวณไว้แล้ว
+        # ใน Step 2 (_fetch_climate_features_step()) -- ห่อ try/except แยก ไม่ให้พังกระทบ prediction หลัก
+        if predictions.get("demand_zone_b") is not None:
+            try:
+                reservoir_breakdown = _wd_allocate_zone_b_reservoir_breakdown(
+                    predictions["demand_zone_b"], climate_result.get("gir_b_reservoir_ratio"),
+                )
+                predictions["demand_zone_b"]["reservoir_breakdown"] = reservoir_breakdown
+                if reservoir_breakdown is None:
+                    logger.info(
+                        "demand_zone_b: ยังแบ่งตามอ่างไม่ได้รอบนี้ (gir_b_reservoir_ratio ไม่พร้อมใช้ "
+                        "-- ดู log Step 2/5 ประกอบ) -- reservoir_breakdown จะเป็น null ใน latest.json"
+                    )
+            except Exception as exc:
+                logger.exception("_wd_allocate_zone_b_reservoir_breakdown() ล้มเหลวไม่คาดคิด (ไม่กระทบ prediction หลัก)")
+                predictions["demand_zone_b"]["reservoir_breakdown"] = None
+                errors.append("reservoir_breakdown: " + str(exc))
+    except Exception as exc:
+        logger.exception("Step 4/5 ล้มเหลว (load_latest_model / run_prediction)")
+        step_status["prediction"] = "failed"
+        errors.append("prediction: " + str(exc))
+
+    model_version = "; ".join(model_version_parts) if model_version_parts else None
+    status = "ok" if not errors else "partial_failure"
+
+    result = PipelineResult(
+        run_timestamp=run_timestamp,
+        telemetry=[t.__dict__ for t in telemetry],
+        telemetry_source=telemetry_source,
+        sar_triggered=sar_triggered,
+        crop_classification=crop_classification,
+        predictions=predictions,
+        model_version=model_version,
+        status=status,
+        errors=errors,
+        step_status=step_status,
+    )
+
+    logger.info("Step 5/5: บันทึกผลลัพธ์เป็น JSON")
+    try:
+        save_results(result)
+        step_status["save_results"] = "ok"
+    except Exception as exc:
+        logger.exception("Step 5/5 ล้มเหลว (save_results)")
+        step_status["save_results"] = "failed"
+        errors.append("save_results: " + str(exc))
+        result.status = "partial_failure"
+
+    return result
+
+
+def main() -> int:
+    """
+    Entry point แบบ standalone — ไม่รอ input จากผู้ใช้ระหว่างทาง เหมาะสำหรับตั้งเวลารันอัตโนมัติ
+    คืนค่า exit code: 0 = สำเร็จทั้งหมด, 1 = สำเร็จบางส่วน, 2 = ล้มเหลวรุนแรง
+    """
+    logger.info("=" * 70)
+    logger.info("=== Starting data pipeline run (%s) ===", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+    try:
+        result = run_pipeline()
+    except Exception:
+        logger.exception("Pipeline crashed นอกเหนือจาก error handling ปกติ — ต้องตรวจสอบด่วน")
+        logger.info("=== Pipeline finished with status: crashed ===")
+        return 2
+
+    logger.info("=== Pipeline finished with status: %s ===", result.status)
+    if result.status == "ok":
+        return 0
+    return 1
+
+
+if __name__ == "__main__":
+    import sys
+
+    sys.exit(main())
