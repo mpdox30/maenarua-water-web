@@ -372,6 +372,11 @@ const DEPTH_VMAX = 4.0;
 const DEPTH_LAYERS_META = {
   yagi2024: { url: 'assets/data/flood_depth_yagi2024.png', label: 'ความลึกน้ำท่วมจริง — พายุยากิ 2567' },
   p95:      { url: 'assets/data/flood_risk_p95.png',       label: 'แผนที่ความเสี่ยงเชิงสถิติ (P95)' },
+  // 2026-07-26 เพิ่ม -- พยากรณ์น้ำท่วม 7 วันข้างหน้าจริง (ล้นตลิ่ง+กว๊านหนุน รวมกันในค่าเดียว
+  // จาก daily_update_colab.py -- ดู gen_ponding_raster_forecast.py/gen_map02_forecast.py ฝั่ง
+  // WMB_Phayao) สมมติไม่มีฝนเพิ่มในช่วงพยากรณ์ (rain_forward_assumption=0.0) จึงเป็น baseline
+  // อนุรักษ์นิยม ไม่ใช่ expected scenario เต็มรูปแบบ -- ดู PROJECT_MEMORY.md ข้อ 9.8 (Future work)
+  forecast7d: { url: 'assets/data/flood_depth_forecast.png', label: 'พยากรณ์น้ำท่วม 7 วันข้างหน้า (ล้นตลิ่ง+กว๊านหนุน, สมมติไม่มีฝนเพิ่ม)' },
 };
 
 const FLAG = {
@@ -653,7 +658,12 @@ function drawMap(d) {
     const layer = L.imageOverlay(meta.url, DEPTH_BOUNDS, { opacity: 0.8, interactive: false });
     depthLayers[meta.label] = layer;
     layer.on('add', () => { legend.classList.add('show'); legendLabel.textContent = meta.label + ' (0–' + DEPTH_VMAX + '+ ม.)'; });
-    layer.on('remove', () => { if (!map.hasLayer(depthLayers['ความลึกน้ำท่วมจริง — พายุยากิ 2567']) && !map.hasLayer(depthLayers['แผนที่ความเสี่ยงเชิงสถิติ (P95)'])) legend.classList.remove('show'); });
+    // 2026-07-26 แก้ให้ generic (เดิม hardcode เช็คแค่ 2 layer ชื่อตรงๆ พังทันทีที่เพิ่ม layer ที่ 3
+    // เข้ามา) -- ซ่อน legend ก็ต่อเมื่อไม่มี depth layer ไหนเปิดอยู่เลยสักตัว ไม่ว่าจะมีกี่ตัวก็ตาม
+    layer.on('remove', () => {
+      const anyOtherActive = Object.values(depthLayers).some(l => map.hasLayer(l));
+      if (!anyOtherActive) legend.classList.remove('show');
+    });
   });
 
   L.control.layers(baseMaps, Object.assign({ 'จุดเสี่ยงรายห้วย': markerLayer }, depthLayers), { collapsed: true }).addTo(map);
