@@ -218,11 +218,11 @@
 <main>
   <section class="page-hero">
     <div class="wrap">
-      <div class="eyebrow">Hurdle Model (CatBoost) · ผลพยากรณ์ล่าสุดจาก Pipeline</div>
+      <div class="eyebrow">Direct Regression (CatBoost) · ผลพยากรณ์ล่าสุดจาก Pipeline</div>
       <h1>พยากรณ์ปริมาณน้ำไหลลงอ่างเก็บน้ำแม่นาเรือ</h1>
       <p class="lead">
-        พยากรณ์ปริมาณน้ำไหลลงอ่าง (Q_in) ล่วงหน้า 1–7 วัน ด้วยโครงสร้าง hurdle สองขั้นตอน
-        (จำแนกวันที่ไม่มีน้ำไหลเข้าก่อน แล้วถดถอยค่าปริมาณด้วย CatBoost) — อัปเดตทุกครั้งที่ pipeline รัน
+        พยากรณ์ปริมาณน้ำไหลลงอ่าง (Q_in) ล่วงหน้า 1–7 วัน ด้วยโมเดล CatBoost ถดถอยค่าโดยตรง
+        (direct delta regression) ไม่มี stage แยกกรอง zero-inflow แล้ว — อัปเดตทุกครั้งที่ pipeline รัน
       </p>
       <div class="hero-tags" id="heroTags">
         <span class="tag">กำลังโหลดข้อมูล…</span>
@@ -380,17 +380,17 @@
         <div class="method-card">
           <div class="step">MULTI-MODEL</div>
           <h5>เปรียบเทียบ 3 โมเดล</h5>
-          <p>CatBoost, LightGBM, XGBoost เทรนแยกทุก horizon (1–7 วัน) ด้วย stratified split และปรับ hyperparameter ผ่าน cross-validation</p>
+          <p>CatBoost, LightGBM, XGBoost เทรนแยกทุก horizon (1–7 วัน) ด้วย chronological split (แบ่งตามช่วงเวลา ไม่ใช่ stratified) และปรับ hyperparameter ผ่าน cross-validation</p>
         </div>
         <div class="method-card">
-          <div class="step">HURDLE MODEL</div>
-          <h5>ทางเลือกสำหรับวันที่ไม่มีน้ำไหลเข้า</h5>
-          <p>ทดสอบโครงสร้าง 2 ขั้นตอนแยกจำแนกวัน zero-inflow ก่อนถดถอย แต่ผลลัพธ์ไม่ได้ดีขึ้นชัดเจนเทียบกับ single-stage ในทุก horizon</p>
+          <div class="step">LAG + ROLLING-RAIN FEATURES</div>
+          <h5>เปลี่ยนจาก hurdle เป็น direct regression (2026-07-26)</h5>
+          <p>เพิ่มฟีเจอร์ Q_in ย้อนหลัง 1-2 วัน และฝนสะสมย้อนหลัง 3/5/7 วัน ทำให้โมเดลถดถอยค่าโดยตรงแบบเดียว (ไม่มี stage แยกกรอง zero-inflow) แม่นยำกว่าโครงสร้าง hurdle 2 ขั้นตอนเดิมในเกือบทุก horizon (วัดด้วย walk-forward CV)</p>
         </div>
         <div class="method-card">
           <div class="step">SHAP ANALYSIS</div>
           <h5>ปัจจัยที่มีอิทธิพลสูงสุด</h5>
-          <p>ระดับน้ำปัจจุบัน (Water_Level_t) และ %ความจุอ่าง (%Full_t) เป็นปัจจัยสำคัญที่สุดในการพยากรณ์ H=1</p>
+          <p>ระดับน้ำปัจจุบัน (Water_Level_t) และ %ความจุอ่าง (%Full_t) เป็นปัจจัยสำคัญที่สุดในการพยากรณ์ H=1 (วิเคราะห์จากโมเดล hurdle รุ่นก่อน 2026-07-26 ยังไม่ได้รัน SHAP ใหม่กับโมเดล lag-feature ปัจจุบัน)</p>
         </div>
       </div>
     </div>
@@ -415,7 +415,7 @@
         </div>
         <div class="access-card">
           <h5>⚪ เฉพาะทีมโครงการ</h5>
-          <p>Hurdle stage-2 diagnostics แบบละเอียด และบันทึกการทดลองที่ยังไม่สรุปผล</p>
+          <p>Diagnostics แบบละเอียดของโมเดล และบันทึกการทดลองที่ยังไม่สรุปผล</p>
         </div>
       </div>
     </div>
@@ -533,7 +533,7 @@ function renderInflow(json) {
   document.getElementById('kpiDataSource').textContent = DATA_SOURCE_LABELS[f.data_source] || f.data_source || '—';
 
   if (!horizonsAvailable) {
-    // stale_data_blocked: ไม่มี horizon ให้แสดงเลย (ไม่ได้รัน stage1/stage2) — เคลียร์ KPI/กราฟ/ตาราง
+    // stale_data_blocked: ไม่มี horizon ให้แสดงเลย (ไม่ได้รัน prediction) — เคลียร์ KPI/กราฟ/ตาราง
     // ที่พึ่งพา horizon ทั้งหมด แทนที่จะปล่อยให้ค่าเก่าค้างอยู่หรือ error จาก f.horizons เป็น null
     document.getElementById('kpiH1').innerHTML = '—';
     document.getElementById('kpiModelNse').textContent = 'ไม่มีการทำนาย (ข้อมูลเก่าเกินเกณฑ์)';
