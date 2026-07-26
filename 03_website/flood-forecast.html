@@ -119,6 +119,11 @@
 
   /* map */
   #riskMap { height: 440px; border-radius: var(--radius-lg); border: 1px solid var(--border-strong); z-index: 1; }
+  #riskMap:fullscreen, #riskMap:-webkit-full-screen { width: 100vw !important; height: 100vh !important; border-radius: 0; }
+  .fullscreen-control { background: rgba(8,30,38,0.88); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid var(--border-strong); border-radius: 10px; box-shadow: 0 4px 14px rgba(0,0,0,0.35); margin: 8px !important; }
+  .fullscreen-control a { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; color: var(--text-300); text-decoration: none; border-radius: 10px; cursor: pointer; }
+  .fullscreen-control a:hover { color: var(--text-100); background: var(--surface-hover); }
+  .fullscreen-control svg { width: 16px; height: 16px; }
   .leaflet-container { background: #0d2a34; font-family: "IBM Plex Sans Thai", sans-serif; }
   .map-note { font-size: 11.5px; color: var(--text-600); margin-top: 10px; }
   .leaflet-control-layers { background: rgba(8,30,38,0.94) !important; color: var(--text-300); border: 1px solid var(--border-strong) !important; border-radius: var(--radius-sm) !important; font-size: 12.5px; }
@@ -667,6 +672,41 @@ function drawMap(d) {
   });
 
   L.control.layers(baseMaps, Object.assign({ 'จุดเสี่ยงรายห้วย': markerLayer }, depthLayers), { collapsed: true }).addTo(map);
+
+  // 2026-07-26 เพิ่ม -- ปุ่มดูแผนที่แบบเต็มจอ (Fullscreen API ตรงๆ ไม่พึ่ง plugin ภายนอก, โค้ดเดียวกับ index.html)
+  const FullscreenControl = L.Control.extend({
+    options: { position: 'topleft' },
+    onAdd: function(mapInstance) {
+      const container = mapInstance.getContainer();
+      const div = L.DomUtil.create('div', 'leaflet-bar fullscreen-control');
+      const link = L.DomUtil.create('a', '', div);
+      link.href = '#';
+      link.title = 'ดูแผนที่แบบเต็มจอ';
+      const iconExpand = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/></svg>';
+      const iconCollapse = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h4v4M20 10h-4V6M14 4l6 6M4 20l6-6"/></svg>';
+      link.innerHTML = iconExpand;
+      L.DomEvent.on(link, 'click', function(e) {
+        L.DomEvent.stop(e);
+        const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+        if (!fsEl) {
+          (container.requestFullscreen || container.webkitRequestFullscreen || container.msRequestFullscreen).call(container);
+        } else {
+          (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen).call(document);
+        }
+      });
+      ['fullscreenchange', 'webkitfullscreenchange', 'msfullscreenchange'].forEach(function(evt) {
+        document.addEventListener(evt, function() {
+          const isFs = (document.fullscreenElement || document.webkitFullscreenElement) === container;
+          link.innerHTML = isFs ? iconCollapse : iconExpand;
+          link.title = isFs ? 'ออกจากเต็มจอ' : 'ดูแผนที่แบบเต็มจอ';
+          setTimeout(function() { mapInstance.invalidateSize(); }, 150);
+        });
+      });
+      L.DomEvent.disableClickPropagation(div);
+      return div;
+    }
+  });
+  map.addControl(new FullscreenControl());
 }
 
 main();
