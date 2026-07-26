@@ -308,11 +308,11 @@
         <div class="table-card">
           <div class="table-grid-2">
             <table class="data-table">
-              <thead><tr><th colspan="2">Zone A — พื้นที่พืชผล (เฮกตาร์)</th></tr></thead>
+              <thead><tr><th colspan="2">Zone A — พื้นที่พืชผล (เฮกตาร์ / ไร่)</th></tr></thead>
               <tbody id="sarZoneATableBody"></tbody>
             </table>
             <table class="data-table">
-              <thead><tr><th colspan="2">Zone B — พื้นที่พืชผล (เฮกตาร์)</th></tr></thead>
+              <thead><tr><th colspan="2">Zone B — พื้นที่พืชผล (เฮกตาร์ / ไร่)</th></tr></thead>
               <tbody id="sarZoneBTableBody"></tbody>
             </table>
           </div>
@@ -544,7 +544,11 @@ const SAR_DATA_ENDPOINT = 'assets/data/latest.json';
 const SAR_CROP_TH = {rice: 'ข้าว', corn: 'ข้าวโพด', cassava: 'มันสำปะหลัง', longan: 'ลำไย', etc: 'อื่นๆ (ยางพารา/ปาล์ม/ยาสูบ ฯลฯ)'};
 
 function _sarFmtHa(v) {
-  return (v === null || v === undefined) ? '—' : Number(v).toFixed(2) + ' ha';
+  if (v === null || v === undefined) return '—';
+  const ha = Number(v);
+  const rai = ha * 6.25; // 1 เฮกตาร์ = 6.25 ไร่ (1 ไร่ = 1,600 ตร.ม.)
+  return ha.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ha' +
+    ' (' + rai.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ไร่)';
 }
 
 function renderSarZoneTable(tbodyId, cropAreaHa) {
