@@ -32,14 +32,15 @@ data_pipeline.py
     (ต้องการ 12 สัปดาห์ต่อเนื่องกันจริงสำหรับ lag12/roll8) จะ fallback ไปใช้ ml_features_phase4.csv
     (static snapshot เดิม) แยกอิสระต่อ zone — ผลลัพธ์มี data_source ("live_reconstructed" |
     "static_snapshot") บอกความโปร่งใสเสมอ ไม่แตะ/backfill ประวัติเก่าที่ผูกกับ area basis ปี 2020
-  - Reservoir Inflow (_ri_* helpers): ทำงานได้จริงแล้ว รัน hurdle prediction (stage1
-    classifier กรอง zero-inflow -> stage2 CatBoost regressor ทำนาย delta) ตาม
-    01_data/scripts and code/Reservoir_inflow/active/model_metadata.json ("final_prediction_logic")
-    — feature (Q_in_t/Water_Level_t/Storage_S_t/DeltaS_t/%Full_t/Rain_obs_t/API_t) คำนวณสด
-    จากไฟล์ "บัญชีน้ำ" รายเดือนจริงของอ่างเก็บน้ำแม่นาเรือ (01_data/Reservoirs/inflow/<year>/
-    <year>_<month>_MNR.xlsx อัปเดตทุกเดือนโดยผู้ใช้ — ดู _ri_load_raw_monthly_data()) เป็น live
-    data_source ("live_monthly_account_files") ถ้าโหลดไม่สำเร็จจะ fallback ไปใช้แถวล่าสุดของ
-    Training_Values_Nofct_7day_Final.csv แทน (data_source "static_snapshot_training_csv")
+  - Reservoir Inflow (_ri_* helpers): ทำงานได้จริงแล้ว 2026-07-26 เปลี่ยนสถาปัตยกรรมจาก hurdle
+    (stage1 classifier กรอง zero-inflow -> stage2 regressor) เป็น direct delta-regression ต่อ
+    horizon ตรงๆ ไม่มี stage1 แล้ว (ดู model_metadata.json ("final_prediction_logic")) — feature
+    พื้นฐาน (Q_in_t/Water_Level_t/Storage_S_t/DeltaS_t/%Full_t/Rain_obs_t/API_t) + feature ใหม่
+    (Qin_lag1/Qin_lag2/Rain_roll3/Rain_roll5/Rain_roll7) คำนวณสดจากไฟล์ "บัญชีน้ำ" รายเดือนจริงของ
+    อ่างเก็บน้ำแม่นาเรือ (01_data/Reservoirs/inflow/<year>/<year>_<month>_MNR.xlsx อัปเดตทุกเดือน
+    โดยผู้ใช้ — ดู _ri_load_raw_monthly_data()) เป็น live data_source ("live_monthly_account_files")
+    ถ้าโหลดไม่สำเร็จจะ fallback ไปใช้แถวล่าสุดของ Training_Values_Nofct_7day_Extended_lagfeat.csv
+    แทน (data_source "static_snapshot_training_csv")
     latest.json.forecasts.inflow.status เป็นหนึ่งใน 4 ค่า: "ok" (ทำนายสำเร็จ ข้อมูลไม่เก่าเกิน 3 วัน),
     "stale_data_warning" (ทำนายสำเร็จ แต่ข้อมูลเก่า 4-14 วัน — มักเกิดเพราะยังไม่อัปโหลดไฟล์เดือนใหม่),
     "stale_data_blocked" (ข้อมูลเก่าเกิน 14 วัน — ไม่ทำนายเลย .forecast.horizons เป็น null แต่ยังมี
@@ -105,7 +106,7 @@ WD_IRRIGATION_EFFICIENCY = 0.90  # IE เฉพาะ zone_B (irrigated) เท�
 
 RESERVOIR_INFLOW_MODEL_DIR = PROJECT_ROOT / "01_data" / "scripts and code" / "Reservoir_inflow" / "active"
 RESERVOIR_INFLOW_METADATA_PATH = RESERVOIR_INFLOW_MODEL_DIR / "model_metadata.json"
-RESERVOIR_INFLOW_TRAINING_CSV = RESERVOIR_INFLOW_MODEL_DIR / "Training_Values_Nofct_7day_Final.csv"
+RESERVOIR_INFLOW_TRAINING_CSV = RESERVOIR_INFLOW_MODEL_DIR / "Training_Values_Nofct_7day_Extended_lagfeat.csv"
 
 RESERVOIR_INFLOW_RAW_DIR = PROJECT_ROOT / "01_data" / "Reservoirs" / "inflow"
 
@@ -2027,9 +2028,11 @@ def _ri_load_metadata() -> dict:
 
 def _ri_load_models(model_dir: Path = RESERVOIR_INFLOW_MODEL_DIR) -> dict:
     """
-    โหลดโมเดล Reservoir Inflow ตาม model_metadata.json — โหลดเฉพาะไฟล์ deployment จริงตามที่
-    deployment_model_choice.json เลือกไว้ (CatBoost ทุก horizon) ไม่โหลด
-    stage2_regressors_all_models.pkl ซึ่งต้องพึ่ง xgboost/lightgbm เพิ่มโดยไม่จำเป็น
+    โหลดโมเดล Reservoir Inflow ตาม model_metadata.json
+
+    2026-07-26: เปลี่ยนจาก hurdle (stage1_classifiers.pkl + stage1_thresholds.pkl +
+    deployment_stage2_regressors.pkl) เป็น direct delta-regression per horizon ไม่มี stage1
+    แล้ว -- โหลดไฟล์เดียว deployment_regressors_no_stage1.pkl (dict {h: fitted_regressor})
     """
     import joblib
 
@@ -2037,21 +2040,14 @@ def _ri_load_models(model_dir: Path = RESERVOIR_INFLOW_MODEL_DIR) -> dict:
     logger.info("Loading Reservoir Inflow models from %s", model_dir)
 
     metadata = _ri_load_metadata()
-    stage1_classifiers = joblib.load(model_dir / "stage1_classifiers.pkl")
-    stage1_thresholds = joblib.load(model_dir / "stage1_thresholds.pkl")
-    stage2_regressors = joblib.load(model_dir / "deployment_stage2_regressors.pkl")
+    regressors = joblib.load(model_dir / "deployment_regressors_no_stage1.pkl")
 
     models = {
         "metadata": metadata,
-        "stage1_classifiers": stage1_classifiers,
-        "stage1_thresholds": stage1_thresholds,
-        "stage2_regressors": stage2_regressors,
+        "regressors": regressors,
     }
 
-    logger.info(
-        "Loaded Reservoir Inflow models: stage1_classifiers=%d stage1_thresholds=%d stage2_regressors=%d",
-        len(models["stage1_classifiers"]), len(models["stage1_thresholds"]), len(models["stage2_regressors"]),
-    )
+    logger.info("Loaded Reservoir Inflow models: regressors=%d horizon(s)", len(models["regressors"]))
     return models
 
 
@@ -2124,7 +2120,15 @@ def _ri_load_raw_monthly_data(raw_dir: Path = RESERVOIR_INFLOW_RAW_DIR):
       API_t         = self-initializing: แถวแรกสุด = Rain_obs_t, แถวถัดไป =
                       RESERVOIR_API_K * API(แถวก่อนหน้า) + Rain_obs_t(แถวนี้)
 
-    คืนค่าเป็น DataFrame เรียงตามวันที่ พร้อมคอลัมน์ feature ทั้ง 7 + "valid"
+    เพิ่ม 2026-07-26 (no-stage1 direct delta-regression architecture): 5 คอลัมน์ lag/rolling ต่อ
+    จาก 7 คอลัมน์เดิม (คำนวณจาก df ต่อเนื่องรายวันตัวเดียวกัน sort ตามวันที่แล้ว):
+      Qin_lag1      = Q_in_t.shift(1)   (เมื่อวาน)
+      Qin_lag2      = Q_in_t.shift(2)   (เมื่อวานก่อน)
+      Rain_roll3    = Rain_obs_t.rolling(3, min_periods=1).sum()
+      Rain_roll5    = Rain_obs_t.rolling(5, min_periods=1).sum()
+      Rain_roll7    = Rain_obs_t.rolling(7, min_periods=1).sum()
+
+    คืนค่าเป็น DataFrame เรียงตามวันที่ พร้อมคอลัมน์ feature ทั้ง 12 + "valid"
     """
     import re
     import pandas as pd
@@ -2244,7 +2248,20 @@ def _ri_load_raw_monthly_data(raw_dir: Path = RESERVOIR_INFLOW_RAW_DIR):
 
     df["API_t"] = api_values
 
-    feature_cols_clean = ["Q_in_t", "Water_Level_t", "Storage_S_t", "DeltaS_t", "%Full_t", "Rain_obs_t", "API_t"]
+    # เพิ่ม 2026-07-26 (พร้อมสถาปัตยกรรม direct delta-regression no-stage1 ใหม่): lag ของ Q_in_t
+    # 1-2 วัน + ฝนสะสม 3/5/7 วันย้อนหลัง -- df ตรงนี้เรียงตามวันที่ต่อเนื่องแล้ว (sort_values("date")
+    # ด้านบน) เหมือนกับตอนเทรน ใช้ .shift()/.rolling() ตรงๆ ได้ (สอดคล้องกับวิธีสร้าง
+    # Training_Values_Nofct_7day_Extended_lagfeat.csv ที่ใช้เทรนโมเดลชุดนี้)
+    df["Qin_lag1"] = df["Q_in_t"].shift(1)
+    df["Qin_lag2"] = df["Q_in_t"].shift(2)
+    df["Rain_roll3"] = df["Rain_obs_t"].rolling(3, min_periods=1).sum()
+    df["Rain_roll5"] = df["Rain_obs_t"].rolling(5, min_periods=1).sum()
+    df["Rain_roll7"] = df["Rain_obs_t"].rolling(7, min_periods=1).sum()
+
+    feature_cols_clean = [
+        "Q_in_t", "Water_Level_t", "Storage_S_t", "DeltaS_t", "%Full_t", "Rain_obs_t", "API_t",
+        "Qin_lag1", "Qin_lag2", "Rain_roll3", "Rain_roll5", "Rain_roll7",
+    ]
     complete = df[feature_cols_clean].notna().all(axis=1)
     plausible = df["%Full_t"].le(RESERVOIR_PLAUSIBLE_PERCENT_FULL_MAX)
     df["valid"] = complete & plausible
@@ -2350,6 +2367,12 @@ def _ri_build_feature_vector() -> dict:
             "%Full_t": float(latest["%Full_t"]),
             "Rain_obs_t": float(latest["Rain_obs_t"]),
             "API_t": float(latest["API_t"]),
+            # เพิ่ม 2026-07-26 (no-stage1 direct delta-regression architecture)
+            "Qin_lag1": float(latest["Qin_lag1"]),
+            "Qin_lag2": float(latest["Qin_lag2"]),
+            "Rain_roll3": float(latest["Rain_roll3"]),
+            "Rain_roll5": float(latest["Rain_roll5"]),
+            "Rain_roll7": float(latest["Rain_roll7"]),
         }
 
         metadata = _ri_load_metadata()
@@ -2417,11 +2440,11 @@ def _ri_build_feature_vector() -> dict:
 
 def _ri_run_prediction(model: dict, features: dict) -> dict:
     """
-    รัน hurdle prediction สำหรับ Reservoir Inflow ตาม "final_prediction_logic" ใน model_metadata.json:
-      ถ้า stage1_classifier.predict_proba(X)[:,1] >= stage1_thresholds[h] => prediction = 0
-      มิฉะนั้น => prediction = clip(Q_in_t(ปัจจุบัน) + stage2_regressor.predict(X), 0, None)
-
-    predict_proba(X)[:,1] คือ "P(Q_in_t+h = 0)" — ทิศทางตรงข้ามกับ classifier ของ Water Demand
+    รัน direct delta-regression prediction สำหรับ Reservoir Inflow ตาม "final_prediction_logic"
+    ใน model_metadata.json (เปลี่ยนจาก hurdle เป็นสถาปัตยกรรมนี้เมื่อ 2026-07-26):
+      prediction = clip(Q_in_t(ปัจจุบัน) + regressor[h].predict(X), 0, None)
+    ไม่มี stage1 classifier/threshold กรอง zero-inflow แล้ว -- regressor ทำนาย delta ตรงๆ ทุกแถว
+    รวมกัน (รวมวัน zero-inflow ในข้อมูลเทรนด้วย)
 
     Staleness gate: ถ้า staleness_status == "stale_data_blocked" จะไม่รัน prediction เลย
     คืนค่า horizons=None พร้อม gap_days/staleness_message
@@ -2457,9 +2480,7 @@ def _ri_run_prediction(model: dict, features: dict) -> dict:
             "staleness_message": staleness_message,
         }
 
-    stage1_classifiers = model["stage1_classifiers"]
-    stage1_thresholds = model["stage1_thresholds"]
-    stage2_regressors = model["stage2_regressors"]
+    regressors = model["regressors"]
 
     targets: list[str] = metadata["targets"]
     horizons: list[int] = metadata["horizons"]
@@ -2472,41 +2493,28 @@ def _ri_run_prediction(model: dict, features: dict) -> dict:
     for h, target_col in zip(horizons, targets):
         key = f"h{h}"
 
-        if target_col not in stage1_classifiers or target_col not in stage1_thresholds \
-                or h not in stage2_regressors:
+        if h not in regressors:
             horizon_results[key] = None
             continue
 
-        clf = stage1_classifiers[target_col]
-        threshold = float(stage1_thresholds[target_col])
-
-        prob_zero = float(clf.predict_proba(X)[:, 1][0])
-
-        if prob_zero >= threshold:
-            prediction = 0.0
-            stage_used = "stage1_zero"
-        else:
-            delta = float(stage2_regressors[h].predict(X)[0])
-            prediction = max(current_qin + delta, 0.0)
-            stage_used = "stage2_regressor"
+        delta = float(regressors[h].predict(X)[0])
+        prediction = max(current_qin + delta, 0.0)
 
         info = deployment_info.get(str(h), {})
-        hurdle_nse = info.get("hurdle_nse_on_test")
+        test_nse = info.get("test_nse")
         wf_cv = info.get("walkforward_cv_nse")
         wf_mean = wf_cv.get("mean") if isinstance(wf_cv, dict) else None
         # walk-forward (rolling-origin) CV mean is the more reliable quality signal --
-        # single-split hurdle_nse_on_test proved noisy/unstable (a single test-set
+        # single-split test_nse proved noisy/unstable (a single test-set
         # composition can flip the sign). Prefer walk-forward mean for the confidence
         # flag when available, fall back to the single-split metric otherwise.
-        confidence_nse = wf_mean if wf_mean is not None else hurdle_nse
+        confidence_nse = wf_mean if wf_mean is not None else test_nse
 
         horizon_results[key] = {
             "prediction_m3_per_day": round(prediction, 2),
-            "prob_zero": round(prob_zero, 4),
-            "threshold": round(threshold, 4),
-            "stage_used": stage_used,
+            "stage_used": "direct_regressor",
             "model_name": info.get("model_name"),
-            "hurdle_nse_on_test": hurdle_nse,
+            "test_nse": test_nse,
             "walkforward_cv_nse": wf_cv,
             "low_confidence": bool(confidence_nse is not None and confidence_nse < 0),
         }
@@ -2753,7 +2761,7 @@ def run_pipeline() -> PipelineResult:
         ri_model = model.get("reservoir_inflow")
         if ri_model is not None:
             model_version_parts.append(
-                "reservoir_inflow_hurdle(n_horizon_models=" + str(len(ri_model["stage2_regressors"])) + ")"
+                "reservoir_inflow_direct(n_horizon_models=" + str(len(ri_model["regressors"])) + ")"
             )
         else:
             model_version_parts.append("reservoir_inflow=unavailable")

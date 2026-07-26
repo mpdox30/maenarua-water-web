@@ -1,6 +1,7 @@
 {
-  "exported_at": "2026-07-25T15:31:02.415985",
+  "exported_at": "2026-07-26T10:12:25.889598+00:00",
   "target_reservoir": "อ่างเก็บน้ำแม่นาเรือ (Mae Na Rua Reservoir)",
+  "architecture": "direct delta-regression per horizon, NO stage1 hurdle classifier (previous production used stage1 CatBoostClassifier gate + stage2 regressor -- replaced 2026-07-26 after lag/rolling-rain feature engineering made the direct approach beat the hurdle architecture on walk-forward CV for every horizon except H1)",
   "feature_cols": [
     "Q_in_t (m3/day)",
     "Water_Level_t (m)",
@@ -8,7 +9,12 @@
     "DeltaS_t (m3/day)",
     "%Full_t",
     "Rain_obs_t (mm)",
-    "API_t (mm)"
+    "API_t (mm)",
+    "Qin_lag1 (m3/day)",
+    "Qin_lag2 (m3/day)",
+    "Rain_roll3 (mm)",
+    "Rain_roll5 (mm)",
+    "Rain_roll7 (mm)"
   ],
   "targets": [
     "y1=Q_in_t+1 (m3/day)",
@@ -23,7 +29,6 @@
   "qin_col": "Q_in_t (m3/day)",
   "rain_col": "Rain_obs_t (mm)",
   "api_col": "API_t (mm)",
-  "zero_threshold": 1e-06,
   "horizons": [
     1,
     2,
@@ -34,135 +39,207 @@
     7
   ],
   "model_structure": {
-    "stage1": "CatBoostClassifier ทำนาย P(Q_in_t+h = 0), threshold ต่อ horizon ใน stage1_thresholds.pkl",
-    "stage2": "Regressor ทำนาย DELTA = Q_in_t+h(actual) - Q_in_t(ปัจจุบัน) ไม่ใช่ค่าจริงตรงๆ",
-    "final_prediction_logic": "ถ้า stage1_classifier.predict_proba(X)[:,1] >= stage1_thresholds[h] => prediction = 0 มิฉะนั้น => prediction = clip(Q_in_t(ปัจจุบัน) + stage2_regressor.predict(X), 0, None)",
-    "stage2_trained_on": "เฉพาะแถวที่ Q_in_actual > ZERO_THRESHOLD ใน train เท่านั้น",
-    "unchanged_from_previous_version": true
+    "stage1": null,
+    "stage2": "Regressor ทำนาย DELTA = Q_in_t+h(actual) - Q_in_t(ปัจจุบัน) ทุกแถวรวมกัน (รวมวัน zero-inflow ด้วย ไม่มี stage1 กรองแยก)",
+    "final_prediction_logic": "prediction = clip(Q_in_t(ปัจจุบัน) + regressor.predict(X), 0, None) -- ไม่มี stage1 classifier/threshold แล้ว",
+    "stage2_trained_on": "ทุกแถวรวมกัน (ต่างจากเดิมที่ stage2 เทรนเฉพาะแถว Q_in_actual > ZERO_THRESHOLD)",
+    "unchanged_from_previous_version": false,
+    "lag_features_added_2026-07-26": [
+      "Qin_lag1 (m3/day)",
+      "Qin_lag2 (m3/day)",
+      "Rain_roll3 (mm)",
+      "Rain_roll5 (mm)",
+      "Rain_roll7 (mm)"
+    ]
   },
   "deployment_model_per_horizon": {
     "1": {
       "model_name": "CatBoost",
-      "hurdle_nse_on_test": -0.776117,
       "target_column": "y1=Q_in_t+1 (m3/day)",
-      "training_data_source": "Training_Values_Nofct_7day_Extended.csv",
-      "stage1_threshold": 0.051842,
+      "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
+      "test_nse": 0.6173004177280479,
+      "val_nse": 0.9919532838544566,
       "walkforward_cv_nse": {
-        "mean": 0.4785,
-        "std": 0.7053,
-        "n_folds": 4,
-        "method": "TimeSeriesSplit rolling-origin CV on the same training_data_source, old-style single-draw Stage-1 threshold, fixed CatBoost architecture reused per fold (not re-tuned per fold)",
-        "note": "More robust estimate than hurdle_nse_on_test (which reflects only ONE test window). For H1 in particular, hurdle_nse_on_test looks alarming (-0.776) but walkforward_cv_nse.mean is actually positive (+0.478) -- the single test split happened to land on an unusually volatile mid/late-July 2026 stretch. Treat walkforward_cv_nse as the primary signal of expected real-world stability; hurdle_nse_on_test is kept for continuity with how this project has always reported the metric."
-      }
+        "mean": 0.42163920066193805,
+        "std": null,
+        "n_folds": 5,
+        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+      },
+      "tuned_params": {
+        "iterations": 650,
+        "learning_rate": 0.0109312751880508,
+        "depth": 6,
+        "l2_leaf_reg": 23.808543547006124,
+        "min_data_in_leaf": 8,
+        "subsample": 0.8332116765879214,
+        "rsm": 0.7890628480631008,
+        "random_strength": 1.07161216899677
+      },
+      "best_iter": 80
     },
     "2": {
       "model_name": "CatBoost",
-      "hurdle_nse_on_test": 0.248307,
       "target_column": "y2=Q_in_t+2 (m3/day)",
-      "training_data_source": "Training_Values_Nofct_7day_CORRECTED.csv",
-      "stage1_threshold": 0.703928,
+      "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
+      "test_nse": 0.3073018887356206,
+      "val_nse": 0.9872824372760663,
       "walkforward_cv_nse": {
-        "mean": -0.0312,
-        "std": 1.3301,
-        "n_folds": 4,
-        "method": "TimeSeriesSplit rolling-origin CV on the same training_data_source, old-style single-draw Stage-1 threshold, fixed CatBoost architecture reused per fold (not re-tuned per fold)",
-        "note": "More robust estimate than hurdle_nse_on_test (which reflects only ONE test window). For H1 in particular, hurdle_nse_on_test looks alarming (-0.776) but walkforward_cv_nse.mean is actually positive (+0.478) -- the single test split happened to land on an unusually volatile mid/late-July 2026 stretch. Treat walkforward_cv_nse as the primary signal of expected real-world stability; hurdle_nse_on_test is kept for continuity with how this project has always reported the metric."
-      }
+        "mean": 0.2559049288804246,
+        "std": null,
+        "n_folds": 5,
+        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+      },
+      "tuned_params": {
+        "iterations": 300,
+        "learning_rate": 0.0146991485489077,
+        "depth": 5,
+        "l2_leaf_reg": 1.7430504177815451,
+        "min_data_in_leaf": 24,
+        "subsample": 0.914033992242307,
+        "rsm": 0.6212741213218833,
+        "random_strength": 1.9674909492695445
+      },
+      "best_iter": 47
     },
     "3": {
       "model_name": "CatBoost",
-      "hurdle_nse_on_test": -3.823508,
       "target_column": "y3=Q_in_t+3 (m3/day)",
-      "training_data_source": "Training_Values_Nofct_7day_Extended.csv",
-      "stage1_threshold": 0.05393,
+      "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
+      "test_nse": 0.005842262968522,
+      "val_nse": 0.9806366577988568,
       "walkforward_cv_nse": {
-        "mean": -1.6972,
-        "std": 3.8091,
-        "n_folds": 4,
-        "method": "TimeSeriesSplit rolling-origin CV on the same training_data_source, old-style single-draw Stage-1 threshold, fixed CatBoost architecture reused per fold (not re-tuned per fold)",
-        "note": "More robust estimate than hurdle_nse_on_test (which reflects only ONE test window). For H1 in particular, hurdle_nse_on_test looks alarming (-0.776) but walkforward_cv_nse.mean is actually positive (+0.478) -- the single test split happened to land on an unusually volatile mid/late-July 2026 stretch. Treat walkforward_cv_nse as the primary signal of expected real-world stability; hurdle_nse_on_test is kept for continuity with how this project has always reported the metric."
-      }
+        "mean": -0.06492277543107258,
+        "std": null,
+        "n_folds": 5,
+        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+      },
+      "tuned_params": {
+        "iterations": 300,
+        "learning_rate": 0.0159859205807381,
+        "depth": 5,
+        "l2_leaf_reg": 4.339666832543908,
+        "min_data_in_leaf": 37,
+        "subsample": 0.986523802644266,
+        "rsm": 0.8127877215251221,
+        "random_strength": 2.57649494325228
+      },
+      "best_iter": 71
     },
     "4": {
       "model_name": "CatBoost",
-      "hurdle_nse_on_test": -1.311909,
       "target_column": "y4=Q_in_t+4 (m3/day)",
-      "training_data_source": "Training_Values_Nofct_7day_CORRECTED.csv",
-      "stage1_threshold": 0.69693,
+      "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
+      "test_nse": 0.0595521393667954,
+      "val_nse": 0.9738158107716643,
       "walkforward_cv_nse": {
-        "mean": -1.8345,
-        "std": 3.1681,
-        "n_folds": 4,
-        "method": "TimeSeriesSplit rolling-origin CV on the same training_data_source, old-style single-draw Stage-1 threshold, fixed CatBoost architecture reused per fold (not re-tuned per fold)",
-        "note": "More robust estimate than hurdle_nse_on_test (which reflects only ONE test window). For H1 in particular, hurdle_nse_on_test looks alarming (-0.776) but walkforward_cv_nse.mean is actually positive (+0.478) -- the single test split happened to land on an unusually volatile mid/late-July 2026 stretch. Treat walkforward_cv_nse as the primary signal of expected real-world stability; hurdle_nse_on_test is kept for continuity with how this project has always reported the metric."
-      }
+        "mean": -0.25257613397929995,
+        "std": null,
+        "n_folds": 5,
+        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+      },
+      "tuned_params": {
+        "iterations": 300,
+        "learning_rate": 0.0109387154307568,
+        "depth": 3,
+        "l2_leaf_reg": 3.810029124004568,
+        "min_data_in_leaf": 36,
+        "subsample": 0.4063769521841512,
+        "rsm": 0.9913749176499462,
+        "random_strength": 2.699726957831789
+      },
+      "best_iter": 145
     },
     "5": {
       "model_name": "CatBoost",
-      "hurdle_nse_on_test": -0.896813,
       "target_column": "y5=Q_in_t+5 (m3/day)",
-      "training_data_source": "Training_Values_Nofct_7day_Extended.csv",
-      "stage1_threshold": 0.321298,
+      "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
+      "test_nse": -1.3971628567879062,
+      "val_nse": 0.9442099512556632,
       "walkforward_cv_nse": {
-        "mean": -3.528,
-        "std": 5.3146,
-        "n_folds": 4,
-        "method": "TimeSeriesSplit rolling-origin CV on the same training_data_source, old-style single-draw Stage-1 threshold, fixed CatBoost architecture reused per fold (not re-tuned per fold)",
-        "note": "More robust estimate than hurdle_nse_on_test (which reflects only ONE test window). For H1 in particular, hurdle_nse_on_test looks alarming (-0.776) but walkforward_cv_nse.mean is actually positive (+0.478) -- the single test split happened to land on an unusually volatile mid/late-July 2026 stretch. Treat walkforward_cv_nse as the primary signal of expected real-world stability; hurdle_nse_on_test is kept for continuity with how this project has always reported the metric."
-      }
+        "mean": -0.2920161390273282,
+        "std": null,
+        "n_folds": 5,
+        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+      },
+      "tuned_params": {
+        "iterations": 300,
+        "learning_rate": 0.0121759578591452,
+        "depth": 2,
+        "l2_leaf_reg": 31.27438558692472,
+        "min_data_in_leaf": 25,
+        "subsample": 0.9868547519916756,
+        "rsm": 0.6502309452463372,
+        "random_strength": 0.217429400040442
+      },
+      "best_iter": 271
     },
     "6": {
       "model_name": "CatBoost",
-      "hurdle_nse_on_test": 0.184566,
       "target_column": "y6=Q_in_t+6 (m3/day)",
-      "training_data_source": "Training_Values_Nofct_7day_Extended.csv",
-      "stage1_threshold": 0.321503,
+      "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
+      "test_nse": -0.1764967343666454,
+      "val_nse": 0.962098484114972,
       "walkforward_cv_nse": {
-        "mean": -15.3064,
-        "std": 27.2576,
-        "n_folds": 4,
-        "method": "TimeSeriesSplit rolling-origin CV on the same training_data_source, old-style single-draw Stage-1 threshold, fixed CatBoost architecture reused per fold (not re-tuned per fold)",
-        "note": "More robust estimate than hurdle_nse_on_test (which reflects only ONE test window). For H1 in particular, hurdle_nse_on_test looks alarming (-0.776) but walkforward_cv_nse.mean is actually positive (+0.478) -- the single test split happened to land on an unusually volatile mid/late-July 2026 stretch. Treat walkforward_cv_nse as the primary signal of expected real-world stability; hurdle_nse_on_test is kept for continuity with how this project has always reported the metric."
-      }
+        "mean": -0.3723953466749509,
+        "std": null,
+        "n_folds": 5,
+        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+      },
+      "tuned_params": {
+        "iterations": 300,
+        "learning_rate": 0.0136765950369614,
+        "depth": 2,
+        "l2_leaf_reg": 4.382716203014211,
+        "min_data_in_leaf": 29,
+        "subsample": 0.7105210344032551,
+        "rsm": 0.8290243458181864,
+        "random_strength": 1.9867898992450308
+      },
+      "best_iter": 182
     },
     "7": {
       "model_name": "CatBoost",
-      "hurdle_nse_on_test": 0.324489,
       "target_column": "y7=Q_in_t+7 (m3/day)",
-      "training_data_source": "Training_Values_Nofct_7day_Extended.csv",
-      "stage1_threshold": 0.280979,
+      "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
+      "test_nse": 0.1086994321424081,
+      "val_nse": 0.9510410308389924,
       "walkforward_cv_nse": {
-        "mean": -13.2143,
-        "std": 23.5219,
-        "n_folds": 4,
-        "method": "TimeSeriesSplit rolling-origin CV on the same training_data_source, old-style single-draw Stage-1 threshold, fixed CatBoost architecture reused per fold (not re-tuned per fold)",
-        "note": "More robust estimate than hurdle_nse_on_test (which reflects only ONE test window). For H1 in particular, hurdle_nse_on_test looks alarming (-0.776) but walkforward_cv_nse.mean is actually positive (+0.478) -- the single test split happened to land on an unusually volatile mid/late-July 2026 stretch. Treat walkforward_cv_nse as the primary signal of expected real-world stability; hurdle_nse_on_test is kept for continuity with how this project has always reported the metric."
-      }
+        "mean": -0.5807696498618561,
+        "std": null,
+        "n_folds": 5,
+        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+      },
+      "tuned_params": {
+        "iterations": 300,
+        "learning_rate": 0.0119080907879342,
+        "depth": 2,
+        "l2_leaf_reg": 1.426422588105843,
+        "min_data_in_leaf": 18,
+        "subsample": 0.4317495679086314,
+        "rsm": 0.7638703770649338,
+        "random_strength": 1.0054966332229271
+      },
+      "best_iter": 251
     }
   },
   "training_data_source": {
-    "note": "HYBRID as of this update -- different horizons trained on different data source files, chosen by walk-forward CV comparison (see deployment_model_per_horizon for which file each horizon uses).",
-    "corrected_file": "Training_Values_Nofct_7day_CORRECTED.csv (359 rows, 2025-06-27 to 2026-06-20) -- used for H2, H4",
-    "extended_file": "Training_Values_Nofct_7day_Extended.csv (393 rows / 386 usable, 2025-06-27 to 2026-07-17) -- used for H1, H3, H5, H6, H7",
-    "extended_file_provenance": "Rebuilt ENTIRELY from current 01_data/Reservoirs/inflow/<year>/*_MNR.xlsx raw files (not just appended) -- validation showed the raw files' Q_in_t values have shifted by a small constant per-month offset since CORRECTED.csv was originally built (consistent with the automation that started writing to official MNR.xlsx on 2026-07-18 having recalibrated the water-balance formula). Raw-rebuild was confirmed to exactly reproduce CORRECTED.csv's known hand-corrected rows (2026-01-08 duplicate fix, the 9 Feb reassigned rows), confirming it is a newer vintage of the same methodology, not a different one."
+    "note": "Single dataset for all horizons now (no longer hybrid per-horizon like the previous version) -- Training_Values_Nofct_7day_Extended_lagfeat.csv, i.e. Extended.csv + Qin_lag1/2 + Rain_roll3/5/7 columns computed via .shift()/.rolling().sum() (date-contiguous, verified no gaps).",
+    "file": "Training_Values_Nofct_7day_Extended_lagfeat.csv (393 rows, 2025-06-27 to 2026-07-24, usable rows depend on target availability near the tail)"
   },
-  "training_date_range": {
-    "corrected": {
-      "start": "2025-06-27 00:00:00",
-      "end": "2026-06-20 00:00:00"
-    },
-    "extended": {
-      "start": "2025-06-27 00:00:00",
-      "end": "2026-07-17 00:00:00"
-    }
-  },
-  "split_method": "stratified season-balanced split (70/15/15), ไม่ใช่ chronological split ตรงๆ -- same methodology as before, applied independently within whichever source file each horizon uses.",
+  "split_method": "chronological 70/15/15 within 3 season segments (wet_before/dry/wet_after), dry window 2026-02-03 to 2026-05-17 -- NOT stratified season-balanced like the previous hurdle version (see experiment discussion 2026-07-26)",
   "known_limitations": [
-    "Test set นี้ไม่สามารถเทียบ RMSE ข้าม notebook อื่นได้โดยตรง (scale/composition ต่างกัน)",
-    "Stage 1 มีตัวอย่าง zero-inflow ใน train ค่อนข้างน้อยต่อ horizon ทำให้ threshold มี noise สูง",
-    "Horizon 3-7 มี Hurdle_NSE ติดลบทั้ง single-split และ walk-forward CV (แม้จะดีขึ้นกว่ารุ่นก่อน ในหลาย horizon) ควรระวังเป็นพิเศษเมื่อนำไปใช้จริง โดยเฉพาะ H5-H6-H7 ที่ walkforward_cv_nse.mean ยังติดลบมาก แม้ hurdle_nse_on_test (single split) ของ H6-H7 จะดูดี",
-    "การเลือก data source เป็นแบบ hybrid ต่อ horizon (ไม่ใช่ไฟล์เดียวทั้งหมด) เพิ่มความซับซ้อนในการ ดูแลระบบ -- ครั้งถัดไปที่มีข้อมูลใหม่มากพอ ควร retrain ทั้ง 7 horizon ด้วยไฟล์เดียวกันอีกครั้งและ เทียบด้วย walk-forward CV ก่อนตัดสินใจ",
-    "single-split NSE (hurdle_nse_on_test) พิสูจน์แล้วในรอบนี้ว่าไม่เสถียร/อาจไม่สะท้อนความสามารถจริง ของโมเดล (ตัวอย่างชัดเจนคือ H1: single-split=-0.776 แต่ walk-forward mean=+0.478) -- ควรอ้างอิง walkforward_cv_nse เป็นหลักสำหรับการประเมินคุณภาพโมเดลนับจากนี้"
+    "Test set มีแค่ 57 แถว (single chronological split) -- test_nse ต่อ horizon จึงมี noise สูง, walkforward_cv_nse (5-fold TimeSeriesSplit) เป็นสัญญาณหลักที่ควรอ้างอิง",
+    "H1 walkforward_cv_nse (0.4216) ยังต่ำกว่า production เดิม (0.4785) เล็กน้อย -- เป็น horizon เดียว ที่โมเดลใหม่แพ้ของเดิม",
+    "H3-H7 walkforward_cv_nse ยังติดลบอยู่ (ดีขึ้นกว่าเดิมมากในทุก horizon ยกเว้น H1 แต่ยังไม่ถึง 0) ควรระวังเป็นพิเศษเมื่อนำไปใช้จริงโดยเฉพาะ H5-H7",
+    "H3 daily-error diagnostic (2026-07-26) พบว่า error หนักๆ กระจุกในช่วงรอยต่อฤดูแล้ง-ฝน (13-17 พ.ค.) และวันที่ Qin สวิงแรงโดยไม่มีฝน (4-6 ม.ค., น่าจะเป็นการปล่อยน้ำ/คุมเขื่อนที่ไม่มี feature ใดจับได้ตรงๆ)",
+    "ทดลองเพิ่ม lag ของ Water_Level_t/Storage_S_t/%Full_t (สถานะอ่างเก็บน้ำ) เพิ่มเติมแล้วพบว่าแย่ลง เกือบทุก horizon เทียบกับ Qin+ฝน lag อย่างเดียว (คาดว่าเพราะค่าพวกนี้เปลี่ยนช้า/ซ้ำซ้อนกับ current-day features ที่มีอยู่แล้ว) จึงไม่ได้ใส่เข้าโมเดลที่ deploy จริง"
   ],
   "library_versions": {
     "note": "Retrained/staged in a Linux sandbox environment (2026-07-25), NOT the production Windows machine -- CatBoost version matches production exactly (1.2.10), but Python/scikit-learn versions differ. joblib/CatBoost pickle format is generally version-portable within the same CatBoost major version, but this was NOT verified on the actual production Windows Python 3.14.4 environment -- test loading before fully trusting in production.",
@@ -218,6 +295,28 @@
         "5": -1.0014987095671315,
         "6": -0.09492939701651837,
         "7": 0.2530401333380593
+      }
+    },
+    {
+      "date": "2026-07-26",
+      "change": "Architecture switch: hurdle (stage1 CatBoostClassifier + stage2 regressor) -> direct delta-regression per horizon, NO stage1. Added Qin_lag1/2 + Rain_roll3/5/7 lag/rolling-rain features (tested reservoir-state lags too -- WaterLevel/Storage/%Full lag1/2 -- but that made things worse on 6/7 horizons, so not included). All 7 horizons now use CatBoost trained on a single dataset (Training_Values_Nofct_7day_Extended_lagfeat.csv), no longer hybrid per-horizon data sources. Validated via walk-forward CV (5-fold TimeSeriesSplit): new model beats old hurdle production on every horizon except H1 (0.4216 vs 0.4785, small gap).",
+      "previous_walkforward_cv_nse": {
+        "1": 0.4785,
+        "2": -0.0312,
+        "3": -1.6972,
+        "4": -1.8345,
+        "5": -3.528,
+        "6": -15.3064,
+        "7": -13.2143
+      },
+      "new_walkforward_cv_nse": {
+        "1": 0.42163920066193805,
+        "2": 0.2559049288804246,
+        "3": -0.06492277543107258,
+        "4": -0.25257613397929995,
+        "5": -0.2920161390273282,
+        "6": -0.3723953466749509,
+        "7": -0.5807696498618561
       }
     }
   ]

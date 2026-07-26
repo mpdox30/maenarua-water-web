@@ -301,20 +301,20 @@
           <div class="eyebrow">รายละเอียดต่อ Horizon</div>
           <h2>ค่าพยากรณ์และความเชื่อมั่นรายวัน</h2>
         </div>
-        <p>prob_zero คือความน่าจะเป็นที่โมเดล stage-1 ประเมินว่าน้ำไหลเข้าจะเป็นศูนย์ในวันนั้น</p>
+        <p>โมเดลทำนายค่าน้ำไหลเข้าโดยตรง (direct delta regression) ไม่มี stage แยกกรอง zero-inflow อีกต่อไป</p>
       </div>
       <div class="table-card">
         <table class="data-table">
           <thead>
-            <tr><th>Horizon</th><th>พยากรณ์ (ม³/วัน)</th><th>Prob. เป็นศูนย์</th><th>โมเดล</th><th>NSE (walk-forward CV)</th><th>ความเชื่อมั่น</th></tr>
+            <tr><th>Horizon</th><th>พยากรณ์ (ม³/วัน)</th><th>โมเดล</th><th>NSE (walk-forward CV)</th><th>ความเชื่อมั่น</th></tr>
           </thead>
           <tbody id="horizonTableBody">
-            <tr><td colspan="6">กำลังโหลดข้อมูล…</td></tr>
+            <tr><td colspan="5">กำลังโหลดข้อมูล…</td></tr>
           </tbody>
         </table>
       </div>
       <div class="disclaimer-box" id="thresholdInstabilityBox" style="display:none; border-left:3px solid var(--amber-400);">
-        <h4>⚠ ทำไม Hurdle_NSE / ความเชื่อมั่นต่อ horizon ถึงแกว่งได้มาก</h4>
+        <h4>⚠ ทำไม NSE / ความเชื่อมั่นต่อ horizon ถึงแกว่งได้มาก</h4>
         <p id="thresholdInstabilityDesc"></p>
         <p id="thresholdInstabilityImpl"></p>
       </div>
@@ -498,7 +498,7 @@ function renderInflow(json) {
     const status = inflow ? inflow.status : 'ไม่ทราบสถานะ';
     if (statusText) statusText.textContent = 'ยังไม่มีผลพยากรณ์ในขณะนี้ (สถานะ: ' + status + ') — โมเดลอาจกำลังรอ retrain หรือหาไฟล์ไม่พบ';
     document.getElementById('heroTags').innerHTML = '<span class="tag">ไม่มีข้อมูลพยากรณ์ในขณะนี้</span>';
-    document.getElementById('horizonTableBody').innerHTML = '<tr><td colspan="6">ไม่มีข้อมูลพยากรณ์</td></tr>';
+    document.getElementById('horizonTableBody').innerHTML = '<tr><td colspan="5">ไม่มีข้อมูลพยากรณ์</td></tr>';
     renderStaleBanner({});
     return;
   }
@@ -544,7 +544,7 @@ function renderInflow(json) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
     document.getElementById('horizonTableBody').innerHTML =
-      '<tr><td colspan="6">ไม่มีผลพยากรณ์ — ข้อมูลเก่าเกินเกณฑ์ (ดูคำเตือนด้านบน)</td></tr>';
+      '<tr><td colspan="5">ไม่มีผลพยากรณ์ — ข้อมูลเก่าเกินเกณฑ์ (ดูคำเตือนด้านบน)</td></tr>';
     const list = document.getElementById('limitationsList');
     const items = (f.known_limitations || []).map(t => `<li>${t}</li>`);
     (f.known_deviations_from_original_template || []).forEach(d => {
@@ -560,7 +560,7 @@ function renderInflow(json) {
   if (h1) {
     document.getElementById('kpiH1').innerHTML = fmtNum(h1.prediction_m3_per_day, 2) + '<span class="kpi-unit">ม³/วัน</span>';
     const h1NseVal = (h1.walkforward_cv_nse && h1.walkforward_cv_nse.mean != null)
-      ? h1.walkforward_cv_nse.mean : h1.hurdle_nse_on_test;
+      ? h1.walkforward_cv_nse.mean : h1.test_nse;
     const h1NseLabel = (h1.walkforward_cv_nse && h1.walkforward_cv_nse.mean != null) ? 'NSE (walk-forward CV)' : 'NSE (test)';
     document.getElementById('kpiModelNse').textContent =
       (h1.model_name || '—') + ' · ' + h1NseLabel + ' ' + (h1NseVal != null ? h1NseVal.toFixed(3) : '—');
@@ -607,12 +607,11 @@ function renderInflow(json) {
     const wf = h.walkforward_cv_nse;
     const wfMean = wf && wf.mean != null ? wf.mean : null;
     const nseCell = wfMean != null
-      ? `${wfMean.toFixed(3)} <span class="nse-sub" title="hurdle_nse_on_test (single-split, less reliable): ${h.hurdle_nse_on_test != null ? h.hurdle_nse_on_test.toFixed(3) : '—'}">(test: ${h.hurdle_nse_on_test != null ? h.hurdle_nse_on_test.toFixed(3) : '—'})</span>`
-      : (h.hurdle_nse_on_test != null ? h.hurdle_nse_on_test.toFixed(3) : '—');
+      ? `${wfMean.toFixed(3)} <span class="nse-sub" title="test_nse (single-split, less reliable): ${h.test_nse != null ? h.test_nse.toFixed(3) : '—'}">(test: ${h.test_nse != null ? h.test_nse.toFixed(3) : '—'})</span>`
+      : (h.test_nse != null ? h.test_nse.toFixed(3) : '—');
     return `<tr>
       <td>ล่วงหน้า ${i + 1} วัน</td>
       <td class="hl">${fmtNum(h.prediction_m3_per_day, 2)}</td>
-      <td>${(h.prob_zero * 100).toFixed(2)}%</td>
       <td>${h.model_name || '—'}</td>
       <td>${nseCell}</td>
       <td>${badge}</td>
@@ -653,7 +652,7 @@ fetch(DATA_ENDPOINT)
     const statusText = document.getElementById('statusText');
     if (statusText) statusText.textContent = 'ไม่สามารถโหลดข้อมูลจาก ' + DATA_ENDPOINT + ' ได้';
     document.getElementById('horizonTableBody').innerHTML =
-      '<tr><td colspan="6">ไม่สามารถโหลดข้อมูลจาก ' + DATA_ENDPOINT + ' ได้</td></tr>';
+      '<tr><td colspan="5">ไม่สามารถโหลดข้อมูลจาก ' + DATA_ENDPOINT + ' ได้</td></tr>';
   });
 
 // ================= WMB Model: น้ำท่าไหลลงอ่างเก็บน้ำ 5 อ่าง (ภาพรวม + รายอ่าง) =================
