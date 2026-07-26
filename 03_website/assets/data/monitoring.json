@@ -1,7 +1,7 @@
 {
   "meta": {
     "source": "สถานีโทรมาตร สสน. (API) ผ่าน Google Sheet wide_log (poll ทุก 10 นาที) + 01_data/Reservoirs/reference (rating curve ต่ออ่าง)",
-    "updated": "2026-07-26T14:50:00",
+    "updated": "2026-07-26T15:10:00",
     "data_connected": true
   },
   "stations": [
@@ -10,22 +10,18 @@
       "name_th": "อ่างเก็บน้ำแม่นาเรือ",
       "name_en": "Mae Na Rua Reservoir",
       "spillway_msl": 489.54,
-      "water_level": 488.458,
+      "water_level": 488.464,
       "rainfall_1h": 0.0,
-      "temperature": 31.72,
-      "humidity": 72.87,
-      "pressure": 949.69,
-      "solar": 234.9,
-      "measure_datetime": "2026-07-26T14:50:00",
-      "storage_m3": 1308941.7,
+      "temperature": 31.22,
+      "humidity": 77.23,
+      "pressure": 949.45,
+      "solar": 207.0,
+      "measure_datetime": "2026-07-26T15:10:00",
+      "storage_m3": 1310667.4,
       "storage_max_m3": 1625463.8,
-      "capacity_pct": 80.5,
-      "distance_to_spillway_m": -1.082,
+      "capacity_pct": 80.6,
+      "distance_to_spillway_m": -1.076,
       "history": [
-        {
-          "t": "2026-07-12T15:00:00",
-          "level": 489.159
-        },
         {
           "t": "2026-07-12T16:00:00",
           "level": 489.165
@@ -1365,6 +1361,10 @@
         {
           "t": "2026-07-26T14:00:00",
           "level": 488.471
+        },
+        {
+          "t": "2026-07-26T15:00:00",
+          "level": 488.465
         }
       ]
     },
@@ -1375,20 +1375,16 @@
       "spillway_msl": 457.07,
       "water_level": 455.5,
       "rainfall_1h": 0.0,
-      "temperature": 34.28,
-      "humidity": 69.11,
-      "pressure": 953.0,
-      "solar": 251.1,
-      "measure_datetime": "2026-07-26T14:50:00",
+      "temperature": 31.52,
+      "humidity": 73.07,
+      "pressure": 952.84,
+      "solar": 234.1,
+      "measure_datetime": "2026-07-26T15:10:00",
       "storage_m3": 264986.5,
       "storage_max_m3": 347778.7,
       "capacity_pct": 76.2,
       "distance_to_spillway_m": -1.57,
       "history": [
-        {
-          "t": "2026-07-12T15:00:00",
-          "level": 455.507
-        },
         {
           "t": "2026-07-12T16:00:00",
           "level": 455.5
@@ -2728,6 +2724,10 @@
         {
           "t": "2026-07-26T14:00:00",
           "level": 455.5
+        },
+        {
+          "t": "2026-07-26T15:00:00",
+          "level": 455.5
         }
       ]
     },
@@ -2738,11 +2738,11 @@
       "spillway_msl": 478.1,
       "water_level": 478.06,
       "rainfall_1h": 0.0,
-      "temperature": 31.8,
-      "humidity": 86.1,
-      "pressure": 950.4,
-      "solar": 557.1,
-      "measure_datetime": "2026-07-26T14:30:00",
+      "temperature": 29.7,
+      "humidity": 85.9,
+      "pressure": 950.1,
+      "solar": 461.1,
+      "measure_datetime": "2026-07-26T15:00:00",
       "storage_m3": 491971.6,
       "storage_max_m3": 495467.8,
       "capacity_pct": 99.3,
@@ -4091,6 +4091,10 @@
         {
           "t": "2026-07-26T14:00:00",
           "level": 478.06
+        },
+        {
+          "t": "2026-07-26T15:00:00",
+          "level": 478.06
         }
       ]
     },
@@ -4099,22 +4103,18 @@
       "name_th": "อ่างเก็บน้ำห้วยโซ้",
       "name_en": "Huai So Reservoir",
       "spillway_msl": 508.0,
-      "water_level": 508.055,
+      "water_level": 508.054,
       "rainfall_1h": 0.0,
-      "temperature": 29.81,
-      "humidity": 84.21,
-      "pressure": 947.77,
-      "solar": 497.7,
-      "measure_datetime": "2026-07-26T14:50:00",
-      "storage_m3": 120896.2,
+      "temperature": 31.89,
+      "humidity": 78.36,
+      "pressure": 947.44,
+      "solar": 560.5,
+      "measure_datetime": "2026-07-26T15:10:00",
+      "storage_m3": 120861.9,
       "storage_max_m3": 119007.2,
       "capacity_pct": 101.6,
-      "distance_to_spillway_m": 0.055,
+      "distance_to_spillway_m": 0.054,
       "history": [
-        {
-          "t": "2026-07-12T15:00:00",
-          "level": 508.061
-        },
         {
           "t": "2026-07-12T16:00:00",
           "level": 508.054
@@ -5454,6 +5454,10 @@
         {
           "t": "2026-07-26T14:00:00",
           "level": 508.061
+        },
+        {
+          "t": "2026-07-26T15:00:00",
+          "level": 508.055
         }
       ]
     }
