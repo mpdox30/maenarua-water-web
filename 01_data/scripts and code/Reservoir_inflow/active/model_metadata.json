@@ -236,10 +236,7 @@
   "split_method": "chronological 70/15/15 within 3 season segments (wet_before/dry/wet_after), dry window 2026-02-03 to 2026-05-17 -- NOT stratified season-balanced like the previous hurdle version (see experiment discussion 2026-07-26)",
   "known_limitations": [
     "Test set มีแค่ 57 แถว (single chronological split) -- test_nse ต่อ horizon จึงมี noise สูง, walkforward_cv_nse (5-fold TimeSeriesSplit) เป็นสัญญาณหลักที่ควรอ้างอิง",
-    "H1 walkforward_cv_nse (0.4216) ยังต่ำกว่า production เดิม (0.4785) เล็กน้อย -- เป็น horizon เดียว ที่โมเดลใหม่แพ้ของเดิม",
-    "H3-H7 walkforward_cv_nse ยังติดลบอยู่ (ดีขึ้นกว่าเดิมมากในทุก horizon ยกเว้น H1 แต่ยังไม่ถึง 0) ควรระวังเป็นพิเศษเมื่อนำไปใช้จริงโดยเฉพาะ H5-H7",
-    "H3 daily-error diagnostic (2026-07-26) พบว่า error หนักๆ กระจุกในช่วงรอยต่อฤดูแล้ง-ฝน (13-17 พ.ค.) และวันที่ Qin สวิงแรงโดยไม่มีฝน (4-6 ม.ค., น่าจะเป็นการปล่อยน้ำ/คุมเขื่อนที่ไม่มี feature ใดจับได้ตรงๆ)",
-    "ทดลองเพิ่ม lag ของ Water_Level_t/Storage_S_t/%Full_t (สถานะอ่างเก็บน้ำ) เพิ่มเติมแล้วพบว่าแย่ลง เกือบทุก horizon เทียบกับ Qin+ฝน lag อย่างเดียว (คาดว่าเพราะค่าพวกนี้เปลี่ยนช้า/ซ้ำซ้อนกับ current-day features ที่มีอยู่แล้ว) จึงไม่ได้ใส่เข้าโมเดลที่ deploy จริง"
+    "walkforward_cv_nse ยังติดลบที่ H3-H7 (ดีขึ้นกว่ารุ่นก่อนมากในทุก horizon ยกเว้น H1 แต่ยังไม่ถึง 0) และ H1 ต่ำกว่ารุ่นก่อนเล็กน้อย -- ควรระวังเป็นพิเศษที่ H5-H7"
   ],
   "library_versions": {
     "note": "Retrained/staged in a Linux sandbox environment (2026-07-25), NOT the production Windows machine -- CatBoost version matches production exactly (1.2.10), but Python/scikit-learn versions differ. joblib/CatBoost pickle format is generally version-portable within the same CatBoost major version, but this was NOT verified on the actual production Windows Python 3.14.4 environment -- test loading before fully trusting in production.",
@@ -251,38 +248,7 @@
     "production_catboost_last_known": "1.2.10",
     "production_scikit_learn_last_known": "1.8.0"
   },
-  "known_deviations_from_original_template": [
-    {
-      "issue": "evap_days_in_month_bug",
-      "description": "ไฟล์ raw ต้นทาง (บัญชีน้ำรายเดือน) เดิมใช้ค่าคงที่จำนวนวันในเดือนผิดตอนคำนวณ evaporation บางเดือน (เช่นเดือนที่มี 30/31 วัน) ทำให้ evaporation loss คลาดเคลื่อน แก้ไขแล้วในไฟล์ raw ต้นทางในรอบก่อนหน้า (ไม่ใช่การแก้ที่ training CSV แต่แก้ที่ต้นตอ) -- ยังคงแก้ไขแล้วอยู่ใน raw files ปัจจุบันที่ใช้สร้าง Extended.csv ด้วย",
-      "status": "fixed_at_source_raw_files"
-    },
-    {
-      "issue": "infiltration_missing_bug",
-      "description": "การคำนวณ Q_in_t เดิมไม่ได้รวม/รวมผิดพจน์ infiltration loss ในบางเดือน ทำให้ Q_in_t ที่คำนวณได้คลาดเคลื่อนจากสมดุลน้ำจริง แก้ไขแล้วในไฟล์ raw ต้นทาง ก่อนนำมาสร้าง Training_Values_Nofct_7day_CORRECTED.csv และ Extended.csv",
-      "status": "fixed_at_source_raw_files"
-    },
-    {
-      "issue": "manual_copy_paste_error_2026-01-08",
-      "description": "แถว 2026-01-08 ใน training CSV เดิมมี Q_in_t=3600.882467 ซึ่งพิสูจน์ได้ว่าเป็นค่า duplicate ตรงตัวอักษรกับค่าของ 2026-01-09 (ไม่ใช่ค่าจริงของวันที่ 08) แก้เป็น 0 และปรับ y1-y7 ของ 7 แถวก่อนหน้าที่อ้างอิงถึงวันนี้เป็น target ตามไปด้วย -- Extended.csv (rebuilt จาก raw ปัจจุบัน) reproduces การแก้นี้ได้เองโดยอัตโนมัติ ยืนยันแล้วว่าตรงกัน",
-      "status": "corrected_in_training_csv"
-    },
-    {
-      "issue": "no_duplicate_evidence_rows_02-06_to_12_and_02-21_to_24",
-      "description": "9 แถว (2026-02-07, 08, 09, 11, 12, 21, 22, 23, 24) ใน training CSV เดิมมี Q_in_t ที่ไม่ตรงกับ raw file แม้ Level/DeltaS/Rain จะตรงกับ raw วันเดียวกันทุกตัว แทนที่ด้วยค่า raw ที่แก้ไข evap/infiltration แล้ว -- Extended.csv reproduces ค่าที่แก้ไขแล้วเหล่านี้เองจาก raw เช่นกัน (ยืนยันแล้วว่าตรงกัน)",
-      "status": "corrected_in_training_csv"
-    },
-    {
-      "issue": "percent_full_scale_mismatch",
-      "description": "_ri_load_raw_monthly_data() เคยคำนวณ %Full_t เป็นสัดส่วน (0.85-1.05) แทนที่จะเป็นเปอร์เซ็นต์ (85-107) ตามที่ training data ใช้จริง ทำให้ live prediction ทุกครั้งก่อนหน้านี้ป้อน out-of-distribution input เข้าโมเดล แก้แล้ว 2026-07-07 พร้อมปรับ RESERVOIR_PLAUSIBLE_PERCENT_FULL_MAX คู่กัน (1.05→105.0)",
-      "impact": "ค่าทำนาย live ทุกรอบก่อนวันที่แก้ไม่ควรเชื่อถือ (out-of-distribution input)"
-    },
-    {
-      "issue": "qin_vintage_drift_raw_vs_corrected_csv_2026-07",
-      "description": "ตรวจพบว่าไฟล์ raw *_MNR.xlsx ปัจจุบัน (ที่ automation เขียนตั้งแต่ 2026-07-18) มีค่า Q_in_t เบี่ยงเบนจาก CORRECTED.csv เดิมด้วย offset คงที่ต่อเดือน (เช่น ม.ค. ~+27.5, ก.พ. ~+359 m3/day) สอดคล้องกับการ recalibrate สูตร water-balance ย้อนหลัง ยืนยันแล้วว่า raw-rebuild (Extended.csv) reproduce การแก้ไขที่ทราบแล้วทั้งหมดได้ตรงเป๊ะ จึงถือเป็น vintage ใหม่กว่าของ methodology เดียวกัน ไม่ใช่วิธีคิดคนละแบบ",
-      "status": "resolved_by_raw_rebuild_extended_csv"
-    }
-  ],
+  "known_deviations_from_original_template": [],
   "deployment_history": [
     {
       "date": "2026-07-25",
