@@ -1068,6 +1068,201 @@ def _backfill_incomplete_climate_weeks(
     return result
 
 
+def backfill_historical_weeks(
+    start_year: int,
+    start_week: int,
+    end_year: int,
+    end_week: int,
+    zones: tuple = ("zone_A", "zone_B"),
+    csv_path: Path = ML_FEATURES_LIVE_CSV,
+    min_age_days: int = 14,
+    as_of_date: Optional[Any] = None,
+) -> dict:
+    """
+    2026-07-25 เพิ่ม -- deep backfill สำหรับสัปดาห์ที่ "ไม่เคยมีแถวใน ml_features_live.csv เลย"
+    (ต่างจาก _backfill_incomplete_climate_weeks() ด้านบนซึ่งแก้ได้แค่สัปดาห์ที่เคย fetch ไปแล้วครั้ง
+    หนึ่งแต่ได้ผลไม่ครบ 7/7 -- ฟังก์ชันนั้นไม่มีทาง "ย้อนไปไกลกว่าจุดที่เคยเริ่ม fetch" เพราะสแกนจาก
+    key ที่มีอยู่ในไฟล์เท่านั้น)
+
+    ใช้เมื่อประวัติสดยังไม่ถึง 12 สัปดาห์ต่อเนื่อง (lag12/roll8 ของ Water Demand live path ต้องการ) และ
+    ไม่อยากรอสะสมตามธรรมชาติ (สัปดาห์ละ 1 สัปดาห์ ผ่าน daily pipeline + self-heal 14 วัน) -- backfill
+    สัปดาห์ในอดีตที่ห่างจากวันนี้เกิน min_age_days แล้ว (เพราะ CHIRPS Prelim/ERA5T ควร "final" แล้วจริง
+    ที่ระยะนี้) ตรงๆ ทีละสัปดาห์ ทีละ zone ตามช่วงที่ระบุ (start_year-start_week ถึง end_year-end_week
+    รวมทั้งสองปลาย)
+
+    ข้ามสัปดาห์ที่ "ครบ 7/7 อยู่แล้ว" ในไฟล์ปัจจุบัน (กันแถว duplicate ที่ไม่จำเป็น) -- แต่ยัง fetch
+    ซ้ำได้ถ้าสัปดาห์นั้นมีแถวแต่ยังไม่ครบ (จะได้แถวใหม่ audit-trail เพิ่มเข้าไปเหมือน
+    _backfill_incomplete_climate_weeks())
+
+    ข้อจำกัดเดียวกับ _backfill_incomplete_climate_weeks(): ไม่ re-fetch MEI, ไม่คำนวณ NIR/GIR ย้อนหลัง
+    (พอสำหรับ readiness gate/lag features แต่ไม่ใช่แถวที่ป้อนโมเดลจริงได้ 100% ถ้าจะใช้ NIR/GIR ด้วย)
+
+    ออกแบบไม่ raise (wrap แต่ละสัปดาห์ต่อ zone ด้วย try/except แยกกัน) เพราะเป็น long-running loop
+    (ERA5T แต่ละสัปดาห์ใช้เวลาราว 30 วินาที - หลายนาที ต่อครั้ง ตาม CDS queue) -- รันจาก cell แยกใน
+    notebook เอง ไม่ได้ผูกกับ run_pipeline() ประจำวัน (เจตนา: deep backfill เป็น one-time/on-demand
+    operation ไม่ใช่ทุกวัน)
+
+    คืนค่า dict {requested: [...], backfilled: [...], already_complete_skipped: [...],
+    too_recent_skipped: [...], still_incomplete: [...], errors: [...]}
+    """
+    from datetime import date
+
+    result: dict = {
+        "requested": [], "backfilled": [], "already_complete_skipped": [],
+        "too_recent_skipped": [], "still_incomplete": [], "errors": [],
+    }
+
+    as_of = as_of_date or datetime.now(timezone.utc).date()
+    csv_path = Path(csv_path)
+
+    def _to_int(v: Any) -> Optional[int]:
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            return None
+
+    def _is_rolling(v: Any) -> bool:
+        return str(v).strip().lower() in ("true", "1")
+
+    # สร้างรายการ (year, week) ทั้งหมดในช่วงที่ขอ (รองรับข้ามปีด้วย เผื่อช่วงคาบเกี่ยว ธ.ค./ม.ค.)
+    week_list: list = []
+    y, w = start_year, start_week
+    while (y, w) <= (end_year, end_week):
+        week_list.append((y, w))
+        max_week = date(y, 12, 28).isocalendar()[1]  # สัปดาห์สุดท้ายของปี y ตาม ISO
+        if w >= max_week:
+            y, w = y + 1, 1
+        else:
+            w += 1
+        if len(week_list) > 200:  # safety guard กันลูปไม่รู้จบถ้า argument ผิด
+            result["errors"].append("ช่วงสัปดาห์ที่ขอยาวเกิน 200 สัปดาห์ -- หยุดไว้ก่อน ตรวจ argument")
+            break
+
+    # อ่านสถานะปัจจุบันของไฟล์ก่อน เพื่อข้ามสัปดาห์ที่ครบ 7/7 อยู่แล้ว
+    already_complete: set = set()
+    if csv_path.exists():
+        import csv as csv_module
+        with open(csv_path, newline="", encoding="utf-8") as f:
+            for r in csv_module.DictReader(f):
+                zone = r.get("zone")
+                yr_i, wk_i = _to_int(r.get("year")), _to_int(r.get("week"))
+                if not zone or yr_i is None or wk_i is None:
+                    continue
+                complete = (
+                    _to_int(r.get("chirps_n_days_in_week")) == 7
+                    and _to_int(r.get("era5t_n_days_in_week")) == 7
+                    and not _is_rolling(r.get("chirps_is_rolling_estimate"))
+                    and not _is_rolling(r.get("era5t_is_rolling_estimate"))
+                )
+                if complete:
+                    already_complete.add((zone, yr_i, wk_i))
+
+    # เรียงตาม (สัปดาห์ -> zone) แทน (zone -> สัปดาห์) เพราะ ERA5T ไม่แยกตาม zone (ค่าอากาศเดียวกัน
+    # ทั้งพื้นที่ ต่างจาก CHIRPS ที่แยกตาม zone จริง) -- fetch ERA5T แค่ครั้งเดียวต่อสัปดาห์แล้ว reuse
+    # กับทุก zone ในสัปดาห์นั้น ลดเวลารวมลงเกือบครึ่ง (ERA5T ผ่าน CDS queue ช้ากว่า CHIRPS มาก)
+    for year_i, week_i in week_list:
+        zones_needing_week = [z for z in zones if (z, year_i, week_i) not in already_complete]
+        for z in zones:
+            result["requested"].append({"zone": z, "year": year_i, "week": week_i})
+        for z in set(zones) - set(zones_needing_week):
+            result["already_complete_skipped"].append({"zone": z, "year": year_i, "week": week_i})
+        if not zones_needing_week:
+            continue
+
+        try:
+            sunday = date.fromisocalendar(year_i, week_i, 7)
+        except ValueError as exc:
+            result["errors"].append(f"{year_i}-W{week_i:02d}: year/week ไม่ valid ({exc})")
+            continue
+
+        age_days = (as_of - sunday).days
+        if age_days < min_age_days:
+            for z in zones_needing_week:
+                result["too_recent_skipped"].append(
+                    {"zone": z, "year": year_i, "week": week_i, "age_days": age_days}
+                )
+            continue
+
+        try:
+            era5t_result = _fetch_era5t_via_subprocess(as_of_date=sunday, weekly=True)
+        except Exception as exc:
+            logger.exception("Historical backfill ERA5T ล้มเหลว (%s-W%02d)", year_i, week_i)
+            for z in zones_needing_week:
+                result["errors"].append(f"era5t backfill {z} {year_i}-W{week_i:02d}: {exc}")
+            continue
+
+        worker_output = (era5t_result or {}).get("worker_output") or {}
+        era5t_days = _to_int(worker_output.get("n_days_in_week"))
+        era5t_is_rolling = bool(worker_output.get("is_rolling_estimate"))
+
+        for zone in zones_needing_week:
+            try:
+                import chirps_feature
+                chirps_result = chirps_feature.get_chirps_feature(zone=zone, as_of_date=sunday)
+            except Exception as exc:
+                logger.exception("Historical backfill CHIRPS ล้มเหลว (%s %s-W%02d)", zone, year_i, week_i)
+                result["errors"].append(f"chirps backfill {zone} {year_i}-W{week_i:02d}: {exc}")
+                continue
+
+            chirps_days = _to_int((chirps_result or {}).get("n_days_in_week"))
+            chirps_is_rolling = bool((chirps_result or {}).get("is_rolling_estimate"))
+
+            if chirps_days == 7 and era5t_days == 7 and not chirps_is_rolling and not era5t_is_rolling:
+                et0_mm_week = worker_output.get("ET0_mm_week")
+                p_mm_week = (chirps_result or {}).get("p_mm_week")
+                row = {
+                    "run_timestamp": datetime.now(timezone.utc).isoformat(),
+                    "as_of_date": sunday.isoformat(),
+                    "year": year_i, "week": week_i, "zone": zone,
+                    "MEI": None, "MEI_lag4": None, "MEI_lag8": None,
+                    "mei_reporting_lag_risk": None,
+                    "mei_fetch_error": "historical backfill row -- ไม่ได้ re-fetch MEI (ดู docstring backfill_historical_weeks())",
+                    "P_mm_week": p_mm_week,
+                    "P_eff_mm": chirps_result.get("p_eff_mm"),
+                    "P_mm_week_lag1": chirps_result.get("p_mm_week_lag1"),
+                    "P_mm_week_lag2": chirps_result.get("p_mm_week_lag2"),
+                    "P_mm_week_lag4": chirps_result.get("p_mm_week_lag4"),
+                    "SPI_4": chirps_result.get("spi_4"),
+                    "drought_flag": chirps_result.get("drought_flag"),
+                    "chirps_data_type": chirps_result.get("data_type"),
+                    "chirps_n_days_in_week": chirps_days,
+                    "chirps_is_rolling_estimate": chirps_is_rolling,
+                    "chirps_fetch_error": chirps_result.get("fetch_error"),
+                    "ET0_mm_week": et0_mm_week,
+                    "T_mean": worker_output.get("T_mean"),
+                    "RH_pct": worker_output.get("RH_pct"),
+                    "VPD_kPa": worker_output.get("VPD_kPa"),
+                    "u2_ms": worker_output.get("u2_ms"),
+                    "Rn_MJ": worker_output.get("Rn_MJ"),
+                    "era5t_n_days_in_week": era5t_days,
+                    "era5t_is_rolling_estimate": era5t_is_rolling,
+                    "era5t_fetch_error": era5t_result.get("fetch_error"),
+                    "AI_week": (et0_mm_week / p_mm_week) if (et0_mm_week is not None and p_mm_week) else None,
+                    "AI_week_status": "historical backfill 2026-07-25 (deep backfill ก่อน W27 -- ดู backfill_historical_weeks())",
+                    "NIR_A_m3": None, "GIR_B_m3": None,
+                    "wd_area_basis": None,
+                    "wd_nir_gir_status": "backfill row -- ไม่ได้คำนวณ NIR/GIR ย้อนหลัง (ดู docstring backfill_historical_weeks())",
+                }
+                try:
+                    _append_ml_features_live([row], csv_path)
+                    result["backfilled"].append({"zone": zone, "year": year_i, "week": week_i})
+                    logger.info(
+                        "Historical backfill สำเร็จ: %s %s-W%02d (era5t=%s/7, chirps=%s/7)",
+                        zone, year_i, week_i, era5t_days, chirps_days,
+                    )
+                except Exception as exc:
+                    logger.exception("Historical backfill append ล้มเหลว (%s %s-W%02d)", zone, year_i, week_i)
+                    result["errors"].append(f"append backfill row {zone} {year_i}-W{week_i:02d}: {exc}")
+            else:
+                result["still_incomplete"].append({
+                    "zone": zone, "year": year_i, "week": week_i,
+                    "era5t_n_days_in_week": era5t_days, "chirps_n_days_in_week": chirps_days,
+                    "reason": "fetch แล้วยังไม่ครบ 7/7 แม้ผ่าน min_age_days แล้ว (อาจมี gap จริงในสัปดาห์นั้น)",
+                })
+
+    return result
+
+
 def _fetch_climate_features_step(as_of_date: Optional[Any] = None) -> dict:
     """
     Integration step ที่เรียกต่อจาก Step 1 (telemetry) ใน run_pipeline() — เรียก MEI -> CHIRPS ->
