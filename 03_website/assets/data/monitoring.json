@@ -1,7 +1,7 @@
 {
   "meta": {
     "source": "สถานีโทรมาตร สสน. (API) ผ่าน Google Sheet wide_log (poll ทุก 10 นาที) + 01_data/Reservoirs/reference (rating curve ต่ออ่าง)",
-    "updated": "2026-07-27T10:50:00",
+    "updated": "2026-07-27T11:10:00",
     "data_connected": true
   },
   "stations": [
@@ -10,22 +10,18 @@
       "name_th": "อ่างเก็บน้ำแม่นาเรือ",
       "name_en": "Mae Na Rua Reservoir",
       "spillway_msl": 489.54,
-      "water_level": 488.388,
+      "water_level": 488.394,
       "rainfall_1h": 0.0,
-      "temperature": 29.84,
-      "humidity": 72.6,
-      "pressure": 952.22,
-      "solar": 423.8,
-      "measure_datetime": "2026-07-27T10:50:00",
-      "storage_m3": 1288828.1,
+      "temperature": 29.88,
+      "humidity": 74.24,
+      "pressure": 952.15,
+      "solar": 377.1,
+      "measure_datetime": "2026-07-27T11:10:00",
+      "storage_m3": 1290550.8,
       "storage_max_m3": 1625463.8,
-      "capacity_pct": 79.3,
-      "distance_to_spillway_m": -1.152,
+      "capacity_pct": 79.4,
+      "distance_to_spillway_m": -1.146,
       "history": [
-        {
-          "t": "2026-07-13T11:00:00",
-          "level": 489.16
-        },
         {
           "t": "2026-07-13T12:00:00",
           "level": 489.159
@@ -1365,6 +1361,10 @@
         {
           "t": "2026-07-27T10:00:00",
           "level": 488.388
+        },
+        {
+          "t": "2026-07-27T11:00:00",
+          "level": 488.408
         }
       ]
     },
@@ -1375,20 +1375,16 @@
       "spillway_msl": 457.07,
       "water_level": 455.494,
       "rainfall_1h": 0.0,
-      "temperature": 30.67,
-      "humidity": 71.97,
-      "pressure": 955.79,
-      "solar": 402.4,
-      "measure_datetime": "2026-07-27T10:50:00",
+      "temperature": 30.87,
+      "humidity": 71.39,
+      "pressure": 955.68,
+      "solar": 416.0,
+      "measure_datetime": "2026-07-27T11:10:00",
       "storage_m3": 264690.8,
       "storage_max_m3": 347778.7,
       "capacity_pct": 76.1,
       "distance_to_spillway_m": -1.576,
       "history": [
-        {
-          "t": "2026-07-13T11:00:00",
-          "level": 455.501
-        },
         {
           "t": "2026-07-13T12:00:00",
           "level": 455.501
@@ -2728,6 +2724,10 @@
         {
           "t": "2026-07-27T10:00:00",
           "level": 455.494
+        },
+        {
+          "t": "2026-07-27T11:00:00",
+          "level": 455.494
         }
       ]
     },
@@ -2738,11 +2738,11 @@
       "spillway_msl": 478.1,
       "water_level": 478.05,
       "rainfall_1h": 0.0,
-      "temperature": 29.8,
-      "humidity": 82.3,
+      "temperature": 29.7,
+      "humidity": 81.5,
       "pressure": 953.0,
-      "solar": 403.6,
-      "measure_datetime": "2026-07-27T10:30:00",
+      "solar": 520.4,
+      "measure_datetime": "2026-07-27T11:00:00",
       "storage_m3": 491097.6,
       "storage_max_m3": 495467.8,
       "capacity_pct": 99.1,
@@ -4091,6 +4091,10 @@
         {
           "t": "2026-07-27T10:00:00",
           "level": 478.05
+        },
+        {
+          "t": "2026-07-27T11:00:00",
+          "level": 478.05
         }
       ]
     },
@@ -4101,20 +4105,16 @@
       "spillway_msl": 508.0,
       "water_level": 508.061,
       "rainfall_1h": 0.0,
-      "temperature": 31.46,
-      "humidity": 74.5,
-      "pressure": 950.44,
-      "solar": 621.2,
-      "measure_datetime": "2026-07-27T10:50:00",
+      "temperature": 31.78,
+      "humidity": 72.32,
+      "pressure": 950.4,
+      "solar": 623.8,
+      "measure_datetime": "2026-07-27T11:10:00",
       "storage_m3": 121102.3,
       "storage_max_m3": 119007.2,
       "capacity_pct": 101.8,
       "distance_to_spillway_m": 0.061,
       "history": [
-        {
-          "t": "2026-07-13T11:00:00",
-          "level": 508.049
-        },
         {
           "t": "2026-07-13T12:00:00",
           "level": 508.055
@@ -5454,6 +5454,10 @@
         {
           "t": "2026-07-27T10:00:00",
           "level": 508.055
+        },
+        {
+          "t": "2026-07-27T11:00:00",
+          "level": 508.068
         }
       ]
     }
