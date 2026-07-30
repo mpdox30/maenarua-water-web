@@ -322,7 +322,7 @@
           <div class="eyebrow">ข้อมูลย้อนหลัง · Live</div>
           <h2>กราฟฝนสะสมย้อนหลัง</h2>
         </div>
-        <p>ฝนสะสมรายชั่วโมงจากสถานีโทรมาตรแต่ละอ่าง (ผ่าน Google Sheet wide_log) เลือกอ่างและช่วงเวลาที่ต้องการดู — ค่าเริ่มต้น: รายวัน</p>
+        <p>ฝนสะสมรายชั่วโมงจากสถานีโทรมาตรแต่ละอ่าง (เดือนที่ปิดแล้วใช้ข้อมูลทางการจาก HII open data ผ่าน QC, เดือนปัจจุบันใช้ค่าจาก Google Sheet wide_log) เลือกอ่างและช่วงเวลาที่ต้องการดู — ค่าเริ่มต้น: รายวัน</p>
       </div>
       <div class="chart-card">
         <div class="chart-toolbar">
@@ -341,10 +341,13 @@
         <span class="chart-range-note" id="rainfallRangeNote"></span>
       </div>
       <p style="font-size:12px; color:var(--text-500); margin-top:14px;">
-        นับเฉพาะค่าฝน 1 ชม. ล่าสุดในแต่ละชั่วโมงปฏิทินเป็นฝนของชั่วโมงนั้น (ไม่บวกรวมทุกรอบ poll 10 นาที
-        เพราะ rainfall_1h เป็นค่าสะสมย้อนหลัง 1 ชม.ต่อรอบอยู่แล้ว) · ชั่วโมงที่ไม่มีข้อมูลจะเว้นช่องว่างไว้
-        ไม่ใช่ฝน 0 มม. · สถานีห้วยถ้ำ (RES005) รายงานไม่ครบทุกรอบ poll อาจมีช่วงขาดหายเป็นระยะ ·
-        อ่างเก็บน้ำห้วยจำตุ้มยังไม่มีสถานีโทรมาตรติดตั้ง จึงไม่มีข้อมูลในกราฟนี้
+        ตัวเลขรายวัน/สัปดาห์/เดือน อ้างอิงตาม "วันอุตุนิยมวิทยา" ของ HII (7.01 น. ของวันนี้ ถึง 7.00 น.
+        ของวันถัดไป ไม่ใช่เที่ยงคืน-เที่ยงคืนแบบปฏิทิน) เพื่อให้ตรงกับเว็บโทรมาตรทางการของ สสน./HII ·
+        เดือนที่ปิดแล้วดึงจากไฟล์ทางการที่ผ่าน QC (tiservice.hii.or.th) เดือนปัจจุบันยังไม่มีไฟล์ทางการ
+        เผยแพร่ จึงใช้ค่าประมาณจาก Google Sheet wide_log แทนชั่วคราว (อาจคลาดเคลื่อนเล็กน้อยจนกว่าเดือน
+        จะปิดและมีไฟล์ทางการมาแทนที่) · ชั่วโมงที่ไม่มีข้อมูลจะเว้นช่องว่างไว้ ไม่ใช่ฝน 0 มม. · สถานี
+        ห้วยถ้ำ (RES005) รายงานไม่ครบทุกรอบ poll อาจมีช่วงขาดหายเป็นระยะในเดือนปัจจุบัน · อ่างเก็บน้ำ
+        ห้วยจำตุ้มยังไม่มีสถานีโทรมาตรติดตั้ง จึงไม่มีข้อมูลในกราฟนี้
       </p>
     </div>
   </section>
@@ -649,18 +652,40 @@ const RAINFALL_RESOLUTION_LABELS = {
   monthly: 'รายเดือน',
 };
 
-function rfBucketKeyDaily(d) {
+// "วันอุตุนิยมวิทยา" ของ HII (ยืนยันจาก data.hii.or.th/en/dataset/hii-rainfall 2026-07-30 + พิสูจน์
+// ด้วยข้อมูลจริง): วันที่ D สะสมฝนตั้งแต่ 7.01 น. ของวันที่ D ถึง 7.00 น. ของวันที่ D+1 -- ไม่ใช่
+// เที่ยงคืน-เที่ยงคืนแบบปฏิทิน ค่าที่รายงานเวลา HH:00 คือฝนสะสมของชั่วโมง (HH-1):00-HH:00 ดังนั้น
+// ชั่วโมง 01:00-07:00 ของวันปฏิทิน d จะอยู่ใน "วันอุตุฯ" ของ (d-1) ส่วนชั่วโมง 08:00-24:00(=00:00
+// วันถัดไป) อยู่ใน "วันอุตุฯ" ของ d เอง -- ฟังก์ชันนี้คืน Date ที่แทน "วันอุตุฯ" ของ timestamp ที่ให้มา
+// (เวลาถูก zero ไว้ที่เที่ยงคืน) ให้ rfBucketKeyDaily/Weekly/Monthly ทั้งหมดอ้างอิงจากค่านี้แทนวันปฏิทิน
+// ดิบ เพื่อให้ตรงกับตัวเลขที่เว็บโทรมาตรทางการแสดงผล
+function hydroDayDate(t) {
+  // ชั่วโมง 00:00-07:00 ของวันปฏิทิน d ตกอยู่ใน "วันอุตุฯ" ของ d-1 (ดูคำอธิบายด้านบน) --
+  // เรียกครั้งเดียวต่อ timestamp ดิบ 1 ค่าเท่านั้น (ห้ามเรียกซ้ำกับผลลัพธ์ของตัวเอง ค่าเวลาที่ zero
+  // ไว้ที่เที่ยงคืนจะโดนตีความว่าเป็นชั่วโมง 00:00 แล้วโดนลบวันซ้ำผิดพลาด)
+  const shifted = new Date(t);
+  shifted.setHours(0, 0, 0, 0);
+  if (t.getHours() <= 7) {
+    shifted.setDate(shifted.getDate() - 1);
+  }
+  return shifted;
+}
+function dateKeyYMD(d) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
-function rfBucketKeyMonthly(d) {
+function rfBucketKeyDaily(t) {
+  return dateKeyYMD(hydroDayDate(t));
+}
+function rfBucketKeyMonthly(t) {
+  const d = hydroDayDate(t);
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
 }
-function rfBucketKeyWeekly(d) {
+function rfBucketKeyWeekly(t) {
+  const d = hydroDayDate(t);
   const dayIdx = (d.getDay() + 6) % 7; // จันทร์=0 ... อาทิตย์=6
   const monday = new Date(d);
-  monday.setHours(0, 0, 0, 0);
   monday.setDate(d.getDate() - dayIdx);
-  return rfBucketKeyDaily(monday);
+  return dateKeyYMD(monday);
 }
 
 function aggregateRainfall(points, resolution) {

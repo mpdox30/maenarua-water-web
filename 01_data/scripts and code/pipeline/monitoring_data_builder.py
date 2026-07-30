@@ -44,12 +44,16 @@ from __future__ import annotations
 import csv
 import datetime as dt
 import json
+import logging
 import sys
 from pathlib import Path
 from typing import Optional
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import reservoir_telemetry_from_sheet as rts
+import hii_rainfall_archive
+
+logger = logging.getLogger("data_pipeline")
 
 REFERENCE_DIR = Path(__file__).resolve().parent.parent.parent / "Reservoirs" / "reference"
 OUTPUT_JSON = Path(__file__).resolve().parent.parent.parent.parent / "03_website" / "assets" / "data" / "monitoring.json"
@@ -188,7 +192,9 @@ def build_station_history(rows: list[dict], code: str, max_hours: int = 24 * 14)
     return history
 
 
-def build_station_rainfall_hourly(rows: list[dict], code: str, max_hours: int = 24 * 60) -> list[dict]:
+def build_station_rainfall_hourly(
+    rows: list[dict], code: str, max_hours: int = 24 * 60, use_hii_archive: bool = True
+) -> list[dict]:
     """
     ฝนสะสมรายชั่วโมงย้อนหลัง (สำหรับกราฟฝนย้อนหลังในหน้า monitoring.html — เพิ่ม 2026-07-30
     แทนที่กล่อง "หมายเหตุเกี่ยวกับข้อมูลโทรมาตร" เดิม)
@@ -203,6 +209,14 @@ def build_station_rainfall_hourly(rows: list[dict], code: str, max_hours: int = 
     ชั่วโมงไหนไม่มีข้อมูลรายงานเข้ามาเลย (gap) จะไม่มีจุดนั้นในผลลัพธ์ (ไม่เติม 0 หรือ interpolate)
     -- สำคัญโดยเฉพาะกับ RES005 ที่รายงานไม่ครบทุกรอบ poll 10 นาที (จะมี gap เป็นระยะ) — หน้าเว็บควร
     แสดงช่วงที่ขาดเป็นช่องว่างในกราฟ ไม่ใช่ตีความเป็นฝน 0 มม.
+
+    2026-07-30 เพิ่ม: ผลจาก wide_log ข้างต้น (เรียกว่า "own reconstruction") เป็นแค่ค่าประมาณ --
+    ผู้ใช้ทักว่าตัวเลขไม่ตรงกับเว็บโทรมาตรทางการของ สสน./HII เช็คแล้วพบว่า HII เผยแพร่ข้อมูลฝนรายชั่วโมง
+    "ตัวจริง" (ผ่าน QC, calendar-hour ตรงเป๊ะ) เป็น open data รายเดือน (ดู hii_rainfall_archive.py)
+    -- ฟังก์ชันนี้จึงดึง archive มา "แทนที่" ผลจาก wide_log ทั้งเดือนที่ archive มีข้อมูล (แม่นกว่า
+    เสมอ) โดย wide_log ยังคงใช้เป็น fallback เฉพาะเดือนปัจจุบันที่ยังไม่ปิด (archive ยังไม่เผยแพร่)
+    ผลข้างเคียงที่ดี: เดือนก่อนหน้าที่ wide_log ของเราเองไม่เคยมีข้อมูลเลย (เราเริ่มเก็บ ~11 ก.ค. 69)
+    จะถูกเติมเต็มด้วยข้อมูลจริงจาก archive ทันที (ย้อนหลังได้ไกลกว่าที่ wide_log เคยมี)
 
     คืนค่า list of {"t": <ISO ของต้นชั่วโมงปฏิทิน>, "rain_mm": <float>} เรียงเวลาเก่า -> ใหม่
     """
@@ -220,27 +234,52 @@ def build_station_rainfall_hourly(rows: list[dict], code: str, max_hours: int = 
         except (TypeError, ValueError):
             continue
         candidates.append((mt, fval))
-    if not candidates:
-        return []
-    candidates.sort(key=lambda c: c[0])
 
-    latest = candidates[-1][0]
-    earliest_allowed = latest - dt.timedelta(hours=max_hours)
+    merged: dict[dt.datetime, float] = {}
+    latest_own: Optional[dt.datetime] = None
+    if candidates:
+        candidates.sort(key=lambda c: c[0])
+        latest_own = candidates[-1][0]
+        earliest_allowed = latest_own - dt.timedelta(hours=max_hours)
 
-    # เก็บแถวล่าสุด (measure_datetime มากสุด) ต่อ 1 ชั่วโมงปฏิทิน
-    best_per_hour: dict[dt.datetime, tuple[dt.datetime, float]] = {}
-    for mt, val in candidates:
-        if mt < earliest_allowed:
-            continue
-        bucket = mt.replace(minute=0, second=0, microsecond=0)
-        prev = best_per_hour.get(bucket)
-        if prev is None or mt > prev[0]:
-            best_per_hour[bucket] = (mt, val)
+        # เก็บแถวล่าสุด (measure_datetime มากสุด) ต่อ 1 ชั่วโมงปฏิทิน
+        best_per_hour: dict[dt.datetime, tuple[dt.datetime, float]] = {}
+        for mt, val in candidates:
+            if mt < earliest_allowed:
+                continue
+            bucket = mt.replace(minute=0, second=0, microsecond=0)
+            prev = best_per_hour.get(bucket)
+            if prev is None or mt > prev[0]:
+                best_per_hour[bucket] = (mt, val)
+        merged = {bucket: val for bucket, (_mt, val) in best_per_hour.items()}
 
-    return [
-        {"t": bucket.isoformat(), "rain_mm": val}
-        for bucket, (_mt, val) in sorted(best_per_hour.items())
-    ]
+    if use_hii_archive:
+        latest_ref = latest_own or dt.datetime.now()
+        start_date = (latest_ref - dt.timedelta(hours=max_hours)).date()
+        end_date = latest_ref.date()
+        try:
+            archive_rows = hii_rainfall_archive.load_archive_hourly(code, start_date, end_date)
+        except Exception:
+            logger.warning(
+                "build_station_rainfall_hourly(%s): โหลด HII archive ไม่สำเร็จ -- ใช้ผลจาก wide_log อย่างเดียว",
+                code, exc_info=True,
+            )
+            archive_rows = []
+
+        if archive_rows:
+            # เดือนไหนที่ archive มีข้อมูล ให้ลบผลจาก wide_log ของเดือนนั้นทิ้งทั้งหมดก่อน (archive
+            # แม่นกว่าเสมอเพราะผ่าน QC แล้ว) แล้วค่อยเติมค่าจาก archive เข้าไปแทน -- ชั่วโมงที่ archive
+            # บอกว่าไม่มีข้อมูลจริง (quality_flag null) จะไม่เติมจุดนั้นเลย (gap จริง เหมือน wide_log)
+            archive_months = {(r["measure_datetime"].year, r["measure_datetime"].month) for r in archive_rows}
+            for bucket in list(merged.keys()):
+                if (bucket.year, bucket.month) in archive_months:
+                    del merged[bucket]
+            for r in archive_rows:
+                if r["rainfall_1h"] is None:
+                    continue
+                merged[r["measure_datetime"]] = r["rainfall_1h"]
+
+    return [{"t": bucket.isoformat(), "rain_mm": val} for bucket, val in sorted(merged.items())]
 
 
 def build_station_snapshot(
@@ -307,6 +346,7 @@ def build_monitoring_json(
     return {
         "meta": {
             "source": "สถานีโทรมาตร สสน. (API) ผ่าน Google Sheet wide_log (poll ทุก 10 นาที) + "
+                       "HII open data (tiservice.hii.or.th, รายชั่วโมงผ่าน QC, เดือนที่ปิดแล้ว) + "
                        "01_data/Reservoirs/reference (rating curve ต่ออ่าง)",
             "updated": latest_overall.isoformat() if latest_overall else None,
             "data_connected": True,
