@@ -188,7 +188,64 @@ def build_station_history(rows: list[dict], code: str, max_hours: int = 24 * 14)
     return history
 
 
-def build_station_snapshot(rows: list[dict], code: str, history_hours: int = 24 * 14) -> dict:
+def build_station_rainfall_hourly(rows: list[dict], code: str, max_hours: int = 24 * 60) -> list[dict]:
+    """
+    ฝนสะสมรายชั่วโมงย้อนหลัง (สำหรับกราฟฝนย้อนหลังในหน้า monitoring.html — เพิ่ม 2026-07-30
+    แทนที่กล่อง "หมายเหตุเกี่ยวกับข้อมูลโทรมาตร" เดิม)
+
+    ข้อควรระวังสำคัญ: rainfall_1h ที่สถานีโทรมาตรรายงานเป็นค่า "ฝนสะสมในชั่วโมงที่ผ่านมา" แบบ
+    rolling window (ไม่ใช่ฝนสะสมนับจากต้นชั่วโมงปฏิทิน) และสถานีรายงานทุก ~10 นาที (~6 ครั้ง/ชั่วโมง)
+    ถ้าเอาทุกแถวในชั่วโมงปฏิทินเดียวกันมาบวกกันจะนับซ้ำเกือบ 6 เท่า -- ฟังก์ชันนี้จึงหยิบ "แถวล่าสุด
+    ในชั่วโมงปฏิทินนั้น" มาใช้แทนค่าฝนของชั่วโมงนั้นเพียงค่าเดียว (เพราะค่า ณ นาทีท้ายชั่วโมงครอบคลุม
+    ฝนที่ตกในชั่วโมงปฏิทินนั้นพอดีอยู่แล้ว) ต่างจาก build_station_history() ที่หา nearest-to-mark
+    ±30 นาที เพราะที่นี่เป็นค่าสะสมผูกกับเวลารายงานตรงๆ ไม่ใช่ค่าจุด ณ เวลาหนึ่งที่ควร interpolate
+
+    ชั่วโมงไหนไม่มีข้อมูลรายงานเข้ามาเลย (gap) จะไม่มีจุดนั้นในผลลัพธ์ (ไม่เติม 0 หรือ interpolate)
+    -- สำคัญโดยเฉพาะกับ RES005 ที่รายงานไม่ครบทุกรอบ poll 10 นาที (จะมี gap เป็นระยะ) — หน้าเว็บควร
+    แสดงช่วงที่ขาดเป็นช่องว่างในกราฟ ไม่ใช่ตีความเป็นฝน 0 มม.
+
+    คืนค่า list of {"t": <ISO ของต้นชั่วโมงปฏิทิน>, "rain_mm": <float>} เรียงเวลาเก่า -> ใหม่
+    """
+    key = f"{code}_rainfall_1h"
+    candidates = []
+    for r in rows:
+        mt = r.get("measure_datetime")
+        val = r.get(key)
+        if mt is None or val in (None, ""):
+            continue
+        if isinstance(mt, str):
+            mt = rts._parse_dt_lenient(mt)
+        try:
+            fval = float(val)
+        except (TypeError, ValueError):
+            continue
+        candidates.append((mt, fval))
+    if not candidates:
+        return []
+    candidates.sort(key=lambda c: c[0])
+
+    latest = candidates[-1][0]
+    earliest_allowed = latest - dt.timedelta(hours=max_hours)
+
+    # เก็บแถวล่าสุด (measure_datetime มากสุด) ต่อ 1 ชั่วโมงปฏิทิน
+    best_per_hour: dict[dt.datetime, tuple[dt.datetime, float]] = {}
+    for mt, val in candidates:
+        if mt < earliest_allowed:
+            continue
+        bucket = mt.replace(minute=0, second=0, microsecond=0)
+        prev = best_per_hour.get(bucket)
+        if prev is None or mt > prev[0]:
+            best_per_hour[bucket] = (mt, val)
+
+    return [
+        {"t": bucket.isoformat(), "rain_mm": val}
+        for bucket, (_mt, val) in sorted(best_per_hour.items())
+    ]
+
+
+def build_station_snapshot(
+    rows: list[dict], code: str, history_hours: int = 24 * 14, rainfall_history_hours: int = 24 * 60
+) -> dict:
     info = STATIONS[code]
     snapshot: dict = {
         "station_code": code,
@@ -218,13 +275,19 @@ def build_station_snapshot(rows: list[dict], code: str, history_hours: int = 24 
         snapshot["distance_to_spillway_m"] = None
 
     snapshot["history"] = build_station_history(rows, code, max_hours=history_hours)
+    snapshot["rainfall_hourly"] = build_station_rainfall_hourly(rows, code, max_hours=rainfall_history_hours)
 
     return snapshot
 
 
-def build_monitoring_json(sheet_source: Optional[str] = None, history_hours: int = 24 * 14) -> dict:
+def build_monitoring_json(
+    sheet_source: Optional[str] = None, history_hours: int = 24 * 14, rainfall_history_hours: int = 24 * 60
+) -> dict:
     rows = rts.load_wide_log(sheet_source)
-    stations = [build_station_snapshot(rows, code, history_hours=history_hours) for code in STATIONS]
+    stations = [
+        build_station_snapshot(rows, code, history_hours=history_hours, rainfall_history_hours=rainfall_history_hours)
+        for code in STATIONS
+    ]
 
     latest_overall = max(
         (dt.datetime.fromisoformat(s["measure_datetime"]) for s in stations if s["measure_datetime"]),
@@ -262,15 +325,24 @@ def main():
     parser.add_argument("--output", type=str, default=str(OUTPUT_JSON))
     parser.add_argument("--history-hours", type=int, default=24 * 14,
                          help="ความยาวย้อนหลังของกราฟ trend ระดับน้ำ (ชั่วโมง) default=14 วัน")
+    parser.add_argument("--rainfall-history-hours", type=int, default=24 * 60,
+                         help="ความยาวย้อนหลังของกราฟฝนรายชั่วโมง (ชั่วโมง) default=60 วัน "
+                              "(กว้างพอสำหรับมุมมองรายเดือนบนหน้าเว็บ)")
     args = parser.parse_args()
 
-    result = build_monitoring_json(args.sheet_source, history_hours=args.history_hours)
+    result = build_monitoring_json(
+        args.sheet_source, history_hours=args.history_hours, rainfall_history_hours=args.rainfall_history_hours
+    )
     out_path = Path(args.output)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
     n_hist = sum(len(s["history"]) for s in result["stations"])
-    print(f"wrote {out_path} — {len(result['stations'])} stations, updated={result['meta']['updated']}, history_points={n_hist}")
+    n_rain = sum(len(s["rainfall_hourly"]) for s in result["stations"])
+    print(
+        f"wrote {out_path} — {len(result['stations'])} stations, updated={result['meta']['updated']}, "
+        f"history_points={n_hist}, rainfall_hourly_points={n_rain}"
+    )
 
 
 if __name__ == "__main__":

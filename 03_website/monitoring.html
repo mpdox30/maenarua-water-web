@@ -126,6 +126,9 @@
   }
   .station-filter-btn:hover { color: var(--text-100); border-color: var(--teal-400); }
   .station-filter-btn.active { background: rgba(69,194,173,0.14); border-color: var(--teal-400); color: var(--teal-300); }
+  .seg-toggle { display: inline-flex; background: var(--bg-800); border: 1px solid var(--border); border-radius: 999px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+  .seg-toggle button { border: none; background: transparent; color: var(--text-500); font-size: 12px; font-family: inherit; padding: 6px 13px; border-radius: 999px; cursor: pointer; transition: background .15s, color .15s; }
+  .seg-toggle button.active { background: var(--teal-400); color: #06161c; font-weight: 600; }
   .chart-range-note { font-size: 11.5px; color: var(--text-600); }
   .chart-canvas-wrap { height: 320px; position: relative; }
   .chart-empty-note { color: var(--text-500); font-size: 13px; text-align: center; padding: 60px 20px; }
@@ -314,17 +317,35 @@
 
   <section class="section">
     <div class="wrap">
-      <div class="empty-panel">
-        <div class="icon">ℹ️</div>
-        <h3>หมายเหตุเกี่ยวกับข้อมูลโทรมาตร</h3>
-        <p>
-          อ่างเก็บน้ำห้วยจำตุ้มยังไม่มีสถานีโทรมาตรติดตั้ง จึงแสดงเฉพาะข้อมูล spillway/ความจุแบบ
-          static ในตารางด้านบน · % ความจุที่แสดงคำนวณจากตาราง rating curve (ระดับน้ำ → พื้นที่ผิวน้ำ →
-          ปริมาตร) ของแต่ละอ่างเทียบกับความจุที่ระดับ spillway ค่าที่เกิน 100% หมายถึงระดับน้ำสูงกว่า
-          สัน spillway (น้ำกำลังล้นทางระบายน้ำล้น) · ข้อมูลสภาพอากาศ/ระดับน้ำจะแสดงเป็น "ข้อมูลไม่สด"
-          หากไม่มีการอัปเดตจากสถานีนานเกิน 30 นาที
-        </p>
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">ข้อมูลย้อนหลัง · Live</div>
+          <h2>กราฟฝนสะสมย้อนหลัง</h2>
+        </div>
+        <p>ฝนสะสมรายชั่วโมงจากสถานีโทรมาตรแต่ละอ่าง (ผ่าน Google Sheet wide_log) เลือกอ่างและช่วงเวลาที่ต้องการดู — ค่าเริ่มต้น: รายวัน</p>
       </div>
+      <div class="chart-card">
+        <div class="chart-toolbar">
+          <div class="station-filter" id="rainfallStationFilter"></div>
+          <div class="seg-toggle" id="rainfallResolutionToggle">
+            <button type="button" data-res="hourly">รายชั่วโมง</button>
+            <button type="button" data-res="last24h">24 ชม.ล่าสุด</button>
+            <button type="button" data-res="daily" class="active">รายวัน</button>
+            <button type="button" data-res="weekly">รายสัปดาห์</button>
+            <button type="button" data-res="monthly">รายเดือน</button>
+          </div>
+        </div>
+        <div class="chart-canvas-wrap" id="rainfallChartCanvasWrap">
+          <canvas id="rainfallChart"></canvas>
+        </div>
+        <span class="chart-range-note" id="rainfallRangeNote"></span>
+      </div>
+      <p style="font-size:12px; color:var(--text-500); margin-top:14px;">
+        นับเฉพาะค่าฝน 1 ชม. ล่าสุดในแต่ละชั่วโมงปฏิทินเป็นฝนของชั่วโมงนั้น (ไม่บวกรวมทุกรอบ poll 10 นาที
+        เพราะ rainfall_1h เป็นค่าสะสมย้อนหลัง 1 ชม.ต่อรอบอยู่แล้ว) · ชั่วโมงที่ไม่มีข้อมูลจะเว้นช่องว่างไว้
+        ไม่ใช่ฝน 0 มม. · สถานีห้วยถ้ำ (RES005) รายงานไม่ครบทุกรอบ poll อาจมีช่วงขาดหายเป็นระยะ ·
+        อ่างเก็บน้ำห้วยจำตุ้มยังไม่มีสถานีโทรมาตรติดตั้ง จึงไม่มีข้อมูลในกราฟนี้
+      </p>
     </div>
   </section>
 
@@ -610,6 +631,168 @@ function renderStationFilter(stations) {
   });
 }
 
+// --- กราฟฝนสะสมย้อนหลัง (2026-07-30) — แทนที่กล่อง "หมายเหตุเกี่ยวกับข้อมูลโทรมาตร" เดิม ---
+// ข้อมูลดิบ (station.rainfall_hourly) เป็น "1 ค่า/ชั่วโมงปฏิทิน" ที่ backend
+// (monitoring_data_builder.py) คัดมาแล้ว (หยิบค่า rainfall_1h ล่าสุดในแต่ละชั่วโมง ไม่บวกรวมทุกรอบ
+// poll 10 นาที) — ฝั่งหน้าเว็บมีหน้าที่แค่ "รวม" ค่าที่คัดมาแล้วนี้ตามความละเอียดที่เลือกเท่านั้น
+// (ไม่ใช่ไปหยิบข้อมูลดิบมาคำนวณเองอีกชั้น)
+let rainfallChart = null;
+let rainfallStations = [];
+let activeRainfallStationCode = null;
+let activeRainfallResolution = 'daily';
+
+const RAINFALL_RESOLUTION_LABELS = {
+  hourly: 'รายชั่วโมง (48 ชม.ล่าสุด)',
+  last24h: 'ย้อนหลัง 24 ชั่วโมง',
+  daily: 'รายวัน',
+  weekly: 'รายสัปดาห์ (เริ่มวันจันทร์)',
+  monthly: 'รายเดือน',
+};
+
+function rfBucketKeyDaily(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function rfBucketKeyMonthly(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+function rfBucketKeyWeekly(d) {
+  const dayIdx = (d.getDay() + 6) % 7; // จันทร์=0 ... อาทิตย์=6
+  const monday = new Date(d);
+  monday.setHours(0, 0, 0, 0);
+  monday.setDate(d.getDate() - dayIdx);
+  return rfBucketKeyDaily(monday);
+}
+
+function aggregateRainfall(points, resolution) {
+  if (!points || !points.length) return { labels: [], values: [] };
+  const parsed = points.map(p => ({ t: new Date(p.t), rain: p.rain_mm })).sort((a, b) => a.t - b.t);
+  const latest = parsed[parsed.length - 1].t;
+
+  if (resolution === 'hourly' || resolution === 'last24h') {
+    const windowHours = resolution === 'last24h' ? 24 : 48;
+    const cutoff = new Date(latest.getTime() - windowHours * 3600 * 1000);
+    const windowed = parsed.filter(p => p.t >= cutoff);
+    return {
+      labels: windowed.map(p => p.t.toLocaleString('th-TH', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })),
+      values: windowed.map(p => Math.round(p.rain * 10) / 10),
+    };
+  }
+
+  let keyFn, windowCount, labelFmt;
+  if (resolution === 'weekly') {
+    keyFn = rfBucketKeyWeekly;
+    windowCount = 12;
+    labelFmt = key => 'wk ' + new Date(key).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit' });
+  } else if (resolution === 'monthly') {
+    keyFn = rfBucketKeyMonthly;
+    windowCount = 12;
+    labelFmt = key => {
+      const [y, m] = key.split('-');
+      return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('th-TH', { month: 'short', year: '2-digit' });
+    };
+  } else {
+    keyFn = rfBucketKeyDaily;
+    windowCount = 31;
+    labelFmt = key => new Date(key).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit' });
+  }
+
+  const sums = new Map();
+  parsed.forEach(p => {
+    const key = keyFn(p.t);
+    sums.set(key, (sums.get(key) || 0) + p.rain);
+  });
+  const keys = Array.from(sums.keys()).sort().slice(-windowCount);
+  return {
+    labels: keys.map(labelFmt),
+    values: keys.map(k => Math.round(sums.get(k) * 10) / 10),
+  };
+}
+
+function renderRainfallChart() {
+  const wrap = document.getElementById('rainfallChartCanvasWrap');
+  const rangeNote = document.getElementById('rainfallRangeNote');
+  const station = rainfallStations.find(s => s.station_code === activeRainfallStationCode);
+
+  if (!station || !station.rainfall_hourly || !station.rainfall_hourly.length) {
+    wrap.innerHTML = '<div class="chart-empty-note">ไม่มีข้อมูลฝนย้อนหลังสำหรับสถานีนี้</div>';
+    rangeNote.textContent = '';
+    return;
+  }
+
+  const { labels, values } = aggregateRainfall(station.rainfall_hourly, activeRainfallResolution);
+  if (!labels.length) {
+    wrap.innerHTML = '<div class="chart-empty-note">ไม่มีข้อมูลในช่วงเวลาที่เลือกสำหรับสถานีนี้</div>';
+    rangeNote.textContent = '';
+    return;
+  }
+
+  if (!document.getElementById('rainfallChart')) {
+    wrap.innerHTML = '<canvas id="rainfallChart"></canvas>';
+  }
+  const canvas = document.getElementById('rainfallChart');
+  const ctx = canvas.getContext('2d');
+
+  if (rainfallChart) { rainfallChart.destroy(); rainfallChart = null; }
+  rainfallChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'ฝนสะสม (มม.)', data: values,
+        backgroundColor: 'rgba(69,194,173,0.55)', borderColor: '#45c2ad', borderWidth: 1, borderRadius: 3,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => c.parsed.y.toFixed(1) + ' มม.' } },
+      },
+      scales: {
+        x: {
+          ticks: { color: '#8aa3a0', maxTicksLimit: 14, font: { family: 'IBM Plex Sans Thai', size: 10.5 }, maxRotation: 0 },
+          grid: { display: false },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: '#8aa3a0', font: { family: 'IBM Plex Sans Thai', size: 10.5 } },
+          grid: { color: 'rgba(157,201,201,0.08)' },
+          title: { display: true, text: 'ฝนสะสม (มม.)', color: '#8aa3a0', font: { size: 11 } },
+        },
+      },
+    },
+  });
+
+  const first = new Date(station.rainfall_hourly[0].t);
+  const last = new Date(station.rainfall_hourly[station.rainfall_hourly.length - 1].t);
+  rangeNote.textContent =
+    `${RAINFALL_RESOLUTION_LABELS[activeRainfallResolution]} · ข้อมูลดิบสะสมตั้งแต่ ${first.toLocaleDateString('th-TH')} – ${last.toLocaleDateString('th-TH')}`;
+}
+
+function renderRainfallStationFilter(stations) {
+  const filterEl = document.getElementById('rainfallStationFilter');
+  filterEl.innerHTML = stations.map(s =>
+    `<button type="button" class="station-filter-btn${s.station_code === activeRainfallStationCode ? ' active' : ''}" data-code="${s.station_code}">${s.name_th}</button>`
+  ).join('');
+  filterEl.querySelectorAll('.station-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeRainfallStationCode = btn.getAttribute('data-code');
+      filterEl.querySelectorAll('.station-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+      renderRainfallChart();
+    });
+  });
+}
+
+document.querySelectorAll('#rainfallResolutionToggle button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#rainfallResolutionToggle button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeRainfallResolution = btn.dataset.res;
+    renderRainfallChart();
+  });
+});
+
 fetch(DATA_ENDPOINT)
   .then(res => {
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -627,9 +810,16 @@ fetch(DATA_ENDPOINT)
     if (typeof Chart === 'undefined') {
       document.getElementById('chartCanvasWrap').innerHTML =
         '<div class="chart-empty-note">โหลด Chart.js ไม่สำเร็จ (assets/js/chart.umd.min.js)</div>';
+      document.getElementById('rainfallChartCanvasWrap').innerHTML =
+        '<div class="chart-empty-note">โหลด Chart.js ไม่สำเร็จ (assets/js/chart.umd.min.js)</div>';
     } else {
       renderStationFilter(stations);
       renderTrendChart();
+
+      rainfallStations = stations;
+      activeRainfallStationCode = stations.length ? stations[0].station_code : null;
+      renderRainfallStationFilter(stations);
+      renderRainfallChart();
     }
   })
   .catch(err => {
@@ -641,6 +831,8 @@ fetch(DATA_ENDPOINT)
     document.getElementById('cadenceTableBody').innerHTML =
       '<tr><td colspan="3">ไม่สามารถโหลดข้อมูลจาก ' + DATA_ENDPOINT + ' ได้</td></tr>';
     document.getElementById('chartCanvasWrap').innerHTML =
+      '<div class="chart-empty-note">ไม่สามารถโหลดข้อมูลกราฟจาก ' + DATA_ENDPOINT + ' ได้</div>';
+    document.getElementById('rainfallChartCanvasWrap').innerHTML =
       '<div class="chart-empty-note">ไม่สามารถโหลดข้อมูลกราฟจาก ' + DATA_ENDPOINT + ' ได้</div>';
   });
 </script>
