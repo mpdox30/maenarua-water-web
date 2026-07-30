@@ -1,0 +1,980 @@
+{
+  "type": "FeatureCollection",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "ท่อpe0.40ม.",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.810839,
+          19.097794
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.811768,
+          19.099377
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.814531,
+          19.099534
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.81788,
+          19.10129
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ปตร.",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "แบ่งน้ำจากท่อpeลงรางผิวดิน",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.821408,
+          19.104725
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.821583,
+          19.104746
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.821877,
+          19.106582
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.825045,
+          19.109326
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.825393,
+          19.110974
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.825622,
+          19.112242
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.825198,
+          19.109981
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "ท่อน้้ำออก",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.821887,
+          19.104538
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ถังเก็บน้ำเหล็ก",
+        "type": "ประปา",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.825525,
+          19.103371
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "จุดปล่อยน้ำ 1 ด้าน",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.82558,
+          19.104351
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ปตร.",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "จ่ายน้ำจากรางคอนกรีต",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.82588,
+          19.10426
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.826451,
+          19.104437
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดแบ่งน้ำ",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "แบ่งน้ำคลองคินกรีนเป็นสองเส้น",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.829162,
+          19.105909
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.828371,
+          19.10633
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ท่อระบายทราย",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.82867,
+          19.107241
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.828667,
+          19.107441
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ปตร.",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.828737,
+          19.107578
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.824916,
+          19.099967
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดแบ่งน้ำ",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "แบ่งน้ำจากท่อpeลงคลองคอนกรีต",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.825069,
+          19.099982
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ท่อระบายทราย",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.821365,
+          19.104616
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ปตร.",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.829168,
+          19.099681
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ปตร.",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.829893,
+          19.098583
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ปตร.",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.830534,
+          19.097878
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ปตร.",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.83166,
+          19.098385
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ปตร.",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.833065,
+          19.098187
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ปตร.",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.833653,
+          19.099287
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ปตร.",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.833728,
+          19.099466
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ปตร.",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "ปล่อยน้ำ 2 ด้าน",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.834798,
+          19.100832
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ปตร.",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "ปล่อยน้ำ 2 ด้าน",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.836425,
+          19.100193
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ปตร.",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.837554,
+          19.099867
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ปตร.",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.838852,
+          19.099469
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ปตร.",
+        "type": "โครงสร้าง",
+        "status": "ไม่สามารถใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.840931,
+          19.100536
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ปตร.",
+        "type": "โครงสร้าง",
+        "status": "ใช้งานได้",
+        "detail": "",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.841442,
+          19.101422
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ถังเก็บน้ำคสล.",
+        "type": "ประปา",
+        "status": "ใช้งานได้",
+        "detail": "เพิ่มเติม",
+        "tambon": "แม่นาเรือ"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.821246,
+          19.106494
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดแบ่งน้ำ",
+        "type": "โครงสร้าง",
+        "status": "",
+        "detail": "",
+        "tambon": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.82134,
+          19.104654
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดแบ่งน้ำ",
+        "type": "โครงสร้าง",
+        "status": "",
+        "detail": "",
+        "tambon": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.821371,
+          19.104755
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "",
+        "detail": "",
+        "tambon": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.828442,
+          19.106816
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "",
+        "detail": "จุดปล่อยน้ำ 1 ด้าน",
+        "tambon": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.826147,
+          19.105286
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "",
+        "detail": "จุดปล่อยน้ำ 1 ด้าน",
+        "tambon": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.825943,
+          19.10622
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "",
+        "detail": "จุดปล่อยน้ำ 1 ด้าน",
+        "tambon": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.825923,
+          19.10689
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "",
+        "detail": "จุดปล่อยน้ำ 1 ด้าน",
+        "tambon": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.826308,
+          19.107433
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "",
+        "detail": "จุดปล่อยน้ำ 1 ด้าน",
+        "tambon": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.826611,
+          19.107922
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "",
+        "detail": "จุดปล่อยน้ำ 1 ด้าน",
+        "tambon": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.827072,
+          19.109015
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "",
+        "detail": "จุดปล่อยน้ำ 1 ด้าน",
+        "tambon": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.827309,
+          19.110042
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดแบ่งน้ำ",
+        "type": "โครงสร้าง",
+        "status": "",
+        "detail": "",
+        "tambon": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.82151,
+          19.106371
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "",
+        "detail": "",
+        "tambon": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.824552,
+          19.10807
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "",
+        "detail": "",
+        "tambon": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.812734,
+          19.096013
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "",
+        "detail": "",
+        "tambon": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.815955,
+          19.096946
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "",
+        "detail": "",
+        "tambon": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.819171,
+          19.098217
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "จุดปล่อยน้ำ",
+        "type": "โครงสร้าง",
+        "status": "",
+        "detail": "",
+        "tambon": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.821603,
+          19.098826
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ปตร.",
+        "type": "โครงสร้าง",
+        "status": "",
+        "detail": "",
+        "tambon": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.839103,
+          19.099385
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ปตร.อ่างแม่นาเรือ ฝั่งสปิลเวย์",
+        "type": "โครงสร้าง",
+        "status": "",
+        "detail": "",
+        "tambon": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.810919,
+          19.094724
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ปตร.อ่างแม่นาเรือ ฝั่งทางขึ้น",
+        "type": "โครงสร้าง",
+        "status": "",
+        "detail": "",
+        "tambon": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.809864,
+          19.096636
+        ]
+      }
+    }
+  ]
+}

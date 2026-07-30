@@ -1,0 +1,711 @@
+{
+  "type": "FeatureCollection",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายห้วยเครือบ้า",
+        "detail": "สันฝายกว้าง 6 ม.\nยาว 1,000 ม.\nสันฝายสูง 2 ม.\nพื้นที่รับน้ำ 18,000 ตร.กม."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.828579,
+          19.111427
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายห้วยเครือบ้า 2",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.830097,
+          19.116634
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายหลัง ร.ร.แม่นาเรือใต้",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.846085,
+          19.114176
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายห้วยโป่งหิน 1",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.839802,
+          19.099348
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายห้วยโป่งหิน 2",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.845501,
+          19.10028
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝาย (พระครูหลี)",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.849739,
+          19.114918
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายพ่อใหญ่",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.871729,
+          19.080376
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ห้วยปูสิงห์",
+        "detail": "สันฝายกว้าง 3 ม.\nยาว 3 ม.\nสูง 1 ม."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.864967,
+          19.108964
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "เหมืองขมุ 1",
+        "detail": "กว้าง 0.5 ยาว 5 สูง 0.5"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.869445,
+          19.112766
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "เหมืองขมุ 2",
+        "detail": "กว้าง 0.5 ยาว 5 สูง 0.5"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.872976,
+          19.118822
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายน้ำล้นห้วยดินแดง",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.832126,
+          19.096591
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายปงผักฮ๋ม",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.834604,
+          19.103492
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายปงป่างิ้ว",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.841875,
+          19.1088
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายน้ำล้น",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.840478,
+          19.106999
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายยายเปลี่ยน",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.842521,
+          19.110722
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายฝามหอม",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.84478,
+          19.111724
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายห้วยผักหละ",
+        "detail": "สันฝายกว้าง 10 ม.\nยาว 8 ม.\nสูง 3 ม."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.859089,
+          19.084385
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝานน้ำล้น 1",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.853117,
+          19.11915
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายน้ำล้น 2",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.853972,
+          19.120845
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายหลัง ร.ร.แม่นาเรือ",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.854378,
+          19.12396
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายหลัง ร.ร.แม่นาเรือ 2",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.856502,
+          19.130204
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายหลัง ร.ร.แม่นาเรือ 3",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.858017,
+          19.130965
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายหลัง ร.ร.แม่นาเรือ 4",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.858348,
+          19.132482
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายพ่อน้อยหยุน",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.847863,
+          19.114231
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายห้วยน้ำจำ",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.845108,
+          19.105171
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายร่องไผ่",
+        "detail": "ฝายกว้าง 1 ม.\nยาว 18 ม."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.877466,
+          19.045395
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายห้วยแข้",
+        "detail": "ฝายกว้าง 1 ม.\nยาว 18 ม."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.876449,
+          19.056216
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายจำตอง",
+        "detail": "ฝายกว้าง 1 ม.\nยาว 18 ม."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.87891,
+          19.059774
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายหัวทุ่ง",
+        "detail": "ฝายกว้าง 1 ม.\nยาว 18 ม."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.879466,
+          19.064281
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายวังตาก",
+        "detail": "ฝายกว้าง 1 ม.\nยาว 18 ม."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.879531,
+          19.065745
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายสมหมาย",
+        "detail": "ฝายกว้าง 1 ม.\nยาว 18 ม."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.879469,
+          19.068456
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายทุ่งอ้อย",
+        "detail": "ฝายกว้าง 1 ม.\nยาว 18 ม."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.878551,
+          19.070864
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายวนอุทยานร่องคำหลวง",
+        "detail": "ฝายกว้าง 3 เมตร\nฝายยาว 8 เมตร"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.86193,
+          19.050368
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ห้วยร่องคำ 1",
+        "detail": "ฝายกว้าง 4 ม.\nยาว 10 ม.\nสูง 4 ม."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.858828,
+          19.098348
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ห้อยร่องคำ 2",
+        "detail": "ฝายกว้าง 4 ม.\nยาว 10 ม.\nสูง 2.5 ม."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.858727,
+          19.097128
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ห้วยร่องคำ 3",
+        "detail": "ฝายกว้าง 1 ม.\nยาว 8 ม.\nสูง 2 ม."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.861377,
+          19.091251
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ห้วยร่องคำ4",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.862621,
+          19.089248
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายน้ำจำ1",
+        "detail": "สันฝายกว้าง 5 ม.\nยาว 7 ม.\nสูง 2 ม.\nพื้นที่รับน้ำ 0.5 ตร.กม."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.854829,
+          19.104484
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายน้ำจำ 2",
+        "detail": "สันฝายกว้าง 4 ม.\nยาว 4 ม.\nสูง 2 ม.\nพื้นที่รับน้ำ 0.1 ตร.กม."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.85566,
+          19.105203
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายน้ำจำ 3",
+        "detail": "สันฝายกว้าง 5 ม.\nยาว 7 ม.\nสูง 3 ม.\nพื้นที่รับน้ำ 0.2 ตร.กม."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.8574,
+          19.10534
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายน้ำจำ 4",
+        "detail": "สันฝายกว้าง 4 ม.\nยาว 12 ม.\nสูง 5 ม.\nพื้นที่รับน้ำ 2 ตร.กม."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.861746,
+          19.105527
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายพ่อหลวงพร",
+        "detail": "ฝาย บ้านพ่อหลวงพร บ้านนายเต้า\nสันฝาย 1.5 ม.\nกว้าง 10 ม."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.827759,
+          19.101553
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายเหมืองจุ๋มปี",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.816443,
+          19.096769
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายซีเมนต์",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.830307,
+          19.101605
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายฮ่องแล้ง",
+        "detail": "สันฝายกว้าง 12 ม.\nยาว 8 ม.\nสูง 1.5 ม.\nพื้นที่รับน้ำ 144 ตร.กม."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.867167,
+          19.120693
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายน้ำล้น 1",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.851013,
+          19.114885
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายน้ำล้น 2",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.851326,
+          19.114757
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายน้ำล้น 3",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.852382,
+          19.114761
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายน้ำล้น 4",
+        "detail": "กว้าง 2 ม.\nยาว  4 ม."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.853239,
+          19.115028
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ฝายน้ำล้น 5",
+        "detail": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          99.852013,
+          19.117031
+        ]
+      }
+    }
+  ]
+}

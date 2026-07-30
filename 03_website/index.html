@@ -592,7 +592,10 @@
           <label class="layer-toggle"><input type="checkbox" id="toggle-a" checked><span class="legend-dot" style="background:#e0a94f"></span>Zone A — Rainfed</label>
           <label class="layer-toggle"><input type="checkbox" id="toggle-b" checked><span class="legend-dot" style="background:#45c2ad"></span>Zone B — พื้นที่ใช้น้ำ</label>
           <label class="layer-toggle"><input type="checkbox" id="toggle-res" checked><span class="legend-dot" style="background:#1e3a8a"></span>อ่างเก็บน้ำ (7 แห่ง)</label>
-          <label class="layer-toggle"><input type="checkbox" id="toggle-canal" checked><span class="legend-dot" style="background:transparent; border:1.5px solid #4f9fe0;"></span>คลอง/เส้นทางส่งน้ำ (17 เส้น)</label>
+          <label class="layer-toggle"><input type="checkbox" id="toggle-canal" checked><span class="legend-dot" style="background:transparent; border:1.5px solid #4f9fe0;"></span>คลอง/เส้นทางส่งน้ำ (23 เส้น)</label>
+          <label class="layer-toggle"><input type="checkbox" id="toggle-dam" checked><span class="legend-dot" style="background:#b45309"></span>ฝาย (50 แห่ง)</label>
+          <label class="layer-toggle"><input type="checkbox" id="toggle-irr" checked><span class="legend-dot" style="background:transparent; border:1.5px solid #f97316;"></span>ระบบส่งน้ำ (13 เส้น)</label>
+          <label class="layer-toggle"><input type="checkbox" id="toggle-dist" checked><span class="legend-dot" style="background:#22c55e"></span>จุดจ่ายน้ำ (57 จุด)</label>
         </div>
       </div>
     </div>
@@ -907,6 +910,12 @@ const FullscreenControl = L.Control.extend({
 });
 map.addControl(new FullscreenControl());
 
+// 2026-07-30 เพิ่ม — เลเยอร์ฝาย (wmb_check_dams.geojson.json 50 จุด, รวมจาก 16 ไฟล์ต่อหมู่ใน
+// D:\WMB_Phayao\01_raw_data\Check dam — 1 จุดข้อมูลต้นฉบับพิกัดผิดปกติถูกตัดออก), ระบบส่งน้ำ
+// (wmb_irrigation_lines.geojson.json 13 เส้น) และจุดจ่ายน้ำ (wmb_distribution_points.geojson.json
+// 57 จุด) จาก D:\WMB_Phayao\01_raw_data\Irrigation system — แปลงจาก EPSG:32647 เป็น EPSG:4326/CRS84
+// ให้ตรง convention เดิม -- เพิ่มเพื่อแสดงผลบนแผนที่เท่านั้น ไม่กระทบโมเดล/pipeline ใด ๆ
+// (canal layer เดิมอัปเดตเป็น 23 เส้นแล้วในไฟล์ wmb_canals.geojson.json — รวม เส้นน้ำเพิ่มเติม.shp)
 Promise.all([
   fetch('assets/data/tambon_boundary.geojson.json').then(r => r.json()),
   fetch('assets/data/villages.geojson.json').then(r => r.json()),
@@ -914,8 +923,11 @@ Promise.all([
   fetch('assets/data/zone_b.geojson.json').then(r => r.json()),
   fetch('assets/data/wmb_reservoirs7.geojson.json').then(r => r.json()),
   fetch('assets/data/wmb_canals.geojson.json').then(r => r.json()),
+  fetch('assets/data/wmb_check_dams.geojson.json').then(r => r.json()),
+  fetch('assets/data/wmb_irrigation_lines.geojson.json').then(r => r.json()),
+  fetch('assets/data/wmb_distribution_points.geojson.json').then(r => r.json()),
   fetch('assets/data/monitoring.json').then(r => r.json()).catch(() => null)
-]).then(([tambonBoundaryGeoJSON, villagesGeoJSON, zoneAGeoJSON, zoneBGeoJSON, reservoirsGeoJSON, canalsGeoJSON, monitoringData]) => {
+]).then(([tambonBoundaryGeoJSON, villagesGeoJSON, zoneAGeoJSON, zoneBGeoJSON, reservoirsGeoJSON, canalsGeoJSON, checkDamsGeoJSON, irrigationLinesGeoJSON, distributionPointsGeoJSON, monitoringData]) => {
 
   // สร้าง lookup ชื่อไทยของอ่าง -> ข้อมูลโทรมาตรสด (ระดับน้ำ/%ความจุ/ปริมาณกักเก็บ) จาก monitoring.json
   // (ย้อนอ้างอิงจาก reservoirs[].station_code -> stations[] ตาม pattern เดียวกับ monitoring.html)
@@ -989,6 +1001,32 @@ Promise.all([
     return '<b>คลอง/เส้นทางส่งน้ำ</b><br>' + (p.name || '-');
   }).addTo(map);
 
+  const checkDamLayer = L.geoJSON(checkDamsGeoJSON, {
+    pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
+      radius: 5, color: '#b45309', weight: 1.5, fillColor: '#b45309', fillOpacity: 0.85
+    })
+  }).bindPopup(function(layer){
+    const p = layer.feature.properties;
+    return '<b>ฝาย — ' + (p.name || '-') + '</b>' + (p.detail ? '<br>' + p.detail.replace(/\n/g, '<br>') : '');
+  }).addTo(map);
+
+  const irrigationLineLayer = L.geoJSON(irrigationLinesGeoJSON, {
+    style: { color: '#f97316', weight: 2, dashArray: '4,3' }
+  }).bindPopup(function(layer){
+    const p = layer.feature.properties;
+    return '<b>ระบบส่งน้ำ — ' + (p.name || '-') + '</b><br>' + (p.material || '') + (p.category ? ' · ' + p.category : '');
+  }).addTo(map);
+
+  const distributionPointLayer = L.geoJSON(distributionPointsGeoJSON, {
+    pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
+      radius: 5, color: '#22c55e', weight: 1.5, fillColor: '#22c55e', fillOpacity: 0.85
+    })
+  }).bindPopup(function(layer){
+    const p = layer.feature.properties;
+    return '<b>จุดจ่ายน้ำ — ' + (p.name || '-') + '</b><br>' + (p.type || '') +
+      (p.status ? ' · ' + p.status : '') + (p.detail ? '<br>' + p.detail : '');
+  }).addTo(map);
+
   document.getElementById('toggle-tambon').addEventListener('change', e => {
     if (e.target.checked) map.addLayer(tambonLayer); else map.removeLayer(tambonLayer);
   });
@@ -1006,6 +1044,15 @@ Promise.all([
   });
   document.getElementById('toggle-canal').addEventListener('change', e => {
     if (e.target.checked) map.addLayer(canalLayer); else map.removeLayer(canalLayer);
+  });
+  document.getElementById('toggle-dam').addEventListener('change', e => {
+    if (e.target.checked) map.addLayer(checkDamLayer); else map.removeLayer(checkDamLayer);
+  });
+  document.getElementById('toggle-irr').addEventListener('change', e => {
+    if (e.target.checked) map.addLayer(irrigationLineLayer); else map.removeLayer(irrigationLineLayer);
+  });
+  document.getElementById('toggle-dist').addEventListener('change', e => {
+    if (e.target.checked) map.addLayer(distributionPointLayer); else map.removeLayer(distributionPointLayer);
   });
 
 }).catch(err => {
