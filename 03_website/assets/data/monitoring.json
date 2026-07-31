@@ -1,7 +1,7 @@
 {
   "meta": {
     "source": "สถานีโทรมาตร สสน. (API) ผ่าน Google Sheet wide_log (poll ทุก 10 นาที) + HII open data (tiservice.hii.or.th, รายชั่วโมงผ่าน QC, เดือนที่ปิดแล้ว) + 01_data/Reservoirs/reference (rating curve ต่ออ่าง)",
-    "updated": "2026-07-31T14:40:00",
+    "updated": "2026-07-31T14:50:00",
     "data_connected": true
   },
   "stations": [
@@ -10,17 +10,17 @@
       "name_th": "อ่างเก็บน้ำแม่นาเรือ",
       "name_en": "Mae Na Rua Reservoir",
       "spillway_msl": 489.54,
-      "water_level": 488.156,
-      "rainfall_1h": 22.2,
-      "temperature": 24.35,
-      "humidity": 92.89,
-      "pressure": 951.27,
-      "solar": 43.8,
-      "measure_datetime": "2026-07-31T14:40:00",
-      "storage_m3": 1222424.4,
+      "water_level": 488.17,
+      "rainfall_1h": 26.0,
+      "temperature": 24.32,
+      "humidity": 92.96,
+      "pressure": 951.14,
+      "solar": 64.1,
+      "measure_datetime": "2026-07-31T14:50:00",
+      "storage_m3": 1226420.1,
       "storage_max_m3": 1625463.8,
-      "capacity_pct": 75.2,
-      "distance_to_spillway_m": -1.384,
+      "capacity_pct": 75.5,
+      "distance_to_spillway_m": -1.37,
       "history": [
         {
           "t": "2026-07-17T14:50:00",
@@ -6254,7 +6254,7 @@
         },
         {
           "t": "2026-07-31T14:00:00",
-          "rain_mm": 22.2
+          "rain_mm": 26.0
         }
       ]
     },
@@ -6263,17 +6263,17 @@
       "name_th": "อ่างเก็บน้ำวิทยาลัยเกษตร",
       "name_en": "Phayao C.A.T. Reservoir",
       "spillway_msl": 457.07,
-      "water_level": 455.69,
-      "rainfall_1h": 6.8,
-      "temperature": 24.05,
-      "humidity": 93.87,
-      "pressure": 954.62,
-      "solar": 60.9,
-      "measure_datetime": "2026-07-31T14:40:00",
-      "storage_m3": 274417.6,
+      "water_level": 455.695,
+      "rainfall_1h": 9.2,
+      "temperature": 24.23,
+      "humidity": 94.04,
+      "pressure": 954.38,
+      "solar": 88.5,
+      "measure_datetime": "2026-07-31T14:50:00",
+      "storage_m3": 274668.7,
       "storage_max_m3": 347778.7,
-      "capacity_pct": 78.9,
-      "distance_to_spillway_m": -1.38,
+      "capacity_pct": 79.0,
+      "distance_to_spillway_m": -1.375,
       "history": [
         {
           "t": "2026-07-17T14:50:00",
@@ -12507,7 +12507,7 @@
         },
         {
           "t": "2026-07-31T14:00:00",
-          "rain_mm": 6.8
+          "rain_mm": 9.2
         }
       ]
     },
@@ -18665,17 +18665,17 @@
       "name_th": "อ่างเก็บน้ำห้วยโซ้",
       "name_en": "Huai So Reservoir",
       "spillway_msl": 508.0,
-      "water_level": 508.049,
+      "water_level": 508.056,
       "rainfall_1h": 0.0,
-      "temperature": 24.91,
-      "humidity": 95.12,
-      "pressure": 949.09,
-      "solar": 93.7,
-      "measure_datetime": "2026-07-31T14:40:00",
-      "storage_m3": 120690.2,
+      "temperature": 25.35,
+      "humidity": 93.97,
+      "pressure": 948.91,
+      "solar": 145.6,
+      "measure_datetime": "2026-07-31T14:50:00",
+      "storage_m3": 120930.6,
       "storage_max_m3": 119007.2,
-      "capacity_pct": 101.4,
-      "distance_to_spillway_m": 0.049,
+      "capacity_pct": 101.6,
+      "distance_to_spillway_m": 0.056,
       "history": [
         {
           "t": "2026-07-17T14:50:00",
