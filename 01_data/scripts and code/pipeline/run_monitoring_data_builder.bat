@@ -21,6 +21,11 @@ REM      เหมือนเดิมซ้ำๆ ภายในชั่ว�
 REM ผลคือ: ไม่ต้องสร้าง scheduled task "MaeNaRua_Inflow6h_Display_Estimate" แยกอีกต่อไป --
 REM run_inflow_6h_display_estimate.bat ยังใช้รันมือ/ทดสอบเดี่ยวๆ ได้ปกติ แค่ไม่ต้องเอาไปตั้ง schtasks เอง
 REM
+REM **2026-07-31 เพิ่มอีกตัว**: รวม forecast_accuracy_logger.py เข้ามาด้วย (บันทึก log เปรียบเทียบ
+REM ค่าพยากรณ์ Q_in (h1-h7 จาก latest.json) กับค่าจริงที่คำนวณได้ภายหลัง (จาก
+REM RES002_daily_computed.csv) ไว้ที่ 01_data/forecasting_results/Reservoir_inflow/
+REM forecast_accuracy_log.csv สำหรับปรับจูนโมเดลในอนาคต) -- idempotent เหมือนกัน รันถี่กี่รอบก็ไม่มี
+REM ผลข้างเคียง (แค่ no-op ถ้าไม่มีอะไรใหม่) เหตุผลที่รวมเข้ามาแทนแยก task เหมือนกับเหตุผลข้อ 2) ด้านบน
 REM ใช้ .venv เดียวกับ run_pipeline.bat ที่ D:\maenaruea-water-web\.venv
 REM
 REM ความถี่ที่แนะนำ: ทุก 10-15 นาที (ให้ใกล้เคียงรอบ poll ของสถานีโทรมาตรเอง ~10 นาที)
@@ -79,6 +84,18 @@ echo [INFO] inflow_6h_display_estimate.py exited with code %INFLOW_EXIT_CODE%
 echo   (รันอิสระจาก monitoring_data_builder.py ด้านบน -- ตัวหนึ่งพังไม่บล็อกอีกตัว เพราะเขียนคนละไฟล์
 echo    output กันคนละไฟล์ ไม่พึ่งพากัน)
 
+echo.
+echo [INFO] Running forecast_accuracy_logger.py (log predicted vs actual, display/tuning only) ...
+echo.
+
+"%VENV_PYTHON%" forecast_accuracy_logger.py
+set "LOGGER_EXIT_CODE=%ERRORLEVEL%"
+
+echo.
+echo [INFO] forecast_accuracy_logger.py exited with code %LOGGER_EXIT_CODE%
+echo   (อ่าน latest.json + RES002_daily_computed.csv อย่างเดียว เขียนแค่ forecast_accuracy_log.csv --
+echo    ไม่แตะ/ไม่พึ่งพา 2 สคริปต์ด้านบน)
+
 REM ============================================================================
 REM 2026-07-20 เพิ่ม -- push monitoring.json ขึ้น GitHub ทุกรอบที่รันสำเร็จ
 REM 2026-07-20 แก้ (รอบ 2) -- เอา "git pull --rebase --autostash" ออก เพราะเคยไปชนกับตอนที่แก้
@@ -101,13 +118,13 @@ REM
 REM เจตนา: git add เฉพาะไฟล์ที่รู้จักตรงๆ (ไม่ใช้ git add -A) เพื่อไม่ให้ไปพ่วงไฟล์อื่นที่ scheduled
 REM task อื่น (run_pipeline.bat, sync_to_drive.bat ฯลฯ) อาจกำลังแก้อยู่พร้อมกันโดยไม่ได้ตั้งใจ
 REM
-REM **2026-07-31**: ตอนนี้ push 2 ไฟล์ต่อรอบ (monitoring.json + inflow_6h_display.json) ในรอบ
-REM pull/push เดียวกัน -- แต่ละไฟล์ add เฉพาะตอนที่สคริปต์ของมันสำเร็จ (BUILDER_EXIT_CODE /
-REM INFLOW_EXIT_CODE แยกกัน) ถ้าสำเร็จแค่ตัวเดียวก็ยัง push ตัวที่สำเร็จได้ตามปกติ ไม่ต้องรอให้ทั้งคู่
-REM สำเร็จพร้อมกัน
+REM **2026-07-31**: ตอนนี้ push 3 ไฟล์ต่อรอบ (monitoring.json + inflow_6h_display.json +
+REM forecast_accuracy_log.csv) ในรอบ pull/push เดียวกัน -- แต่ละไฟล์ add เฉพาะตอนที่สคริปต์ของมันสำเร็จ
+REM (BUILDER_EXIT_CODE / INFLOW_EXIT_CODE / LOGGER_EXIT_CODE แยกกัน) ถ้าสำเร็จแค่บางตัวก็ยัง push
+REM ตัวที่สำเร็จได้ตามปกติ ไม่ต้องรอให้ทั้งหมดสำเร็จพร้อมกัน
 REM ============================================================================
-if not "%BUILDER_EXIT_CODE%"=="0" if not "%INFLOW_EXIT_CODE%"=="0" (
-    echo [WARN] ทั้งสองสคริปต์ไม่สำเร็จเลย ข้ามขั้นตอน push git รอบนี้
+if not "%BUILDER_EXIT_CODE%"=="0" if not "%INFLOW_EXIT_CODE%"=="0" if not "%LOGGER_EXIT_CODE%"=="0" (
+    echo [WARN] ทั้งสามสคริปต์ไม่สำเร็จเลย ข้ามขั้นตอน push git รอบนี้
     goto :SKIP_GIT_PUSH
 )
 
@@ -154,14 +171,15 @@ if errorlevel 1 (
 )
 
 echo.
-echo [INFO] กำลัง add ไฟล์ที่อัปเดตสำเร็จขึ้น git (monitoring.json / inflow_6h_display.json แล้วแต่ตัวไหนสำเร็จ) ...
+echo [INFO] กำลัง add ไฟล์ที่อัปเดตสำเร็จขึ้น git (monitoring.json / inflow_6h_display.json / forecast_accuracy_log.csv แล้วแต่ตัวไหนสำเร็จ) ...
 
 if "%BUILDER_EXIT_CODE%"=="0" git add "03_website/assets/data/monitoring.json"
 if "%INFLOW_EXIT_CODE%"=="0" git add "03_website/assets/data/inflow_6h_display.json"
+if "%LOGGER_EXIT_CODE%"=="0" git add "01_data/forecasting_results/Reservoir_inflow/forecast_accuracy_log.csv"
 
 git diff --cached --quiet
 if errorlevel 1 (
-    git commit -m "Auto-update: monitoring.json + inflow_6h_display.json %DATE% %TIME%" >nul 2>&1
+    git commit -m "Auto-update: monitoring.json + inflow_6h_display.json + forecast_accuracy_log.csv %DATE% %TIME%" >nul 2>&1
     git push origin master
     if errorlevel 1 (
         echo [WARN] push ไม่สำเร็จ ^(เน็ตหลุด หรือ remote ไปไกลกว่าที่มี^) -- จะลองใหม่รอบถัดไปอัตโนมัติ ^(ไม่ pull/rebase เอง^)
@@ -169,7 +187,7 @@ if errorlevel 1 (
         echo [OK] push สำเร็จ
     )
 ) else (
-    echo [INFO] ไม่มีอะไรเปลี่ยนจากรอบก่อนในทั้งสองไฟล์ ข้ามการ commit/push
+    echo [INFO] ไม่มีอะไรเปลี่ยนจากรอบก่อนในทุกไฟล์ ข้ามการ commit/push
 )
 goto :GIT_DONE
 
@@ -181,9 +199,10 @@ popd
 
 :SKIP_GIT_PUSH
 
-REM exit code รวม: 0 เฉพาะตอนที่ทั้งสองสคริปต์สำเร็จ -- ถ้าอย่างใดอย่างหนึ่งพัง ให้ non-zero เพื่อให้
+REM exit code รวม: 0 เฉพาะตอนที่ทั้งสามสคริปต์สำเร็จ -- ถ้าอย่างใดอย่างหนึ่งพัง ให้ non-zero เพื่อให้
 REM Task Scheduler เห็นว่ารอบนี้ "ไม่สมบูรณ์" แม้ git จะ push ไฟล์ที่สำเร็จไปแล้วก็ตาม
 set "COMBINED_EXIT_CODE=%BUILDER_EXIT_CODE%"
 if not "%INFLOW_EXIT_CODE%"=="0" set "COMBINED_EXIT_CODE=%INFLOW_EXIT_CODE%"
+if not "%LOGGER_EXIT_CODE%"=="0" set "COMBINED_EXIT_CODE=%LOGGER_EXIT_CODE%"
 
 endlocal & exit /b %COMBINED_EXIT_CODE%

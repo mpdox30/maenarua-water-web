@@ -284,6 +284,28 @@
         </div>
         <p>ความแม่นยำสูงสุดที่การพยากรณ์ล่วงหน้า 1 วัน และลดลงตามระยะเวลาพยากรณ์ที่เพิ่มขึ้น</p>
       </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon">🔮</div>
+          <div class="kpi-label">พยากรณ์น้ำไหลเข้ารวม <span id="kpiH1HorizonLabel">(ล่วงหน้า 1 วัน)</span></div>
+          <div class="kpi-value" id="kpiH1">—</div>
+          <div class="kpi-note" id="kpiModelNse">กำลังโหลดข้อมูล…</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">🏞️</div>
+          <div class="kpi-label">อ่างเก็บน้ำ / ที่มาข้อมูล</div>
+          <div class="kpi-value" id="kpiReservoir" style="font-size:16px;">—</div>
+          <div class="kpi-note" id="kpiDataSource">กำลังโหลดข้อมูล…</div>
+        </div>
+        <div class="kpi-card accent-amber">
+          <div class="kpi-icon">⚠️</div>
+          <div class="kpi-label">Horizon ความเชื่อมั่นต่ำ</div>
+          <div class="kpi-value" id="kpiLowConfCount">—</div>
+          <div class="kpi-note">NSE ติดลบบนชุดทดสอบ — ดูคำเตือนใต้กราฟก่อนใช้งานจริง</div>
+        </div>
+      </div>
+
       <div class="primary-inflow-panel">
         <div class="pip-head">
           <div class="pip-left">
@@ -333,26 +355,6 @@
         </div>
       </div>
 
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-icon">🔮</div>
-          <div class="kpi-label">พยากรณ์น้ำไหลเข้ารวม (ล่วงหน้า 1 วัน)</div>
-          <div class="kpi-value" id="kpiH1">—</div>
-          <div class="kpi-note" id="kpiModelNse">กำลังโหลดข้อมูล…</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon">🏞️</div>
-          <div class="kpi-label">อ่างเก็บน้ำ / ที่มาข้อมูล</div>
-          <div class="kpi-value" id="kpiReservoir" style="font-size:16px;">—</div>
-          <div class="kpi-note" id="kpiDataSource">กำลังโหลดข้อมูล…</div>
-        </div>
-        <div class="kpi-card accent-amber">
-          <div class="kpi-icon">⚠️</div>
-          <div class="kpi-label">Horizon ความเชื่อมั่นต่ำ</div>
-          <div class="kpi-value" id="kpiLowConfCount">—</div>
-          <div class="kpi-note">NSE ติดลบบนชุดทดสอบ — ดูคำเตือนใต้กราฟก่อนใช้งานจริง</div>
-        </div>
-      </div>
       <div class="cross-check-note">
         ℹ️ <strong>Q_in</strong> คำนวณจากสมการสมดุลมวลน้ำของอ่าง (ΔStorage บวกกลับด้วยปริมาณที่ปล่อย/ล้น/ระเหย/ซึม แล้วหักน้ำฝนที่ตกลงอ่างตรง)
         เป็นค่าสุทธิของรอบ 07:00–07:00 (ดูรายละเอียดวันนี้ในพาแนลด้านบน) — ดูน้ำท่าประมาณการจากแบบจำลองฝน-น้ำท่า WMB
@@ -543,6 +545,30 @@ function fmtRunTimestamp(iso) {
   }
 }
 
+// เพิ่ม 2026-07-31 -- "ล่วงหน้า N วัน" เฉยๆ ทำให้เข้าใจผิดว่านับจากวันนี้ (พรุ่งนี้เป็นต้นไป) ทั้งที่จริง
+// โมเดลนับ N วันถัดจาก as_of_date (ข้อมูลจริงล่าสุดที่มี ซึ่งเป็น "เมื่อวาน" เสมอ) ทำให้ h1 = วันนี้จริงๆ
+// ไม่ใช่พรุ่งนี้ -- เติมวันที่ปฏิทินกำกับให้ชัดเจนทุกจุดที่โชว์ horizon (การ์ด, กราฟ, ตาราง)
+function horizonTargetDate(asOfDate, h) {
+  try {
+    const d = new Date(asOfDate + 'T00:00:00');
+    d.setDate(d.getDate() + h);
+    return d;
+  } catch (e) {
+    return null;
+  }
+}
+function isSameBangkokDate(d1, d2) {
+  const opts = { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' };
+  return d1.toLocaleDateString('en-CA', opts) === d2.toLocaleDateString('en-CA', opts);
+}
+function fmtHorizonDateShort(asOfDate, h) {
+  const d = horizonTargetDate(asOfDate, h);
+  if (!d) return '';
+  let s = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', timeZone: 'Asia/Bangkok' });
+  if (isSameBangkokDate(d, new Date())) s += ' = วันนี้';
+  return s;
+}
+
 // staleness_status ที่เพิ่มเข้ามาใน latest.json (2026-07-05 — ดู data_pipeline.py::
 // _ri_compute_staleness()): "ok" | "stale_data_warning" | "stale_data_blocked" ใช้ label/สี
 // เดียวกับ badge ที่มีอยู่แล้วสำหรับ horizon (badge-ok/badge-low) บวก badge-blocked ใหม่สำหรับกรณี
@@ -660,6 +686,11 @@ function renderInflow(json) {
     const h1NseLabel = (h1.walkforward_cv_nse && h1.walkforward_cv_nse.mean != null) ? 'NSE (walk-forward CV)' : 'NSE (test)';
     document.getElementById('kpiModelNse').textContent =
       (h1.model_name || '—') + ' · ' + h1NseLabel + ' ' + (h1NseVal != null ? h1NseVal.toFixed(3) : '—');
+    const h1LabelEl = document.getElementById('kpiH1HorizonLabel');
+    if (h1LabelEl) {
+      const dstr = fmtHorizonDateShort(f.as_of_date, 1);
+      h1LabelEl.textContent = dstr ? '(ล่วงหน้า 1 วัน · ' + dstr + ')' : '(ล่วงหน้า 1 วัน)';
+    }
   }
 
   document.getElementById('kpiLowConfCount').textContent = lowConf.filter(Boolean).length + ' / ' + horizonData.length;
@@ -667,7 +698,7 @@ function renderInflow(json) {
   new Chart(document.getElementById('inflowChart').getContext('2d'), {
     type: 'line',
     data: {
-      labels: horizonKeys.map(k => 'ล่วงหน้า ' + k.slice(1) + ' วัน'),
+      labels: horizonKeys.map((k, i) => ['ล่วงหน้า ' + (i + 1) + ' วัน', fmtHorizonDateShort(f.as_of_date, i + 1)]),
       datasets: [{
         label: 'พยากรณ์ Q_in (ม³/วัน)',
         data: horizonData.map(h => h.prediction_m3_per_day),
@@ -705,8 +736,9 @@ function renderInflow(json) {
     const nseCell = wfMean != null
       ? `${wfMean.toFixed(3)} <span class="nse-sub" title="test_nse (single-split, less reliable): ${h.test_nse != null ? h.test_nse.toFixed(3) : '—'}">(test: ${h.test_nse != null ? h.test_nse.toFixed(3) : '—'})</span>`
       : (h.test_nse != null ? h.test_nse.toFixed(3) : '—');
+    const hDate = fmtHorizonDateShort(f.as_of_date, i + 1);
     return `<tr>
-      <td>ล่วงหน้า ${i + 1} วัน</td>
+      <td>ล่วงหน้า ${i + 1} วัน${hDate ? ' <span style="color:var(--text-600);font-size:11.5px;">(' + hDate + ')</span>' : ''}</td>
       <td class="hl">${fmtNum(h.prediction_m3_per_day, 2)}</td>
       <td>${h.model_name || '—'}</td>
       <td>${nseCell}</td>
