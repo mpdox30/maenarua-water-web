@@ -776,6 +776,59 @@ function renderInflow(json) {
 const MONITORING_ENDPOINT = 'assets/data/monitoring.json';
 const TARGET_STATION_CODE = 'RES002';
 
+// **แก้ 2026-07-31 (รอบ 2)**: การซ่อนแค่ป้ายข้อความออกจาก SVG (แก้รอบแรก) ไม่พอ -- เส้น/วงกลม peak
+// ก็ยังเบี้ยวอยู่ เพราะ viewBox="0 0 640 100" คงที่ + preserveAspectRatio="none" ทำให้แกน X ถูกยืดสัดส่วน
+// ไม่เท่าแกน Y เสมอ (container จริงกว้างกว่า 640px มาก เช่น ~1300px แต่สูงคงที่ 100px -- scaleX ~2 เท่า
+// scaleY) วงกลม r=4.5 เลยกลายเป็นวงรี ไม่ใช่วงกลม และเส้น/stroke-width ก็บิดเบี้ยวไปด้วย -- แก้ที่ราก
+// ของปัญหาจริงๆ คือตั้ง viewBox ให้ตรงกับความกว้างจริงที่ render (วัดจาก getBoundingClientRect() ก่อน
+// วาด) ทำให้ scaleX = scaleY = 1 เป๊ะ ไม่มีการยืด/บีบเลย ไม่ว่าจอกว้างแค่ไหน
+//
+// เก็บ args ล่าสุดไว้ (lastSparkDrawArgs) เพื่อวาดซ้ำตอน resize หน้าจอ (debounce 150ms) เพราะความกว้าง
+// container เปลี่ยนได้เมื่อ resize -- ถ้าไม่วาดซ้ำ กราฟจะกลับไปเบี้ยวได้อีกจนกว่าจะ fetch ข้อมูลใหม่รอบถัดไป
+let lastSparkDrawArgs = null;
+
+function drawSparkline(levelPts, peak, startLevel, peakTimeStr) {
+  const svg = document.getElementById('pipSparkSvg');
+  const peakLabel = document.getElementById('pipSparkPeakLabel');
+  if (!svg) return;
+
+  const rect = svg.getBoundingClientRect();
+  const W = rect.width > 0 ? rect.width : 640;  // fallback ถ้ายังไม่ layout (ไม่ควรเกิดถ้าเรียกหลัง unhide sparkWrap แล้ว)
+  const H = 100, padX = 8, padY = 12;
+  const levels = levelPts.map(p => p.level);
+  const lo = Math.min(...levels), hi = Math.max(...levels);
+  const rng = (hi - lo) || 0.01;
+  const n = levelPts.length;
+  const X = i => padX + (W - 2 * padX) * i / (n - 1);
+  const Y = v => H - padY - (H - 2 * padY) * (v - lo) / rng;
+  const pts = levelPts.map((p, i) => [X(i), Y(p.level)]);
+  const poly = pts.map(([x, y]) => x.toFixed(1) + ',' + y.toFixed(1)).join(' ');
+  const peakIdx = levelPts.indexOf(peak);
+  const [peakX, peakY] = pts[peakIdx];
+  const baselineY = Y(startLevel);
+
+  svg.setAttribute('viewBox', `0 0 ${W.toFixed(1)} ${H}`);
+  svg.innerHTML =
+    `<line x1="${padX}" y1="${baselineY.toFixed(1)}" x2="${(W - padX).toFixed(1)}" y2="${baselineY.toFixed(1)}" stroke="rgba(157,201,201,0.25)" stroke-width="1" stroke-dasharray="4,4"/>` +
+    `<polyline points="${poly}" fill="none" stroke="#45c2ad" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>` +
+    `<circle cx="${peakX.toFixed(1)}" cy="${peakY.toFixed(1)}" r="4.5" fill="#e0a94f" stroke="#0d2a34" stroke-width="1.5"/>`;
+
+  // ป้าย "สูงสุด HH:MM" เป็น HTML overlay (ไม่ใช่ <text> ใน SVG) เหมือนเดิม -- ตำแหน่งเป็น % ของกรอบ
+  if (peakLabel) {
+    peakLabel.style.left = (peakX / W * 100).toFixed(2) + '%';
+    peakLabel.style.top = (peakY / H * 100).toFixed(2) + '%';
+    peakLabel.textContent = 'สูงสุด ' + peakTimeStr;
+  }
+}
+
+let sparkResizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(sparkResizeTimer);
+  sparkResizeTimer = setTimeout(() => {
+    if (lastSparkDrawArgs) drawSparkline.apply(null, lastSparkDrawArgs);
+  }, 150);
+});
+
 function renderInflowContext(f) {
   const badge = document.getElementById('pipSignalBadge');
   const rowEl = document.getElementById('pipContextRow');
@@ -855,41 +908,18 @@ function renderInflowContext(f) {
         badge.textContent = '⚪ มีฝนตกแต่ยังไม่เห็นระดับน้ำขึ้นชัดเจน';
       }
 
-      const W = 640, H = 100, padX = 8, padY = 12;
-      const levels = levelPts.map(p => p.level);
-      const lo = Math.min(...levels), hi = Math.max(...levels);
-      const rng = (hi - lo) || 0.01;
+      // ต้อง unhide ก่อนวัดความกว้างจริงด้วย getBoundingClientRect() (element ที่ display:none จะวัดได้ 0
+      // เสมอ) -- แก้ลำดับนี้เป็นส่วนสำคัญของการแก้ปัญหากราฟเบี้ยว ดู drawSparkline() ด้านบน
+      sparkWrap.style.display = '';
+      lastSparkDrawArgs = [levelPts, peak, startLevel, peakTimeStr];
+      drawSparkline(levelPts, peak, startLevel, peakTimeStr);
+
       const n = levelPts.length;
-      const X = i => padX + (W - 2 * padX) * i / (n - 1);
-      const Y = v => H - padY - (H - 2 * padY) * (v - lo) / rng;
-      const pts = levelPts.map((p, i) => [X(i), Y(p.level)]);
-      const poly = pts.map(([x, y]) => x.toFixed(1) + ',' + y.toFixed(1)).join(' ');
-      const peakIdx = levelPts.indexOf(peak);
-      const [peakX, peakY] = pts[peakIdx];
-      const baselineY = Y(startLevel);
-
-      const svg = document.getElementById('pipSparkSvg');
-      svg.innerHTML =
-        `<line x1="${padX}" y1="${baselineY.toFixed(1)}" x2="${W - padX}" y2="${baselineY.toFixed(1)}" stroke="rgba(157,201,201,0.25)" stroke-width="1" stroke-dasharray="4,4"/>` +
-        `<polyline points="${poly}" fill="none" stroke="#45c2ad" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>` +
-        `<circle cx="${peakX.toFixed(1)}" cy="${peakY.toFixed(1)}" r="4.5" fill="#e0a94f" stroke="#0d2a34" stroke-width="1.5"/>`;
-
-      // ป้าย "สูงสุด HH:MM" เรนเดอร์เป็น HTML overlay (ไม่ใช่ <text> ใน SVG) เพื่อไม่ให้ฟอนต์ถูก
-      // preserveAspectRatio="none" ยืด/บีบเบี้ยวตามอัตราส่วนความกว้าง:สูงที่ต่างจาก viewBox (ดูหมายเหตุ
-      // ที่ .spark-peak-label ใน CSS) -- ตำแหน่งคำนวณเป็น % ของกรอบ ไม่ผูกกับพิกัด viewBox โดยตรง
-      const peakLabel = document.getElementById('pipSparkPeakLabel');
-      if (peakLabel) {
-        peakLabel.style.left = (peakX / W * 100).toFixed(2) + '%';
-        peakLabel.style.top = (peakY / H * 100).toFixed(2) + '%';
-        peakLabel.textContent = 'สูงสุด ' + peakTimeStr;
-      }
-
       document.getElementById('pipSparkRange').textContent =
         new Date(windowStart).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' }) + ' – ' +
         new Date(windowEnd).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
       document.getElementById('pipSparkCaption').textContent =
         `ระดับน้ำจริงจากสถานีโทรมาตร (${n} จุดข้อมูล) — ${startLevel.toFixed(3)} → สูงสุด ${peak.level.toFixed(3)} → ${endLevel.toFixed(3)} ม.รทก`;
-      sparkWrap.style.display = '';
     })
     .catch(err => {
       console.error('โหลดข้อมูล monitoring.json สำหรับพาแนล inflow ไม่สำเร็จ:', err);
