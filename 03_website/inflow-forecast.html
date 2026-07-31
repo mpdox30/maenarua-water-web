@@ -155,6 +155,17 @@
   .spark-wrap { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 16px 10px; }
   .spark-title { font-size: 11.5px; color: var(--text-500); margin-bottom: 10px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
   svg.spark { width: 100%; height: 100px; display: block; overflow: visible; }
+  /* .spark-canvas: กรอบ position:relative ให้ .spark-peak-label วางทับ SVG แบบ HTML overlay แทนการฝัง
+     <text> ไว้ใน SVG โดยตรง -- เพราะ SVG นี้ใช้ viewBox คงที่ (640x100) กับ preserveAspectRatio="none"
+     เพื่อให้ยืด/หดตามความกว้าง card ได้อิสระจากความสูง แต่ผลข้างเคียงคือฟอนต์ที่ฝังในพิกัด SVG จะถูกยืด
+     ไม่เท่ากันทั้งสองแกน (บีบ/เบี้ยว) ถ้าความกว้างจริงที่ render ไม่เท่ากับ 640px (เกือบทุกกรณี) --
+     label ที่เป็น HTML ธรรมดาไม่ผ่าน viewBox transform จึงไม่เบี้ยว (เพิ่ม 2026-07-31 แก้ตามที่ผู้ใช้แจ้ง) */
+  .spark-canvas { position: relative; }
+  .spark-peak-label {
+    position: absolute; transform: translate(-50%, -100%); margin-top: -6px;
+    font-size: 11px; color: #f0c47c; font-family: "IBM Plex Sans Thai", sans-serif;
+    white-space: nowrap; pointer-events: none;
+  }
   .spark-caption { font-size: 11px; color: var(--text-600); margin-top: 8px; }
   .signal-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; margin-top: 4px; }
 
@@ -299,7 +310,10 @@
 
         <div class="spark-wrap" id="pipSparkWrap" style="display:none;">
           <div class="spark-title"><span>ระดับน้ำรายชั่วโมง</span><span id="pipSparkRange"></span></div>
-          <svg class="spark" id="pipSparkSvg" viewBox="0 0 640 100" preserveAspectRatio="none"></svg>
+          <div class="spark-canvas">
+            <svg class="spark" id="pipSparkSvg" viewBox="0 0 640 100" preserveAspectRatio="none"></svg>
+            <div class="spark-peak-label" id="pipSparkPeakLabel"></div>
+          </div>
           <div class="spark-caption" id="pipSparkCaption"></div>
         </div>
         <div class="kpi-note" id="pipSparkFallback" style="border-top:1px solid var(--border); padding-top:12px; display:none;">
@@ -609,7 +623,7 @@ function renderInflow(json) {
   } catch (e) { /* ปล่อยข้อความเดิมถ้า as_of_date parse ไม่ได้ */ }
 
   renderInflowContext(f);
-  renderInflow6hEstimate();
+  renderInflow6hEstimate(f);
 
   document.getElementById('kpiReservoir').textContent = f.target_reservoir || '—';
   document.getElementById('kpiDataSource').textContent = DATA_SOURCE_LABELS[f.data_source] || f.data_source || '—';
@@ -826,8 +840,17 @@ function renderInflowContext(f) {
       svg.innerHTML =
         `<line x1="${padX}" y1="${baselineY.toFixed(1)}" x2="${W - padX}" y2="${baselineY.toFixed(1)}" stroke="rgba(157,201,201,0.25)" stroke-width="1" stroke-dasharray="4,4"/>` +
         `<polyline points="${poly}" fill="none" stroke="#45c2ad" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>` +
-        `<circle cx="${peakX.toFixed(1)}" cy="${peakY.toFixed(1)}" r="4.5" fill="#e0a94f" stroke="#0d2a34" stroke-width="1.5"/>` +
-        `<text x="${peakX.toFixed(1)}" y="${Math.max(peakY - 8, 8).toFixed(1)}" font-size="10" fill="#f0c47c" text-anchor="middle" font-family="IBM Plex Sans Thai, sans-serif">สูงสุด ${peakTimeStr}</text>`;
+        `<circle cx="${peakX.toFixed(1)}" cy="${peakY.toFixed(1)}" r="4.5" fill="#e0a94f" stroke="#0d2a34" stroke-width="1.5"/>`;
+
+      // ป้าย "สูงสุด HH:MM" เรนเดอร์เป็น HTML overlay (ไม่ใช่ <text> ใน SVG) เพื่อไม่ให้ฟอนต์ถูก
+      // preserveAspectRatio="none" ยืด/บีบเบี้ยวตามอัตราส่วนความกว้าง:สูงที่ต่างจาก viewBox (ดูหมายเหตุ
+      // ที่ .spark-peak-label ใน CSS) -- ตำแหน่งคำนวณเป็น % ของกรอบ ไม่ผูกกับพิกัด viewBox โดยตรง
+      const peakLabel = document.getElementById('pipSparkPeakLabel');
+      if (peakLabel) {
+        peakLabel.style.left = (peakX / W * 100).toFixed(2) + '%';
+        peakLabel.style.top = (peakY / H * 100).toFixed(2) + '%';
+        peakLabel.textContent = 'สูงสุด ' + peakTimeStr;
+      }
 
       document.getElementById('pipSparkRange').textContent =
         new Date(windowStart).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' }) + ' – ' +
@@ -847,20 +870,42 @@ function renderInflowContext(f) {
 // สูตร water-balance เดิมทุกตัว แค่ resolution ละเอียดขึ้น ไม่ใช่ input/output ของโมเดลพยากรณ์ CatBoost
 // ถ้าไฟล์นี้ยังไม่ถูกสร้าง (ยังไม่ตั้ง schtasks ให้รันสคริปต์) หรือโหลดไม่สำเร็จ จะ fallback เงียบๆ
 // ไม่กระทบ KPI อื่นบนหน้า
+//
+// **แก้ 2026-07-31**: เดิมใช้ d.peak_window ตรงๆ ซึ่งเป็นค่าสูงสุดจาก "84 ชม. ล่าสุดนับจากตอนที่สคริปต์
+// รันครั้งล่าสุด" -- อาจเป็นคนละวันกับหน้าต่าง Q_in รายวันด้านบน (as_of_date ของ latest.json เป็น
+// "เมื่อวาน" เสมอ) ทำให้ตัวเลข 2 กล่องดูเหมือนพูดถึงวันเดียวกันแต่จริงๆไม่ใช่ -- แก้โดยกรอง d.windows
+// เอาเฉพาะหน้าต่างที่ window_end อยู่ในช่วง (windowStart, windowEnd] เดียวกับที่ renderInflowContext()
+// ใช้ (คำนวณจาก f.as_of_date) แล้วค่อยหา max ในกลุ่มนั้น -- ถ้าไม่มีหน้าต่างไหนตรงช่วงเลย (เช่น
+// สคริปต์ยังไม่เคยรันคลุมช่วงนั้น หรือ as_of_date เก่าเกิน lookback ของสคริปต์) จะ fallback แทนการโชว์
+// เลขคนละวัน
 const INFLOW_6H_ENDPOINT = 'assets/data/inflow_6h_display.json';
 
-function renderInflow6hEstimate() {
+function renderInflow6hEstimate(f) {
   const box = document.getElementById('pipEstimateBox');
   const fallback = document.getElementById('pipEstimateFallback');
   if (!box || !fallback) return;
   box.style.display = 'none';
   fallback.style.display = 'none';
 
+  if (!f || !f.as_of_date) { fallback.style.display = ''; return; }
+
+  const windowEnd = new Date(f.as_of_date + 'T07:00:00');
+  const windowStart = new Date(windowEnd.getTime() - 24 * 3600 * 1000);
+
   fetch(INFLOW_6H_ENDPOINT)
     .then(res => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
     .then(d => {
-      const p = d.peak_window;
-      if (!p) throw new Error('ไม่มีหน้าต่าง 6 ชม. ที่คำนวณได้ในข้อมูลนี้ (n_windows_computed=' + d.n_windows_computed + ')');
+      const sameDay = (d.windows || []).filter(w => {
+        const wEnd = new Date(w.window_end).getTime();
+        return wEnd > windowStart.getTime() && wEnd <= windowEnd.getTime();
+      });
+      if (!sameDay.length) {
+        throw new Error(
+          'ไม่มีหน้าต่าง 6 ชม. ที่คำนวณได้ตรงกับช่วงวันเดียวกับ Q_in ด้านบน (' + f.as_of_date + ') '
+          + '-- ข้อมูลที่มี (n_windows_computed=' + d.n_windows_computed + ') อาจยังไม่คลุมช่วงนี้'
+        );
+      }
+      const p = sameDay.reduce((a, b) => (b.q_in_6h_m3 > a.q_in_6h_m3 ? b : a));
       const endT = new Date(p.window_end);
       const timeStr = endT.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Bangkok' });
       const dateStr = endT.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', timeZone: 'Asia/Bangkok' });
@@ -870,7 +915,7 @@ function renderInflow6hEstimate() {
       box.style.display = '';
     })
     .catch(err => {
-      console.error('โหลดข้อมูล inflow_6h_display.json ไม่สำเร็จ:', err);
+      console.error('โหลดข้อมูล inflow_6h_display.json ไม่สำเร็จ หรือไม่มีข้อมูลตรงช่วงวันนี้:', err);
       fallback.style.display = '';
     });
 }

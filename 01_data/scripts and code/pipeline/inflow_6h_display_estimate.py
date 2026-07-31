@@ -42,7 +42,10 @@ reuse สูตร/ค่าคงที่ตรงจาก reservoir_water_ba
 
 === วิธีใช้ ===
 
-    python inflow_6h_display_estimate.py                       # ใช้ค่าปัจจุบัน, lookback 30 ชม.
+    python inflow_6h_display_estimate.py                       # ใช้ค่าปัจจุบัน, lookback 84 ชม. (ค่า default
+                                                                 # ต้องคลุมถึงหน้าต่างของ as_of_date ที่
+                                                                 # latest.json รายงาน ซึ่งเป็น "เมื่อวาน" เสมอ
+                                                                 # -- ดูเหตุผลที่ LOOKBACK_HOURS_DEFAULT ในโค้ด)
     python inflow_6h_display_estimate.py --lookback-hours 48
     python inflow_6h_display_estimate.py --sheet-source /path/to/local_wide_log.csv   # ทดสอบ/backfill
     python inflow_6h_display_estimate.py --now 2026-07-31T09:00:00                    # backfill เวลาที่ระบุ
@@ -89,7 +92,14 @@ logger = logging.getLogger("inflow_6h_display_estimate")
 OUTPUT_JSON = (
     Path(__file__).resolve().parent.parent.parent.parent / "03_website" / "assets" / "data" / "inflow_6h_display.json"
 )
-LOOKBACK_HOURS_DEFAULT = 30
+# 84 ชม. (3.5 วัน) -- ไม่ใช่แค่ครอบคลุมหน้าต่างรายวันปัจจุบัน (24 ชม.) แต่ต้องคลุมถึงหน้าต่างของ
+# as_of_date ที่ latest.json รายงานด้วย ซึ่ง "เมื่อวาน" เสมอ (reservoir_daily_orchestration.py คำนวณของ
+# "เมื่อวาน" ทุกครั้งที่รัน 07:30) -- ทำให้ gap ระหว่าง "ตอนนี้" กับจุดเริ่มหน้าต่างของ as_of_date
+# (as_of_date - 1 วัน 07:00) กว้างได้ถึง ~72.5 ชม. ก่อนถึงรอบอัปเดตถัดไป (right before การรันเช้าถัดไป)
+# บวก 6 ชม. สำหรับสร้างหน้าต่างแรกที่ครบ = ต้องการ ~78.5 ชม. เป็นอย่างน้อย -- 84 ชม. เผื่อ margin
+# (เว็บฝั่ง JS จะกรองเอาเฉพาะหน้าต่างที่ตรงกับ as_of_date ของ latest.json เท่านั้น ไม่ใช้ peak_window
+# ตรงๆ -- ดู renderInflow6hEstimate() ใน inflow-forecast.html)
+LOOKBACK_HOURS_DEFAULT = 84
 WINDOW_HOURS = 6
 
 
