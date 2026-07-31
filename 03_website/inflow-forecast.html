@@ -72,7 +72,7 @@
   .section-head h2 { font-size: 23px; margin-top: 8px; }
   .section-head p { color: var(--text-500); font-size: 13.5px; max-width: 480px; margin: 8px 0 0; }
 
-  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
   .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px 20px; position: relative; overflow: hidden; transition: transform .22s ease, border-color .22s ease, background .22s ease; }
   .kpi-card:hover { transform: translateY(-4px); border-color: var(--border-strong); background: var(--surface-hover); }
   .kpi-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(69,194,173,0.12); border: 1px solid rgba(69,194,173,0.28); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 16px; }
@@ -134,6 +134,39 @@
   .seg-toggle button.active { background: var(--teal-400); color: #06161c; font-weight: 600; }
   .res-detail-note { font-size: 11.5px; color: var(--text-600); margin: 12px 0 0; }
   .cross-check-note { margin-top: 14px; padding: 12px 16px; border-radius: var(--radius-sm); background: rgba(69,194,173,0.07); border: 1px solid rgba(69,194,173,0.24); font-size: 12px; color: var(--text-300); }
+
+  /* น้ำไหลเข้าอ่างสุทธิ -- พาแนลเต็มความกว้าง (เพิ่ม 2026-07-31 ตามข้อเสนอ display layer เพื่อลดความ
+     สับสนตอนค่า Q_in แสดง 0 ทั้งที่ระดับน้ำ/ฝนจริงบอกว่ามีสัญญาณน้ำไหลเข้าระหว่างวัน -- ดู
+     mockup_inflow_forecast_integrated.html ใน 01_data/experiments/hourly_feasibility_20260731/) */
+  .primary-inflow-panel { background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 26px 28px 22px; margin-bottom: 20px; }
+  .pip-head { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; justify-content: space-between; }
+  .pip-left { display: flex; gap: 14px; align-items: flex-start; }
+  .pip-label-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .pip-label { font-size: 12.5px; color: var(--text-500); }
+  .info-dot { width: 16px; height: 16px; border-radius: 50%; background: rgba(69,194,173,0.16); color: var(--teal-300); border: 1px solid rgba(69,194,173,0.4); font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; cursor: help; position: relative; flex: 0 0 auto; }
+  .info-dot .tip { display: none; position: absolute; top: 22px; left: 0; width: 300px; z-index: 6; background: #0f2f38; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 12px; line-height: 1.7; color: var(--text-300); box-shadow: 0 12px 30px rgba(0,0,0,0.45); }
+  .info-dot:hover .tip { display: block; }
+  .pip-value { font-family: "Space Grotesk", sans-serif; font-size: 34px; font-weight: 600; color: var(--text-100); margin-top: 6px; }
+  .context-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 18px 0; }
+  .chip { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-300); background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 999px; padding: 7px 13px; }
+  .chip b { color: var(--text-100); font-family: "Space Grotesk", sans-serif; font-weight: 600; }
+  .chip.amber { border-color: rgba(224,169,79,0.35); background: rgba(224,169,79,0.08); }
+  .chip.amber b { color: var(--amber-300); }
+  .spark-wrap { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 16px 10px; }
+  .spark-title { font-size: 11.5px; color: var(--text-500); margin-bottom: 10px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  svg.spark { width: 100%; height: 100px; display: block; overflow: visible; }
+  .spark-caption { font-size: 11px; color: var(--text-600); margin-top: 8px; }
+  .signal-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; margin-top: 4px; }
+
+  /* ITEM 4 (เพิ่ม 2026-07-31): กล่องประมาณการน้ำไหลเข้าสูงสุดในหน้าต่าง 6 ชม. -- display-only, มาจาก
+     assets/data/inflow_6h_display.json ที่เขียนโดย inflow_6h_display_estimate.py (สูตร water-balance
+     เดิม แค่ resolution ละเอียดขึ้น) ไม่ใช่ตัวเลขที่โมเดลพยากรณ์ CatBoost ใช้ -- ดู mockup_inflow_display.html
+     ใน 01_data/experiments/hourly_feasibility_20260731/ สำหรับที่มาของ layout นี้ */
+  .pip-estimate-box { margin-top: 16px; padding: 14px 16px; border-radius: var(--radius-md); background: rgba(224,169,79,0.08); border: 1px solid rgba(224,169,79,0.28); }
+  .pip-estimate-title { font-size: 12.5px; color: var(--amber-300); font-weight: 600; margin-bottom: 4px; }
+  .pip-estimate-value { font-family: "Space Grotesk", sans-serif; font-size: 22px; color: var(--text-100); font-weight: 600; }
+  .pip-estimate-note { font-size: 11.5px; color: var(--text-600); margin-top: 8px; line-height: 1.6; }
+  .pip-estimate-note b { color: var(--text-300); }
 
   .access-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
   .access-card { border-radius: var(--radius-md); padding: 20px; border: 1px solid var(--border); background: var(--surface); border-top: 3px solid var(--teal-400); }
@@ -240,13 +273,53 @@
         </div>
         <p>ความแม่นยำสูงสุดที่การพยากรณ์ล่วงหน้า 1 วัน และลดลงตามระยะเวลาพยากรณ์ที่เพิ่มขึ้น</p>
       </div>
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-icon">💧</div>
-          <div class="kpi-label">น้ำไหลเข้ารวม (Q_in) ปัจจุบัน</div>
-          <div class="kpi-value" id="kpiCurrentQin">—</div>
-          <div class="kpi-note" id="kpiCurrentQinNote">กำลังโหลดข้อมูล…</div>
+      <div class="primary-inflow-panel">
+        <div class="pip-head">
+          <div class="pip-left">
+            <div class="kpi-icon">💧</div>
+            <div>
+              <div class="pip-label-row">
+                <span class="pip-label" id="pipLabel">น้ำไหลเข้าอ่างสุทธิ (07:00 เมื่อวาน → 07:00 วันนี้)</span>
+                <span class="info-dot">i
+                  <span class="tip">
+                    คำนวณจากการเปลี่ยนแปลงระดับน้ำสุทธิระหว่างรอบ 07:00 ถึง 07:00 ถัดไป — ถ้าน้ำที่ไหลเข้า
+                    ระหว่างวันถูกระบายออกไปหมดก่อนถึงรอบคำนวณ ตัวเลขนี้จะแสดงใกล้ 0 ได้ แม้จะมีฝนตกและ
+                    ระดับน้ำขึ้นจริงในช่วงเวลานั้น (ดูรายละเอียดในกราฟระดับน้ำด้านล่าง)
+                  </span>
+                </span>
+              </div>
+              <div class="pip-value" id="kpiCurrentQin">—</div>
+              <div class="kpi-note" id="kpiCurrentQinNote" style="border-top:none; margin-top:2px; padding-top:0;">กำลังโหลดข้อมูล…</div>
+            </div>
+          </div>
+          <span class="badge" id="pipSignalBadge" style="display:none;"></span>
         </div>
+
+        <div class="context-row" id="pipContextRow"></div>
+
+        <div class="spark-wrap" id="pipSparkWrap" style="display:none;">
+          <div class="spark-title"><span>ระดับน้ำรายชั่วโมง</span><span id="pipSparkRange"></span></div>
+          <svg class="spark" id="pipSparkSvg" viewBox="0 0 640 100" preserveAspectRatio="none"></svg>
+          <div class="spark-caption" id="pipSparkCaption"></div>
+        </div>
+        <div class="kpi-note" id="pipSparkFallback" style="border-top:1px solid var(--border); padding-top:12px; display:none;">
+          ไม่สามารถโหลดข้อมูลระดับน้ำรายชั่วโมงประกอบได้ในขณะนี้
+        </div>
+
+        <div class="pip-estimate-box" id="pipEstimateBox" style="display:none;">
+          <div class="pip-estimate-title" id="pipEstimateTitle">⏱️ ประมาณการน้ำไหลเข้าสูงสุดในช่วง 6 ชม.</div>
+          <div class="pip-estimate-value" id="pipEstimateValue">—</div>
+          <div class="pip-estimate-note">
+            *คำนวณเสริมเพื่อการแสดงผลเท่านั้น จากสูตร water-balance เดิมที่ resolution ละเอียดขึ้น (ราย 6 ชม.
+            แทนรายวัน) — <b>ไม่ใช่ตัวเลขที่ระบบใช้พยากรณ์จริง</b> (โมเดลพยากรณ์ยังเป็นรายวันตามเดิม)
+          </div>
+        </div>
+        <div class="kpi-note" id="pipEstimateFallback" style="border-top:1px solid var(--border); padding-top:12px; display:none;">
+          ไม่สามารถโหลดข้อมูลประมาณการช่วง 6 ชม. ได้ในขณะนี้
+        </div>
+      </div>
+
+      <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-icon">🔮</div>
           <div class="kpi-label">พยากรณ์น้ำไหลเข้ารวม (ล่วงหน้า 1 วัน)</div>
@@ -267,10 +340,9 @@
         </div>
       </div>
       <div class="cross-check-note">
-        ℹ️ <strong>Q_in</strong> ที่นี่คำนวณจากสมการสมดุลมวลน้ำของอ่าง (ΔStorage บวกกลับด้วยปริมาณที่ปล่อย/ล้น/ระเหย/ซึม แล้วหักน้ำฝนที่ตกลงอ่างตรง) —
-        จึงเป็น <strong>น้ำไหลเข้ารวมจากลุ่มน้ำ (ไม่ใช่ค่าหลังหักการระบายออก)</strong> ค่า 0 ในบางวันเป็นไปได้จริง
-        เมื่อระดับน้ำในอ่างไม่เปลี่ยนแปลงสุทธิ ไม่ได้แปลว่าไม่มีน้ำไหลเข้าเลย — ดูน้ำท่าประมาณการจากแบบจำลองฝน-น้ำท่า WMB
-        (อิสระจากค่านี้) ได้ในหัวข้อ "ภาพรวมน้ำท่าไหลลงอ่างเก็บน้ำ" ด้านล่าง
+        ℹ️ <strong>Q_in</strong> คำนวณจากสมการสมดุลมวลน้ำของอ่าง (ΔStorage บวกกลับด้วยปริมาณที่ปล่อย/ล้น/ระเหย/ซึม แล้วหักน้ำฝนที่ตกลงอ่างตรง)
+        เป็นค่าสุทธิของรอบ 07:00–07:00 (ดูรายละเอียดวันนี้ในพาแนลด้านบน) — ดูน้ำท่าประมาณการจากแบบจำลองฝน-น้ำท่า WMB
+        (อิสระจากค่านี้) เพิ่มเติมได้ในหัวข้อ "ภาพรวมน้ำท่าไหลลงอ่างเก็บน้ำ" ด้านล่าง
       </div>
     </div>
   </section>
@@ -526,8 +598,18 @@ function renderInflow(json) {
   `;
 
   document.getElementById('kpiCurrentQin').innerHTML = fmtNum(f.current_qin_m3_per_day, 2) + '<span class="kpi-unit">ม³/วัน</span>';
-  document.getElementById('kpiCurrentQinNote').textContent = 'ข้อมูล ณ วันที่ ' + f.as_of_date +
-    (f.current_qin_m3_per_day === 0 ? ' — ค่า 0 นี้เป็นค่าคำนวณจากสมดุลมวลน้ำ ดูคำอธิบายด้านล่าง' : '');
+  document.getElementById('kpiCurrentQinNote').textContent = 'ข้อมูล ณ วันที่ ' + f.as_of_date;
+
+  try {
+    const endD = new Date(f.as_of_date + 'T07:00:00');
+    const startD = new Date(endD.getTime() - 24 * 3600 * 1000);
+    const fmtDate = d => (d.getMonth() + 1) + '/' + d.getDate();
+    document.getElementById('pipLabel').textContent =
+      'น้ำไหลเข้าอ่างสุทธิ (' + fmtDate(startD) + ' 07:00 → ' + fmtDate(endD) + ' 07:00)';
+  } catch (e) { /* ปล่อยข้อความเดิมถ้า as_of_date parse ไม่ได้ */ }
+
+  renderInflowContext(f);
+  renderInflow6hEstimate();
 
   document.getElementById('kpiReservoir').textContent = f.target_reservoir || '—';
   document.getElementById('kpiDataSource').textContent = DATA_SOURCE_LABELS[f.data_source] || f.data_source || '—';
@@ -639,6 +721,158 @@ function renderInflow(json) {
       tiBox.style.display = 'none';
     }
   }
+}
+
+// ================= พาแนล "น้ำไหลเข้าอ่างสุทธิ" -- context chips + sparkline (เพิ่ม 2026-07-31) =================
+// ใช้ assets/data/monitoring.json ที่มีอยู่แล้ว (สถานีโทรมาตร RES002 -- history ระดับน้ำ + rainfall_hourly
+// อัปเดตทุก 10 นาที) มาคำนวณ "บริบท" ประกอบตัวเลข Q_in สุทธิด้านบน ล้วนเป็นการแสดงผลเสริม (ไม่ใช่ค่าที่
+// โมเดลพยากรณ์ใช้) ไม่ต้องแก้ pipeline/โมเดลใดๆ -- ถ้าโหลดไม่สำเร็จจะ fallback เงียบๆ ไม่กระทบ KPI อื่น
+const MONITORING_ENDPOINT = 'assets/data/monitoring.json';
+const TARGET_STATION_CODE = 'RES002';
+
+function renderInflowContext(f) {
+  const badge = document.getElementById('pipSignalBadge');
+  const rowEl = document.getElementById('pipContextRow');
+  const sparkWrap = document.getElementById('pipSparkWrap');
+  const fallback = document.getElementById('pipSparkFallback');
+  if (!badge || !rowEl || !sparkWrap || !fallback) return;
+  badge.style.display = 'none';
+  rowEl.innerHTML = '';
+  sparkWrap.style.display = 'none';
+  fallback.style.display = 'none';
+
+  if (!f || !f.as_of_date) return;
+
+  fetch(MONITORING_ENDPOINT)
+    .then(res => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+    .then(mon => {
+      const station = (mon.stations || []).find(s => s.station_code === TARGET_STATION_CODE);
+      if (!station || !Array.isArray(station.history) || !Array.isArray(station.rainfall_hourly)) {
+        throw new Error('ไม่พบข้อมูลสถานี ' + TARGET_STATION_CODE + ' ใน monitoring.json');
+      }
+
+      const windowEnd = new Date(f.as_of_date + 'T07:00:00');
+      const windowStart = new Date(windowEnd.getTime() - 24 * 3600 * 1000);
+      const prevWindowStart = new Date(windowStart.getTime() - 24 * 3600 * 1000);
+      const inWindow = (t, a, b) => t >= a.getTime() && t <= b.getTime();
+
+      const levelPts = station.history
+        .map(h => ({ t: new Date(h.t).getTime(), level: h.level }))
+        .filter(p => !isNaN(p.t) && p.level != null && inWindow(p.t, windowStart, windowEnd))
+        .sort((a, b) => a.t - b.t);
+
+      const rainThisWindow = station.rainfall_hourly
+        .filter(r => { const t = new Date(r.t).getTime(); return !isNaN(t) && inWindow(t, windowStart, windowEnd); })
+        .reduce((s, r) => s + (r.rain_mm || 0), 0);
+      const rainPrevWindow = station.rainfall_hourly
+        .filter(r => { const t = new Date(r.t).getTime(); return !isNaN(t) && inWindow(t, prevWindowStart, windowStart); })
+        .reduce((s, r) => s + (r.rain_mm || 0), 0);
+
+      if (levelPts.length < 2) {
+        fallback.style.display = '';
+        fallback.textContent = 'ไม่มีข้อมูลระดับน้ำรายชั่วโมงเพียงพอสำหรับช่วงนี้';
+        return;
+      }
+
+      const startLevel = levelPts[0].level;
+      const endLevel = levelPts[levelPts.length - 1].level;
+      let peak = levelPts[0];
+      levelPts.forEach(p => { if (p.level > peak.level) peak = p; });
+      const riseCm = (peak.level - startLevel) * 100;
+      const peakTimeStr = new Date(peak.t).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Bangkok' });
+
+      const chips = [];
+      if (rainThisWindow > 0.5) {
+        chips.push(`<div class="chip amber">🌧️ ฝนสะสม 24 ชม. <b>${rainThisWindow.toFixed(1)} มม.</b></div>`);
+      } else if (rainPrevWindow > 5) {
+        chips.push(`<div class="chip amber">🌧️ ฝนสะสม <b>${rainPrevWindow.toFixed(1)} มม.</b> (24 ชม. ก่อนหน้ารอบนี้)</div>`);
+      } else {
+        chips.push(`<div class="chip">🌧️ ฝนสะสม 24 ชม. <b>${rainThisWindow.toFixed(1)} มม.</b></div>`);
+      }
+      if (Math.abs(riseCm) >= 1) {
+        chips.push(`<div class="chip">📈 ระดับน้ำขึ้นสูงสุดระหว่างวัน <b>+${riseCm.toFixed(1)} ซม.</b> (${peakTimeStr} น.)</div>`);
+        if (Math.abs(endLevel - startLevel) * 100 < Math.abs(riseCm) * 0.6) {
+          chips.push('<div class="chip">↩️ ลดกลับใกล้ระดับเดิมก่อนรอบคำนวณถัดไป</div>');
+        }
+      } else {
+        chips.push(`<div class="chip">📉 ระดับน้ำไม่เปลี่ยนแปลงมากระหว่างวัน (สูงสุด +${riseCm.toFixed(1)} ซม.)</div>`);
+      }
+      rowEl.innerHTML = chips.join('');
+
+      if (riseCm >= 1) {
+        badge.className = 'badge badge-ok';
+        badge.style.display = '';
+        badge.textContent = '🔵 มีสัญญาณน้ำไหลเข้าระหว่างวัน';
+      } else if (rainThisWindow > 0.5 || rainPrevWindow > 5) {
+        badge.className = 'badge badge-low';
+        badge.style.display = '';
+        badge.textContent = '⚪ มีฝนตกแต่ยังไม่เห็นระดับน้ำขึ้นชัดเจน';
+      }
+
+      const W = 640, H = 100, padX = 8, padY = 12;
+      const levels = levelPts.map(p => p.level);
+      const lo = Math.min(...levels), hi = Math.max(...levels);
+      const rng = (hi - lo) || 0.01;
+      const n = levelPts.length;
+      const X = i => padX + (W - 2 * padX) * i / (n - 1);
+      const Y = v => H - padY - (H - 2 * padY) * (v - lo) / rng;
+      const pts = levelPts.map((p, i) => [X(i), Y(p.level)]);
+      const poly = pts.map(([x, y]) => x.toFixed(1) + ',' + y.toFixed(1)).join(' ');
+      const peakIdx = levelPts.indexOf(peak);
+      const [peakX, peakY] = pts[peakIdx];
+      const baselineY = Y(startLevel);
+
+      const svg = document.getElementById('pipSparkSvg');
+      svg.innerHTML =
+        `<line x1="${padX}" y1="${baselineY.toFixed(1)}" x2="${W - padX}" y2="${baselineY.toFixed(1)}" stroke="rgba(157,201,201,0.25)" stroke-width="1" stroke-dasharray="4,4"/>` +
+        `<polyline points="${poly}" fill="none" stroke="#45c2ad" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>` +
+        `<circle cx="${peakX.toFixed(1)}" cy="${peakY.toFixed(1)}" r="4.5" fill="#e0a94f" stroke="#0d2a34" stroke-width="1.5"/>` +
+        `<text x="${peakX.toFixed(1)}" y="${Math.max(peakY - 8, 8).toFixed(1)}" font-size="10" fill="#f0c47c" text-anchor="middle" font-family="IBM Plex Sans Thai, sans-serif">สูงสุด ${peakTimeStr}</text>`;
+
+      document.getElementById('pipSparkRange').textContent =
+        new Date(windowStart).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' }) + ' – ' +
+        new Date(windowEnd).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
+      document.getElementById('pipSparkCaption').textContent =
+        `ระดับน้ำจริงจากสถานีโทรมาตร (${n} จุดข้อมูล) — ${startLevel.toFixed(3)} → สูงสุด ${peak.level.toFixed(3)} → ${endLevel.toFixed(3)} ม.รทก`;
+      sparkWrap.style.display = '';
+    })
+    .catch(err => {
+      console.error('โหลดข้อมูล monitoring.json สำหรับพาแนล inflow ไม่สำเร็จ:', err);
+      fallback.style.display = '';
+    });
+}
+
+// ================= ITEM 4: ประมาณการน้ำไหลเข้าสูงสุดในหน้าต่าง 6 ชม. (เพิ่ม 2026-07-31) =================
+// เขียนโดย inflow_6h_display_estimate.py (01_data/scripts and code/pipeline/) -- display-only, reuse
+// สูตร water-balance เดิมทุกตัว แค่ resolution ละเอียดขึ้น ไม่ใช่ input/output ของโมเดลพยากรณ์ CatBoost
+// ถ้าไฟล์นี้ยังไม่ถูกสร้าง (ยังไม่ตั้ง schtasks ให้รันสคริปต์) หรือโหลดไม่สำเร็จ จะ fallback เงียบๆ
+// ไม่กระทบ KPI อื่นบนหน้า
+const INFLOW_6H_ENDPOINT = 'assets/data/inflow_6h_display.json';
+
+function renderInflow6hEstimate() {
+  const box = document.getElementById('pipEstimateBox');
+  const fallback = document.getElementById('pipEstimateFallback');
+  if (!box || !fallback) return;
+  box.style.display = 'none';
+  fallback.style.display = 'none';
+
+  fetch(INFLOW_6H_ENDPOINT)
+    .then(res => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+    .then(d => {
+      const p = d.peak_window;
+      if (!p) throw new Error('ไม่มีหน้าต่าง 6 ชม. ที่คำนวณได้ในข้อมูลนี้ (n_windows_computed=' + d.n_windows_computed + ')');
+      const endT = new Date(p.window_end);
+      const timeStr = endT.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Bangkok' });
+      const dateStr = endT.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', timeZone: 'Asia/Bangkok' });
+      document.getElementById('pipEstimateTitle').textContent =
+        '⏱️ ประมาณการน้ำไหลเข้าสูงสุดในช่วง 6 ชม. (' + dateStr + ' ' + timeStr + ' น.)';
+      document.getElementById('pipEstimateValue').innerHTML = fmtNum(p.q_in_6h_m3, 0) + '<span class="kpi-unit">ลบ.ม.</span>';
+      box.style.display = '';
+    })
+    .catch(err => {
+      console.error('โหลดข้อมูล inflow_6h_display.json ไม่สำเร็จ:', err);
+      fallback.style.display = '';
+    });
 }
 
 fetch(DATA_ENDPOINT)
