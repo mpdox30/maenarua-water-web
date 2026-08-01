@@ -880,11 +880,15 @@ function renderInflowContext(f) {
       const riseCm = (peak.level - startLevel) * 100;
       const peakTimeStr = new Date(peak.t).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Bangkok' });
 
+      // เพิ่ม 2026-07-31 -- "(24 ชม. ก่อนหน้ารอบนี้)" เฉยๆ ไม่บอกวันที่ ทำให้เทียบกับกราฟฝนสะสมย้อนหลัง
+      // (ที่หน้าสถานการณ์น้ำ) ไม่ออกว่าเป็นแท่งไหน (ผู้ใช้เอาไปเทียบกับแท่งวันปัจจุบันผิด ทั้งที่จริงเป็น
+      // แท่งของวันก่อนหน้า) -- เติมวันที่ตาม "วันอุตุนิยมวิทยา" (เริ่ม 07:00) ให้ตรงกับ label บนกราฟนั้น
+      const fmtMetDay = (d) => d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', timeZone: 'Asia/Bangkok' });
       const chips = [];
       if (rainThisWindow > 0.5) {
         chips.push(`<div class="chip amber">🌧️ ฝนสะสม 24 ชม. <b>${rainThisWindow.toFixed(1)} มม.</b></div>`);
       } else if (rainPrevWindow > 5) {
-        chips.push(`<div class="chip amber">🌧️ ฝนสะสม <b>${rainPrevWindow.toFixed(1)} มม.</b> (24 ชม. ก่อนหน้ารอบนี้)</div>`);
+        chips.push(`<div class="chip amber">🌧️ ฝนสะสม <b>${rainPrevWindow.toFixed(1)} มม.</b> (${fmtMetDay(prevWindowStart)} 07:00–${fmtMetDay(windowStart)} 07:00 · รอบก่อนหน้า)</div>`);
       } else {
         chips.push(`<div class="chip">🌧️ ฝนสะสม 24 ชม. <b>${rainThisWindow.toFixed(1)} มม.</b></div>`);
       }
