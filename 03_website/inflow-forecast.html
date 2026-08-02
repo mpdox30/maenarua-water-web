@@ -594,6 +594,11 @@ function renderStaleBanner(f) {
   }</span>`;
 }
 
+// เพิ่ม 2026-07-31 -- เก็บ instance ของกราฟไว้ทำลายก่อนสร้างใหม่ทุกครั้งที่ renderInflow() ถูกเรียกซ้ำ
+// (จำเป็นสำหรับ auto-refresh ด้านล่าง -- ถ้าไม่ destroy ของเดิมก่อน Chart.js จะ error "Canvas is
+// already in use" เพราะ canvas element เดิมถูกผูกกับ Chart instance เก่าอยู่แล้ว)
+let inflowChartInstance = null;
+
 function renderInflow(json) {
   const footerEl = document.getElementById('footerUpdated');
   if (footerEl) footerEl.textContent = 'อัปเดตล่าสุดเมื่อ ' + fmtRunTimestamp(json.run_timestamp);
@@ -660,6 +665,7 @@ function renderInflow(json) {
     document.getElementById('kpiH1').innerHTML = '—';
     document.getElementById('kpiModelNse').textContent = 'ไม่มีการทำนาย (ข้อมูลเก่าเกินเกณฑ์)';
     document.getElementById('kpiLowConfCount').textContent = '—';
+    if (inflowChartInstance) { inflowChartInstance.destroy(); inflowChartInstance = null; }
     const canvas = document.getElementById('inflowChart');
     if (canvas && canvas.getContext) {
       const ctx = canvas.getContext('2d');
@@ -695,7 +701,8 @@ function renderInflow(json) {
 
   document.getElementById('kpiLowConfCount').textContent = lowConf.filter(Boolean).length + ' / ' + horizonData.length;
 
-  new Chart(document.getElementById('inflowChart').getContext('2d'), {
+  if (inflowChartInstance) { inflowChartInstance.destroy(); inflowChartInstance = null; }
+  inflowChartInstance = new Chart(document.getElementById('inflowChart').getContext('2d'), {
     type: 'line',
     data: {
       labels: horizonKeys.map((k, i) => ['ล่วงหน้า ' + (i + 1) + ' วัน', fmtHorizonDateShort(f.as_of_date, i + 1)]),
@@ -842,7 +849,7 @@ function renderInflowContext(f) {
 
   if (!f || !f.as_of_date) return;
 
-  fetch(MONITORING_ENDPOINT)
+  fetch(MONITORING_ENDPOINT, { cache: 'no-store' })
     .then(res => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
     .then(mon => {
       const station = (mon.stations || []).find(s => s.station_code === TARGET_STATION_CODE);
@@ -958,7 +965,7 @@ function renderInflow6hEstimate(f) {
   const windowEnd = new Date(f.as_of_date + 'T07:00:00');
   const windowStart = new Date(windowEnd.getTime() - 24 * 3600 * 1000);
 
-  fetch(INFLOW_6H_ENDPOINT)
+  fetch(INFLOW_6H_ENDPOINT, { cache: 'no-store' })
     .then(res => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
     .then(d => {
       const sameDay = (d.windows || []).filter(w => {
@@ -986,19 +993,8 @@ function renderInflow6hEstimate(f) {
     });
 }
 
-fetch(DATA_ENDPOINT)
-  .then(res => {
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    return res.json();
-  })
-  .then(renderInflow)
-  .catch(err => {
-    console.error('โหลดข้อมูลไม่สำเร็จ:', err);
-    const statusText = document.getElementById('statusText');
-    if (statusText) statusText.textContent = 'ไม่สามารถโหลดข้อมูลจาก ' + DATA_ENDPOINT + ' ได้';
-    document.getElementById('horizonTableBody').innerHTML =
-      '<tr><td colspan="5">ไม่สามารถโหลดข้อมูลจาก ' + DATA_ENDPOINT + ' ได้</td></tr>';
-  });
+// (การเรียก loadInflowForecast() ครั้งแรกอยู่รวมกับ loadResInflow() ที่ท้ายไฟล์ พร้อม auto-refresh
+// ตั้งค่า setInterval -- ดูด้านล่างสุดของสคริปต์นี้)
 
 // ================= WMB Model: น้ำท่าไหลลงอ่างเก็บน้ำ 5 อ่าง (ภาพรวม + รายอ่าง) =================
 // ข้อมูลจาก reservoir_inflow_{daily,weekly,monthly}.csv ของ WMB_Phayao แปลงเป็น JSON เดียว —
@@ -1007,7 +1003,8 @@ const RES_INFLOW_ENDPOINT = 'assets/data/reservoir_inflow.json';
 const RES_ORDER = ['MaeNaRua', 'HuayTham', 'So', 'CAT', 'ChamTum'];
 const RES_COLORS = { MaeNaRua: '#45c2ad', HuayTham: '#e0a94f', So: '#7fa8e0', CAT: '#c98be0', ChamTum: '#e0839c', total: '#eef6f4' };
 
-let resData = null, resDetailChart = null, resGran = 'daily', resSelected = 'MaeNaRua';
+let resData = null, resDetailChart = null, resOverviewChart = null, resGran = 'daily', resSelected = 'MaeNaRua';
+let resControlsInitialized = false;  // เพิ่ม 2026-07-31 -- กันไม่ให้ addEventListener ซ้ำตอน auto-refresh เรียก initResCharts() ซ้ำ
 
 function fmtMcm(v) {
   if (v === null || v === undefined) return '—';
@@ -1029,7 +1026,8 @@ function drawResOverview(d) {
     borderWidth: 1.8, borderDash: [4, 3], pointRadius: 0, tension: 0.15, fill: false,
   }]);
 
-  new Chart(document.getElementById('resOverviewChart').getContext('2d'), {
+  if (resOverviewChart) { resOverviewChart.destroy(); resOverviewChart = null; }
+  resOverviewChart = new Chart(document.getElementById('resOverviewChart').getContext('2d'), {
     type: 'line',
     data: { labels, datasets },
     options: {
@@ -1096,31 +1094,72 @@ function drawResDetail(d) {
 function initResCharts(d) {
   resData = d;
   const sel = document.getElementById('resSelect');
+
+  // **แก้ 2026-07-31**: ย้าย innerHTML/value ให้อัปเดตได้ทุกครั้ง (เผื่อรายชื่ออ่างเปลี่ยน) แต่
+  // addEventListener ต้องผูกแค่ครั้งเดียว -- ถ้า auto-refresh เรียกฟังก์ชันนี้ซ้ำแล้วผูก listener ซ้ำ
+  // ทุกรอบ จะทำให้ event handler ทำงานซ้ำหลายครั้งต่อการคลิก/เปลี่ยนค่า 1 ครั้ง (ยิ่งรีเฟรชนานยิ่งซ้ำเยอะ)
   sel.innerHTML = RES_ORDER.map(k => '<option value="' + k + '">' + d.reservoirs[k].name_th + '</option>').join('');
   sel.value = resSelected;
-  sel.addEventListener('change', () => { resSelected = sel.value; drawResDetail(resData); });
 
-  document.querySelectorAll('#resGranToggle button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#resGranToggle button').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      resGran = btn.dataset.gran;
-      drawResDetail(resData);
+  if (!resControlsInitialized) {
+    sel.addEventListener('change', () => { resSelected = sel.value; drawResDetail(resData); });
+    document.querySelectorAll('#resGranToggle button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#resGranToggle button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        resGran = btn.dataset.gran;
+        drawResDetail(resData);
+      });
     });
-  });
+    resControlsInitialized = true;
+  }
 
   drawResOverview(d);
   drawResDetail(d);
 }
 
-fetch(RES_INFLOW_ENDPOINT)
-  .then(res => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
-  .then(initResCharts)
-  .catch(err => {
-    console.error('โหลดข้อมูลน้ำท่า WMB ไม่สำเร็จ:', err);
-    const note = document.getElementById('resDetailNote');
-    if (note) note.textContent = 'ไม่สามารถโหลดข้อมูลน้ำท่าจาก ' + RES_INFLOW_ENDPOINT + ' ได้';
-  });
+// เพิ่ม 2026-07-31 -- ห่อทั้งสองเส้นทางการโหลดข้อมูลเป็นฟังก์ชันเรียกซ้ำได้ + ตั้ง auto-refresh ด้านล่าง
+// (เดิมหน้านี้ fetch แค่ตอนโหลดครั้งแรกครั้งเดียว ทิ้งแท็บไว้เปิดค้างจะไม่มีทางเห็นข้อมูลใหม่เลยจนกว่าจะ
+// กด reload มือ -- ทั้งที่ backend (monitoring builder / 6h estimate script) รีเฟรชข้อมูลจริงทุก ~15 นาที)
+// ใช้ { cache: 'no-store' } กับทุก fetch ที่ auto-refresh เรียกซ้ำ กัน browser cache เสิร์ฟข้อมูลเก่าซ้ำ
+function loadInflowForecast() {
+  fetch(DATA_ENDPOINT, { cache: 'no-store' })
+    .then(res => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(renderInflow)
+    .catch(err => {
+      console.error('โหลดข้อมูลไม่สำเร็จ:', err);
+      const statusText = document.getElementById('statusText');
+      if (statusText) statusText.textContent = 'ไม่สามารถโหลดข้อมูลจาก ' + DATA_ENDPOINT + ' ได้';
+      document.getElementById('horizonTableBody').innerHTML =
+        '<tr><td colspan="5">ไม่สามารถโหลดข้อมูลจาก ' + DATA_ENDPOINT + ' ได้</td></tr>';
+    });
+}
+
+function loadResInflow() {
+  fetch(RES_INFLOW_ENDPOINT, { cache: 'no-store' })
+    .then(res => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+    .then(initResCharts)
+    .catch(err => {
+      console.error('โหลดข้อมูลน้ำท่า WMB ไม่สำเร็จ:', err);
+      const note = document.getElementById('resDetailNote');
+      if (note) note.textContent = 'ไม่สามารถโหลดข้อมูลน้ำท่าจาก ' + RES_INFLOW_ENDPOINT + ' ได้';
+    });
+}
+
+loadInflowForecast();
+loadResInflow();
+
+// auto-refresh ทุก 5 นาที -- เร็วพอที่จะเห็นข้อมูลใหม่ไม่นานหลัง backend อัปเดต (~15 นาที/รอบ) โดยไม่ถี่
+// เกินจำเป็น เป็นการ re-fetch + re-render บางส่วน ไม่ใช่ full page reload (ไม่รบกวน scroll position/
+// การโต้ตอบของผู้ใช้ที่กำลังดูอยู่)
+const AUTO_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+setInterval(() => {
+  loadInflowForecast();
+  loadResInflow();
+}, AUTO_REFRESH_INTERVAL_MS);
 </script>
 
 </body>
