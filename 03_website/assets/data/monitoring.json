@@ -1,7 +1,7 @@
 {
   "meta": {
     "source": "สถานีโทรมาตร สสน. (API) ผ่าน Google Sheet wide_log (poll ทุก 10 นาที) + HII open data (tiservice.hii.or.th, รายชั่วโมงผ่าน QC, เดือนที่ปิดแล้ว) + 01_data/Reservoirs/reference (rating curve ต่ออ่าง)",
-    "updated": "2026-08-05T17:20:00",
+    "updated": "2026-08-05T17:40:00",
     "data_connected": true
   },
   "stations": [
@@ -10,17 +10,17 @@
       "name_th": "อ่างเก็บน้ำแม่นาเรือ",
       "name_en": "Mae Na Rua Reservoir",
       "spillway_msl": 489.54,
-      "water_level": 487.939,
-      "rainfall_1h": 0.0,
-      "temperature": 24.85,
-      "humidity": 91.56,
-      "pressure": 949.88,
-      "solar": 47.3,
-      "measure_datetime": "2026-08-05T17:20:00",
-      "storage_m3": 1160682.9,
+      "water_level": 487.938,
+      "rainfall_1h": 0.2,
+      "temperature": 24.5,
+      "humidity": 93.83,
+      "pressure": 950.0,
+      "solar": 35.7,
+      "measure_datetime": "2026-08-05T17:40:00",
+      "storage_m3": 1160399.3,
       "storage_max_m3": 1625463.8,
       "capacity_pct": 71.4,
-      "distance_to_spillway_m": -1.601,
+      "distance_to_spillway_m": -1.602,
       "history": [
         {
           "t": "2026-07-22T18:00:00",
@@ -6266,7 +6266,7 @@
         },
         {
           "t": "2026-08-05T17:00:00",
-          "rain_mm": 0.0
+          "rain_mm": 0.2
         }
       ]
     },
@@ -6275,17 +6275,17 @@
       "name_th": "อ่างเก็บน้ำวิทยาลัยเกษตร",
       "name_en": "Phayao C.A.T. Reservoir",
       "spillway_msl": 457.07,
-      "water_level": 455.804,
-      "rainfall_1h": 0.2,
-      "temperature": 24.7,
-      "humidity": 91.8,
-      "pressure": 953.51,
-      "solar": 53.9,
-      "measure_datetime": "2026-08-05T17:20:00",
-      "storage_m3": 280157.3,
+      "water_level": 455.803,
+      "rainfall_1h": 0.4,
+      "temperature": 24.43,
+      "humidity": 91.86,
+      "pressure": 953.63,
+      "solar": 36.4,
+      "measure_datetime": "2026-08-05T17:40:00",
+      "storage_m3": 280106.7,
       "storage_max_m3": 347778.7,
-      "capacity_pct": 80.6,
-      "distance_to_spillway_m": -1.266,
+      "capacity_pct": 80.5,
+      "distance_to_spillway_m": -1.267,
       "history": [
         {
           "t": "2026-07-22T18:00:00",
@@ -12531,7 +12531,7 @@
         },
         {
           "t": "2026-08-05T17:00:00",
-          "rain_mm": 0.2
+          "rain_mm": 0.4
         }
       ]
     },
@@ -12541,21 +12541,17 @@
       "name_en": "Huai Tham Reservoir",
       "spillway_msl": 478.1,
       "water_level": 478.71,
-      "rainfall_1h": 0.2,
-      "temperature": 25.1,
-      "humidity": 92.8,
-      "pressure": 950.4,
-      "solar": 96.7,
-      "measure_datetime": "2026-08-05T17:00:00",
+      "rainfall_1h": 0.0,
+      "temperature": 24.9,
+      "humidity": 93.9,
+      "pressure": 950.6,
+      "solar": 47.6,
+      "measure_datetime": "2026-08-05T17:30:00",
       "storage_m3": 551313.5,
       "storage_max_m3": 495467.8,
       "capacity_pct": 111.3,
       "distance_to_spillway_m": 0.61,
       "history": [
-        {
-          "t": "2026-07-22T17:00:00",
-          "level": 478.1
-        },
         {
           "t": "2026-07-22T18:00:00",
           "level": 478.1
@@ -18708,7 +18704,7 @@
         },
         {
           "t": "2026-08-05T17:00:00",
-          "rain_mm": 0.2
+          "rain_mm": 0.0
         }
       ]
     },
@@ -18717,17 +18713,17 @@
       "name_th": "อ่างเก็บน้ำห้วยโซ้",
       "name_en": "Huai So Reservoir",
       "spillway_msl": 508.0,
-      "water_level": 508.049,
+      "water_level": 508.05,
       "rainfall_1h": 0.0,
-      "temperature": 25.29,
-      "humidity": 93.28,
-      "pressure": 948.0,
-      "solar": 51.8,
-      "measure_datetime": "2026-08-05T17:20:00",
-      "storage_m3": 120690.2,
+      "temperature": 24.88,
+      "humidity": 94.95,
+      "pressure": 948.16,
+      "solar": 37.6,
+      "measure_datetime": "2026-08-05T17:40:00",
+      "storage_m3": 120724.5,
       "storage_max_m3": 119007.2,
       "capacity_pct": 101.4,
-      "distance_to_spillway_m": 0.049,
+      "distance_to_spillway_m": 0.05,
       "history": [
         {
           "t": "2026-07-22T18:00:00",
