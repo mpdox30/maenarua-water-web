@@ -392,6 +392,12 @@ const FLAG = {
 };
 const LV = ['normal', 'watch', 'warning', 'critical'];
 
+// 2026-08-05 เพิ่ม -- ตัดจุดที่ไม่ต้องการแสดง ออกจากการ์ด "ระยะห่างจากตลิ่ง" และโหนดเฝ้าระวังบนแผนที่
+// (ตามคำขอผู้ใช้ -- ไม่ลบข้อมูลออกจาก flood_latest.json เพราะยังใช้ในส่วนอื่น เช่น warnings/model_info)
+const HIDDEN_NODES = new Set(['Mae_Branch1', 'So_HuaiCho', 'RongLaeng']); // เส้นแยก 1, ห้วยโซ้, ห้วยร่องแล้ง (การ์ดระยะห่างจากตลิ่ง)
+// เฉพาะแผนที่ -- ตัดเพิ่มอีก 3 จุด (ห้วยจำตุ้ม, ห้วยถ้ำ, ห้วยร่องเปา) นอกเหนือจาก HIDDEN_NODES เดิม
+const HIDDEN_MAP_NODES = new Set([...HIDDEN_NODES, 'ChamTum', 'HuayTham', 'RongPao']);
+
 function fmt(n, d) {
   if (n === null || n === undefined || Number.isNaN(n)) return '—';
   return Number(n).toLocaleString('en-US', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -473,7 +479,7 @@ function render(d) {
 // ---------- ระยะห่างจากตลิ่ง รายห้วย ----------
 function drawBankList(d) {
   const el = document.getElementById('bankList');
-  const rows = Object.entries(d.banks).map(([node, bank]) => {
+  const rows = Object.entries(d.banks).filter(([node]) => !HIDDEN_NODES.has(node)).map(([node, bank]) => {
     const gap = bank - d.kwan_now.level;
     const name = (d.nodes && d.nodes[node] && d.nodes[node].name_th) || node;
     let cls = 'normal';
@@ -640,7 +646,7 @@ function drawMap(d) {
 
   // ---------- จุดเสี่ยงรายห้วย ----------
   const markerLayer = L.layerGroup();
-  Object.entries(d.nodes).forEach(([node, p]) => {
+  Object.entries(d.nodes).filter(([node]) => !HIDDEN_MAP_NODES.has(node)).forEach(([node, p]) => {
     const lv = nodeFlagLevel(d, node);
     const f = FLAG[lv];
     const rows = d.overflow_forecast.filter(r => r.node === node);
