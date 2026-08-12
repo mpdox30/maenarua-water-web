@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ติดตามความแม่นยำพยากรณ์น้ำไหลลงอ่าง | ข้อมูลประกอบการตัดสินใจเพื่อการบริหารจัดการน้ำ ตำบลแม่นาเรือ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="assets/js/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg-950: #06161c; --bg-900: #081e26; --bg-800: #0d2a34; --bg-700: #123643;
+    --surface: rgba(255,255,255,0.045); --surface-hover: rgba(255,255,255,0.075);
+    --border: rgba(157,201,201,0.16); --border-strong: rgba(157,201,201,0.32);
+    --teal-300: #7fe0d1; --teal-400: #45c2ad; --teal-500: #2a9d8f; --teal-glow: rgba(69,194,173,0.35);
+    --amber-400: #e0a94f; --amber-300: #f0c47c;
+    --text-100: #eef6f4; --text-300: #c4d6d3; --text-500: #8aa3a0; --text-600: #66807d;
+    --radius-lg: 18px; --radius-md: 12px; --radius-sm: 8px;
+    --flag-normal: #2a9d8f; --flag-watch: #e0a94f; --flag-warning: #e0763f; --flag-critical: #e05252;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: radial-gradient(ellipse 1200px 700px at 15% -10%, #103743 0%, transparent 60%),
+                radial-gradient(ellipse 900px 600px at 100% 10%, #0e2f2a 0%, transparent 55%),
+                var(--bg-950);
+    color: var(--text-300); font-family: "IBM Plex Sans Thai", "Sarabun", sans-serif; line-height: 1.65; -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 { font-family: "Noto Serif Thai", "Space Grotesk", serif; color: var(--text-100); font-weight: 600; letter-spacing: 0.01em; margin: 0; }
+  a { color: inherit; }
+  .num { font-family: "Space Grotesk", "IBM Plex Sans Thai", sans-serif; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 40px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: "Space Grotesk", "IBM Plex Sans Thai", sans-serif; font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--teal-300); font-weight: 600; }
+  .eyebrow::before { content: ""; width: 16px; height: 1px; background: var(--teal-400); display: inline-block; }
+
+  header.site-header { position: sticky; top: 0; z-index: 1200; background: rgba(6,22,28,0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+  .header-inner { max-width: 1240px; margin: 0 auto; padding: 14px 40px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .back-link { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 13px; color: var(--text-500); font-weight: 500; }
+  .back-link:hover { color: var(--teal-300); }
+  .refresh-note { font-size: 11.5px; color: var(--text-600); }
+
+  .page-hero { padding: 40px 0 8px; }
+  .page-hero h1 { font-size: 28px; line-height: 1.3; margin: 14px 0 10px; }
+  .page-hero p.lead { color: var(--text-500); font-size: 13.5px; max-width: 760px; margin: 0; }
+
+  section.section { padding: 36px 0; }
+  section.section + section.section { border-top: 1px solid var(--border); }
+  .section-head { margin-bottom: 22px; }
+  .section-head h2 { font-size: 19px; margin-top: 6px; }
+  .section-head p { color: var(--text-500); font-size: 12.5px; margin: 6px 0 0; max-width: 680px; }
+
+  .h-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
+  .h-tab { border: 1px solid var(--border); background: var(--surface); color: var(--text-500); font-family: "Space Grotesk", sans-serif; font-size: 12.5px; font-weight: 600; padding: 8px 14px; border-radius: 999px; cursor: pointer; transition: all .15s; }
+  .h-tab:hover { border-color: var(--border-strong); color: var(--text-300); }
+  .h-tab.active { background: var(--teal-500); border-color: var(--teal-500); color: #06161c; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 22px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 18px; }
+  .kpi .label { font-size: 11.5px; color: var(--text-500); margin-bottom: 8px; }
+  .kpi .value { font-family: "Space Grotesk", "IBM Plex Sans Thai", sans-serif; font-size: 23px; font-weight: 600; color: var(--text-100); line-height: 1.1; }
+  .kpi .value small { font-size: 12px; color: var(--text-500); font-weight: 500; margin-left: 4px; }
+  .kpi .sub { font-size: 11px; color: var(--text-600); margin-top: 6px; }
+
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 22px; margin-top: 20px; }
+  .chart-card canvas { width: 100%; }
+  .legend-row { display: flex; gap: 18px; margin-top: 10px; font-size: 12px; color: var(--text-500); flex-wrap: wrap; }
+  .legend-row .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+
+  table.acc-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12.5px; }
+  table.acc-table th { text-align: left; color: var(--text-500); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 10px; border-bottom: 1px solid var(--border-strong); position: sticky; top: 0; background: var(--bg-900); }
+  table.acc-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); color: var(--text-300); white-space: nowrap; }
+  table.acc-table tr.pending td { color: var(--text-600); }
+  table.acc-table td.num { font-family: "Space Grotesk", sans-serif; }
+  .table-scroll { max-height: 520px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-md); margin-top: 18px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600; }
+  .badge.ok { background: rgba(42,157,143,0.18); color: var(--teal-300); }
+  .badge.low { background: rgba(224,169,79,0.18); color: var(--amber-300); }
+  .badge.pending { background: rgba(138,163,160,0.14); color: var(--text-600); }
+
+  .loading-note { color: var(--text-600); font-size: 12.5px; padding: 20px 0; }
+  footer.site-footer { border-top: 1px solid var(--border); padding: 26px 0 40px; margin-top: 10px; }
+  footer.site-footer .wrap { font-size: 11.5px; color: var(--text-600); }
+
+  @media (max-width: 900px) {
+    .wrap { padding: 0 20px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 560px) {
+    .kpi-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="back-link" href="inflow-forecast.html">&larr; กลับหน้าคาดการณ์น้ำไหลลงอ่าง</a>
+    <span class="refresh-note" id="refreshNote">กำลังโหลด…</span>
+  </div>
+</header>
+
+<main>
+  <section class="page-hero">
+    <div class="wrap">
+      <div class="eyebrow">Forecast Tracking · RES002</div>
+      <h1>ติดตามความแม่นยำพยากรณ์น้ำไหลลงอ่าง (พยากรณ์ vs ค่าจริง)</h1>
+      <p class="lead">
+        เทียบค่าพยากรณ์น้ำไหลลงอ่างรายวัน (h1–h7 วันล่วงหน้า) จากโมเดล CatBoost กับค่าจริงที่คำนวณจาก
+        water balance รายวันย้อนหลัง — บันทึกอัตโนมัติทุกวันจาก <code>forecast_accuracy_logger.py</code>
+        เพื่อใช้ประเมิน/ปรับจูนโมเดลในอนาคต หน้านี้อัปเดตข้อมูลเองทุก 5 นาที เปิดทิ้งไว้ดูได้ตลอด
+      </p>
+
+      <div class="kpi-grid" id="kpiGrid">
+        <div class="kpi"><div class="label">จำนวนคู่เทียบทั้งหมด</div><div class="value num" id="kpiN">—</div><div class="sub">มีค่าจริงแล้ว / บันทึกทั้งหมด</div></div>
+        <div class="kpi"><div class="label">MAE รวมทุก horizon</div><div class="value num" id="kpiMae">—<small>ลบ.ม./วัน</small></div><div class="sub">ค่าเฉลี่ย |พยากรณ์ − จริง|</div></div>
+        <div class="kpi"><div class="label">Horizon แม่นยำสุด</div><div class="value num" id="kpiBestH">—</div><div class="sub" id="kpiBestHSub">—</div></div>
+        <div class="kpi"><div class="label">อัปเดตล่าสุด</div><div class="value num" id="kpiLastUpdate" style="font-size:16px;">—</div><div class="sub" id="kpiLastUpdateSub">—</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">Predicted vs Actual</div>
+        <h2>กราฟเทียบพยากรณ์กับค่าจริง แยกตาม horizon</h2>
+        <p>เลือก horizon ที่จะดู — เส้นทึบคือค่าพยากรณ์ (บันทึกไว้ตั้งแต่วันที่พยากรณ์), จุดคือค่าจริงที่คำนวณได้ภายหลัง</p>
+      </div>
+      <div class="h-tabs" id="hTabs"></div>
+      <div class="chart-card">
+        <canvas id="accChart" height="90"></canvas>
+        <div class="legend-row">
+          <span><span class="dot" style="background:#7fe0d1"></span>พยากรณ์ (Predicted)</span>
+          <span><span class="dot" style="background:#e0a94f"></span>ค่าจริง (Actual)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">Raw Log</div>
+        <h2>ตารางบันทึกทั้งหมด (ล่าสุดก่อน)</h2>
+        <p>แถวสีจางคือยังไม่มีค่าจริง (รอ water balance คำนวณของวันที่นั้นให้เสร็จก่อน)</p>
+      </div>
+      <div id="tableWrap" class="loading-note">กำลังโหลดข้อมูล…</div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">ข้อมูลจาก forecast_accuracy_log.csv — อัปเดตอัตโนมัติทุกวันโดย forecast_accuracy_logger.py</div>
+</footer>
+
+<script>
+const LOG_CSV_URL = 'assets/data/forecast_accuracy_log.csv';
+let allRows = [];
+let selectedHorizon = 1;
+let accChart = null;
+
+function parseCsv(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',');
+  return lines.slice(1).map(line => {
+    // ค่าคอลัมน์ทั้งหมดในไฟล์นี้เป็นตัวเลข/ข้อความง่ายๆ ไม่มี comma ฝังในค่า -- split ตรงๆ ปลอดภัย
+    const cells = line.split(',');
+    const row = {};
+    headers.forEach((h, i) => { row[h] = cells[i] !== undefined ? cells[i] : ''; });
+    return row;
+  });
+}
+
+function isFilled(v) { return v !== undefined && v !== null && v !== '' && v !== 'None'; }
+function fmt(n, d = 0) { return isFilled(n) ? Number(n).toLocaleString('th-TH', { maximumFractionDigits: d, minimumFractionDigits: d }) : '—'; }
+
+function computeKpis(rows) {
+  const withActual = rows.filter(r => isFilled(r.actual_m3_per_day));
+  document.getElementById('kpiN').textContent = withActual.length + ' / ' + rows.length;
+
+  const allErr = withActual.map(r => Math.abs(Number(r.abs_error_m3))).filter(v => !isNaN(v));
+  const maeAll = allErr.length ? allErr.reduce((a, b) => a + b, 0) / allErr.length : null;
+  document.getElementById('kpiMae').innerHTML = fmt(maeAll) + '<small>ลบ.ม./วัน</small>';
+
+  const byH = {};
+  withActual.forEach(r => {
+    const h = r.horizon;
+    if (!byH[h]) byH[h] = [];
+    const e = Math.abs(Number(r.abs_error_m3));
+    if (!isNaN(e)) byH[h].push(e);
+  });
+  let bestH = null, bestMae = Infinity;
+  Object.entries(byH).forEach(([h, errs]) => {
+    if (!errs.length) return;
+    const mae = errs.reduce((a, b) => a + b, 0) / errs.length;
+    if (mae < bestMae) { bestMae = mae; bestH = h; }
+  });
+  document.getElementById('kpiBestH').textContent = bestH ? ('h' + bestH) : '—';
+  document.getElementById('kpiBestHSub').textContent = bestH ? ('MAE ' + fmt(bestMae) + ' ลบ.ม./วัน (n=' + byH[bestH].length + ')') : '—';
+
+  const logged = rows.map(r => r.logged_at).filter(isFilled).sort();
+  const last = logged.length ? logged[logged.length - 1] : null;
+  if (last) {
+    const d = new Date(last);
+    document.getElementById('kpiLastUpdate').textContent = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+    document.getElementById('kpiLastUpdateSub').textContent = d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.';
+  }
+}
+
+function buildHorizonTabs(rows) {
+  const horizons = [...new Set(rows.map(r => r.horizon))].sort((a, b) => Number(a) - Number(b));
+  const wrap = document.getElementById('hTabs');
+  wrap.innerHTML = '';
+  horizons.forEach(h => {
+    const btn = document.createElement('button');
+    btn.className = 'h-tab' + (Number(h) === selectedHorizon ? ' active' : '');
+    btn.textContent = 'ล่วงหน้า ' + h + ' วัน';
+    btn.addEventListener('click', () => {
+      selectedHorizon = Number(h);
+      wrap.querySelectorAll('.h-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      drawChart(rows);
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+function drawChart(rows) {
+  const hRows = rows
+    .filter(r => Number(r.horizon) === selectedHorizon)
+    .sort((a, b) => a.target_date.localeCompare(b.target_date));
+
+  const labels = hRows.map(r => r.target_date);
+  const predicted = hRows.map(r => isFilled(r.predicted_m3_per_day) ? Number(r.predicted_m3_per_day) : null);
+  const actual = hRows.map(r => isFilled(r.actual_m3_per_day) ? Number(r.actual_m3_per_day) : null);
+
+  const ctx = document.getElementById('accChart').getContext('2d');
+  if (accChart) { accChart.destroy(); accChart = null; }
+  accChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'พยากรณ์', data: predicted, borderColor: '#7fe0d1', backgroundColor: 'rgba(127,224,209,0.12)', borderWidth: 2, pointRadius: 2, tension: 0.25, spanGaps: true },
+        { label: 'ค่าจริง', data: actual, borderColor: '#e0a94f', backgroundColor: '#e0a94f', borderWidth: 0, pointRadius: 4, pointStyle: 'circle', showLine: false },
+      ],
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        x: { ticks: { color: '#8aa3a0', maxRotation: 60, minRotation: 40 }, grid: { color: 'rgba(157,201,201,0.08)' } },
+        y: { ticks: { color: '#8aa3a0', callback: v => Number(v).toLocaleString('th-TH') }, grid: { color: 'rgba(157,201,201,0.08)' }, title: { display: true, text: 'ลบ.ม./วัน', color: '#8aa3a0' } },
+      },
+      plugins: { legend: { display: false } },
+    },
+  });
+}
+
+function buildTable(rows) {
+  const sorted = [...rows].sort((a, b) => b.target_date.localeCompare(a.target_date) || Number(a.horizon) - Number(b.horizon));
+  let html = '<div class="table-scroll"><table class="acc-table"><thead><tr>' +
+    '<th>วันเป้าหมาย</th><th>Horizon</th><th>วันที่พยากรณ์</th><th>พยากรณ์ (ลบ.ม./วัน)</th>' +
+    '<th>จริง (ลบ.ม./วัน)</th><th>ผิดพลาด</th><th>% ผิดพลาด</th><th>สถานะ</th>' +
+    '</tr></thead><tbody>';
+  sorted.forEach(r => {
+    const hasActual = isFilled(r.actual_m3_per_day);
+    const badge = hasActual
+      ? (r.low_confidence === 'True' ? '<span class="badge low">low-conf</span>' : '<span class="badge ok">เทียบแล้ว</span>')
+      : '<span class="badge pending">รอค่าจริง</span>';
+    html += '<tr class="' + (hasActual ? '' : 'pending') + '">' +
+      '<td>' + r.target_date + '</td>' +
+      '<td class="num">h' + r.horizon + '</td>' +
+      '<td>' + r.recorded_as_of_date + '</td>' +
+      '<td class="num">' + fmt(r.predicted_m3_per_day) + '</td>' +
+      '<td class="num">' + (hasActual ? fmt(r.actual_m3_per_day) : '—') + '</td>' +
+      '<td class="num">' + (hasActual ? fmt(r.abs_error_m3) : '—') + '</td>' +
+      '<td class="num">' + (hasActual && isFilled(r.pct_error) ? fmt(r.pct_error, 1) + '%' : '—') + '</td>' +
+      '<td>' + badge + '</td>' +
+      '</tr>';
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('tableWrap').innerHTML = html;
+}
+
+function render(rows) {
+  allRows = rows;
+  computeKpis(rows);
+  buildHorizonTabs(rows);
+  drawChart(rows);
+  buildTable(rows);
+  document.getElementById('refreshNote').textContent = 'อัปเดตอัตโนมัติทุก 5 นาที · โหลดล่าสุด ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.';
+}
+
+function loadLog() {
+  fetch(LOG_CSV_URL, { cache: 'no-store' })
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+    .then(text => render(parseCsv(text)))
+    .catch(err => {
+      document.getElementById('tableWrap').innerHTML = '<div class="loading-note">โหลดข้อมูลไม่สำเร็จ: ' + err.message + '</div>';
+      document.getElementById('refreshNote').textContent = 'โหลดข้อมูลไม่สำเร็จ';
+    });
+}
+
+loadLog();
+const ACC_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+setInterval(loadLog, ACC_REFRESH_INTERVAL_MS);
+</script>
+
+</body>
+</html>

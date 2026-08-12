@@ -27,6 +27,7 @@ from __future__ import annotations
 import csv
 import datetime as dt
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -34,6 +35,9 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 LATEST_JSON = REPO_ROOT / "03_website" / "assets" / "data" / "latest.json"
 DAILY_COMPUTED_CSV = REPO_ROOT / "01_data" / "Reservoirs" / "inflow_auto" / "RES002_daily_computed.csv"
 LOG_CSV = REPO_ROOT / "01_data" / "forecasting_results" / "Reservoir_inflow" / "forecast_accuracy_log.csv"
+# 2026-08-12 เพิ่ม -- สำเนา LOG_CSV ไว้ให้หน้าเว็บ forecast-accuracy.html fetch() ได้ตรงๆ (เว็บ static
+# ไม่สามารถอ่านไฟล์นอก 03_website/ ได้) คัดลอกทุกครั้งที่ _write_log() เขียนไฟล์จริง ไม่ใช่ทุกรอบที่รัน
+WEBSITE_LOG_CSV = REPO_ROOT / "03_website" / "assets" / "data" / "forecast_accuracy_log.csv"
 
 LOG_FIELDS = [
     "recorded_as_of_date", "horizon", "target_date", "predicted_m3_per_day",
@@ -167,6 +171,12 @@ def main() -> int:
     if n_added or n_filled:
         _write_log(rows)
         print(f"[INFO] เขียน {LOG_CSV} ({len(rows)} แถวทั้งหมด)")
+        try:
+            WEBSITE_LOG_CSV.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(LOG_CSV, WEBSITE_LOG_CSV)
+            print(f"[INFO] คัดลอกไปให้เว็บอ่านที่ {WEBSITE_LOG_CSV}")
+        except Exception as exc:
+            print(f"[WARN] คัดลอก {WEBSITE_LOG_CSV} ไม่สำเร็จ ({exc}) -- ไม่กระทบ log หลัก")
     else:
         print("[INFO] ไม่มีอะไรใหม่ต้องบันทึก/เติมรอบนี้")
     return 0
