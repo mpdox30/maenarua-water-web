@@ -38,6 +38,17 @@ __pycache__/
 # environment variable TELEMETRY_API_URL ที่ telemetry_feature.py อ่านจริง) แค่ไม่ track ใน git อีกต่อไป
 01_data/telemetry/Tele_API_Address.txt
 
+# --- 2026-07-25 เพิ่ม — โฟลเดอร์ทำงานชั่วคราวสำหรับปรับปรุงโมเดล Reservoir Inflow (NSE) ---
+# สำเนาแยกของ training CSV/notebook/metadata ทำงาน/ทดลองแยกจากของจริงทั้งหมด ไม่แตะไฟล์ต้นฉบับใน
+# 01_data/scripts and code/Reservoir_inflow/active/ เลย ลบทิ้งได้เมื่อตัดสินใจ deploy ผลลัพธ์จริงแล้ว
+_inflow_model_improve_wip/
+
+# --- 2026-07-25 เพิ่ม — โฟลเดอร์ทำงานชั่วคราวสำหรับ refactor สถาปัตยกรรมเว็บ (Web Components) ---
+# สำเนาแยกของ 03_website/ ทำงาน/ทดสอบแยกจากของจริงทั้งหมด ไม่ให้กระทบเว็บ live หรือชน
+# กับ auto-push ของ monitoring_data_builder.py (รันทุก 10-15 นาที, git add เฉพาะไฟล์ที่รู้จักเท่านั้น
+# แต่กันไว้อีกชั้นไม่ให้ขึ้น git status เป็น noise) ลบทิ้งได้เมื่องาน merge กลับเข้า 03_website/ จริงแล้ว
+_website_refactor_wip/
+
 # --- 2026-07-20 เพิ่ม — เอกสารประกอบ manuscript (draft) ---
 # ลบออกจาก git history ทั้งหมดแล้วด้วย git filter-repo (2026-07-20) ตามที่ผู้ใช้ขอ เพราะ repo
 # เปลี่ยนเป็น public แล้ว และ PROJECT_MEMORY.md ระบุชัดว่าห้ามเอา draft manuscript ไปแสดงในส่วน
@@ -46,3 +57,10 @@ __pycache__/
 # โฟลเดอร์นี้อยู่แล้ว) ลบออกจึงไม่กระทบเว็บ live เพิ่มเติม ไฟล์ยังอยู่บนดิสก์ตามปกติสำหรับดูผ่าน local
 # server เท่านั้น แค่ไม่ track ใน git อีกต่อไป
 04_docs_research/
+
+# --- 2026-08-12 เพิ่ม — ไฟล์ backup อัตโนมัติของไฟล์ทางการอ่างเก็บน้ำ (สร้างทุกครั้งก่อนเขียนทับจริง
+# โดย reservoir_official_file_writer.py/create_new_month_official_file.py) ไม่ต้อง track ใน git --
+# มีเยอะมาก (เกือบทุกวัน) และของจริงที่แก้แล้วอยู่ใน .xlsx หลักซึ่ง track อยู่แล้ว ต้อง ignore ไว้ก่อน
+# เพิ่มขั้นตอน git add แบบกว้าง (ทั้งโฟลเดอร์ inflow/) ให้ run_reservoir_daily_orchestration.bat ได้
+# อย่างปลอดภัย ไม่ดึง backup พวกนี้ติดไปด้วย
+01_data/Reservoirs/inflow/*/*.bak_before_*

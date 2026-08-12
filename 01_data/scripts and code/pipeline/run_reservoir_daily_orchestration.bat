@@ -59,5 +59,59 @@ echo [INFO] reservoir_daily_orchestration.py exited with code %ORCH_EXIT_CODE%
 echo   (0 = สำเร็จ, non-zero = error -- เช็ค log ด้านบน โดยเฉพาะถ้าเขียนไฟล์ทางการล้มเหลว
 echo    shadow CSV จะยังเขียนสำเร็จแยกต่างหากเสมอถ้าคำนวณได้ ไม่ขึ้นกับไฟล์ทางการ)
 
+REM ============================================================================
+REM 2026-08-12 เพิ่ม -- push ไฟล์ทางการ + shadow CSV ขึ้น GitHub ทุกรอบที่รันสำเร็จ
+REM
+REM ก่อนหน้านี้สคริปต์นี้ไม่มีขั้นตอน git ใดๆ เลย -- ไฟล์ทางการรายเดือน (inflow/<year>/*.xlsx) และ
+REM shadow CSV (RES002_daily_computed.csv) เขียนแค่บนดิสก์ทุกเช้า ไม่เคยขึ้น GitHub อัตโนมัติ ตรวจพบ
+REM 2026-08-12 ว่า GitHub ค้างข้อมูลจริงถึง 26 วัน (shadow CSV) และ 10 วัน (ไฟล์ทางการเดือนปัจจุบัน)
+REM ทั้งที่ดิสก์เครื่องนี้มีข้อมูลครบทุกวันปกติ -- แก้ด้วย pattern เดียวกับ run_pipeline.bat/
+REM run_monitoring_data_builder.bat (pull --no-rebase ก่อน, add เฉพาะไฟล์ที่รู้จัก, commit/push
+REM เฉพาะตอนมีอะไรเปลี่ยนจริง) ไฟล์ backup อัตโนมัติ (.bak_before_*) ถูก .gitignore กันไว้แล้ว จึง
+REM git add ทั้งโฟลเดอร์ inflow/ ได้อย่างปลอดภัยโดยไม่ดึง backup ติดไปด้วย
+REM ============================================================================
+if not "%ORCH_EXIT_CODE%"=="0" (
+    echo [WARN] reservoir_daily_orchestration.py ไม่สำเร็จ -- ข้ามขั้นตอน push git รอบนี้
+    goto :SKIP_RESERVOIR_PUSH
+)
+
+pushd "%SCRIPT_DIR%..\..\..\"
+
+if exist ".git\rebase-merge" goto :RESERVOIR_GIT_BUSY
+if exist ".git\rebase-apply" goto :RESERVOIR_GIT_BUSY
+if exist ".git\MERGE_HEAD" goto :RESERVOIR_GIT_BUSY
+
+echo.
+echo [INFO] sync กับ remote ก่อน push ไฟล์ทางการ + shadow CSV ...
+git pull --no-rebase --no-edit origin master
+if errorlevel 1 (
+    echo [WARN] git pull --no-rebase ไม่สำเร็จ -- ข้ามขั้นตอน push รอบนี้ ^(ไม่ force/resolve เอง^)
+    goto :RESERVOIR_GIT_DONE
+)
+
+git add "01_data/Reservoirs/inflow/"
+git add "01_data/Reservoirs/inflow_auto/RES002_daily_computed.csv"
+git diff --cached --quiet
+if errorlevel 1 (
+    git commit -m "Auto-update: reservoir official file + shadow CSV %DATE% %TIME%" >nul 2>&1
+    git push origin master
+    if errorlevel 1 (
+        echo [WARN] push ไฟล์ทางการ/shadow CSV ไม่สำเร็จ -- จะลองใหม่รอบถัดไปอัตโนมัติ
+    ) else (
+        echo [OK] push ไฟล์ทางการ/shadow CSV สำเร็จ
+    )
+) else (
+    echo [INFO] ไม่มีอะไรเปลี่ยนจากรอบก่อน -- ข้ามการ commit/push
+)
+goto :RESERVOIR_GIT_DONE
+
+:RESERVOIR_GIT_BUSY
+echo [WARN] เจอ rebase/merge ค้างอยู่ใน git -- ข้ามขั้นตอน push รอบนี้
+
+:RESERVOIR_GIT_DONE
+popd
+
+:SKIP_RESERVOIR_PUSH
+
 endlocal
 exit /b %ORCH_EXIT_CODE%
