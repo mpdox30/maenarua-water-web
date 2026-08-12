@@ -122,6 +122,8 @@ REM **2026-07-31**: ตอนนี้ push 3 ไฟล์ต่อรอบ (mo
 REM forecast_accuracy_log.csv) ในรอบ pull/push เดียวกัน -- แต่ละไฟล์ add เฉพาะตอนที่สคริปต์ของมันสำเร็จ
 REM (BUILDER_EXIT_CODE / INFLOW_EXIT_CODE / LOGGER_EXIT_CODE แยกกัน) ถ้าสำเร็จแค่บางตัวก็ยัง push
 REM ตัวที่สำเร็จได้ตามปกติ ไม่ต้องรอให้ทั้งหมดสำเร็จพร้อมกัน
+REM **2026-08-12 เพิ่ม**: forecast_accuracy_logger.py เขียนไฟล์ที่ 4 เพิ่ม (สำเนา log ไว้ที่
+REM 03_website/assets/data/ ให้หน้า forecast-accuracy.html fetch() ได้) รวมเป็น 4 ไฟล์ต่อรอบ
 REM ============================================================================
 if not "%BUILDER_EXIT_CODE%"=="0" if not "%INFLOW_EXIT_CODE%"=="0" if not "%LOGGER_EXIT_CODE%"=="0" (
     echo [WARN] ทั้งสามสคริปต์ไม่สำเร็จเลย ข้ามขั้นตอน push git รอบนี้
@@ -175,7 +177,11 @@ echo [INFO] กำลัง add ไฟล์ที่อัปเดตสำเ
 
 if "%BUILDER_EXIT_CODE%"=="0" git add "03_website/assets/data/monitoring.json"
 if "%INFLOW_EXIT_CODE%"=="0" git add "03_website/assets/data/inflow_6h_display.json"
+REM 2026-08-12 เพิ่ม -- forecast_accuracy_logger.py ตอนนี้เขียน 2 ไฟล์ (log หลัก + สำเนาให้เว็บ
+REM forecast-accuracy.html fetch() ได้ตรงๆ ดู WEBSITE_LOG_CSV ในสคริปต์) ต้อง git add ทั้งคู่ ไม่งั้น
+REM หน้าเว็บจะค้างข้อมูลเก่าถาวรเพราะสำเนาไม่เคยถูก push
 if "%LOGGER_EXIT_CODE%"=="0" git add "01_data/forecasting_results/Reservoir_inflow/forecast_accuracy_log.csv"
+if "%LOGGER_EXIT_CODE%"=="0" git add "03_website/assets/data/forecast_accuracy_log.csv"
 
 git diff --cached --quiet
 if errorlevel 1 (

@@ -79,9 +79,17 @@ if r.returncode != 0:
 GitHub มาวางที่ path ที่ `dp` จะเขียน/อ่านจริงก่อนรัน Cell 8 เสมอ" ให้ทั้ง 2 ระบบ (เครื่อง Windows +
 Colab) มองไฟล์เดียวกันเป๊ะ ผ่าน git แทนที่จะเป็นคนละสำเนา — ต้องรันเซลล์นี้**ทุกครั้งก่อน Cell 8**
 
+**หมายเหตุ 2026-08-12 (แก้บั๊ก)**: เซลล์นี้ต้อง `import data_pipeline_colab as dp` เอง (ห้ามพึ่ง Cell 8
+import ไว้ให้ เพราะเซลล์นี้รัน**ก่อน** Cell 8) — เวอร์ชันแรกที่ให้ไปลืมบรรทัดนี้ ทำให้เจอ
+`NameError: name 'dp' is not defined` ถ้าเคยเจอ error นี้ ให้แทนที่โค้ดเซลล์เดิมด้วยเวอร์ชันนี้:
+
 ```python
-import subprocess, shutil
+import subprocess, shutil, importlib
 from pathlib import Path
+
+import data_pipeline_colab as dp
+importlib.reload(dp)   # กันแคชกรณีเคย import ไฟล์เก่าไว้ใน session นี้แล้ว (เซลล์นี้รันก่อน Cell 8
+                        # จึงต้อง import เองตรงนี้ ไม่ใช่พึ่ง Cell 8 import ให้)
 
 ML_FEATURES_SYNC_DIR = "/content/repo_sync_mlfeatures"
 if Path(ML_FEATURES_SYNC_DIR).exists():
