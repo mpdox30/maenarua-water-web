@@ -72,8 +72,8 @@ STATIONS = {
                "spillway_msl": 478.10, "curve": "rating_curve_RES005.csv",
                "area_display": "54.9 ไร่ (0.088 ตร.กม.)", "capacity_display": "0.495 ล้าน ลบ.ม."},
     "RES006": {"name_th": "อ่างเก็บน้ำห้วยโซ้", "name_en": "Huai So Reservoir",
-               "spillway_msl": 508.00, "curve": "rating_curve_RES006.csv",
-               "area_display": "21.4 ไร่ (0.034 ตร.กม.)", "capacity_display": "0.119 ล้าน ลบ.ม."},
+               "spillway_msl": 508.10, "curve": "rating_curve_RES006.csv",
+               "area_display": "21.4 ไร่ (0.034 ตร.กม.)", "capacity_display": "0.122 ล้าน ลบ.ม."},
 }
 
 # อ่างที่ไม่มีสถานีโทรมาตร (Tele_Code เป็นค่าว่างใน อ่างเก็บน้ำ.shp) -- โชว์ในตาราง static เฉยๆ
