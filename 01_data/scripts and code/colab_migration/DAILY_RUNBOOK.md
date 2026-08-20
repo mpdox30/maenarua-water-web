@@ -158,18 +158,29 @@ if not _diff.stdout.strip():
 else:
     _msg = f"Auto-update: ml_features_live.csv {datetime.now().strftime('%Y-%m-%d %H:%M')} (Colab)"
     subprocess.run(["git", "-C", ML_FEATURES_SYNC_DIR, "commit", "-m", _msg], check=True)
-    _result = subprocess.run(["git", "-C", ML_FEATURES_SYNC_DIR, "push", "origin", "HEAD:master"], capture_output=True, text=True)
-    if _result.returncode == 0:
-        print("push สำเร็จ:", _msg)
-    else:
-        print("push ไม่สำเร็จ (อาจมีเครื่อง Windows push ทับพร้อมกันพอดี -- รันเซลล์ #7.5+#8.5 ใหม่อีกรอบ):")
-        print(_result.stderr[-800:])
-```
 
-**ถ้า push ไม่สำเร็จเพราะ non-fast-forward** (เครื่อง Windows push ไฟล์เดียวกันพอดีระหว่างที่ Colab
-กำลังรัน — เกิดได้ยากแต่เป็นไปได้ ทั้งสองฝั่ง pull-then-push แบบปลอดภัยอยู่แล้วไม่ force ทับกัน) แค่รัน
-เซลล์ #7.5 ใหม่ (sync ของล่าสุดมา) แล้วรัน #8.5 ซ้ำ **ไม่ต้องรัน Cell 8 ใหม่** (ผลทำนายรอบนี้ยังใช้ได้
-แค่ต้อง sync ไฟล์ก่อน push เฉยๆ)
+    # 2026-08-12 เพิ่ม -- retry อัตโนมัติเมื่อโดน non-fast-forward (Windows push ไฟล์อื่นถี่ทุก 10-15
+    # นาทีผ่าน run_monitoring_data_builder.bat ชนกับ ref เดียวกัน ไม่ใช่ conflict เนื้อไฟล์จริง)
+    # สูงสุด 3 รอบ -- ถ้า pull เจอ conflict เนื้อไฟล์จริง (rare) จะหยุดทันที ไม่ auto-resolve
+    _MAX_PUSH_RETRIES = 3
+    for _attempt in range(1, _MAX_PUSH_RETRIES + 1):
+        _result = subprocess.run(["git", "-C", ML_FEATURES_SYNC_DIR, "push", "origin", "HEAD:master"], capture_output=True, text=True)
+        if _result.returncode == 0:
+            print(f"push สำเร็จ (ลองครั้งที่ {_attempt}):", _msg)
+            break
+        if "fetch first" not in _result.stderr and "non-fast-forward" not in _result.stderr:
+            print("push ไม่สำเร็จ (ไม่ใช่ non-fast-forward -- ต้องเช็คเอง):")
+            print(_result.stderr[-800:])
+            break
+        print(f"[INFO] ครั้งที่ {_attempt}: non-fast-forward (มีคนอื่น push ก่อน) -- pull แล้วลองใหม่ ...")
+        _pull = subprocess.run(["git", "-C", ML_FEATURES_SYNC_DIR, "pull", "--no-rebase", "--no-edit", "origin", "master"], capture_output=True, text=True)
+        if _pull.returncode != 0 or "CONFLICT" in _pull.stdout or "CONFLICT" in _pull.stderr:
+            print("[WARN] pull ไม่สำเร็จ หรือเจอ conflict เนื้อไฟล์จริง -- หยุด ไม่ auto-resolve เช็คด้วยตัวเองที่:", ML_FEATURES_SYNC_DIR)
+            print(_pull.stdout[-500:], _pull.stderr[-500:])
+            break
+    else:
+        print(f"[WARN] push ไม่สำเร็จหลังลอง {_MAX_PUSH_RETRIES} ครั้ง -- รันเซลล์ #7.5+#8.5 ใหม่อีกรอบภายหลัง")
+```
 
 ---
 

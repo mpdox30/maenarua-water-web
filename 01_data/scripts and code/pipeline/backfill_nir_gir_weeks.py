@@ -44,7 +44,6 @@ from __future__ import annotations
 import argparse
 import csv
 import datetime as dt
-import json
 import sys
 from pathlib import Path
 from typing import Optional
@@ -52,9 +51,7 @@ from typing import Optional
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import data_pipeline as dp  # noqa: E402  -- import หลังตั้ง sys.path
-import sar_classification as sc  # noqa: E402
 
-SAR_OUTPUT_DIR = sc.GIS_DIR / "sar_output"
 ML_FEATURES_LIVE_CSV = dp.ML_FEATURES_LIVE_CSV
 ML_FEATURES_LIVE_COLUMNS = dp.ML_FEATURES_LIVE_COLUMNS
 
@@ -81,40 +78,13 @@ def _find_area_source(as_of_date: dt.date) -> tuple[dict, dict, str]:
     """
     หา area_ha_by_crop ที่ "active อยู่จริง" ณ as_of_date -- คืนค่า
     (area_by_zone: {"zone_A": {...}, "zone_B": {...}}, meta: dict สำหรับ log, basis: str)
+
+    2026-08-20 แก้: เปลี่ยนมาเรียก dp._wd_find_area_source_for_date() แทนการมี logic หาไฟล์ SAR
+    แยกชุดของตัวเอง -- เพราะตอนนี้ _backfill_incomplete_climate_weeks() ใน data_pipeline.py ก็ต้องหา
+    area basis แบบเดียวกันนี้ด้วย (แก้บั๊กแถว NIR/GIR ถูกทับเงียบๆ) ย้าย logic ไปไว้ที่เดียว (data_pipeline.py)
+    กันสองจุดหลุด sync กัน เหมือนหลักการเดียวกับที่ทำไว้แล้วกับ _wd_compute_live_nir_gir()
     """
-    dated_files = sorted(SAR_OUTPUT_DIR.glob("sar_result_*_*.json"))
-    candidates = []
-    for fpath in dated_files:
-        try:
-            with open(fpath, encoding="utf-8") as f:
-                payload = json.load(f)
-        except Exception:
-            continue
-        gen_at_str = payload.get("generated_at")
-        if not gen_at_str:
-            continue
-        try:
-            gen_date = dt.datetime.fromisoformat(gen_at_str).date()
-        except ValueError:
-            continue
-        if gen_date <= as_of_date and payload.get("status") in ("ok", "partial"):
-            candidates.append((gen_date, fpath, payload))
-
-    if not candidates:
-        return (
-            {"zone_A": sc.AREA_2020_HA_BY_ZONE.get("zone_A", {}), "zone_B": sc.AREA_2020_HA_BY_ZONE.get("zone_B", {})},
-            {"source": "hardcoded_2020", "reason": f"ไม่มีผล SAR classification ที่ generated_at <= {as_of_date} เลย"},
-            "hardcoded_2020",
-        )
-
-    candidates.sort(key=lambda c: c[0])
-    gen_date, fpath, payload = candidates[-1]
-    zone_area = payload.get("zone_crop_area_ha") or {}
-    return (
-        {"zone_A": zone_area.get("zone_A", {}), "zone_B": zone_area.get("zone_B", {})},
-        {"source": "sar_live", "sar_file": fpath.name, "sar_generated_at": gen_date.isoformat()},
-        "sar_live",
-    )
+    return dp._wd_find_area_source_for_date(as_of_date)
 
 
 def backfill(year: int, weeks: list[int], dry_run: bool = False) -> list[dict]:

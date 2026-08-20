@@ -441,6 +441,63 @@ def _wd_get_area_zone_ha(zone: str, sar_result: Optional[dict]) -> dict:
     }
 
 
+def _wd_find_area_source_for_date(as_of_date) -> tuple:
+    """
+    2026-08-20 เพิ่ม -- ย้ายมาจาก backfill_nir_gir_weeks.py::_find_area_source() ให้เป็นจุดเดียว
+    (single source of truth) เพราะตอนนี้มี 2 จุดที่ต้องหา area basis "ตามช่วงเวลาจริง" ของสัปดาห์
+    ย้อนหลัง: สคริปต์ backfill_nir_gir_weeks.py (manual, on-demand) และ
+    _backfill_incomplete_climate_weeks() (อัตโนมัติ ทุกรอบ pipeline) -- ถ้าปล่อยให้มีสูตร/logic
+    หาไฟล์ SAR แยกกัน 2 ชุด เสี่ยงหลุด sync กันแบบเดียวกับที่กันไว้แล้วสำหรับ _wd_compute_live_nir_gir()
+    (ดู docstring ฟังก์ชันนั้น + comment ใน backfill_nir_gir_weeks.py)
+
+    หลักการเดียวกับ _wd_get_area_zone_ha(): ต้องใช้ผล SAR classification ที่ "active อยู่จริง ณ
+    as_of_date" ไม่ใช่ผลล่าสุดวันนี้ (กัน look-ahead bias) -- สแกนไฟล์ dated audit-trail
+    01_data/gis/sar_output/sar_result_<year>_<date>.json หาไฟล์ที่ generated_at <= as_of_date และ
+    status ok/partial เอาไฟล์ล่าสุดในกลุ่มนั้น ถ้าไม่มีเลย fallback ไป
+    sar_classification.AREA_2020_HA_BY_ZONE
+
+    คืนค่า (area_by_zone: {"zone_A": {...}, "zone_B": {...}}, meta: dict สำหรับ log, basis: str)
+    """
+    import datetime as _dt
+    import json as _json
+    import sar_classification as sc
+
+    sar_output_dir = sc.GIS_DIR / "sar_output"
+    dated_files = sorted(sar_output_dir.glob("sar_result_*_*.json")) if sar_output_dir.exists() else []
+    candidates = []
+    for fpath in dated_files:
+        try:
+            with open(fpath, encoding="utf-8") as f:
+                payload = _json.load(f)
+        except Exception:
+            continue
+        gen_at_str = payload.get("generated_at")
+        if not gen_at_str:
+            continue
+        try:
+            gen_date = _dt.datetime.fromisoformat(gen_at_str).date()
+        except ValueError:
+            continue
+        if gen_date <= as_of_date and payload.get("status") in ("ok", "partial"):
+            candidates.append((gen_date, fpath, payload))
+
+    if not candidates:
+        return (
+            {"zone_A": sc.AREA_2020_HA_BY_ZONE.get("zone_A", {}), "zone_B": sc.AREA_2020_HA_BY_ZONE.get("zone_B", {})},
+            {"source": "hardcoded_2020", "reason": f"ไม่มีผล SAR classification ที่ generated_at <= {as_of_date} เลย"},
+            "hardcoded_2020",
+        )
+
+    candidates.sort(key=lambda c: c[0])
+    gen_date, fpath, payload = candidates[-1]
+    zone_area = payload.get("zone_crop_area_ha") or {}
+    return (
+        {"zone_A": zone_area.get("zone_A", {}), "zone_B": zone_area.get("zone_B", {})},
+        {"source": "sar_live", "sar_file": fpath.name, "sar_generated_at": gen_date.isoformat()},
+        "sar_live",
+    )
+
+
 def _wd_compute_live_nir_gir(
     zone: str, iso_week: int,
     et0_mm_week: Optional[float], p_eff_mm: Optional[float],
@@ -937,11 +994,17 @@ def _backfill_incomplete_climate_weeks(
     ต้องเรียก subprocess แยก environment ทีละสัปดาห์ (ช้า อาจกินเวลาหลายนาทีต่อสัปดาห์) — ถ้ามีสัปดาห์
     ค้างมากกว่านี้จะทยอยไล่ backfill ต่อในรอบถัดๆไปเอง ไม่จำเป็นต้องทำครบในรอบเดียว
 
-    **ข้อจำกัดของแถวที่ backfill**: ไม่ได้ re-fetch MEI (ไม่เกี่ยวกับ n_days_in_week completeness) และ
-    ไม่ได้คำนวณ NIR_A_m3/GIR_B_m3 ย้อนหลัง (ต้องใช้พื้นที่ SAR classification ณ ตอนนั้นซึ่งอาจต่างจาก
-    ปัจจุบันแล้ว) — เพียงพอสำหรับให้ readiness check ผ่าน (ต้องการแค่ era5t/chirps ครบ 7/7) แต่ถ้าจะ
-    เอาแถวนี้ไปใช้ป้อนโมเดลจริงในอนาคตต้องพิจารณาช่องว่างนี้ก่อน (ตอนนี้ยังไม่กระทบเพราะ
-    _wd_build_feature_vector()/_wd_run_prediction() ยังไม่ได้เรียกใช้ live path นี้จริง)
+    **ข้อจำกัดของแถวที่ backfill**: ไม่ได้ re-fetch MEI (ไม่เกี่ยวกับ n_days_in_week completeness)
+
+    **2026-08-20 แก้บั๊ก**: เดิมฟังก์ชันนี้ปล่อย NIR_A_m3/GIR_B_m3 เป็น None เสมอ (เหตุผลเดิม: "ต้องใช้
+    พื้นที่ SAR classification ณ ตอนนั้นซึ่งอาจต่างจากปัจจุบัน" — ตอนเขียนแรกๆ live path ยังไม่เรียกใช้
+    ค่านี้จริง เลยมองว่าไม่กระทบ) หลัง Phase 3 (live-wire FAO-56 NIR/GIR เข้า Water Demand pipeline)
+    ค่านี้ถูกใช้จริงแล้ว ทำให้แถว blank ที่ฟังก์ชันนี้ append ไปทับแถว "ok" เดิมเงียบๆ ทุกครั้งที่ backfill
+    สัปดาห์ซ้ำ (dedup ยึด run_timestamp ล่าสุด) — เกิดจริง 2 ครั้ง (สัปดาห์ 30, 31 เดือน ส.ค. 2026)
+    ตอนนี้คำนวณ NIR/GIR ให้เสมอเมื่อ climate ครบ 7/7 โดยใช้ area basis "ตามช่วงเวลาจริง" ของสัปดาห์นั้น
+    ผ่าน `_wd_find_area_source_for_date()` (จุดเดียวกับที่ `backfill_nir_gir_weeks.py` ใช้ — กัน
+    look-ahead bias เหมือนเดิมทุกประการ ไม่ได้ผ่อนหลักการนี้ลง) ถ้าคำนวณไม่สำเร็จ (area/kc ไม่พร้อม)
+    จะ fallback เป็นแถว blank เหมือนพฤติกรรมเดิม ไม่ raise
 
     ออกแบบให้ "ไม่ raise" เหมือนฟังก์ชันอื่นในไฟล์นี้ — ห่อแต่ละสัปดาห์ด้วย try/except แยกกัน สัปดาห์
     หนึ่งพังไม่กระทบสัปดาห์อื่น เรียกจาก `_fetch_climate_features_step()` ต่อจาก append สัปดาห์ปัจจุบัน
@@ -1054,6 +1117,52 @@ def _backfill_incomplete_climate_weeks(
         if chirps_days == 7 and era5t_days == 7 and not chirps_is_rolling and not era5t_is_rolling:
             et0_mm_week = worker_output.get("ET0_mm_week")
             p_mm_week = (chirps_result or {}).get("p_mm_week")
+            p_eff_mm = chirps_result.get("p_eff_mm")
+
+            # 2026-08-20 เพิ่ม -- แก้บั๊ก: เดิมฟังก์ชันนี้ปล่อย NIR_A_m3/GIR_B_m3 เป็น None เสมอ (ดู
+            # docstring หัวข้อ "ข้อจำกัดของแถวที่ backfill" ด้านบน) ซึ่งตอนนั้นไม่กระทบเพราะ live path
+            # ยังไม่เรียกใช้ค่าพวกนี้จริง แต่หลัง Phase 3 (live-wire FAO-56 NIR/GIR) ค่านี้ถูกใช้จริงแล้ว
+            # ทำให้ทุกครั้งที่ฟังก์ชันนี้ backfill สัปดาห์ที่เคยมีแถว "ok" (คำนวณ NIR/GIR ไว้แล้ว) ซ้ำ
+            # (เช่น climate ของสัปดาห์นั้นไม่ครบ 7/7 ตอนแรก แล้ว provider ค่อยปล่อย final ทีหลัง) แถวใหม่
+            # (blank) จะไปทับแถว "ok" เดิมเงียบๆ เพราะ dedup ยึด run_timestamp ล่าสุด (พบจริง 2 ครั้ง:
+            # สัปดาห์ 30 เดือน ส.ค. และสัปดาห์ 31 -- แก้ด้วย backfill_nir_gir_weeks.py ทุกครั้งที่เจอ)
+            # แก้ที่ต้นตอตรงนี้แทน: คำนวณ NIR/GIR ให้เสมอเมื่อ climate ครบ 7/7 แล้ว โดยใช้ area basis
+            # "ตามช่วงเวลาจริง" ของสัปดาห์นั้นผ่าน _wd_find_area_source_for_date() เดียวกับที่
+            # backfill_nir_gir_weeks.py ใช้ (single source of truth เดียวกัน กัน logic หลุด sync)
+            nir_a_m3 = None
+            gir_b_m3 = None
+            wd_area_basis = None
+            wd_nir_gir_status = "backfill row -- ไม่ได้คำนวณ NIR/GIR (ดู docstring ฟังก์ชันนี้)"
+            try:
+                area_by_zone, area_meta, basis = _wd_find_area_source_for_date(sunday)
+                area_ha_by_crop = area_by_zone.get(zone, {})
+                nir_gir = _wd_compute_live_nir_gir(
+                    zone=zone, iso_week=week_i,
+                    et0_mm_week=et0_mm_week, p_eff_mm=p_eff_mm,
+                    area_ha_by_crop=area_ha_by_crop,
+                )
+                if nir_gir is not None:
+                    if zone == "zone_A":
+                        nir_a_m3 = nir_gir["total_m3"]
+                    else:
+                        gir_b_m3 = nir_gir["total_m3"]
+                    wd_area_basis = basis
+                    wd_nir_gir_status = (
+                        f"ok (auto-backfill {datetime.now(timezone.utc).date().isoformat()} -- "
+                        f"_backfill_incomplete_climate_weeks, area_source={area_meta.get('sar_file', 'hardcoded_2020')})"
+                    )
+                else:
+                    wd_nir_gir_status = (
+                        "backfill row -- _wd_compute_live_nir_gir() คืน None "
+                        f"(et0={et0_mm_week!r}, p_eff={p_eff_mm!r}, area={'มี' if area_ha_by_crop else 'ว่าง'})"
+                    )
+            except Exception as exc:
+                logger.exception(
+                    "Backfill NIR/GIR คำนวณล้มเหลว (%s %s-W%02d) -- เก็บแถวไว้แบบ blank เหมือนเดิม",
+                    zone, year_i, week_i,
+                )
+                wd_nir_gir_status = f"backfill row -- คำนวณ NIR/GIR ไม่สำเร็จ ({exc})"
+
             row = {
                 "run_timestamp": datetime.now(timezone.utc).isoformat(),
                 "as_of_date": sunday.isoformat(),
@@ -1083,9 +1192,9 @@ def _backfill_incomplete_climate_weeks(
                 "era5t_fetch_error": era5t_result.get("fetch_error"),
                 "AI_week": (et0_mm_week / p_mm_week) if (et0_mm_week is not None and p_mm_week) else None,
                 "AI_week_status": "backfilled 2026-07-18 (ดึงย้อนหลังหลังข้อมูล final ออกแล้ว)",
-                "NIR_A_m3": None, "GIR_B_m3": None,
-                "wd_area_basis": None,
-                "wd_nir_gir_status": "backfill row -- ไม่ได้คำนวณ NIR/GIR ย้อนหลัง (ดู docstring ฟังก์ชันนี้)",
+                "NIR_A_m3": nir_a_m3, "GIR_B_m3": gir_b_m3,
+                "wd_area_basis": wd_area_basis,
+                "wd_nir_gir_status": wd_nir_gir_status,
             }
             try:
                 _append_ml_features_live([row], csv_path)
