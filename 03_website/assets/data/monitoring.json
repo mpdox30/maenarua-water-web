@@ -1,7 +1,7 @@
 {
   "meta": {
     "source": "สถานีโทรมาตร สสน. (API) ผ่าน Google Sheet wide_log (poll ทุก 10 นาที) + HII open data (tiservice.hii.or.th, รายชั่วโมงผ่าน QC, เดือนที่ปิดแล้ว) + 01_data/Reservoirs/reference (rating curve ต่ออ่าง)",
-    "updated": "2026-09-02T12:40:00",
+    "updated": "2026-09-02T12:50:00",
     "data_connected": true
   },
   "stations": [
@@ -10,17 +10,17 @@
       "name_th": "อ่างเก็บน้ำแม่นาเรือ",
       "name_en": "Mae Na Rua Reservoir",
       "spillway_msl": 489.54,
-      "water_level": 488.021,
+      "water_level": 488.007,
       "rainfall_1h": 0.0,
-      "temperature": 28.65,
-      "humidity": 79.78,
-      "pressure": 954.89,
-      "solar": 172.4,
-      "measure_datetime": "2026-09-02T12:40:00",
-      "storage_m3": 1183969.5,
+      "temperature": 27.91,
+      "humidity": 85.3,
+      "pressure": 954.95,
+      "solar": 98.1,
+      "measure_datetime": "2026-09-02T12:50:00",
+      "storage_m3": 1179989.7,
       "storage_max_m3": 1625463.8,
-      "capacity_pct": 72.8,
-      "distance_to_spillway_m": -1.519,
+      "capacity_pct": 72.6,
+      "distance_to_spillway_m": -1.533,
       "history": [
         {
           "t": "2026-08-19T13:00:00",
@@ -7189,11 +7189,11 @@
       "spillway_msl": 457.07,
       "water_level": 456.078,
       "rainfall_1h": 0.0,
-      "temperature": 28.31,
-      "humidity": 77.3,
-      "pressure": 958.02,
-      "solar": 411.7,
-      "measure_datetime": "2026-09-02T12:40:00",
+      "temperature": 27.67,
+      "humidity": 77.88,
+      "pressure": 957.96,
+      "solar": 262.1,
+      "measure_datetime": "2026-09-02T12:50:00",
       "storage_m3": 294163.2,
       "storage_max_m3": 347778.7,
       "capacity_pct": 84.6,
@@ -21538,12 +21538,12 @@
       "name_en": "Huai So Reservoir",
       "spillway_msl": 508.1,
       "water_level": 508.221,
-      "rainfall_1h": 10.2,
-      "temperature": 23.49,
-      "humidity": 97.81,
-      "pressure": 953.05,
-      "solar": 90.3,
-      "measure_datetime": "2026-09-02T12:40:00",
+      "rainfall_1h": 15.0,
+      "temperature": 23.19,
+      "humidity": 98.47,
+      "pressure": 953.06,
+      "solar": 90.8,
+      "measure_datetime": "2026-09-02T12:50:00",
       "storage_m3": 126627.7,
       "storage_max_m3": 122441.9,
       "capacity_pct": 103.4,
@@ -28705,7 +28705,7 @@
         },
         {
           "t": "2026-09-02T12:00:00",
-          "rain_mm": 10.2
+          "rain_mm": 15.0
         }
       ]
     }
