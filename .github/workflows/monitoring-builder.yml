@@ -1,0 +1,95 @@
+name: Monitoring Data Builder
+
+# พอร์ตจาก run_monitoring_data_builder.bat (Windows Task Scheduler, ทุก 15 นาที)
+# รัน 3 สคริปต์ต่อเนื่องกันในรอบเดียว (เหตุผลเดิม: pull/push git ครั้งเดียวต่อรอบ กันชนกันเอง):
+#   1. monitoring_data_builder.py      -> 03_website/assets/data/monitoring.json
+#   2. inflow_6h_display_estimate.py   -> 03_website/assets/data/inflow_6h_display.json
+#   3. forecast_accuracy_logger.py     -> 01_data/forecasting_results/Reservoir_inflow/forecast_accuracy_log.csv
+#                                       -> 03_website/assets/data/forecast_accuracy_log.csv
+# ทั้ง 3 สคริปต์เป็น stdlib ล้วน (csv/json/urllib/datetime/pathlib) ยืนยันด้วย import grep แล้ว --
+# ไม่ต้อง pip install อะไรเลย
+#
+# ต่างจาก .bat ต้นฉบับ 1 จุดโดยตั้งใจ: ไม่ต้อง `git checkout --` เลิกไฟล์ 4 ไฟล์ (latest.json,
+# flood_latest.json, reservoir_inflow.json, forecasting_results/latest.json) ก่อน pull เหมือน .bat --
+# เหตุผล: ปัญหานั้นเกิดจาก Google Drive Desktop sync เขียนไฟล์ลงดิสก์ Windows โดยไม่มีใคร commit ให้
+# (ทำให้ค้างเป็น "M" ตลอด) ซึ่ง GitHub Actions ไม่มีปัญหานี้เลย เพราะ checkout ใหม่ทุกรอบ ไม่มีไฟล์
+# ค้าง local modification จากที่อื่นมาก่อน
+#
+# หมายเหตุ: เครื่อง Windows ยังรัน .bat ตัวเดิมขนานกันทุก 15 นาทีเช่นกัน (shadow mode) --
+# ถ้าข้อมูลต้นทาง (wide_log Google Sheet) เหมือนกัน ผลลัพธ์ไฟล์จะเหมือนกันเป๊ะ ฝั่งที่รันทีหลังในแต่ละ
+# รอบจะเจอ "ไม่มีอะไรเปลี่ยน ข้าม commit" เฉยๆ ไม่ใช่ conflict จริง
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    # ทุก 15 นาที -- GitHub ไม่การันตีความถี่นี้แบบเป๊ะๆ โดยเฉพาะช่วงโหลดสูง (อาจดีเลย์ได้บ้าง)
+    - cron: "*/15 * * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: monitoring-builder
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run monitoring_data_builder.py
+        id: builder
+        working-directory: 01_data/scripts and code/pipeline
+        continue-on-error: true
+        run: python monitoring_data_builder.py
+
+      - name: Run inflow_6h_display_estimate.py
+        id: inflow6h
+        working-directory: 01_data/scripts and code/pipeline
+        continue-on-error: true
+        run: python inflow_6h_display_estimate.py
+
+      - name: Run forecast_accuracy_logger.py
+        id: logger
+        working-directory: 01_data/scripts and code/pipeline
+        continue-on-error: true
+        run: python forecast_accuracy_logger.py
+
+      - name: Sync กับ remote ก่อน push (merge จริง ไม่ใช่ ff-only -- pattern เดียวกับ .bat)
+        run: git pull --no-rebase --no-edit origin master
+
+      - name: Commit + push ไฟล์ที่อัปเดตสำเร็จ (แล้วแต่ตัวไหนสำเร็จ)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if [ "${{ steps.builder.outcome }}" = "success" ]; then
+            git add "03_website/assets/data/monitoring.json"
+          fi
+          if [ "${{ steps.inflow6h.outcome }}" = "success" ]; then
+            git add "03_website/assets/data/inflow_6h_display.json"
+          fi
+          if [ "${{ steps.logger.outcome }}" = "success" ]; then
+            git add "01_data/forecasting_results/Reservoir_inflow/forecast_accuracy_log.csv"
+            git add "03_website/assets/data/forecast_accuracy_log.csv"
+          fi
+
+          if git diff --cached --quiet; then
+            echo "[INFO] ไม่มีอะไรเปลี่ยนจากรอบก่อนในทุกไฟล์ -- ข้ามการ commit/push"
+          else
+            git commit -m "Auto-update (GitHub Actions): monitoring.json + inflow_6h_display.json + forecast_accuracy_log.csv"
+            git push origin master
+          fi
+
+      - name: ตรวจว่ามีสคริปต์ไหนล้มเหลวบ้าง แล้วทำให้ job นี้ fail ตาม (ให้เห็นใน Actions tab)
+        if: steps.builder.outcome != 'success' || steps.inflow6h.outcome != 'success' || steps.logger.outcome != 'success'
+        run: |
+          echo "[WARN] มีอย่างน้อย 1 สคริปต์ไม่สำเร็จรอบนี้ (builder=${{ steps.builder.outcome }}, inflow6h=${{ steps.inflow6h.outcome }}, logger=${{ steps.logger.outcome }})"
+          exit 1

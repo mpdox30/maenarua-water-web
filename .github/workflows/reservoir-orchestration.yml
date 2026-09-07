@@ -1,0 +1,69 @@
+name: Reservoir Daily Orchestration
+
+# พอร์ตจาก run_reservoir_daily_orchestration.bat (Windows Task Scheduler, ทุกวัน 07:30 ICT)
+# รัน reservoir_daily_orchestration.py -- คำนวณของ "เมื่อวาน" เสมอ, เขียนทั้ง shadow CSV
+# (RES002_daily_computed.csv) และไฟล์ทางการรายเดือน (inflow/<year>/<year>_<month>_MNR.xlsx)
+# แล้ว push ทั้งคู่ขึ้น GitHub -- pattern เดียวกับ .bat ต้นฉบับทุกจุด (pull --no-rebase ก่อน
+# push, add เฉพาะไฟล์ที่รู้จัก, commit เฉพาะตอนมีอะไรเปลี่ยนจริง)
+#
+# Dependency: openpyxl เท่านั้น (สคริปต์นี้ + module ที่ import ทั้งหมด --
+# reservoir_telemetry_from_sheet.py, reservoir_water_balance.py -- เป็น stdlib ล้วน
+# ยืนยันด้วย import grep แล้ว)
+#
+# หมายเหตุ: เครื่อง Windows ยังรัน .bat ตัวเดิมขนานกันอยู่ (shadow mode ตามที่ตกลงกันไว้ --
+# ยกเลิกเมื่อ GitHub Actions พิสูจน์แล้วว่าใช้งานได้สมบูรณ์) ถ้า workflow นี้ push ข้อมูลที่คำนวณ
+# จากแหล่งเดียวกันเหมือน Windows จะได้ผลเหมือนกันเป๊ะ -- ปกติจะจบด้วย "ไม่มีอะไรเปลี่ยน ข้าม commit"
+# ในฝั่งที่รันทีหลัง ไม่ใช่ conflict
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    # 00:30 UTC = 07:30 ICT (UTC+7) -- เวลาเดียวกับ Windows Task Scheduler เดิม
+    # หมายเหตุ: GitHub ไม่การันตีว่าจะรันตรงเวลาเป๊ะ อาจดีเลย์ได้โดยเฉพาะช่วงโหลดสูง
+    - cron: "30 0 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: reservoir-orchestration
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: pip install dependencies
+        run: pip install openpyxl==3.1.5
+
+      - name: Run reservoir_daily_orchestration.py
+        working-directory: 01_data/scripts and code/pipeline
+        env:
+          RESERVOIR_TELEMETRY_SHEET_CSV_URL: ${{ secrets.RESERVOIR_TELEMETRY_SHEET_CSV_URL }}
+          RESERVOIR_RELEASE_SHEET_CSV_URL: ${{ secrets.RESERVOIR_RELEASE_SHEET_CSV_URL }}
+        run: python reservoir_daily_orchestration.py
+
+      - name: Sync กับ remote ก่อน push (merge จริง ไม่ใช่ ff-only -- pattern เดียวกับ .bat)
+        run: git pull --no-rebase --no-edit origin master
+
+      - name: Commit + push ไฟล์ทางการ + shadow CSV ถ้ามีอะไรเปลี่ยนจริง
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "01_data/Reservoirs/inflow/"
+          git add "01_data/Reservoirs/inflow_auto/RES002_daily_computed.csv"
+          if git diff --cached --quiet; then
+            echo "[INFO] ไม่มีอะไรเปลี่ยนจากรอบก่อน -- ข้ามการ commit/push"
+          else
+            git commit -m "Auto-update (GitHub Actions): reservoir official file + shadow CSV"
+            git push origin master
+          fi
