@@ -66,7 +66,7 @@ import os
 import random
 import subprocess
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Optional
 
@@ -112,6 +112,23 @@ RESERVOIR_INFLOW_RAW_DIR = PROJECT_ROOT / "01_data" / "Reservoirs" / "inflow"
 
 RESERVOIR_STORAGE_MAX_M3 = 1625463.7590197
 RESERVOIR_API_K = 0.95
+
+# เพิ่ม 2026-09-07 พร้อมโมเดล candidate ใหม่ (regularized + rain-forecast feature เฉพาะ h3/h6/h7
+# + post-hoc bias correction) -- ดูที่มา/การตรวจสอบเต็มที่ 01_data/experiments/
+# inflow_rain_forecast_feature_20260907/ และ inflow_regularized_final_20260907/
+# พิกัดเดียวกับ TARGET_LAT/TARGET_LON ใน chirps_feature.py (จุดอ้างอิงอ่างเก็บน้ำแม่นาเรือ)
+# หมายเหตุ (Colab): endpoint นี้ต้องการ internet ออกจาก Colab runtime -- ปกติมีอยู่แล้ว (เหมือนที่
+# ใช้ดึง CHIRPS/ERA5T/MEI) ไม่ต้องตั้งค่าเพิ่ม
+RAIN_FORECAST_LAT = 19.05
+RAIN_FORECAST_LON = 99.80
+RAIN_FORECAST_API_URL = "https://api.open-meteo.com/v1/forecast"  # regular (live) forecast endpoint
+# threshold คือ mm สะสมของฝนพยากรณ์ล่วงหน้า (lead1..h วัน) ที่ tune จาก honest holdout split บน
+# forecast_accuracy_log.csv (fit 65% แรกตามเวลา, วัดผลบน 35% หลัง) -- ดู
+# inflow_rain_forecast_feature_20260907/09_binary_threshold_honest_split.py
+RAIN_FORECAST_BINARY_HORIZONS = {3: 27.3, 6: 3.1, 7: 61.0}
+# ค่า post-hoc bias correction แบบบวกลบ (predicted - actual เฉลี่ยจาก log, fit ชุดเดียวกับข้างบน)
+# ลบออกจากค่าทำนายก่อนแสดงผล -- h1/h2 ไม่ใส่เพราะ correction ทำให้แย่ลงตอนทดสอบ honest holdout
+RESERVOIR_INFLOW_BIAS_CORRECTION_M3 = {3: 610.9, 4: 4241.9, 5: 2605.5, 6: 6583.5, 7: 13153.2}
 
 RESERVOIR_PLAUSIBLE_PERCENT_FULL_MAX = 105.0
 # (แก้ไข 2026-07-07: เดิม %Full_t คำนวณเป็นสัดส่วน 0-1.05 ผิดสเกลจาก training data ที่เป็นเปอร์เซ็นต์
@@ -2539,6 +2556,79 @@ def _ri_build_feature_vector() -> dict:
         return _ri_build_feature_vector_from_static_csv()
 
 
+def _ri_fetch_rain_forecast_binary_flags(as_of_date_str: str) -> dict:
+    """
+    เพิ่ม 2026-09-07: ดึงพยากรณ์ฝนล่วงหน้าจาก Open-Meteo (regular live forecast API, ฟรี ไม่ต้อง
+    API key) แล้วคำนวณ binary flag "ฝนพยากรณ์สะสมช่วง lead1..h เกิน threshold หรือไม่" สำหรับ
+    horizon ที่ใช้ feature นี้ (ดู RAIN_FORECAST_BINARY_HORIZONS) — ใช้ endpoint
+    api.open-meteo.com/v1/forecast (ไม่ใช่ historical-forecast-api ที่ใช้ตอนสร้าง archive ทดสอบ
+    ย้อนหลัง เพราะ endpoint นี้ออกแบบมาสำหรับพยากรณ์อนาคตโดยตรง ผ่าน past_days/forecast_days)
+
+    ใช้ past_days=5, forecast_days=10 (สัมพัทธ์กับ "วันนี้จริง") แล้ว slice ช่วง [as_of_date+1,
+    as_of_date+max_lead] ออกมาด้วยการจับคู่วันที่ -- รองรับกรณี as_of_date ล้าหลัง "วันนี้จริง"
+    เล็กน้อยตามปกติของระบบ (gap_days 1-3 วัน, ดู _ri_compute_staleness)
+
+    Fail-safe: ถ้าดึงไม่สำเร็จ หรือวันที่ที่ต้องการไม่อยู่ในช่วงที่ API คืนมา (เช่น gap_days
+    ผิดปกติมาก) จะคืนค่า flag=None สำหรับ horizon นั้นๆ (ไม่ raise) — โค้ดที่เรียกใช้จะ fallback
+    เป็น flag=0.0 (ถือว่า "ไม่มีสัญญาณฝนมาก" ซึ่งปลอดภัยกว่าปล่อยให้ pipeline ทั้งหมดล้มเหลว)
+    """
+    import requests
+
+    try:
+        as_of = datetime.strptime(as_of_date_str, "%Y-%m-%d").date()
+    except (ValueError, TypeError) as exc:
+        logger.warning("Reservoir Inflow: as_of_date รูปแบบผิด (%s) -- ข้ามการดึงพยากรณ์ฝนล่วงหน้า", exc)
+        return {}
+
+    try:
+        resp = requests.get(
+            RAIN_FORECAST_API_URL,
+            params={
+                "latitude": RAIN_FORECAST_LAT,
+                "longitude": RAIN_FORECAST_LON,
+                "daily": "precipitation_sum",
+                "timezone": "Asia/Bangkok",
+                "models": "best_match",
+                "past_days": 5,
+                "forecast_days": 10,
+            },
+            timeout=20,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        by_date = dict(zip(data["daily"]["time"], data["daily"]["precipitation_sum"]))
+    except Exception as exc:
+        logger.warning(
+            "Reservoir Inflow: ดึงพยากรณ์ฝนล่วงหน้าจาก Open-Meteo ไม่สำเร็จ (as_of=%s): %s -- "
+            "horizon %s จะใช้ rain_forecast_flag=0.0 (fallback ปลอดภัย)",
+            as_of_date_str, exc, sorted(RAIN_FORECAST_BINARY_HORIZONS),
+        )
+        return {}
+
+    flags: dict = {}
+    for h, threshold in RAIN_FORECAST_BINARY_HORIZONS.items():
+        cum = 0.0
+        ok = True
+        for lead in range(1, h + 1):
+            d_str = (as_of + timedelta(days=lead)).isoformat()
+            val = by_date.get(d_str)
+            if val is None:
+                ok = False
+                break
+            cum += val
+        if ok:
+            flags[h] = 1.0 if cum > threshold else 0.0
+        else:
+            logger.warning(
+                "Reservoir Inflow: Open-Meteo ไม่มีข้อมูลครบสำหรับ h%d (as_of=%s, ต้องการถึง +%d วัน) "
+                "-- ใช้ rain_forecast_flag=0.0 (fallback)", h, as_of_date_str, h,
+            )
+            flags[h] = None
+
+    logger.info("Reservoir Inflow: พยากรณ์ฝนล่วงหน้า (as_of=%s) -- flags=%s", as_of_date_str, flags)
+    return flags
+
+
 def _ri_run_prediction(model: dict, features: dict) -> dict:
     """
     รัน direct delta-regression prediction สำหรับ Reservoir Inflow ตาม "final_prediction_logic"
@@ -2590,6 +2680,15 @@ def _ri_run_prediction(model: dict, features: dict) -> dict:
     X = features["X"]
     current_qin = features["current_qin"]
 
+    # เพิ่ม 2026-09-07: horizon ใน RAIN_FORECAST_BINARY_HORIZONS ต้องการ feature ที่ 13 (binary
+    # flag ฝนพยากรณ์ล่วงหน้า) เพิ่มจาก 12 feature เดิม -- ดึงครั้งเดียวต่อรอบ (ไม่ใช่ต่อ horizon)
+    # แล้วนำไปต่อท้าย X เฉพาะ horizon ที่ต้องใช้
+    import numpy as np
+
+    rain_flags: dict = {}
+    if RAIN_FORECAST_BINARY_HORIZONS:
+        rain_flags = _ri_fetch_rain_forecast_binary_flags(features["as_of_date"])
+
     horizon_results: dict = {}
     for h, target_col in zip(horizons, targets):
         key = f"h{h}"
@@ -2598,8 +2697,19 @@ def _ri_run_prediction(model: dict, features: dict) -> dict:
             horizon_results[key] = None
             continue
 
-        delta = float(regressors[h].predict(X)[0])
-        prediction = max(current_qin + delta, 0.0)
+        rain_flag_used = None
+        if h in RAIN_FORECAST_BINARY_HORIZONS:
+            rain_flag_used = rain_flags.get(h)
+            if rain_flag_used is None:
+                rain_flag_used = 0.0  # fallback ปลอดภัย -- ดึงไม่สำเร็จหรือข้อมูลไม่ครบ
+            X_h = np.append(X, [[rain_flag_used]], axis=1)
+        else:
+            X_h = X
+
+        delta = float(regressors[h].predict(X_h)[0])
+        prediction_before_bias = max(current_qin + delta, 0.0)
+        bias_correction = RESERVOIR_INFLOW_BIAS_CORRECTION_M3.get(h, 0.0)
+        prediction = max(prediction_before_bias - bias_correction, 0.0)
 
         info = deployment_info.get(str(h), {})
         test_nse = info.get("test_nse")
@@ -2618,6 +2728,10 @@ def _ri_run_prediction(model: dict, features: dict) -> dict:
             "test_nse": test_nse,
             "walkforward_cv_nse": wf_cv,
             "low_confidence": bool(confidence_nse is not None and confidence_nse < 0),
+            # เพิ่ม 2026-09-07 -- เก็บไว้เพื่อ debug/ตรวจสอบ ไม่กระทบ UI เดิม (ฟิลด์ใหม่)
+            "rain_forecast_flag_used": rain_flag_used,
+            "bias_correction_applied_m3": round(bias_correction, 2) if bias_correction else 0.0,
+            "prediction_before_bias_correction_m3_per_day": round(prediction_before_bias, 2),
         }
 
     if staleness_status != "ok":

@@ -1,6 +1,6 @@
 # Project Memory — เว็บไซต์บริหารจัดการน้ำ ตำบลแม่นาเรือ
 
-อัปเดตล่าสุด: 2026-07-18
+อัปเดตล่าสุด: 2026-09-07
 ไฟล์นี้เป็นสรุปความจำโปรเจกต์แบบละเอียด สำหรับให้ Claude (หรือคนอื่น) อ่านแล้วเข้าใจสถานะปัจจุบัน
 ของทั้งระบบได้เร็ว โดยไม่ต้องไล่อ่าน chat history ย้อนหลัง — เสริมไฟล์ `Cowork_Global_Instructions.md`
 (กฎการทำงาน/สไตล์) และ `สรุปไอเดีย_เว็บไซต์บริหารจัดการน้ำ_แม่นาเรือ.md` (ไอเดียตั้งต้นของโปรเจกต์)
@@ -296,6 +296,19 @@ final data ให้ดึงซ้ำ แล้ว re-fetch สัปดาห�
 - เปลี่ยนชื่อแท็บ "Monitoring" → "สถานการณ์น้ำ" ทั้งเว็บ
 - เพิ่มแท็บ "คาดการณ์น้ำท่วม" (placeholder เปล่า) ทั้งเว็บ
 - สร้าง `คำสั่งรัน_scripts.txt` (reference คำสั่งรัน .py ทั้งหมดแบบ manual)
+- **2026-09-07: Deploy โมเดล Reservoir Inflow รุ่นใหม่** (แก้ผ่าน `01_data/experiments/` ก่อน
+  deploy ตามระเบียบเดิม) — สรุป: (1) แก้บั๊ก h5 ที่ทำนายค้างค่าสุดขั้ว (~85,000-136,000 ลบ.ม./วัน)
+  ต่อเนื่องเกือบ 3 สัปดาห์ ต้นเหตุคือ overfitting/instability (`random_strength` ต่ำผิดปกติ +
+  ต้นไม้เกือบเต็มเพดาน) แก้ด้วย early-stopping ใช้กับทุก horizon ไม่ใช่แค่ h5 (2) เพิ่ม feature
+  พยากรณ์ฝนล่วงหน้าแบบ binary (Open-Meteo live forecast API) เฉพาะ h3/h6/h7 หลังพบว่า raw
+  continuous feature extrapolate แล้วพังแบบเดียวกับบั๊ก h5 (3) เพิ่ม post-hoc bias correction
+  เฉพาะ h3-h7 — ผลรวม MAE เฉลี่ยถ่วงน้ำหนักดีขึ้น 47.2% (วัดแบบ honest holdout บน
+  `forecast_accuracy_log.csv` จริง ไม่ใช่แค่ CV) ทุก horizon ดีขึ้น ไม่มีตัวไหนแย่ลง — รายละเอียด
+  เต็มที่ `01_data/experiments/inflow_h5_bias_fix_20260907/`,
+  `inflow_rain_forecast_feature_20260907/`, `inflow_regularized_final_20260907/` — เพิ่ม
+  dependency ใหม่: pipeline ต้องเรียก Open-Meteo API ทุกวัน (fail-safe: fallback เป็น flag=0.0
+  ถ้าดึงไม่สำเร็จ ไม่ทำให้ pipeline ล้ม) ทั้ง `data_pipeline.py` (Windows) และ
+  `data_pipeline_colab.py` (Colab) แก้ตรงกันแล้ว
 
 ## 8. งานที่ยังค้าง / ต้องตัดสินใจร่วมกับผู้ใช้
 

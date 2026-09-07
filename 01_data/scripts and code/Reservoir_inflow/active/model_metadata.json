@@ -1,7 +1,7 @@
 {
   "exported_at": "2026-07-26T10:12:25.889598+00:00",
   "target_reservoir": "อ่างเก็บน้ำแม่นาเรือ (Mae Na Rua Reservoir)",
-  "architecture": "direct delta-regression per horizon, NO stage1 hurdle classifier (previous production used stage1 CatBoostClassifier gate + stage2 regressor -- replaced 2026-07-26 after lag/rolling-rain feature engineering made the direct approach beat the hurdle architecture on walk-forward CV for every horizon except H1)",
+  "architecture": "direct delta-regression per horizon, NO stage1 hurdle classifier (previous production used stage1 CatBoostClassifier gate + stage2 regressor -- replaced 2026-07-26 after lag/rolling-rain feature engineering made the direct approach beat the hurdle architecture on walk-forward CV for every horizon except H1) -- ปรับปรุง 2026-09-07: (1) เทรนใหม่ทุก horizon ด้วย early stopping (od_wait=30, validation-based) แทนการ fix iterations เดิม เพื่อลด overfitting/instability (h5 เคยมีบั๊ก ทำนายค้างที่ค่าสุดขั้วต่อเนื่องหลายสัปดาห์ ดู 01_data/experiments/inflow_h5_bias_fix_20260907), (2) เพิ่ม binary rain-forecast feature (ที่ 13) เฉพาะ h3/h6/h7 จาก Open-Meteo live forecast API, (3) เพิ่ม post-hoc additive bias correction เฉพาะ h3-h7 ดู 01_data/experiments/inflow_rain_forecast_feature_20260907/ และ inflow_regularized_final_20260907/ สำหรับวิธีตรวจสอบเต็ม",
   "feature_cols": [
     "Q_in_t (m3/day)",
     "Water_Level_t (m)",
@@ -41,7 +41,7 @@
   "model_structure": {
     "stage1": null,
     "stage2": "Regressor ทำนาย DELTA = Q_in_t+h(actual) - Q_in_t(ปัจจุบัน) ทุกแถวรวมกัน (รวมวัน zero-inflow ด้วย ไม่มี stage1 กรองแยก)",
-    "final_prediction_logic": "prediction = clip(Q_in_t(ปัจจุบัน) + regressor.predict(X), 0, None) -- ไม่มี stage1 classifier/threshold แล้ว",
+    "final_prediction_logic": "prediction = clip(Q_in_t(ปัจจุบัน) + regressor.predict(X) - bias_correction.get(h, 0), 0, None) -- เพิ่ม bias_correction (2026-09-07) หลัง delta-regression เดิม ดู RESERVOIR_INFLOW_BIAS_CORRECTION_M3 ใน data_pipeline.py/data_pipeline_colab.py",
     "stage2_trained_on": "ทุกแถวรวมกัน (ต่างจากเดิมที่ stage2 เทรนเฉพาะแถว Q_in_actual > ZERO_THRESHOLD)",
     "unchanged_from_previous_version": false,
     "lag_features_added_2026-07-26": [
@@ -50,22 +50,51 @@
       "Rain_roll3 (mm)",
       "Rain_roll5 (mm)",
       "Rain_roll7 (mm)"
-    ]
+    ],
+    "rain_forecast_feature_added_2026-09-07": {
+      "applies_to_horizons": [
+        3,
+        6,
+        7
+      ],
+      "feature_name": "Rain_fcst_binary_h{N} (0/1)",
+      "definition": "1.0 ถ้าผลรวมฝนพยากรณ์ล่วงหน้า (Open-Meteo, lead1..h วัน) เกิน threshold_mm, else 0.0",
+      "threshold_mm_per_horizon": {
+        "3": 27.3,
+        "6": 3.1,
+        "7": 61.0
+      },
+      "why_binary_not_continuous": "ทดสอบ raw continuous cumulative forecast ก่อน -- CV ภายในชุดเทรนดูดีมาก แต่ backtest จริงบน ข้อมูลนอกช่วงเทรนแย่ลงรุนแรง (tree model extrapolate ค่านอกช่วงไม่ได้ เกิด plateau เหมือนบั๊ก h5 เดิม) binary แก้ปัญหานี้เพราะไม่มีทาง 'ค้างค่าสุดขั้ว' ได้อีก validate ด้วย honest holdout split (fit threshold จาก log 65% แรก, วัดผลบน 35% หลังที่ไม่เคยเห็น)",
+      "live_source": "Open-Meteo regular forecast API (api.open-meteo.com/v1/forecast), lat=19.05 lon=99.80, fail-safe fallback to flag=0.0 if fetch fails"
+    },
+    "bias_correction_added_2026-09-07": {
+      "applies_to_horizons": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "not_applied_to": [
+        1,
+        2
+      ],
+      "reason_not_applied_h1_h2": "post-hoc correction fit/tested on honest holdout made h1/h2 slightly worse (bias already near-zero there)",
+      "correction_m3_per_day": {
+        "3": 610.9,
+        "4": 4241.9,
+        "5": 2605.5,
+        "6": 6583.5,
+        "7": 13153.2
+      },
+      "method": "additive: predicted - correction, clipped at 0; fit as mean(predicted-actual) on chronological-first 65% of forecast_accuracy_log.csv, validated on later 35% never used for fitting"
+    }
   },
   "deployment_model_per_horizon": {
     "1": {
       "model_name": "CatBoost",
       "target_column": "y1=Q_in_t+1 (m3/day)",
       "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
-      "test_nse": 0.6173004177280479,
-      "val_nse": 0.9919532838544566,
-      "walkforward_cv_nse": {
-        "mean": 0.42163920066193805,
-        "std": null,
-        "n_folds": 5,
-        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
-        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
-      },
       "tuned_params": {
         "iterations": 650,
         "learning_rate": 0.0109312751880508,
@@ -76,21 +105,37 @@
         "rsm": 0.7890628480631008,
         "random_strength": 1.07161216899677
       },
-      "best_iter": 80
+      "superseded_2026-07-26_metrics": {
+        "test_nse": 0.6173004177280479,
+        "val_nse": 0.9919532838544566,
+        "walkforward_cv_nse": {
+          "mean": 0.42163920066193805,
+          "std": null,
+          "n_folds": 5,
+          "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+          "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+        },
+        "best_iter": 80,
+        "note": "ตัวเลขจากโมเดลรุ่นก่อน 2026-09-07 (fixed iterations, ไม่มี rain feature/bias correction) เก็บไว้อ้างอิงเปรียบเทียบเท่านั้น"
+      },
+      "tuned_params_note_2026-09-07": "iterations เดิมยังเป็น max cap (300, หรือ 650 สำหรับ h1) แต่เทรนจริงหยุดที่ tree_count ด้านล่างผ่าน early stopping (od_wait=30)",
+      "tree_count_2026-09-07": 45,
+      "n_features_2026-09-07": 12,
+      "uses_rain_forecast_binary": false,
+      "rain_forecast_threshold_mm": null,
+      "bias_correction_m3_per_day": 0.0,
+      "live_backtest_2026-09-07": {
+        "methodology": "honest holdout: fit threshold/bias on chronological-first 65% of forecast_accuracy_log.csv, evaluate on later 35% never used for fitting",
+        "n_holdout": 18,
+        "mae_previous_production": 9344.1,
+        "mae_new_deployed_model": 8703.1,
+        "improvement_pct": 6.9
+      }
     },
     "2": {
       "model_name": "CatBoost",
       "target_column": "y2=Q_in_t+2 (m3/day)",
       "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
-      "test_nse": 0.3073018887356206,
-      "val_nse": 0.9872824372760663,
-      "walkforward_cv_nse": {
-        "mean": 0.2559049288804246,
-        "std": null,
-        "n_folds": 5,
-        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
-        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
-      },
       "tuned_params": {
         "iterations": 300,
         "learning_rate": 0.0146991485489077,
@@ -101,21 +146,37 @@
         "rsm": 0.6212741213218833,
         "random_strength": 1.9674909492695445
       },
-      "best_iter": 47
+      "superseded_2026-07-26_metrics": {
+        "test_nse": 0.3073018887356206,
+        "val_nse": 0.9872824372760663,
+        "walkforward_cv_nse": {
+          "mean": 0.2559049288804246,
+          "std": null,
+          "n_folds": 5,
+          "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+          "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+        },
+        "best_iter": 47,
+        "note": "ตัวเลขจากโมเดลรุ่นก่อน 2026-09-07 (fixed iterations, ไม่มี rain feature/bias correction) เก็บไว้อ้างอิงเปรียบเทียบเท่านั้น"
+      },
+      "tuned_params_note_2026-09-07": "iterations เดิมยังเป็น max cap (300, หรือ 650 สำหรับ h1) แต่เทรนจริงหยุดที่ tree_count ด้านล่างผ่าน early stopping (od_wait=30)",
+      "tree_count_2026-09-07": 30,
+      "n_features_2026-09-07": 12,
+      "uses_rain_forecast_binary": false,
+      "rain_forecast_threshold_mm": null,
+      "bias_correction_m3_per_day": 0.0,
+      "live_backtest_2026-09-07": {
+        "methodology": "honest holdout: fit threshold/bias on chronological-first 65% of forecast_accuracy_log.csv, evaluate on later 35% never used for fitting",
+        "n_holdout": 18,
+        "mae_previous_production": 4293.0,
+        "mae_new_deployed_model": 3645.3,
+        "improvement_pct": 15.1
+      }
     },
     "3": {
       "model_name": "CatBoost",
       "target_column": "y3=Q_in_t+3 (m3/day)",
       "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
-      "test_nse": 0.005842262968522,
-      "val_nse": 0.9806366577988568,
-      "walkforward_cv_nse": {
-        "mean": -0.06492277543107258,
-        "std": null,
-        "n_folds": 5,
-        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
-        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
-      },
       "tuned_params": {
         "iterations": 300,
         "learning_rate": 0.0159859205807381,
@@ -126,21 +187,37 @@
         "rsm": 0.8127877215251221,
         "random_strength": 2.57649494325228
       },
-      "best_iter": 71
+      "superseded_2026-07-26_metrics": {
+        "test_nse": 0.005842262968522,
+        "val_nse": 0.9806366577988568,
+        "walkforward_cv_nse": {
+          "mean": -0.06492277543107258,
+          "std": null,
+          "n_folds": 5,
+          "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+          "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+        },
+        "best_iter": 71,
+        "note": "ตัวเลขจากโมเดลรุ่นก่อน 2026-09-07 (fixed iterations, ไม่มี rain feature/bias correction) เก็บไว้อ้างอิงเปรียบเทียบเท่านั้น"
+      },
+      "tuned_params_note_2026-09-07": "iterations เดิมยังเป็น max cap (300, หรือ 650 สำหรับ h1) แต่เทรนจริงหยุดที่ tree_count ด้านล่างผ่าน early stopping (od_wait=30)",
+      "tree_count_2026-09-07": 11,
+      "n_features_2026-09-07": 13,
+      "uses_rain_forecast_binary": true,
+      "rain_forecast_threshold_mm": 27.3,
+      "bias_correction_m3_per_day": 610.9,
+      "live_backtest_2026-09-07": {
+        "methodology": "honest holdout: fit threshold/bias on chronological-first 65% of forecast_accuracy_log.csv, evaluate on later 35% never used for fitting",
+        "n_holdout": 17,
+        "mae_previous_production": 9219.7,
+        "mae_new_deployed_model": 6994.3,
+        "improvement_pct": 24.1
+      }
     },
     "4": {
       "model_name": "CatBoost",
       "target_column": "y4=Q_in_t+4 (m3/day)",
       "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
-      "test_nse": 0.0595521393667954,
-      "val_nse": 0.9738158107716643,
-      "walkforward_cv_nse": {
-        "mean": -0.25257613397929995,
-        "std": null,
-        "n_folds": 5,
-        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
-        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
-      },
       "tuned_params": {
         "iterations": 300,
         "learning_rate": 0.0109387154307568,
@@ -151,21 +228,37 @@
         "rsm": 0.9913749176499462,
         "random_strength": 2.699726957831789
       },
-      "best_iter": 145
+      "superseded_2026-07-26_metrics": {
+        "test_nse": 0.0595521393667954,
+        "val_nse": 0.9738158107716643,
+        "walkforward_cv_nse": {
+          "mean": -0.25257613397929995,
+          "std": null,
+          "n_folds": 5,
+          "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+          "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+        },
+        "best_iter": 145,
+        "note": "ตัวเลขจากโมเดลรุ่นก่อน 2026-09-07 (fixed iterations, ไม่มี rain feature/bias correction) เก็บไว้อ้างอิงเปรียบเทียบเท่านั้น"
+      },
+      "tuned_params_note_2026-09-07": "iterations เดิมยังเป็น max cap (300, หรือ 650 สำหรับ h1) แต่เทรนจริงหยุดที่ tree_count ด้านล่างผ่าน early stopping (od_wait=30)",
+      "tree_count_2026-09-07": 88,
+      "n_features_2026-09-07": 12,
+      "uses_rain_forecast_binary": false,
+      "rain_forecast_threshold_mm": null,
+      "bias_correction_m3_per_day": 4241.9,
+      "live_backtest_2026-09-07": {
+        "methodology": "honest holdout: fit threshold/bias on chronological-first 65% of forecast_accuracy_log.csv, evaluate on later 35% never used for fitting",
+        "n_holdout": 17,
+        "mae_previous_production": 10573.0,
+        "mae_new_deployed_model": 5886.4,
+        "improvement_pct": 44.3
+      }
     },
     "5": {
       "model_name": "CatBoost",
       "target_column": "y5=Q_in_t+5 (m3/day)",
       "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
-      "test_nse": -1.3971628567879062,
-      "val_nse": 0.9442099512556632,
-      "walkforward_cv_nse": {
-        "mean": -0.2920161390273282,
-        "std": null,
-        "n_folds": 5,
-        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
-        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
-      },
       "tuned_params": {
         "iterations": 300,
         "learning_rate": 0.0121759578591452,
@@ -174,23 +267,39 @@
         "min_data_in_leaf": 25,
         "subsample": 0.9868547519916756,
         "rsm": 0.6502309452463372,
-        "random_strength": 0.217429400040442
+        "random_strength": 1.0
       },
-      "best_iter": 271
+      "superseded_2026-07-26_metrics": {
+        "test_nse": -1.3971628567879062,
+        "val_nse": 0.9442099512556632,
+        "walkforward_cv_nse": {
+          "mean": -0.2920161390273282,
+          "std": null,
+          "n_folds": 5,
+          "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+          "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+        },
+        "best_iter": 271,
+        "note": "ตัวเลขจากโมเดลรุ่นก่อน 2026-09-07 (fixed iterations, ไม่มี rain feature/bias correction) เก็บไว้อ้างอิงเปรียบเทียบเท่านั้น"
+      },
+      "tuned_params_note_2026-09-07": "iterations เดิมยังเป็น max cap (300, หรือ 650 สำหรับ h1) แต่เทรนจริงหยุดที่ tree_count ด้านล่างผ่าน early stopping (od_wait=30)",
+      "tree_count_2026-09-07": 64,
+      "n_features_2026-09-07": 12,
+      "uses_rain_forecast_binary": false,
+      "rain_forecast_threshold_mm": null,
+      "bias_correction_m3_per_day": 2605.5,
+      "live_backtest_2026-09-07": {
+        "methodology": "honest holdout: fit threshold/bias on chronological-first 65% of forecast_accuracy_log.csv, evaluate on later 35% never used for fitting",
+        "n_holdout": 17,
+        "mae_previous_production": 23198.0,
+        "mae_new_deployed_model": 5418.7,
+        "improvement_pct": 76.6
+      }
     },
     "6": {
       "model_name": "CatBoost",
       "target_column": "y6=Q_in_t+6 (m3/day)",
       "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
-      "test_nse": -0.1764967343666454,
-      "val_nse": 0.962098484114972,
-      "walkforward_cv_nse": {
-        "mean": -0.3723953466749509,
-        "std": null,
-        "n_folds": 5,
-        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
-        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
-      },
       "tuned_params": {
         "iterations": 300,
         "learning_rate": 0.0136765950369614,
@@ -201,21 +310,37 @@
         "rsm": 0.8290243458181864,
         "random_strength": 1.9867898992450308
       },
-      "best_iter": 182
+      "superseded_2026-07-26_metrics": {
+        "test_nse": -0.1764967343666454,
+        "val_nse": 0.962098484114972,
+        "walkforward_cv_nse": {
+          "mean": -0.3723953466749509,
+          "std": null,
+          "n_folds": 5,
+          "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+          "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+        },
+        "best_iter": 182,
+        "note": "ตัวเลขจากโมเดลรุ่นก่อน 2026-09-07 (fixed iterations, ไม่มี rain feature/bias correction) เก็บไว้อ้างอิงเปรียบเทียบเท่านั้น"
+      },
+      "tuned_params_note_2026-09-07": "iterations เดิมยังเป็น max cap (300, หรือ 650 สำหรับ h1) แต่เทรนจริงหยุดที่ tree_count ด้านล่างผ่าน early stopping (od_wait=30)",
+      "tree_count_2026-09-07": 142,
+      "n_features_2026-09-07": 13,
+      "uses_rain_forecast_binary": true,
+      "rain_forecast_threshold_mm": 3.1,
+      "bias_correction_m3_per_day": 6583.5,
+      "live_backtest_2026-09-07": {
+        "methodology": "honest holdout: fit threshold/bias on chronological-first 65% of forecast_accuracy_log.csv, evaluate on later 35% never used for fitting",
+        "n_holdout": 16,
+        "mae_previous_production": 12835.6,
+        "mae_new_deployed_model": 8579.1,
+        "improvement_pct": 33.2
+      }
     },
     "7": {
       "model_name": "CatBoost",
       "target_column": "y7=Q_in_t+7 (m3/day)",
       "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
-      "test_nse": 0.1086994321424081,
-      "val_nse": 0.9510410308389924,
-      "walkforward_cv_nse": {
-        "mean": -0.5807696498618561,
-        "std": null,
-        "n_folds": 5,
-        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
-        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
-      },
       "tuned_params": {
         "iterations": 300,
         "learning_rate": 0.0119080907879342,
@@ -226,7 +351,32 @@
         "rsm": 0.7638703770649338,
         "random_strength": 1.0054966332229271
       },
-      "best_iter": 251
+      "superseded_2026-07-26_metrics": {
+        "test_nse": 0.1086994321424081,
+        "val_nse": 0.9510410308389924,
+        "walkforward_cv_nse": {
+          "mean": -0.5807696498618561,
+          "std": null,
+          "n_folds": 5,
+          "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+          "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+        },
+        "best_iter": 251,
+        "note": "ตัวเลขจากโมเดลรุ่นก่อน 2026-09-07 (fixed iterations, ไม่มี rain feature/bias correction) เก็บไว้อ้างอิงเปรียบเทียบเท่านั้น"
+      },
+      "tuned_params_note_2026-09-07": "iterations เดิมยังเป็น max cap (300, หรือ 650 สำหรับ h1) แต่เทรนจริงหยุดที่ tree_count ด้านล่างผ่าน early stopping (od_wait=30)",
+      "tree_count_2026-09-07": 152,
+      "n_features_2026-09-07": 13,
+      "uses_rain_forecast_binary": true,
+      "rain_forecast_threshold_mm": 61.0,
+      "bias_correction_m3_per_day": 13153.2,
+      "live_backtest_2026-09-07": {
+        "methodology": "honest holdout: fit threshold/bias on chronological-first 65% of forecast_accuracy_log.csv, evaluate on later 35% never used for fitting",
+        "n_holdout": 16,
+        "mae_previous_production": 21111.0,
+        "mae_new_deployed_model": 8198.1,
+        "improvement_pct": 61.2
+      }
     }
   },
   "training_data_source": {
@@ -236,7 +386,8 @@
   "split_method": "chronological 70/15/15 within 3 season segments (wet_before/dry/wet_after), dry window 2026-02-03 to 2026-05-17 -- NOT stratified season-balanced like the previous hurdle version (see experiment discussion 2026-07-26)",
   "known_limitations": [
     "Test set มีแค่ 57 แถว (single chronological split) -- test_nse ต่อ horizon จึงมี noise สูง, walkforward_cv_nse (5-fold TimeSeriesSplit) เป็นสัญญาณหลักที่ควรอ้างอิง",
-    "walkforward_cv_nse ยังติดลบที่ H3-H7 (ดีขึ้นกว่ารุ่นก่อนมากในทุก horizon ยกเว้น H1 แต่ยังไม่ถึง 0) และ H1 ต่ำกว่ารุ่นก่อนเล็กน้อย -- ควรระวังเป็นพิเศษที่ H5-H7"
+    "walkforward_cv_nse ยังติดลบที่ H3-H7 (ดีขึ้นกว่ารุ่นก่อนมากในทุก horizon ยกเว้น H1 แต่ยังไม่ถึง 0) และ H1 ต่ำกว่ารุ่นก่อนเล็กน้อย -- ควรระวังเป็นพิเศษที่ H5-H7",
+    "2026-09-07: honest holdout ใช้แค่ 16-18 แถวต่อ horizon (เพราะ forecast_accuracy_log.csv ยังสะสมได้ไม่นาน) ตัวเลข improvement ยังมี noise พอสมควร ควรตรวจซ้ำเมื่อ log สะสมมากขึ้น -- rain-forecast threshold และ bias correction ควร refit เป็นระยะ (แนะนำทุกเดือน)"
   ],
   "library_versions": {
     "note": "Retrained/staged in a Linux sandbox environment (2026-07-25), NOT the production Windows machine -- CatBoost version matches production exactly (1.2.10), but Python/scikit-learn versions differ. joblib/CatBoost pickle format is generally version-portable within the same CatBoost major version, but this was NOT verified on the actual production Windows Python 3.14.4 environment -- test loading before fully trusting in production.",
@@ -283,6 +434,22 @@
         "5": -0.2920161390273282,
         "6": -0.3723953466749509,
         "7": -0.5807696498618561
+      }
+    },
+    {
+      "date": "2026-09-07",
+      "change": "Regularization (early-stopping ทุก horizon แทน fixed iterations เดิม -- แก้ต้นตอบั๊ก h5 ที่ ทำนายค้างค่าสุดขั้วต่อเนื่องหลายสัปดาห์) + เพิ่ม binary rain-forecast feature (Open-Meteo live API) เฉพาะ h3/h6/h7 + post-hoc additive bias correction เฉพาะ h3-h7. Validated ผ่าน honest chronological holdout บน forecast_accuracy_log.csv จริง (ไม่ใช่แค่ CV ภายในชุดเทรน) — ดูเต็มที่ 01_data/experiments/inflow_h5_bias_fix_20260907/, inflow_rain_forecast_feature_20260907/, inflow_regularized_final_20260907/",
+      "weighted_avg_mae_production_before": 12769,
+      "weighted_avg_mae_after": 6738,
+      "overall_improvement_pct": 47.2,
+      "per_horizon_improvement_pct": {
+        "1": 6.9,
+        "2": 15.1,
+        "3": 24.1,
+        "4": 44.3,
+        "5": 76.6,
+        "6": 33.2,
+        "7": 61.2
       }
     }
   ]

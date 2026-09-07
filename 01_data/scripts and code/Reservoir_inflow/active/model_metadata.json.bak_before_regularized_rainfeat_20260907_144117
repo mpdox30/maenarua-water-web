@@ -1,0 +1,289 @@
+{
+  "exported_at": "2026-07-26T10:12:25.889598+00:00",
+  "target_reservoir": "อ่างเก็บน้ำแม่นาเรือ (Mae Na Rua Reservoir)",
+  "architecture": "direct delta-regression per horizon, NO stage1 hurdle classifier (previous production used stage1 CatBoostClassifier gate + stage2 regressor -- replaced 2026-07-26 after lag/rolling-rain feature engineering made the direct approach beat the hurdle architecture on walk-forward CV for every horizon except H1)",
+  "feature_cols": [
+    "Q_in_t (m3/day)",
+    "Water_Level_t (m)",
+    "Storage_S_t (m3)",
+    "DeltaS_t (m3/day)",
+    "%Full_t",
+    "Rain_obs_t (mm)",
+    "API_t (mm)",
+    "Qin_lag1 (m3/day)",
+    "Qin_lag2 (m3/day)",
+    "Rain_roll3 (mm)",
+    "Rain_roll5 (mm)",
+    "Rain_roll7 (mm)"
+  ],
+  "targets": [
+    "y1=Q_in_t+1 (m3/day)",
+    "y2=Q_in_t+2 (m3/day)",
+    "y3=Q_in_t+3 (m3/day)",
+    "y4=Q_in_t+4 (m3/day)",
+    "y5=Q_in_t+5 (m3/day)",
+    "y6=Q_in_t+6 (m3/day)",
+    "y7=Q_in_t+7 (m3/day)"
+  ],
+  "date_col_raw": "Date",
+  "qin_col": "Q_in_t (m3/day)",
+  "rain_col": "Rain_obs_t (mm)",
+  "api_col": "API_t (mm)",
+  "horizons": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "model_structure": {
+    "stage1": null,
+    "stage2": "Regressor ทำนาย DELTA = Q_in_t+h(actual) - Q_in_t(ปัจจุบัน) ทุกแถวรวมกัน (รวมวัน zero-inflow ด้วย ไม่มี stage1 กรองแยก)",
+    "final_prediction_logic": "prediction = clip(Q_in_t(ปัจจุบัน) + regressor.predict(X), 0, None) -- ไม่มี stage1 classifier/threshold แล้ว",
+    "stage2_trained_on": "ทุกแถวรวมกัน (ต่างจากเดิมที่ stage2 เทรนเฉพาะแถว Q_in_actual > ZERO_THRESHOLD)",
+    "unchanged_from_previous_version": false,
+    "lag_features_added_2026-07-26": [
+      "Qin_lag1 (m3/day)",
+      "Qin_lag2 (m3/day)",
+      "Rain_roll3 (mm)",
+      "Rain_roll5 (mm)",
+      "Rain_roll7 (mm)"
+    ]
+  },
+  "deployment_model_per_horizon": {
+    "1": {
+      "model_name": "CatBoost",
+      "target_column": "y1=Q_in_t+1 (m3/day)",
+      "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
+      "test_nse": 0.6173004177280479,
+      "val_nse": 0.9919532838544566,
+      "walkforward_cv_nse": {
+        "mean": 0.42163920066193805,
+        "std": null,
+        "n_folds": 5,
+        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+      },
+      "tuned_params": {
+        "iterations": 650,
+        "learning_rate": 0.0109312751880508,
+        "depth": 6,
+        "l2_leaf_reg": 23.808543547006124,
+        "min_data_in_leaf": 8,
+        "subsample": 0.8332116765879214,
+        "rsm": 0.7890628480631008,
+        "random_strength": 1.07161216899677
+      },
+      "best_iter": 80
+    },
+    "2": {
+      "model_name": "CatBoost",
+      "target_column": "y2=Q_in_t+2 (m3/day)",
+      "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
+      "test_nse": 0.3073018887356206,
+      "val_nse": 0.9872824372760663,
+      "walkforward_cv_nse": {
+        "mean": 0.2559049288804246,
+        "std": null,
+        "n_folds": 5,
+        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+      },
+      "tuned_params": {
+        "iterations": 300,
+        "learning_rate": 0.0146991485489077,
+        "depth": 5,
+        "l2_leaf_reg": 1.7430504177815451,
+        "min_data_in_leaf": 24,
+        "subsample": 0.914033992242307,
+        "rsm": 0.6212741213218833,
+        "random_strength": 1.9674909492695445
+      },
+      "best_iter": 47
+    },
+    "3": {
+      "model_name": "CatBoost",
+      "target_column": "y3=Q_in_t+3 (m3/day)",
+      "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
+      "test_nse": 0.005842262968522,
+      "val_nse": 0.9806366577988568,
+      "walkforward_cv_nse": {
+        "mean": -0.06492277543107258,
+        "std": null,
+        "n_folds": 5,
+        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+      },
+      "tuned_params": {
+        "iterations": 300,
+        "learning_rate": 0.0159859205807381,
+        "depth": 5,
+        "l2_leaf_reg": 4.339666832543908,
+        "min_data_in_leaf": 37,
+        "subsample": 0.986523802644266,
+        "rsm": 0.8127877215251221,
+        "random_strength": 2.57649494325228
+      },
+      "best_iter": 71
+    },
+    "4": {
+      "model_name": "CatBoost",
+      "target_column": "y4=Q_in_t+4 (m3/day)",
+      "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
+      "test_nse": 0.0595521393667954,
+      "val_nse": 0.9738158107716643,
+      "walkforward_cv_nse": {
+        "mean": -0.25257613397929995,
+        "std": null,
+        "n_folds": 5,
+        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+      },
+      "tuned_params": {
+        "iterations": 300,
+        "learning_rate": 0.0109387154307568,
+        "depth": 3,
+        "l2_leaf_reg": 3.810029124004568,
+        "min_data_in_leaf": 36,
+        "subsample": 0.4063769521841512,
+        "rsm": 0.9913749176499462,
+        "random_strength": 2.699726957831789
+      },
+      "best_iter": 145
+    },
+    "5": {
+      "model_name": "CatBoost",
+      "target_column": "y5=Q_in_t+5 (m3/day)",
+      "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
+      "test_nse": -1.3971628567879062,
+      "val_nse": 0.9442099512556632,
+      "walkforward_cv_nse": {
+        "mean": -0.2920161390273282,
+        "std": null,
+        "n_folds": 5,
+        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+      },
+      "tuned_params": {
+        "iterations": 300,
+        "learning_rate": 0.0121759578591452,
+        "depth": 2,
+        "l2_leaf_reg": 31.27438558692472,
+        "min_data_in_leaf": 25,
+        "subsample": 0.9868547519916756,
+        "rsm": 0.6502309452463372,
+        "random_strength": 0.217429400040442
+      },
+      "best_iter": 271
+    },
+    "6": {
+      "model_name": "CatBoost",
+      "target_column": "y6=Q_in_t+6 (m3/day)",
+      "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
+      "test_nse": -0.1764967343666454,
+      "val_nse": 0.962098484114972,
+      "walkforward_cv_nse": {
+        "mean": -0.3723953466749509,
+        "std": null,
+        "n_folds": 5,
+        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+      },
+      "tuned_params": {
+        "iterations": 300,
+        "learning_rate": 0.0136765950369614,
+        "depth": 2,
+        "l2_leaf_reg": 4.382716203014211,
+        "min_data_in_leaf": 29,
+        "subsample": 0.7105210344032551,
+        "rsm": 0.8290243458181864,
+        "random_strength": 1.9867898992450308
+      },
+      "best_iter": 182
+    },
+    "7": {
+      "model_name": "CatBoost",
+      "target_column": "y7=Q_in_t+7 (m3/day)",
+      "training_data_source": "Training_Values_Nofct_7day_Extended_lagfeat.csv",
+      "test_nse": 0.1086994321424081,
+      "val_nse": 0.9510410308389924,
+      "walkforward_cv_nse": {
+        "mean": -0.5807696498618561,
+        "std": null,
+        "n_folds": 5,
+        "method": "TimeSeriesSplit rolling-origin CV (5 folds) on the train block only, tuned params reused per fold (not re-tuned per fold) -- see chat/experiment discussion 2026-07-26",
+        "note": "Primary quality signal (test_nse uses only the 57-row single test split and is noisy -- see known_limitations). This replaces the old hurdle_nse_on_test field name since there is no hurdle/stage1 in this architecture anymore."
+      },
+      "tuned_params": {
+        "iterations": 300,
+        "learning_rate": 0.0119080907879342,
+        "depth": 2,
+        "l2_leaf_reg": 1.426422588105843,
+        "min_data_in_leaf": 18,
+        "subsample": 0.4317495679086314,
+        "rsm": 0.7638703770649338,
+        "random_strength": 1.0054966332229271
+      },
+      "best_iter": 251
+    }
+  },
+  "training_data_source": {
+    "note": "Single dataset for all horizons now (no longer hybrid per-horizon like the previous version) -- Training_Values_Nofct_7day_Extended_lagfeat.csv, i.e. Extended.csv + Qin_lag1/2 + Rain_roll3/5/7 columns computed via .shift()/.rolling().sum() (date-contiguous, verified no gaps).",
+    "file": "Training_Values_Nofct_7day_Extended_lagfeat.csv (393 rows, 2025-06-27 to 2026-07-24, usable rows depend on target availability near the tail)"
+  },
+  "split_method": "chronological 70/15/15 within 3 season segments (wet_before/dry/wet_after), dry window 2026-02-03 to 2026-05-17 -- NOT stratified season-balanced like the previous hurdle version (see experiment discussion 2026-07-26)",
+  "known_limitations": [
+    "Test set มีแค่ 57 แถว (single chronological split) -- test_nse ต่อ horizon จึงมี noise สูง, walkforward_cv_nse (5-fold TimeSeriesSplit) เป็นสัญญาณหลักที่ควรอ้างอิง",
+    "walkforward_cv_nse ยังติดลบที่ H3-H7 (ดีขึ้นกว่ารุ่นก่อนมากในทุก horizon ยกเว้น H1 แต่ยังไม่ถึง 0) และ H1 ต่ำกว่ารุ่นก่อนเล็กน้อย -- ควรระวังเป็นพิเศษที่ H5-H7"
+  ],
+  "library_versions": {
+    "note": "Retrained/staged in a Linux sandbox environment (2026-07-25), NOT the production Windows machine -- CatBoost version matches production exactly (1.2.10), but Python/scikit-learn versions differ. joblib/CatBoost pickle format is generally version-portable within the same CatBoost major version, but this was NOT verified on the actual production Windows Python 3.14.4 environment -- test loading before fully trusting in production.",
+    "staging_python": "3.10.12 (Linux sandbox)",
+    "staging_catboost": "1.2.10",
+    "staging_optuna": "4.9.0",
+    "staging_scikit_learn": "1.7.2",
+    "production_python_last_known": "3.14.4 (Windows-11-10.0.26200-SP0)",
+    "production_catboost_last_known": "1.2.10",
+    "production_scikit_learn_last_known": "1.8.0"
+  },
+  "known_deviations_from_original_template": [],
+  "deployment_history": [
+    {
+      "date": "2026-07-25",
+      "change": "Hybrid retrain: H1,H3,H5,H6,H7 switched to Extended.csv (raw-rebuilt, +34 days through 2026-07-17/24), H2,H4 kept on CORRECTED.csv. Model choice validated via walk-forward CV (TimeSeriesSplit, 4 folds) comparing CORRECTED vs Extended per horizon, NOT single-split alone (single-split gave a materially different, less reliable recommendation for H1/H2 -- see known_limitations). Stage-1 threshold kept at the original single-draw method (a Monte-Carlo-averaged + shrinkage stabilization method was tested but only clearly helped H2 and was not validated under walk-forward CV for this exact hybrid, so not adopted this round).",
+      "previous_hurdle_nse_on_test": {
+        "1": 0.7338984757410334,
+        "2": 0.34454807979728475,
+        "3": -2.8450243065744956,
+        "4": -0.6729781001229029,
+        "5": -1.0014987095671315,
+        "6": -0.09492939701651837,
+        "7": 0.2530401333380593
+      }
+    },
+    {
+      "date": "2026-07-26",
+      "change": "Architecture switch: hurdle (stage1 CatBoostClassifier + stage2 regressor) -> direct delta-regression per horizon, NO stage1. Added Qin_lag1/2 + Rain_roll3/5/7 lag/rolling-rain features (tested reservoir-state lags too -- WaterLevel/Storage/%Full lag1/2 -- but that made things worse on 6/7 horizons, so not included). All 7 horizons now use CatBoost trained on a single dataset (Training_Values_Nofct_7day_Extended_lagfeat.csv), no longer hybrid per-horizon data sources. Validated via walk-forward CV (5-fold TimeSeriesSplit): new model beats old hurdle production on every horizon except H1 (0.4216 vs 0.4785, small gap).",
+      "previous_walkforward_cv_nse": {
+        "1": 0.4785,
+        "2": -0.0312,
+        "3": -1.6972,
+        "4": -1.8345,
+        "5": -3.528,
+        "6": -15.3064,
+        "7": -13.2143
+      },
+      "new_walkforward_cv_nse": {
+        "1": 0.42163920066193805,
+        "2": 0.2559049288804246,
+        "3": -0.06492277543107258,
+        "4": -0.25257613397929995,
+        "5": -0.2920161390273282,
+        "6": -0.3723953466749509,
+        "7": -0.5807696498618561
+      }
+    }
+  ]
+}
