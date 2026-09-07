@@ -66,7 +66,7 @@ REM   git add "01_data/forecasting_results/Reservoir_inflow/forecast_accuracy_lo
 REM   git commit -m "Manual push from Windows (GitHub Actions issue)"
 REM   git pull --no-rebase --no-edit origin master
 REM   git push origin master
-set "GIT_PUSH_ENABLED=0"
+set "GIT_PUSH_ENABLED=1"
 REM ============================================================================
 
 set "SCRIPT_DIR=%~dp0"
