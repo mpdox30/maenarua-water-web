@@ -47,7 +47,9 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          # numpy==2.5.0 ใน requirements.txt ต้องการ Python >=3.12 (3.11 resolve ไม่ได้ --
+          # เจอจริงตอนทดสอบรอบแรก error "No matching distribution found for numpy==2.5.0")
+          python-version: "3.12"
           cache: pip
           cache-dependency-path: "01_data/scripts and code/pipeline/requirements.txt"
 
