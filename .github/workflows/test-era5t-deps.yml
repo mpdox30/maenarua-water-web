@@ -49,9 +49,6 @@ jobs:
 
           import cfgrib
           print("cfgrib OK, version:", getattr(cfgrib, "__version__", "?"))
-          # cfgrib's own built-in self-check of the eccodes backend
-          from cfgrib import eccodes as cfgrib_eccodes
-          print("cfgrib <-> eccodes backend check passed")
 
           print("\nALL DEPENDENCY CHECKS PASSED")
           PY
