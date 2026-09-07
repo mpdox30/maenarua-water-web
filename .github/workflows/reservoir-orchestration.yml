@@ -45,6 +45,20 @@ jobs:
       - name: pip install dependencies
         run: pip install openpyxl==3.1.5
 
+      # 2026-09-07 เพิ่ม -- กัน silent fallback ไปใช้ release_events.csv local (placeholder เก่า
+      # ครอบคลุมช่วงกว้าง 26 มิ.ย.-14 ต.ค. 2569 แบบเหมารวม ไม่ใช่ log เหตุการณ์จริง) เกิดขึ้นจริงมาแล้ว
+      # 2026-09-07: workflow นี้รันโดยไม่มี secret RESERVOIR_RELEASE_SHEET_CSV_URL ตั้งไว้ -- สคริปต์
+      # เลย fallback ไปเจอ event ปลอมที่ครอบคลุมวันนั้นพอดี ได้ inflow ผิดไปเกือบ 24 เท่า (405 -> 9,851
+      # m3/day) แล้ว push ทับทั้ง shadow CSV และไฟล์ทางการแบบเงียบๆ ไม่มี error ให้เห็นเลย (ดู commit
+      # b2c35f7 ที่แก้กลับ) -- ด่านนี้ทำให้ job fail ทันทีชัดเจนแทน ถ้า secret ว่าง จะได้ไม่เกิดซ้ำอีก
+      # ไม่ว่าใครจะลืมตั้ง secret ตอนไหนก็ตาม
+      - name: ตรวจสอบว่ามี secret RESERVOIR_RELEASE_SHEET_CSV_URL ครบก่อนรัน (กัน silent fallback)
+        run: |
+          if [ -z "${{ secrets.RESERVOIR_RELEASE_SHEET_CSV_URL }}" ]; then
+            echo "::error::ไม่ได้ตั้ง secret RESERVOIR_RELEASE_SHEET_CSV_URL -- ถ้าปล่อยรันต่อ reservoir_daily_orchestration.py จะ fallback ไปอ่าน release_events.csv local (placeholder เก่า ครอบคลุม 26 มิ.ย.-14 ต.ค. 2569 แบบเหมารวม ไม่ใช่ log เหตุการณ์จริง) แล้วคำนวณ inflow ผิดแบบเงียบๆ (เคยเกิดจริง 2026-09-07 ดู commit b2c35f7) -- ไปตั้ง secret นี้ที่ Settings > Secrets and variables > Actions ก่อน ใช้ค่าเดียวกับ env var RESERVOIR_RELEASE_SHEET_CSV_URL บนเครื่อง Windows"
+            exit 1
+          fi
+
       - name: Run reservoir_daily_orchestration.py
         working-directory: 01_data/scripts and code/pipeline
         env:
