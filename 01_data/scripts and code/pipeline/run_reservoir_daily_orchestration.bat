@@ -32,6 +32,24 @@ REM ============================================================================
 
 setlocal enabledelayedexpansion
 
+REM ============================================================================
+REM 2026-09-08 เพิ่มชั่วคราว -- ปิด git pull/push (GIT_PUSH_ENABLED=0) ระหว่างทดสอบให้เว็บจริง
+REM พึ่ง GitHub Actions (reservoir-orchestration.yml) เต็มตัว 1-2 วัน ตามที่ตกลงกับผู้ใช้
+REM สคริปต์ยังคำนวณ + เขียนไฟล์ทางการ/shadow CSV ลงดิสก์ตามปกติทุกอย่าง แค่ไม่แตะ git เลย (ทั้ง
+REM pull และ push) กันชนกับที่ GitHub Actions เขียน/push ไฟล์เดียวกันไปแล้ว (ปิด pull ด้วยเพราะถ้า
+REM เปิด pull ทิ้งไว้แต่ไม่ commit ผลลัพธ์ตัวเอง ไฟล์ inflow/*.xlsx ที่เพิ่งเขียนสดจะชนกับ pull ได้
+REM ถ้า Actions push ไฟล์เดือนเดียวกันมาก่อน)
+REM
+REM เปิดกลับ: เปลี่ยน GIT_PUSH_ENABLED เป็น 1 แล้วรันไฟล์นี้ใหม่ (จะ pull+push อัตโนมัติเหมือนเดิม)
+REM หรือถ้า GitHub Actions มีปัญหาแล้วอยากดึงผลจากเครื่องนี้ไป push เองทันที (ไม่ต้องรอสคริปต์) เปิด
+REM Command Prompt ที่ D:\maenaruea-water-web แล้วรัน:
+REM   git add "01_data/Reservoirs/inflow/" "01_data/Reservoirs/inflow_auto/RES002_daily_computed.csv"
+REM   git commit -m "Manual push from Windows (GitHub Actions issue)"
+REM   git pull --no-rebase --no-edit origin master
+REM   git push origin master
+set "GIT_PUSH_ENABLED=0"
+REM ============================================================================
+
 set "SCRIPT_DIR=%~dp0"
 set "VENV_PYTHON=%SCRIPT_DIR%..\..\..\.venv\Scripts\python.exe"
 
@@ -70,6 +88,12 @@ REM run_monitoring_data_builder.bat (pull --no-rebase ก่อน, add เฉ�
 REM เฉพาะตอนมีอะไรเปลี่ยนจริง) ไฟล์ backup อัตโนมัติ (.bak_before_*) ถูก .gitignore กันไว้แล้ว จึง
 REM git add ทั้งโฟลเดอร์ inflow/ ได้อย่างปลอดภัยโดยไม่ดึง backup ติดไปด้วย
 REM ============================================================================
+if not "%GIT_PUSH_ENABLED%"=="1" (
+    echo [INFO] Git pull/push ปิดอยู่ชั่วคราว ^(GIT_PUSH_ENABLED=0^) -- ข้ามขั้นตอน git ทั้งหมดรอบนี้
+    echo   ^(ไฟล์ทางการ/shadow CSV ยังเขียนลงดิสก์ปกติ แค่ไม่ pull/push เฉยๆ^)
+    goto :SKIP_RESERVOIR_PUSH
+)
+
 if not "%ORCH_EXIT_CODE%"=="0" (
     echo [WARN] reservoir_daily_orchestration.py ไม่สำเร็จ -- ข้ามขั้นตอน push git รอบนี้
     goto :SKIP_RESERVOIR_PUSH

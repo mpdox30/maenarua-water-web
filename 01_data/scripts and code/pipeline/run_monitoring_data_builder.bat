@@ -46,6 +46,29 @@ REM ============================================================================
 
 setlocal enabledelayedexpansion
 
+REM ============================================================================
+REM 2026-09-08 เพิ่มชั่วคราว -- ปิด git pull/push (GIT_PUSH_ENABLED=0) ระหว่างทดสอบให้เว็บจริง
+REM พึ่ง GitHub Actions (monitoring-builder.yml) เต็มตัว 1-2 วัน ตามที่ตกลงกับผู้ใช้
+REM ทั้ง 3 สคริปต์ยังรัน + เขียนไฟล์ลงดิสก์ตามปกติทุกอย่าง แค่ไม่แตะ git เลย (ทั้ง pull และ push)
+REM กันชนกับที่ GitHub Actions เขียน/push ไฟล์เดียวกันไปแล้วทุก 15 นาทีเหมือนกัน (ปิด pull ด้วยเพราะ
+REM ถ้าเปิด pull ทิ้งไว้แต่ไม่ commit ผลลัพธ์ตัวเอง monitoring.json/inflow_6h_display.json ที่เขียนสด
+REM ทุกรอบจะชนกับ pull บ่อยมาก เสี่ยง merge conflict เขียนทับไฟล์เสียหายได้)
+REM
+REM ผลข้างเคียงที่ยอมรับได้ชั่วคราว: forecast_accuracy_logger.py จะอ่าน latest.json (ที่ Colab เขียน)
+REM เป็นสำเนาเก่าค้างไว้ตั้งแต่ก่อนปิด pull (ไม่ใช่ production-critical แค่ log เปรียบเทียบใช้ทดสอบ
+REM โมเดล ไม่กระทบเว็บจริง)
+REM
+REM เปิดกลับ: เปลี่ยน GIT_PUSH_ENABLED เป็น 1 แล้วรันไฟล์นี้ใหม่ (จะ pull+push อัตโนมัติเหมือนเดิม)
+REM หรือถ้า GitHub Actions มีปัญหาแล้วอยากดึงผลจากเครื่องนี้ไป push เองทันที (ไม่ต้องรอสคริปต์) เปิด
+REM Command Prompt ที่ D:\maenaruea-water-web แล้วรัน (add เฉพาะไฟล์ที่มีอยู่จริง/อัปเดตแล้ว):
+REM   git add "03_website/assets/data/monitoring.json" "03_website/assets/data/inflow_6h_display.json"
+REM   git add "01_data/forecasting_results/Reservoir_inflow/forecast_accuracy_log.csv" "03_website/assets/data/forecast_accuracy_log.csv"
+REM   git commit -m "Manual push from Windows (GitHub Actions issue)"
+REM   git pull --no-rebase --no-edit origin master
+REM   git push origin master
+set "GIT_PUSH_ENABLED=0"
+REM ============================================================================
+
 set "SCRIPT_DIR=%~dp0"
 set "VENV_PYTHON=%SCRIPT_DIR%..\..\..\.venv\Scripts\python.exe"
 
@@ -125,6 +148,12 @@ REM ตัวที่สำเร็จได้ตามปกติ ไม่
 REM **2026-08-12 เพิ่ม**: forecast_accuracy_logger.py เขียนไฟล์ที่ 4 เพิ่ม (สำเนา log ไว้ที่
 REM 03_website/assets/data/ ให้หน้า forecast-accuracy.html fetch() ได้) รวมเป็น 4 ไฟล์ต่อรอบ
 REM ============================================================================
+if not "%GIT_PUSH_ENABLED%"=="1" (
+    echo [INFO] Git pull/push ปิดอยู่ชั่วคราว ^(GIT_PUSH_ENABLED=0^) -- ข้ามขั้นตอน git ทั้งหมดรอบนี้
+    echo   ^(monitoring.json/inflow_6h_display.json/forecast_accuracy_log.csv ยังเขียนลงดิสก์ปกติ แค่ไม่ pull/push เฉยๆ^)
+    goto :SKIP_GIT_PUSH
+)
+
 if not "%BUILDER_EXIT_CODE%"=="0" if not "%INFLOW_EXIT_CODE%"=="0" if not "%LOGGER_EXIT_CODE%"=="0" (
     echo [WARN] ทั้งสามสคริปต์ไม่สำเร็จเลย ข้ามขั้นตอน push git รอบนี้
     goto :SKIP_GIT_PUSH
