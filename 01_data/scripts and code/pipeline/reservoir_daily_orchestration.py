@@ -192,6 +192,24 @@ def load_release_events_from_sheet(source: Optional[str] = None) -> list[dict]:
     req = urllib.request.Request(url, headers={"Accept": "text/csv"})
     with urllib.request.urlopen(req, timeout=20) as resp:
         text = resp.read().decode("utf-8")
+
+    # 2026-09-07 เพิ่ม -- เช็คว่าได้ HTML กลับมาแทน CSV ก่อนส่งเข้า csv.DictReader (ซึ่งจะ parse HTML
+    # เป็น "แถว/คอลัมน์" มั่วๆ ตาม comma ในโค้ด JS แล้วโผล่เป็น error คอลัมน์หายที่งงกว่าเดิม) เจอจริง
+    # 2026-09-07: secret ชี้ไปลิงก์ "edit" ธรรมดาของ Sheet (ต้อง login ถึงเห็นข้อมูล) แทนที่จะเป็นลิงก์
+    # "Publish to web" export CSV (เข้าถึงได้แบบไม่ต้อง login) -- ได้ HTML/JS ของหน้า Sheets editor
+    # กลับมาแทน ข้อความ error นี้ชี้ตรงไปที่วิธีสร้างลิงก์ที่ถูกต้อง
+    if text.lstrip().lower().startswith(("<!doctype html", "<html")):
+        raise RuntimeError(
+            "ได้ HTML กลับมาแทน CSV จาก RESERVOIR_RELEASE_SHEET_CSV_URL -- แปลว่าลิงก์นี้น่าจะเป็นลิงก์ "
+            "'edit' ธรรมดาของ Google Sheet (เช่น .../edit?gid=...) ซึ่งต้อง login ถึงจะเห็นข้อมูล ไม่ใช่ "
+            "ลิงก์ 'Publish to web' export CSV ที่เข้าถึงได้แบบไม่ต้อง login -- วิธีสร้างลิงก์ที่ถูกต้อง: "
+            "เปิด Google Sheet คำตอบ -> File > Share > Publish to web -> เลือก dropdown แท็บเป็น "
+            "'release_log' (ไม่ใช่ 'Entire Document') -> format 'Comma-separated values (.csv)' -> "
+            "Publish -> ก็อปลิงก์ที่ได้ (จะมีรูปแบบ .../pub?gid=...&single=true&output=csv) มาตั้งเป็น "
+            "secret/env var แทนของเดิม ดู RESERVOIR_AUTOMATION_DESIGN.md หัวข้อ 'Publish-to-web + ตั้ง "
+            "env var' ประกอบ"
+        )
+
     return _parse_release_events_rows(csv.DictReader(io.StringIO(text)))
 
 
