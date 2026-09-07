@@ -130,6 +130,14 @@
         "mae_previous_production": 9344.1,
         "mae_new_deployed_model": 8703.1,
         "improvement_pct": 6.9
+      },
+      "test_nse": null,
+      "walkforward_cv_nse": {
+        "mean": -1.283,
+        "std": null,
+        "n_folds": null,
+        "method": "Honest chronological holdout on live forecast_accuracy_log.csv: threshold/bias fit on chronological-first 65% of rows, NSE measured on the later 35% never used for fitting -- reflects the actually-deployed model (regularized + rain feature + bias correction), NOT in-sample CV on the original training set. See 01_data/experiments/inflow_regularized_final_20260907/bias_recalibration_on_candidate_results.csv",
+        "note": "แทนที่ walkforward_cv_nse เดิม (5-fold TimeSeriesSplit บนชุดเทรน) ด้วยค่านี้ 2026-09-07 -- ค่าเดิมยังดูได้ใน deployment_model_per_horizon.{h}.superseded_2026-07-26_metrics n=16-18 แถวต่อ horizon เท่านั้น (log ยังสะสมได้ไม่นาน) -- ควร refit เป็นระยะ"
       }
     },
     "2": {
@@ -171,6 +179,14 @@
         "mae_previous_production": 4293.0,
         "mae_new_deployed_model": 3645.3,
         "improvement_pct": 15.1
+      },
+      "test_nse": null,
+      "walkforward_cv_nse": {
+        "mean": 0.363,
+        "std": null,
+        "n_folds": null,
+        "method": "Honest chronological holdout on live forecast_accuracy_log.csv: threshold/bias fit on chronological-first 65% of rows, NSE measured on the later 35% never used for fitting -- reflects the actually-deployed model (regularized + rain feature + bias correction), NOT in-sample CV on the original training set. See 01_data/experiments/inflow_regularized_final_20260907/bias_recalibration_on_candidate_results.csv",
+        "note": "แทนที่ walkforward_cv_nse เดิม (5-fold TimeSeriesSplit บนชุดเทรน) ด้วยค่านี้ 2026-09-07 -- ค่าเดิมยังดูได้ใน deployment_model_per_horizon.{h}.superseded_2026-07-26_metrics n=16-18 แถวต่อ horizon เท่านั้น (log ยังสะสมได้ไม่นาน) -- ควร refit เป็นระยะ"
       }
     },
     "3": {
@@ -212,6 +228,14 @@
         "mae_previous_production": 9219.7,
         "mae_new_deployed_model": 6994.3,
         "improvement_pct": 24.1
+      },
+      "test_nse": null,
+      "walkforward_cv_nse": {
+        "mean": -0.733,
+        "std": null,
+        "n_folds": null,
+        "method": "Honest chronological holdout on live forecast_accuracy_log.csv: threshold/bias fit on chronological-first 65% of rows, NSE measured on the later 35% never used for fitting -- reflects the actually-deployed model (regularized + rain feature + bias correction), NOT in-sample CV on the original training set. See 01_data/experiments/inflow_regularized_final_20260907/bias_recalibration_on_candidate_results.csv",
+        "note": "แทนที่ walkforward_cv_nse เดิม (5-fold TimeSeriesSplit บนชุดเทรน) ด้วยค่านี้ 2026-09-07 -- ค่าเดิมยังดูได้ใน deployment_model_per_horizon.{h}.superseded_2026-07-26_metrics n=16-18 แถวต่อ horizon เท่านั้น (log ยังสะสมได้ไม่นาน) -- ควร refit เป็นระยะ"
       }
     },
     "4": {
@@ -253,6 +277,14 @@
         "mae_previous_production": 10573.0,
         "mae_new_deployed_model": 5886.4,
         "improvement_pct": 44.3
+      },
+      "test_nse": null,
+      "walkforward_cv_nse": {
+        "mean": -0.301,
+        "std": null,
+        "n_folds": null,
+        "method": "Honest chronological holdout on live forecast_accuracy_log.csv: threshold/bias fit on chronological-first 65% of rows, NSE measured on the later 35% never used for fitting -- reflects the actually-deployed model (regularized + rain feature + bias correction), NOT in-sample CV on the original training set. See 01_data/experiments/inflow_regularized_final_20260907/bias_recalibration_on_candidate_results.csv",
+        "note": "แทนที่ walkforward_cv_nse เดิม (5-fold TimeSeriesSplit บนชุดเทรน) ด้วยค่านี้ 2026-09-07 -- ค่าเดิมยังดูได้ใน deployment_model_per_horizon.{h}.superseded_2026-07-26_metrics n=16-18 แถวต่อ horizon เท่านั้น (log ยังสะสมได้ไม่นาน) -- ควร refit เป็นระยะ"
       }
     },
     "5": {
@@ -294,6 +326,14 @@
         "mae_previous_production": 23198.0,
         "mae_new_deployed_model": 5418.7,
         "improvement_pct": 76.6
+      },
+      "test_nse": null,
+      "walkforward_cv_nse": {
+        "mean": -0.581,
+        "std": null,
+        "n_folds": null,
+        "method": "Honest chronological holdout on live forecast_accuracy_log.csv: threshold/bias fit on chronological-first 65% of rows, NSE measured on the later 35% never used for fitting -- reflects the actually-deployed model (regularized + rain feature + bias correction), NOT in-sample CV on the original training set. See 01_data/experiments/inflow_regularized_final_20260907/bias_recalibration_on_candidate_results.csv",
+        "note": "แทนที่ walkforward_cv_nse เดิม (5-fold TimeSeriesSplit บนชุดเทรน) ด้วยค่านี้ 2026-09-07 -- ค่าเดิมยังดูได้ใน deployment_model_per_horizon.{h}.superseded_2026-07-26_metrics n=16-18 แถวต่อ horizon เท่านั้น (log ยังสะสมได้ไม่นาน) -- ควร refit เป็นระยะ"
       }
     },
     "6": {
@@ -335,6 +375,14 @@
         "mae_previous_production": 12835.6,
         "mae_new_deployed_model": 8579.1,
         "improvement_pct": 33.2
+      },
+      "test_nse": null,
+      "walkforward_cv_nse": {
+        "mean": -0.631,
+        "std": null,
+        "n_folds": null,
+        "method": "Honest chronological holdout on live forecast_accuracy_log.csv: threshold/bias fit on chronological-first 65% of rows, NSE measured on the later 35% never used for fitting -- reflects the actually-deployed model (regularized + rain feature + bias correction), NOT in-sample CV on the original training set. See 01_data/experiments/inflow_regularized_final_20260907/bias_recalibration_on_candidate_results.csv",
+        "note": "แทนที่ walkforward_cv_nse เดิม (5-fold TimeSeriesSplit บนชุดเทรน) ด้วยค่านี้ 2026-09-07 -- ค่าเดิมยังดูได้ใน deployment_model_per_horizon.{h}.superseded_2026-07-26_metrics n=16-18 แถวต่อ horizon เท่านั้น (log ยังสะสมได้ไม่นาน) -- ควร refit เป็นระยะ"
       }
     },
     "7": {
@@ -376,6 +424,14 @@
         "mae_previous_production": 21111.0,
         "mae_new_deployed_model": 8198.1,
         "improvement_pct": 61.2
+      },
+      "test_nse": null,
+      "walkforward_cv_nse": {
+        "mean": -1.825,
+        "std": null,
+        "n_folds": null,
+        "method": "Honest chronological holdout on live forecast_accuracy_log.csv: threshold/bias fit on chronological-first 65% of rows, NSE measured on the later 35% never used for fitting -- reflects the actually-deployed model (regularized + rain feature + bias correction), NOT in-sample CV on the original training set. See 01_data/experiments/inflow_regularized_final_20260907/bias_recalibration_on_candidate_results.csv",
+        "note": "แทนที่ walkforward_cv_nse เดิม (5-fold TimeSeriesSplit บนชุดเทรน) ด้วยค่านี้ 2026-09-07 -- ค่าเดิมยังดูได้ใน deployment_model_per_horizon.{h}.superseded_2026-07-26_metrics n=16-18 แถวต่อ horizon เท่านั้น (log ยังสะสมได้ไม่นาน) -- ควร refit เป็นระยะ"
       }
     }
   },
