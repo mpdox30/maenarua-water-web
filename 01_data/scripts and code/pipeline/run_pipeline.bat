@@ -50,8 +50,19 @@ REM ซ้ำอีกรอบตอนแก้ปัญหานั้นเ�
 REM เพิ่มขั้นตอนนี้ให้ไฟล์นี้เข้า git ทุกรอบที่ data_pipeline.py รันสำเร็จ (เหมือน monitoring.json/
 REM forecast_accuracy_log.csv ใน run_monitoring_data_builder.bat) ตัดการพึ่งพา manual sync ทิ้งไปเลย
 REM
+REM 2026-09-07 เพิ่ม -- push latest.json (ทั้ง 2 ชุด: 01_data/forecasting_results/latest.json ตัวจริง
+REM + 03_website/assets/data/latest.json สำเนาที่เว็บใช้) เข้าไปในรอบ push เดียวกันนี้ด้วย
+REM
+REM ก่อนหน้านี้ไฟล์นี้ไม่เคยถูก push จาก Windows เลย (เขียนแค่บนดิสก์) มีแต่ Colab เท่านั้นที่ push
+REM ไฟล์นี้ขึ้น GitHub ได้ (ผ่าน push cell ของ Colab) -- เจอปัญหาจริง 2026-09-07: Windows คำนวณ
+REM ค่า inflow แก้ไขถูกต้องในเครื่องแล้ว แต่เว็บจริงยังโชว์ค่าเก่าผิดอยู่เพราะรอ Colab รันรอบถัดไป
+REM ถึงจะ push ให้ -- ถ้า Colab ไม่ได้รันวันนั้น (เช่นลืม หรือยังไม่ได้ตั้ง schedule) เว็บจะค้างข้อมูลผิด
+REM ไปเรื่อยๆ โดยไม่มีใครรู้ -- เพิ่มขั้นตอนนี้ให้ Windows push latest.json เองได้ทันทีที่รันสำเร็จ
+REM ไม่ต้องรอ Colab อีกต่อไป (Colab ยังรันคู่ขนานได้ปกติ -- ไฟล์เดียวกัน ค่าเดียวกัน ก็จะจบด้วย
+REM "ไม่มีอะไรเปลี่ยน ข้าม commit" ในฝั่งที่รันทีหลัง เหมือน pattern อื่นๆ ในระบบนี้)
+REM
 REM ใช้ pattern เดียวกับ run_monitoring_data_builder.bat: เช็ค rebase/merge ค้างก่อน, pull --no-rebase
-REM (merge จริง ไม่ force), add เฉพาะไฟล์นี้ไฟล์เดียว, commit+push เฉพาะตอนมีอะไรเปลี่ยนจริง
+REM (merge จริง ไม่ force), add เฉพาะไฟล์ที่รู้จัก, commit+push เฉพาะตอนมีอะไรเปลี่ยนจริง
 REM ============================================================================
 if not "%PIPELINE_EXIT_CODE%"=="0" if not "%PIPELINE_EXIT_CODE%"=="1" (
     echo [WARN] data_pipeline.py ล้มเหลวรุนแรง ^(exit code %PIPELINE_EXIT_CODE%^) -- ข้ามขั้นตอน push git
@@ -65,7 +76,7 @@ if exist ".git\rebase-apply" goto :ML_FEATURES_GIT_BUSY
 if exist ".git\MERGE_HEAD" goto :ML_FEATURES_GIT_BUSY
 
 echo.
-echo [INFO] sync กับ remote ก่อน push ml_features_live.csv ...
+echo [INFO] sync กับ remote ก่อน push ml_features_live.csv + latest.json ...
 git pull --no-rebase --no-edit origin master
 if errorlevel 1 (
     echo [WARN] git pull --no-rebase ไม่สำเร็จ -- ข้ามขั้นตอน push รอบนี้ ^(ไม่ force/resolve เอง^)
@@ -73,22 +84,24 @@ if errorlevel 1 (
 )
 
 git add "01_data/scripts and code/pipeline/ml_features_live.csv"
+git add "01_data/forecasting_results/latest.json"
+git add "03_website/assets/data/latest.json"
 git diff --cached --quiet
 if errorlevel 1 (
-    git commit -m "Auto-update: ml_features_live.csv %DATE% %TIME%" >nul 2>&1
+    git commit -m "Auto-update: ml_features_live.csv + latest.json %DATE% %TIME%" >nul 2>&1
     git push origin master
     if errorlevel 1 (
-        echo [WARN] push ml_features_live.csv ไม่สำเร็จ -- จะลองใหม่รอบถัดไปอัตโนมัติ
+        echo [WARN] push ml_features_live.csv/latest.json ไม่สำเร็จ -- จะลองใหม่รอบถัดไปอัตโนมัติ
     ) else (
-        echo [OK] push ml_features_live.csv สำเร็จ
+        echo [OK] push ml_features_live.csv + latest.json สำเร็จ
     )
 ) else (
-    echo [INFO] ml_features_live.csv ไม่มีอะไรเปลี่ยนจากรอบก่อน -- ข้ามการ commit/push
+    echo [INFO] ไม่มีอะไรเปลี่ยนจากรอบก่อน -- ข้ามการ commit/push
 )
 goto :ML_FEATURES_GIT_DONE
 
 :ML_FEATURES_GIT_BUSY
-echo [WARN] เจอ rebase/merge ค้างอยู่ใน git -- ข้ามขั้นตอน push ml_features_live.csv รอบนี้
+echo [WARN] เจอ rebase/merge ค้างอยู่ใน git -- ข้ามขั้นตอน push ml_features_live.csv/latest.json รอบนี้
 
 :ML_FEATURES_GIT_DONE
 popd
