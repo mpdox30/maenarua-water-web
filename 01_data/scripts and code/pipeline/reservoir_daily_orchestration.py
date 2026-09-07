@@ -107,6 +107,26 @@ def _parse_release_events_rows(dict_reader) -> list[dict]:
     (ValueError: time data ' ' does not match format) และเพราะฟังก์ชันนี้ parse ทั้งไฟล์รวดเดียว
     ก่อน return ทำให้เหตุการณ์เปิดค้างแค่ 1 แถวพังการคำนวณ "ทุกวันที่" ไม่ใช่แค่วันของเหตุการณ์นั้น
     """
+    # 2026-09-07 เพิ่ม -- เช็คหัวคอลัมน์ก่อน parse แถวแรก แทนที่จะปล่อยให้ crash ด้วย KeyError เปล่าๆ
+    # ตรงบรรทัด row['start_date'] (ไม่บอกเลยว่าจริงๆ ได้คอลัมน์อะไรมา) -- เกิดขึ้นจริง 2026-09-07:
+    # GitHub Actions ตั้ง RESERVOIR_RELEASE_SHEET_CSV_URL ชี้ผิดแท็บ (ได้ CSV ของแท็บ "Form_Responses"
+    # ดิบ ที่มีหัวคอลัมน์ภาษาไทยจาก Google Form ตรงๆ แทนที่จะเป็นแท็บ "release_log" ที่ Apps Script
+    # แปลงให้แล้ว) ทำให้ KeyError: 'start_date' แบบไม่รู้สาเหตุ ต้องเดาสาเหตุกันหลายรอบกว่าจะเจอ --
+    # ข้อความ error ใหม่นี้จะโชว์หัวคอลัมน์ที่ได้จริงเทียบกับที่คาดหวัง ช่วยวินิจฉัยได้ทันทีในรอบต่อไป
+    expected_cols = {"event_no", "start_date", "start_time", "end_date", "end_time", "rate_m3_per_day"}
+    actual_cols = set(dict_reader.fieldnames or [])
+    missing_cols = expected_cols - actual_cols
+    if missing_cols:
+        raise RuntimeError(
+            f"CSV ที่อ่านมา (จาก local file หรือ Google Sheet source ที่ระบุ) ไม่มีคอลัมน์ที่คาดหวัง: "
+            f"{sorted(missing_cols)} -- หัวคอลัมน์ที่ได้จริงคือ {dict_reader.fieldnames!r} "
+            f"(คาดหวัง: event_no, start_date, start_time, end_date, end_time, outlet_side, "
+            f"rate_m3_per_day, purpose, note) -- ถ้าใช้ RESERVOIR_RELEASE_SHEET_CSV_URL ตรวจสอบว่า "
+            f"publish-to-web link ชี้ไปแท็บ 'release_log' (แท็บที่ Apps Script แปลงคำตอบ Form แล้ว) "
+            f"ไม่ใช่แท็บ 'Form_Responses' ดิบ (คอลัมน์ภาษาไทยตรงจาก Form) -- ดู RESERVOIR_AUTOMATION_"
+            f"DESIGN.md หัวข้อ 'Publish-to-web + ตั้ง env var'"
+        )
+
     events = []
     for row in dict_reader:
         row["start_dt"] = dt.datetime.strptime(f"{row['start_date']} {row['start_time']}", "%Y-%m-%d %H:%M")
