@@ -1,0 +1,60 @@
+name: Test - ERA5T dependency install (cfgrib/eccodes on ubuntu-latest)
+
+# ทดสอบเปล่าๆ อย่างเดียว -- ไม่แตะ/เขียนไฟล์อะไรในโปรเจกต์เลย ตรวจแค่ว่า cdsapi/cfgrib/eccodes/
+# ecmwflibs/xarray ติดตั้งได้จริงและใช้งานได้จริงบน GitHub-hosted ubuntu-latest runner หรือไม่
+# (ปัญหาเดิม: ติดตั้งไม่ได้บน Windows เพราะขาด eccodes system library ตัวจริง -- แก้ได้แล้วบน Colab
+# เพราะเป็น Linux, ยังไม่เคยทดสอบบน GitHub Actions runner ซึ่งก็เป็น Linux แต่คนละ image กัน อาจขาด
+# system library บางตัวที่ Colab มีมาก่อนก็ได้ -- เป็นก้าวแรกก่อนตัดสินใจ port สคริปต์จริงใดๆ ไป Actions)
+#
+# วิธีรัน: ไปที่แท็บ Actions ของ repo บน GitHub -> เลือก workflow นี้ทางซ้าย -> กด "Run workflow"
+# (ไม่มี schedule อัตโนมัติ ตั้งใจให้กดรันมือเท่านั้นสำหรับการทดสอบครั้งนี้)
+#
+# ทดสอบผ่านแล้วและตัดสินใจเดินหน้า GitHub Actions migration จริง -- ลบไฟล์นี้ทิ้งได้ (ไม่ใช่ส่วนของ
+# ระบบ production ใดๆ)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  test-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: pip install ERA5T dependencies (same set used on Colab)
+        run: pip install cdsapi cfgrib eccodes ecmwflibs xarray
+
+      - name: Verify imports + actually exercise eccodes (not just import success)
+        run: |
+          python3 - <<'PY'
+          import sys
+
+          print("python:", sys.version)
+
+          import cdsapi
+          print("cdsapi OK, version:", getattr(cdsapi, "__version__", "?"))
+
+          import xarray
+          print("xarray OK, version:", xarray.__version__)
+
+          import eccodes
+          print("eccodes (python bindings) OK")
+          # this is the real test -- it calls into the native eccodes C library,
+          # which is exactly what failed silently/loudly on Windows before
+          api_version = eccodes.codes_get_api_version()
+          print("eccodes native library API version:", api_version)
+
+          import cfgrib
+          print("cfgrib OK, version:", getattr(cfgrib, "__version__", "?"))
+          # cfgrib's own built-in self-check of the eccodes backend
+          from cfgrib import eccodes as cfgrib_eccodes
+          print("cfgrib <-> eccodes backend check passed")
+
+          print("\nALL DEPENDENCY CHECKS PASSED")
+          PY
+
+      - name: Result
+        run: echo "ถ้าเห็น step ก่อนหน้าผ่านทั้งหมดโดยไม่มี error แปลว่า eccodes/cfgrib ใช้งานได้จริงบน ubuntu-latest -- ไปต่อขั้น port สคริปต์จริงได้เลย"
