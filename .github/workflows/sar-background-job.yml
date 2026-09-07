@@ -73,17 +73,18 @@ jobs:
         if: always()
         run: rm -f /tmp/gee-key.json
 
-      - name: Sync กับ remote ก่อน push
-        run: git pull --no-rebase --no-edit origin master
-
-      - name: Commit + push ผลลัพธ์ SAR ถ้ามีอะไรเปลี่ยนจริง
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add "01_data/gis/sar_output/"
-          if git diff --cached --quiet; then
-            echo "[INFO] ไม่มีอะไรเปลี่ยนจากรอบก่อน (ปกติมาก -- ปกติแค่เช็คแล้วยังไม่ถึงรอบ classify จริง) -- ข้ามการ commit/push"
-          else
-            git commit -m "Auto-update (GitHub Actions): SAR crop classification result"
-            git push origin master
-          fi
+      # 2026-09-07 เอาขั้นตอน push ออก -- 01_data/gis/sar_output/ อยู่ใน .gitignore ตั้งใจไว้แล้ว
+      # (runtime artifact, regenerable, ไม่ควร commit -- ดู comment ใน .gitignore บรรทัด 5-9) ทดสอบ
+      # จริงแล้วพบว่า git add ล้มเหลวเพราะเหตุนี้ (ไม่ใช่บั๊ก workflow)
+      #
+      # ที่สำคัญกว่านั้น: ผลลัพธ์ไฟล์นี้เป็น feature จริงที่ data_pipeline_colab.py อ่านใช้ (crop
+      # classification) แต่ Colab เห็นข้อมูลจาก Windows ผ่าน sync_to_drive.bat (Google Drive sync)
+      # ไม่ใช่ผ่าน git เลย (ยืนยันจาก DAILY_RUNBOOK.md บรรทัด 210) -- ตอนนี้ยังไม่กระทบอะไรเพราะ
+      # Windows ยังรัน sar_background_job.py ขนานอยู่ (shadow mode) sync_to_drive.bat ยังทำงานปกติ
+      # ผลลัพธ์รอบนี้ (จาก GitHub Actions) จึงยังไม่มีใครอ่านจริง -- แค่พิสูจน์ว่าสคริปต์รันได้จริงบน
+      # Actions (pip install + GEE Service Account auth + sar_background_job.py เอง ผ่านหมดแล้ว)
+      # ถ้าจะให้ผลลัพธ์รอบนี้มีประโยชน์จริง (เช่นตอนย้าย main pipeline ไป Actions ด้วย) ต้องตัดสินใจ
+      # เรื่อง data bridge ไป Colab ใหม่ก่อน (push เข้า git แล้วให้ Colab git pull แทน Drive sync,
+      # หรือทางอื่น) -- ยังไม่ทำตอนนี้ รอคุยกับผู้ใช้ก่อน
+      - name: ผลลัพธ์ SAR (ไม่ push -- ดู comment ด้านบน)
+        run: echo "[INFO] sar_background_job.py รันสำเร็จ -- ผลลัพธ์อยู่ใน runner นี้เท่านั้น (ephemeral, ไม่ push) ตามที่ตกลงไว้"
