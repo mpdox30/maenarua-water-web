@@ -1,0 +1,126 @@
+name: Main Data Pipeline (Forecast)
+
+# พอร์ตจาก run_pipeline.bat (Windows Task Scheduler) -- รัน data_pipeline.py ตัวเต็ม (Water Demand
+# forecast + Reservoir Inflow forecast h1-h7) แล้วเขียน latest.json (ทั้ง 2 ชุด: 01_data/
+# forecasting_results/ ตัวจริง + 03_website/assets/data/ สำเนาที่เว็บใช้) แล้ว push ขึ้น GitHub
+#
+# 2026-09-08 ใช้ data_pipeline_colab.py แทน data_pipeline.py ตัวเดิม (ไม่ใช้ตัวเดิมตรงๆ) --
+# data_pipeline.py ของจริงเรียก ERA5T ผ่าน subprocess ไปยัง python.exe ของ conda environment
+# "era5-grib" ที่มากับ ArcGIS Pro (Windows-only เด็ดขาด ไม่มีทางรันบน ubuntu-latest ได้) --
+# data_pipeline_colab.py เป็นตัวแปรที่สร้างไว้แล้วตอนย้าย Colab (ทำงานเหมือนกันทุกอย่าง สลับแค่
+# ฟังก์ชัน _fetch_era5t_via_subprocess() ให้เรียก era5t_worker_colab.py แบบ in-process แทน
+# ใช้ cdsapi/cfgrib ซึ่งรันบน Linux ได้ปกติ -- พิสูจน์แล้วว่าใช้งานได้จริงบน Colab) ใช้ตัวเดียวกันนี้
+# บน Actions ได้เลย ไม่ต้องเขียนใหม่ -- ผลลัพธ์เหมือนกันทุกประการนอกจาก ERA5T fetch mechanism
+#
+# ⚠️ ต้องตั้ง GitHub Secrets เพิ่มก่อน workflow นี้จะรันผ่านจริง (นอกจาก RESERVOIR_*_SHEET_CSV_URL
+# และ GEE_* ที่ตั้งไว้แล้วจาก workflow อื่น):
+#   - CDSAPI_URL   : URL ของ Copernicus Climate Data Store API (ดูค่าจาก Colab Secret CDSAPI_URL
+#                    ที่ตั้งไว้แล้ว หรือหน้าโปรไฟล์ https://cds.climate.copernicus.eu/api-how-to)
+#   - CDSAPI_KEY   : API key ของ CDS (ดูค่าจาก Colab Secret CDSAPI_KEY ที่ตั้งไว้แล้ว)
+# **ไม่ต้องส่งค่า secret เหล่านี้มาที่แชท** ตั้งในหน้า GitHub โดยตรง (Settings > Secrets and
+# variables > Actions)
+#
+# โมเดล Water Demand 2 ไฟล์ใหญ่ (catboost_models.pkl 124MB, rf_model_v3b_final.pkl 117MB) เกิน
+# ลิมิต 100MB ของ GitHub เลย gitignore ไว้แต่แรก (ดู .gitignore บรรทัด 26-32) -- เก็บไว้เป็น asset
+# บน GitHub Release แทน (ตัดสินใจร่วมกับผู้ใช้ 2026-09-08 เลือกวิธีนี้แทน Google Drive/Git LFS
+# เพราะไม่จำกัด bandwidth ไม่ต้องพึ่ง Drive) ต้องอัปโหลด 2 ไฟล์นี้เป็น release asset ก่อน (ดู
+# ขั้นตอนใน PR/คำแนะนำที่แนบมา) แล้ว cache ไว้ข้าม run ไม่ต้องดาวน์โหลดซ้ำทุกรอบ
+#
+# หมายเหตุ: sar_output/ (ผล SAR crop classification) ตอนนี้ push เข้า git แล้วจาก sar-background-
+# job.yml (แก้ 2026-09-08 พร้อมกัน) -- Actions checkout จะเห็นผลล่าสุดที่มีจริง ไม่ fallback ไป
+# hardcoded_2020 เหมือนที่จะเกิดถ้าไม่แก้จุดนี้ก่อน
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    # 01:00 UTC = 08:00 ICT (UTC+7) -- เผื่อเวลาให้ Reservoir Daily Orchestration (07:30 ICT)
+    # รันเสร็จก่อน จะได้มี RES002_daily_computed.csv ของ "เมื่อวาน" ที่สดที่สุดให้ใช้
+    - cron: "0 1 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-pipeline
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: "01_data/scripts and code/pipeline/requirements.txt"
+
+      - name: pip install dependencies (requirements.txt เดิม + ERA5T)
+        run: |
+          pip install -r "01_data/scripts and code/pipeline/requirements.txt"
+          pip install cdsapi cfgrib eccodes ecmwflibs xarray
+
+      - name: เขียน .cdsapirc จาก secrets (สำหรับ ERA5T)
+        run: |
+          cat > ~/.cdsapirc <<EOF
+          url: ${{ secrets.CDSAPI_URL }}
+          key: ${{ secrets.CDSAPI_KEY }}
+          EOF
+
+      - name: เขียน GEE service account key ลงไฟล์ชั่วคราว
+        run: |
+          cat > /tmp/gee-key.json <<'EOF'
+          ${{ secrets.GEE_SERVICE_ACCOUNT_KEY_JSON }}
+          EOF
+
+      # โมเดล Water Demand ใหญ่เกิน git limit (ดู comment หัวไฟล์) -- cache ไว้ข้าม run ด้วย key คงที่
+      # (เปลี่ยน key ถ้าเทรนโมเดลใหม่แล้วอัปโหลด release asset ใหม่ในอนาคต)
+      - name: Cache โมเดล Water Demand (124MB+117MB)
+        id: cache-wd-models
+        uses: actions/cache@v4
+        with:
+          path: |
+            01_data/scripts and code/Water_demand/active/catboost_models.pkl
+            01_data/scripts and code/Water_demand/active/rf_model_v3b_final.pkl
+          key: water-demand-models-v1
+
+      - name: ดาวน์โหลดโมเดล Water Demand จาก GitHub Release (ถ้ายังไม่มีใน cache)
+        if: steps.cache-wd-models.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "01_data/scripts and code/Water_demand/active"
+          curl -fL -o "01_data/scripts and code/Water_demand/active/catboost_models.pkl" \
+            "https://github.com/${{ github.repository }}/releases/download/water-demand-models-v1/catboost_models.pkl"
+          curl -fL -o "01_data/scripts and code/Water_demand/active/rf_model_v3b_final.pkl" \
+            "https://github.com/${{ github.repository }}/releases/download/water-demand-models-v1/rf_model_v3b_final.pkl"
+
+      - name: Run data_pipeline_colab.py
+        working-directory: 01_data/scripts and code/colab_migration
+        env:
+          GEE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GEE_SERVICE_ACCOUNT_EMAIL }}
+          GEE_SERVICE_ACCOUNT_KEY: /tmp/gee-key.json
+          PYTHONPATH: ${{ github.workspace }}/01_data/scripts and code/pipeline
+        run: python -c "import data_pipeline_colab as dp; r = dp.run_pipeline(); print('status:', r.get('status') if isinstance(r, dict) else r)"
+
+      - name: ลบไฟล์ key ชั่วคราวทิ้ง (กันหลงเหลือใน runner)
+        if: always()
+        run: rm -f /tmp/gee-key.json
+
+      - name: Sync กับ remote ก่อน push (pattern เดียวกับ workflow อื่น)
+        run: git pull --no-rebase --no-edit origin master
+
+      - name: Commit + push latest.json (2 ชุด) ถ้ามีอะไรเปลี่ยนจริง
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "01_data/forecasting_results/latest.json"
+          git add "03_website/assets/data/latest.json"
+          if git diff --cached --quiet; then
+            echo "[INFO] ไม่มีอะไรเปลี่ยนจากรอบก่อน -- ข้ามการ commit/push"
+          else
+            git commit -m "Auto-update (GitHub Actions): pipeline data (latest.json)"
+            git push origin master
+          fi

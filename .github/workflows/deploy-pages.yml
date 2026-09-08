@@ -20,6 +20,7 @@ on:
       - "Reservoir Daily Orchestration"
       - "Monitoring Data Builder"
       - "SAR Background Job"
+      - "Main Data Pipeline (Forecast)"
     types: [completed]
   workflow_dispatch:   # allows manual "Run workflow" button in the Actions tab too
 
