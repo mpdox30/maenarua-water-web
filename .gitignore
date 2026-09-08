@@ -4,9 +4,16 @@
 
 # --- SAR crop classification: runtime artifacts (regenerable, ไม่ควร commit) ---
 01_data/gis/sar_rasters/
-01_data/gis/sar_output/
-01_data/gis/.sar_last_classified
 01_data/gis/.sar_last_classified_test
+
+# 2026-09-08 เอา sar_output/ และ .sar_last_classified ออกจากลิสต์นี้ -- คนละกรณีกับ sar_rasters/
+# (rasters ใหญ่/regenerable จริง) ไฟล์ในนี้เป็นแค่ JSON ผลสรุปเล็กๆ (4-8KB/ไฟล์) ที่
+# data_pipeline.py อ่านใช้จริงทุกวัน (crop_classification section ของ latest.json) -- ก่อนหน้านี้
+# bridge ผ่าน sync_to_drive.bat (Google Drive) ไปหา Colab เท่านั้น ไม่เคยขึ้น git เลย พอย้าย main
+# pipeline ไป GitHub Actions (ไม่มี local disk persist ข้ามรอบ, ไม่มี Drive mount) ต้อง track ผ่าน git
+# แทนถึงจะอ่านได้ -- .sar_last_classified (marker วันที่รันจริงล่าสุด, ใช้กับ min_days_between_runs=30
+# gate ใน sar_classification.py) ก็ต้อง track ด้วยเหตุผลเดียวกัน (ไม่งั้น Actions runner ที่เป็น
+# fresh checkout ทุกรอบจะคิดว่า "ไม่เคยรันมาก่อน" ตลอดเวลา)
 
 # --- GEE Service Account credentials (ห้าม commit เด็ดขาด — ดู gee_auth.py) ---
 # แนะนำให้เก็บ key file ไว้นอกโฟลเดอร์ repo นี้ตั้งแต่แรกอยู่แล้ว (ดู docstring gee_auth.py) แต่กัน
