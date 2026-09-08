@@ -112,15 +112,23 @@ jobs:
       - name: Sync กับ remote ก่อน push (pattern เดียวกับ workflow อื่น)
         run: git pull --no-rebase --no-edit origin master
 
-      - name: Commit + push latest.json (2 ชุด) ถ้ามีอะไรเปลี่ยนจริง
+      - name: Commit + push latest.json (2 ชุด) + ml_features_live.csv ถ้ามีอะไรเปลี่ยนจริง
+        # 2026-09-08 เพิ่ม ml_features_live.csv เข้า git add -- เจอจริงว่า run_pipeline() เรียก
+        # _append_ml_features_live() ทุกรอบ (append แถว climate feature สดของสัปดาห์นี้ต่อ zone)
+        # แต่ก่อนแก้จุดนี้ workflow push แค่ latest.json เท่านั้น -- แถวที่ Actions เพิ่งเขียนบน runner
+        # (ephemeral, checkout ใหม่ทุกรอบ) เลยหายไปเฉยๆ ทุกครั้งที่รันจบ ไม่เคยสะสมจริงใน git เลย
+        # ผลคือถ้าวันหนึ่งเลิกพึ่ง Windows/Colab จริงตามเป้าหมายผู้ใช้ ("ไม่ต้องพึ่งฉัน") ไฟล์นี้จะหยุดโต
+        # ทันที และ Water Demand live-reconstructed feature path (_wd_build_live_df()) จะขาดประวัติ
+        # ต่อเนื่อง สุดท้าย fallback ไป static_snapshot (ml_features_phase4.csv เดิม) แบบไม่มีใครรู้ตัว
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add "01_data/forecasting_results/latest.json"
           git add "03_website/assets/data/latest.json"
+          git add "01_data/scripts and code/pipeline/ml_features_live.csv"
           if git diff --cached --quiet; then
             echo "[INFO] ไม่มีอะไรเปลี่ยนจากรอบก่อน -- ข้ามการ commit/push"
           else
-            git commit -m "Auto-update (GitHub Actions): pipeline data (latest.json)"
+            git commit -m "Auto-update (GitHub Actions): pipeline data (latest.json + ml_features_live.csv)"
             git push origin master
           fi

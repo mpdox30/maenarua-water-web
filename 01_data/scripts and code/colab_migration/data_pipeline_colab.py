@@ -157,7 +157,15 @@ ERA5T_WORKER_SCRIPT = SCRIPT_DIR / "era5t_worker.py"
 ERA5T_OUTPUT_DIR = SCRIPT_DIR / "era5t_output"
 ERA5T_SUBPROCESS_TIMEOUT_SEC = 600
 
-ML_FEATURES_LIVE_CSV = SCRIPT_DIR / "ml_features_live.csv"
+# 2026-09-08 แก้บั๊กจริงที่เพิ่งเจอ (ตอน audit หลังพอร์ต data_pipeline.py มา Actions): เดิมใช้
+# SCRIPT_DIR (= .../colab_migration/) ตรงๆ เหมือน data_pipeline.py ต้นฉบับ แต่ data_pipeline.py
+# ตัวจริงอยู่ที่ .../pipeline/ (SCRIPT_DIR ต่างกัน) ทำให้ไฟล์นี้ resolve เป็นคนละไฟล์กับที่ Windows/
+# Colab ใช้จริงมาตลอด (.../pipeline/ml_features_live.csv) -- ทุกรอบที่รันผ่าน data_pipeline_colab.py
+# (Colab หรือ Actions) จะ append เข้าไฟล์ colab_migration/ml_features_live.csv แยกต่างหาก ที่ไม่มีใคร
+# push จริง (git add เดิมไม่รู้จักไฟล์นี้เลย) ทำให้ประวัติ climate feature สดของแต่ละรอบหายไปเงียบๆ
+# ทุกครั้ง แก้โดยชี้ตรงไปที่ไฟล์ canonical เดียวกับ data_pipeline.py ต้นฉบับ ให้ทุกสภาพแวดล้อม
+# (Windows/Colab/Actions) อ่าน-เขียนไฟล์เดียวกันจริง ไม่แตกประวัติ
+ML_FEATURES_LIVE_CSV = PROJECT_ROOT / "01_data" / "scripts and code" / "pipeline" / "ml_features_live.csv"
 ML_FEATURES_LIVE_COLUMNS = [
     "run_timestamp", "as_of_date", "year", "week", "zone",
     "MEI", "MEI_lag4", "MEI_lag8", "mei_reporting_lag_risk", "mei_fetch_error",
