@@ -1,6 +1,6 @@
 {
-  "computed_at": "2026-09-08T01:07:52.866422",
-  "reference_now": "2026-09-08T01:07:51.430192",
+  "computed_at": "2026-09-08T09:17:19.251285",
+  "reference_now": "2026-09-08T09:17:10.922112",
   "target_reservoir": "อ่างเก็บน้ำแม่นาเรือ (Mae Na Rua Reservoir)",
   "method": "display-only water-balance estimate ที่ resolution 6 ชม. (สไลด์ทีละ 1 ชม. ย้อนหลัง 84 ชม.) reuse สูตร/ค่าคงที่ตรงจาก reservoir_water_balance.py (rating curve, spillway weir, evap/infiltration รายเดือน หาร 4) -- ไม่ใช่ค่าที่โมเดล พยากรณ์ CatBoost ใช้ ใช้แสดงผลเสริมบนเว็บเท่านั้น (ดู docstring หัวไฟล์ script นี้)",
   "lookback_hours": 84,
@@ -8,136 +8,48 @@
   "n_windows_computed": 79,
   "windows": [
     {
-      "window_start": "2026-09-04T13:00:00",
-      "window_end": "2026-09-04T19:00:00",
-      "q_in_6h_m3": 20628.9,
-      "water_level_start_m": 488.162,
-      "water_level_end_m": 488.239,
-      "rain_6h_mm": 7.0,
-      "release_6h_m3": 2361.6,
-      "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
-    },
-    {
-      "window_start": "2026-09-04T14:00:00",
-      "window_end": "2026-09-04T20:00:00",
-      "q_in_6h_m3": 14065.2,
-      "water_level_start_m": 488.199,
-      "water_level_end_m": 488.239,
-      "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
-      "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
-    },
-    {
-      "window_start": "2026-09-04T15:00:00",
-      "window_end": "2026-09-04T21:00:00",
-      "q_in_6h_m3": 2634.4,
-      "water_level_start_m": 488.233,
-      "water_level_end_m": 488.239,
-      "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
-      "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
-    },
-    {
-      "window_start": "2026-09-04T16:00:00",
-      "window_end": "2026-09-04T22:00:00",
-      "q_in_6h_m3": 0.0,
-      "water_level_start_m": 488.252,
-      "water_level_end_m": 488.239,
-      "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
-      "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
-    },
-    {
-      "window_start": "2026-09-04T17:00:00",
-      "window_end": "2026-09-04T23:00:00",
-      "q_in_6h_m3": 0.0,
-      "water_level_start_m": 488.263,
-      "water_level_end_m": 488.239,
-      "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
-      "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
-    },
-    {
-      "window_start": "2026-09-04T18:00:00",
-      "window_end": "2026-09-05T00:00:00",
-      "q_in_6h_m3": 2634.4,
-      "water_level_start_m": 488.239,
-      "water_level_end_m": 488.239,
-      "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
-      "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
-    },
-    {
-      "window_start": "2026-09-04T19:00:00",
-      "window_end": "2026-09-05T01:00:00",
-      "q_in_6h_m3": 5493.9,
-      "water_level_start_m": 488.239,
-      "water_level_end_m": 488.24,
-      "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
-      "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
-    },
-    {
-      "window_start": "2026-09-04T20:00:00",
-      "window_end": "2026-09-05T02:00:00",
-      "q_in_6h_m3": 5493.9,
-      "water_level_start_m": 488.239,
-      "water_level_end_m": 488.246,
-      "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
-      "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
-    },
-    {
       "window_start": "2026-09-04T21:00:00",
       "window_end": "2026-09-05T03:00:00",
-      "q_in_6h_m3": 2634.4,
+      "q_in_6h_m3": 272.8,
       "water_level_start_m": 488.239,
       "water_level_end_m": 488.239,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-04T22:00:00",
       "window_end": "2026-09-05T04:00:00",
-      "q_in_6h_m3": 2634.4,
+      "q_in_6h_m3": 272.8,
       "water_level_start_m": 488.239,
       "water_level_end_m": 488.239,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-04T23:00:00",
       "window_end": "2026-09-05T05:00:00",
-      "q_in_6h_m3": 2634.4,
+      "q_in_6h_m3": 272.8,
       "water_level_start_m": 488.239,
       "water_level_end_m": 488.239,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T00:00:00",
       "window_end": "2026-09-05T06:00:00",
-      "q_in_6h_m3": 2634.4,
+      "q_in_6h_m3": 272.8,
       "water_level_start_m": 488.239,
       "water_level_end_m": 488.239,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T01:00:00",
@@ -146,86 +58,86 @@
       "water_level_start_m": 488.24,
       "water_level_end_m": 488.239,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T02:00:00",
       "window_end": "2026-09-05T08:00:00",
-      "q_in_6h_m3": 2634.5,
+      "q_in_6h_m3": 272.9,
       "water_level_start_m": 488.246,
       "water_level_end_m": 488.245,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T03:00:00",
       "window_end": "2026-09-05T09:00:00",
-      "q_in_6h_m3": 5493.9,
+      "q_in_6h_m3": 3132.3,
       "water_level_start_m": 488.239,
       "water_level_end_m": 488.245,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T04:00:00",
       "window_end": "2026-09-05T10:00:00",
-      "q_in_6h_m3": 25531.7,
+      "q_in_6h_m3": 23170.1,
       "water_level_start_m": 488.239,
       "water_level_end_m": 488.316,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T05:00:00",
       "window_end": "2026-09-05T11:00:00",
-      "q_in_6h_m3": 71467.6,
+      "q_in_6h_m3": 69106.0,
       "water_level_start_m": 488.239,
       "water_level_end_m": 488.471,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T06:00:00",
       "window_end": "2026-09-05T12:00:00",
-      "q_in_6h_m3": 59965.9,
+      "q_in_6h_m3": 57604.3,
       "water_level_start_m": 488.239,
       "water_level_end_m": 488.433,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T07:00:00",
       "window_end": "2026-09-05T13:00:00",
-      "q_in_6h_m3": 5493.9,
+      "q_in_6h_m3": 3132.3,
       "water_level_start_m": 488.239,
       "water_level_end_m": 488.244,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T08:00:00",
       "window_end": "2026-09-05T14:00:00",
-      "q_in_6h_m3": 5037.1,
+      "q_in_6h_m3": 2675.5,
       "water_level_start_m": 488.245,
       "water_level_end_m": 488.257,
       "rain_6h_mm": 1.6,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T09:00:00",
@@ -234,9 +146,9 @@
       "water_level_start_m": 488.245,
       "water_level_end_m": 488.234,
       "rain_6h_mm": 1.8,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T10:00:00",
@@ -245,9 +157,9 @@
       "water_level_start_m": 488.316,
       "water_level_end_m": 488.245,
       "rain_6h_mm": 2.4,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T11:00:00",
@@ -256,9 +168,9 @@
       "water_level_start_m": 488.471,
       "water_level_end_m": 488.394,
       "rain_6h_mm": 2.4,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T12:00:00",
@@ -267,9 +179,9 @@
       "water_level_start_m": 488.433,
       "water_level_end_m": 488.239,
       "rain_6h_mm": 2.4,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T13:00:00",
@@ -278,9 +190,9 @@
       "water_level_start_m": 488.244,
       "water_level_end_m": 488.239,
       "rain_6h_mm": 2.4,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T14:00:00",
@@ -289,20 +201,20 @@
       "water_level_start_m": 488.257,
       "water_level_end_m": 488.239,
       "rain_6h_mm": 0.8,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T15:00:00",
       "window_end": "2026-09-05T21:00:00",
-      "q_in_6h_m3": 2462.8,
+      "q_in_6h_m3": 101.2,
       "water_level_start_m": 488.234,
       "water_level_end_m": 488.239,
       "rain_6h_mm": 0.6,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T16:00:00",
@@ -311,9 +223,9 @@
       "water_level_start_m": 488.245,
       "water_level_end_m": 488.239,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T17:00:00",
@@ -322,152 +234,152 @@
       "water_level_start_m": 488.394,
       "water_level_end_m": 488.239,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T18:00:00",
       "window_end": "2026-09-06T00:00:00",
-      "q_in_6h_m3": 2634.4,
+      "q_in_6h_m3": 272.8,
       "water_level_start_m": 488.239,
       "water_level_end_m": 488.234,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T19:00:00",
       "window_end": "2026-09-06T01:00:00",
-      "q_in_6h_m3": 2634.4,
+      "q_in_6h_m3": 272.8,
       "water_level_start_m": 488.239,
       "water_level_end_m": 488.234,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T20:00:00",
       "window_end": "2026-09-06T02:00:00",
-      "q_in_6h_m3": 2634.4,
+      "q_in_6h_m3": 272.8,
       "water_level_start_m": 488.239,
       "water_level_end_m": 488.234,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T21:00:00",
       "window_end": "2026-09-06T03:00:00",
-      "q_in_6h_m3": 2634.4,
+      "q_in_6h_m3": 272.8,
       "water_level_start_m": 488.239,
       "water_level_end_m": 488.234,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T22:00:00",
       "window_end": "2026-09-06T04:00:00",
-      "q_in_6h_m3": 2634.4,
+      "q_in_6h_m3": 272.8,
       "water_level_start_m": 488.239,
       "water_level_end_m": 488.234,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-05T23:00:00",
       "window_end": "2026-09-06T05:00:00",
-      "q_in_6h_m3": 2634.4,
+      "q_in_6h_m3": 272.8,
       "water_level_start_m": 488.239,
       "water_level_end_m": 488.234,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T00:00:00",
       "window_end": "2026-09-06T06:00:00",
-      "q_in_6h_m3": 2634.4,
+      "q_in_6h_m3": 272.8,
       "water_level_start_m": 488.234,
       "water_level_end_m": 488.234,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T01:00:00",
       "window_end": "2026-09-06T07:00:00",
-      "q_in_6h_m3": 2634.4,
+      "q_in_6h_m3": 272.8,
       "water_level_start_m": 488.234,
       "water_level_end_m": 488.234,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T02:00:00",
       "window_end": "2026-09-06T08:00:00",
-      "q_in_6h_m3": 11215.3,
+      "q_in_6h_m3": 8853.7,
       "water_level_start_m": 488.234,
       "water_level_end_m": 488.264,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T03:00:00",
       "window_end": "2026-09-06T09:00:00",
-      "q_in_6h_m3": 22666.9,
+      "q_in_6h_m3": 20305.3,
       "water_level_start_m": 488.234,
       "water_level_end_m": 488.309,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T04:00:00",
       "window_end": "2026-09-06T10:00:00",
-      "q_in_6h_m3": 120481.6,
+      "q_in_6h_m3": 118120.0,
       "water_level_start_m": 488.234,
       "water_level_end_m": 488.641,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T05:00:00",
       "window_end": "2026-09-06T11:00:00",
-      "q_in_6h_m3": 103158.3,
+      "q_in_6h_m3": 100796.7,
       "water_level_start_m": 488.234,
       "water_level_end_m": 488.581,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T06:00:00",
       "window_end": "2026-09-06T12:00:00",
-      "q_in_6h_m3": 120481.6,
+      "q_in_6h_m3": 118120.0,
       "water_level_start_m": 488.234,
       "water_level_end_m": 488.647,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T07:00:00",
@@ -476,31 +388,31 @@
       "water_level_start_m": 488.234,
       "water_level_end_m": 488.179,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T08:00:00",
       "window_end": "2026-09-06T14:00:00",
-      "q_in_6h_m3": 11222.2,
+      "q_in_6h_m3": 8860.6,
       "water_level_start_m": 488.264,
       "water_level_end_m": 488.296,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T09:00:00",
       "window_end": "2026-09-06T15:00:00",
-      "q_in_6h_m3": 14098.2,
+      "q_in_6h_m3": 11736.6,
       "water_level_start_m": 488.309,
       "water_level_end_m": 488.342,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T10:00:00",
@@ -509,9 +421,9 @@
       "water_level_start_m": 488.641,
       "water_level_end_m": 488.444,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T11:00:00",
@@ -520,9 +432,9 @@
       "water_level_start_m": 488.581,
       "water_level_end_m": 488.433,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T12:00:00",
@@ -531,42 +443,42 @@
       "water_level_start_m": 488.647,
       "water_level_end_m": 488.375,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T13:00:00",
       "window_end": "2026-09-06T19:00:00",
-      "q_in_6h_m3": 65617.7,
+      "q_in_6h_m3": 63256.1,
       "water_level_start_m": 488.179,
       "water_level_end_m": 488.394,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T14:00:00",
       "window_end": "2026-09-06T20:00:00",
-      "q_in_6h_m3": 34179.4,
+      "q_in_6h_m3": 31817.8,
       "water_level_start_m": 488.296,
       "water_level_end_m": 488.401,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T15:00:00",
       "window_end": "2026-09-06T21:00:00",
-      "q_in_6h_m3": 19852.4,
+      "q_in_6h_m3": 17490.8,
       "water_level_start_m": 488.342,
       "water_level_end_m": 488.401,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T16:00:00",
@@ -575,9 +487,9 @@
       "water_level_start_m": 488.444,
       "water_level_end_m": 488.408,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T17:00:00",
@@ -586,306 +498,394 @@
       "water_level_start_m": 488.433,
       "water_level_end_m": 488.421,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T18:00:00",
       "window_end": "2026-09-07T00:00:00",
-      "q_in_6h_m3": 16992.3,
+      "q_in_6h_m3": 14630.7,
       "water_level_start_m": 488.375,
       "water_level_end_m": 488.421,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T19:00:00",
       "window_end": "2026-09-07T01:00:00",
-      "q_in_6h_m3": 11251.9,
+      "q_in_6h_m3": 8890.3,
       "water_level_start_m": 488.394,
       "water_level_end_m": 488.427,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T20:00:00",
       "window_end": "2026-09-07T02:00:00",
-      "q_in_6h_m3": 8380.6,
+      "q_in_6h_m3": 6019.0,
       "water_level_start_m": 488.401,
       "water_level_end_m": 488.427,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T21:00:00",
       "window_end": "2026-09-07T03:00:00",
-      "q_in_6h_m3": 8380.6,
+      "q_in_6h_m3": 6019.0,
       "water_level_start_m": 488.401,
       "water_level_end_m": 488.427,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T22:00:00",
       "window_end": "2026-09-07T04:00:00",
-      "q_in_6h_m3": 14128.4,
+      "q_in_6h_m3": 11766.8,
       "water_level_start_m": 488.408,
       "water_level_end_m": 488.44,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-06T23:00:00",
       "window_end": "2026-09-07T05:00:00",
-      "q_in_6h_m3": 2635.8,
+      "q_in_6h_m3": 274.2,
       "water_level_start_m": 488.421,
       "water_level_end_m": 488.427,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-07T00:00:00",
       "window_end": "2026-09-07T06:00:00",
-      "q_in_6h_m3": 5509.3,
+      "q_in_6h_m3": 3147.7,
       "water_level_start_m": 488.421,
       "water_level_end_m": 488.434,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-07T01:00:00",
       "window_end": "2026-09-07T07:00:00",
-      "q_in_6h_m3": 8383.6,
+      "q_in_6h_m3": 6022.0,
       "water_level_start_m": 488.427,
       "water_level_end_m": 488.44,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-07T02:00:00",
       "window_end": "2026-09-07T08:00:00",
-      "q_in_6h_m3": 8383.6,
+      "q_in_6h_m3": 6022.0,
       "water_level_start_m": 488.427,
       "water_level_end_m": 488.44,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-07T03:00:00",
       "window_end": "2026-09-07T09:00:00",
-      "q_in_6h_m3": 8383.6,
+      "q_in_6h_m3": 6022.0,
       "water_level_start_m": 488.427,
       "water_level_end_m": 488.44,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-07T04:00:00",
       "window_end": "2026-09-07T10:00:00",
-      "q_in_6h_m3": 5511.0,
+      "q_in_6h_m3": 3149.4,
       "water_level_start_m": 488.44,
       "water_level_end_m": 488.458,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-07T05:00:00",
       "window_end": "2026-09-07T11:00:00",
-      "q_in_6h_m3": 6773.8,
+      "q_in_6h_m3": 4412.2,
       "water_level_start_m": 488.427,
       "water_level_end_m": 488.446,
       "rain_6h_mm": 5.6,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-07T06:00:00",
       "window_end": "2026-09-07T12:00:00",
-      "q_in_6h_m3": 6200.0,
+      "q_in_6h_m3": 3838.4,
       "water_level_start_m": 488.434,
       "water_level_end_m": 488.458,
       "rain_6h_mm": 7.6,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-07T07:00:00",
       "window_end": "2026-09-07T13:00:00",
-      "q_in_6h_m3": 3325.7,
+      "q_in_6h_m3": 964.1,
       "water_level_start_m": 488.44,
       "water_level_end_m": 488.458,
       "rain_6h_mm": 7.6,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-07T08:00:00",
       "window_end": "2026-09-07T14:00:00",
-      "q_in_6h_m3": 3325.7,
+      "q_in_6h_m3": 964.1,
       "water_level_start_m": 488.44,
       "water_level_end_m": 488.451,
       "rain_6h_mm": 7.6,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-07T09:00:00",
       "window_end": "2026-09-07T15:00:00",
-      "q_in_6h_m3": 9076.9,
+      "q_in_6h_m3": 6715.3,
       "water_level_start_m": 488.44,
       "water_level_end_m": 488.471,
       "rain_6h_mm": 7.6,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-07T10:00:00",
       "window_end": "2026-09-07T16:00:00",
-      "q_in_6h_m3": 3325.9,
+      "q_in_6h_m3": 964.3,
       "water_level_start_m": 488.458,
       "water_level_end_m": 488.464,
       "rain_6h_mm": 7.6,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-07T11:00:00",
       "window_end": "2026-09-07T17:00:00",
-      "q_in_6h_m3": 10687.9,
+      "q_in_6h_m3": 8326.3,
       "water_level_start_m": 488.446,
       "water_level_end_m": 488.477,
       "rain_6h_mm": 2.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-07T12:00:00",
       "window_end": "2026-09-07T18:00:00",
-      "q_in_6h_m3": 2636.0,
+      "q_in_6h_m3": 274.4,
       "water_level_start_m": 488.458,
       "water_level_end_m": 488.458,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-07T13:00:00",
       "window_end": "2026-09-07T19:00:00",
-      "q_in_6h_m3": 8388.3,
+      "q_in_6h_m3": 6026.7,
       "water_level_start_m": 488.458,
       "water_level_end_m": 488.471,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-07T14:00:00",
       "window_end": "2026-09-07T20:00:00",
-      "q_in_6h_m3": 8388.3,
+      "q_in_6h_m3": 6026.7,
       "water_level_start_m": 488.451,
       "water_level_end_m": 488.472,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-07T15:00:00",
       "window_end": "2026-09-07T21:00:00",
-      "q_in_6h_m3": 2636.1,
+      "q_in_6h_m3": 274.5,
       "water_level_start_m": 488.471,
       "water_level_end_m": 488.472,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-07T16:00:00",
       "window_end": "2026-09-07T22:00:00",
-      "q_in_6h_m3": 5512.6,
+      "q_in_6h_m3": 3151.0,
       "water_level_start_m": 488.464,
       "water_level_end_m": 488.472,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-07T17:00:00",
       "window_end": "2026-09-07T23:00:00",
-      "q_in_6h_m3": 2636.1,
+      "q_in_6h_m3": 274.5,
       "water_level_start_m": 488.477,
       "water_level_end_m": 488.478,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-07T18:00:00",
       "window_end": "2026-09-08T00:00:00",
-      "q_in_6h_m3": 8388.3,
+      "q_in_6h_m3": 6026.7,
       "water_level_start_m": 488.458,
       "water_level_end_m": 488.472,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     },
     {
       "window_start": "2026-09-07T19:00:00",
       "window_end": "2026-09-08T01:00:00",
-      "q_in_6h_m3": 2636.1,
+      "q_in_6h_m3": 274.5,
       "water_level_start_m": 488.471,
       "water_level_end_m": 488.478,
       "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
+      "release_6h_m3": 0.0,
       "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
+    },
+    {
+      "window_start": "2026-09-07T20:00:00",
+      "window_end": "2026-09-08T02:00:00",
+      "q_in_6h_m3": 0.0,
+      "water_level_start_m": 488.472,
+      "water_level_end_m": 488.465,
+      "rain_6h_mm": 0.0,
+      "release_6h_m3": 0.0,
+      "spill_6h_m3": 0.0,
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
+    },
+    {
+      "window_start": "2026-09-07T21:00:00",
+      "window_end": "2026-09-08T03:00:00",
+      "q_in_6h_m3": 0.0,
+      "water_level_start_m": 488.472,
+      "water_level_end_m": 488.465,
+      "rain_6h_mm": 0.0,
+      "release_6h_m3": 0.0,
+      "spill_6h_m3": 0.0,
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
+    },
+    {
+      "window_start": "2026-09-07T22:00:00",
+      "window_end": "2026-09-08T04:00:00",
+      "q_in_6h_m3": 274.5,
+      "water_level_start_m": 488.472,
+      "water_level_end_m": 488.472,
+      "rain_6h_mm": 0.0,
+      "release_6h_m3": 0.0,
+      "spill_6h_m3": 0.0,
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
+    },
+    {
+      "window_start": "2026-09-07T23:00:00",
+      "window_end": "2026-09-08T05:00:00",
+      "q_in_6h_m3": 0.0,
+      "water_level_start_m": 488.478,
+      "water_level_end_m": 488.465,
+      "rain_6h_mm": 0.0,
+      "release_6h_m3": 0.0,
+      "spill_6h_m3": 0.0,
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
+    },
+    {
+      "window_start": "2026-09-08T00:00:00",
+      "window_end": "2026-09-08T06:00:00",
+      "q_in_6h_m3": 274.5,
+      "water_level_start_m": 488.472,
+      "water_level_end_m": 488.472,
+      "rain_6h_mm": 0.0,
+      "release_6h_m3": 0.0,
+      "spill_6h_m3": 0.0,
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
+    },
+    {
+      "window_start": "2026-09-08T01:00:00",
+      "window_end": "2026-09-08T07:00:00",
+      "q_in_6h_m3": 0.0,
+      "water_level_start_m": 488.478,
+      "water_level_end_m": 488.465,
+      "rain_6h_mm": 0.0,
+      "release_6h_m3": 0.0,
+      "spill_6h_m3": 0.0,
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
+    },
+    {
+      "window_start": "2026-09-08T02:00:00",
+      "window_end": "2026-09-08T08:00:00",
+      "q_in_6h_m3": 0.0,
+      "water_level_start_m": 488.465,
+      "water_level_end_m": 488.438,
+      "rain_6h_mm": 0.0,
+      "release_6h_m3": 0.0,
+      "spill_6h_m3": 0.0,
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
+    },
+    {
+      "window_start": "2026-09-08T03:00:00",
+      "window_end": "2026-09-08T09:00:00",
+      "q_in_6h_m3": 0.0,
+      "water_level_start_m": 488.465,
+      "water_level_end_m": 488.445,
+      "rain_6h_mm": 0.0,
+      "release_6h_m3": 0.0,
+      "spill_6h_m3": 0.0,
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     }
   ],
   "peak_window": {
     "window_start": "2026-09-06T04:00:00",
     "window_end": "2026-09-06T10:00:00",
-    "q_in_6h_m3": 120481.6,
+    "q_in_6h_m3": 118120.0,
     "water_level_start_m": 488.234,
     "water_level_end_m": 488.641,
     "rain_6h_mm": 0.0,
-    "release_6h_m3": 2361.6,
+    "release_6h_m3": 0.0,
     "spill_6h_m3": 0.0,
-    "release_note": "event#1(6.0h@9446.4m3/d)"
+    "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
   }
 }
