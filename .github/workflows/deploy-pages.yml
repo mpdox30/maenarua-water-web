@@ -4,9 +4,23 @@ name: Deploy website to GitHub Pages
 # something is pushed to master. Does not touch 01_data/ or anything else in the repo —
 # only 03_website/ is uploaded as the published site root.
 
+# 2026-09-08 เพิ่ม workflow_run trigger -- เจอปัญหาจริง: push ที่ทำโดย GITHUB_TOKEN จากในเวิร์กโฟลว์
+# อื่น (Reservoir Daily Orchestration / Monitoring Data Builder / SAR Background Job) ไม่ trigger
+# เวิร์กโฟลว์นี้เลย (เป็นกฎของ GitHub ที่ตั้งใจกันไม่ให้เกิด push-loop ไม่รู้จบ -- ดู
+# https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow)
+# ผลคือ monitoring.json/RES002_daily_computed.csv ฯลฯ ที่ Actions push เข้า repo สำเร็จ ไม่เคยไป
+# kick ให้เว็บ deploy ใหม่เลย -- เว็บค้างที่เวอร์ชันล่าสุดที่ Windows push (ด้วย PAT ของผู้ใช้เอง ไม่ติด
+# ข้อจำกัดนี้) เท่านั้น ทั้งที่ข้อมูลใน repo อัปเดตถูกต้องมาตลอด -- เพิ่ม workflow_run ให้ฟังการจบงาน
+# ของอีก 3 เวิร์กโฟลว์โดยตรง (วิธีมาตรฐานที่ GitHub แนะนำสำหรับเคสนี้) แทนที่จะพึ่ง push event อย่างเดียว
 on:
   push:
     branches: ["master"]
+  workflow_run:
+    workflows:
+      - "Reservoir Daily Orchestration"
+      - "Monitoring Data Builder"
+      - "SAR Background Job"
+    types: [completed]
   workflow_dispatch:   # allows manual "Run workflow" button in the Actions tab too
 
 permissions:
@@ -20,6 +34,9 @@ concurrency:
 
 jobs:
   deploy:
+    # workflow_run เกิดทุกครั้งที่เวิร์กโฟลว์ต้นทางจบงาน ไม่ว่าจะสำเร็จหรือ fail -- deploy เฉพาะตอน
+    # สำเร็จ (หรือถ้ามาจาก push/workflow_dispatch ตามปกติ ให้รันเสมอ)
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
