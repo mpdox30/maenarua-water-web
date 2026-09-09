@@ -47,26 +47,22 @@ REM ============================================================================
 setlocal enabledelayedexpansion
 
 REM ============================================================================
-REM 2026-09-08 เพิ่มชั่วคราว -- ปิด git pull/push (GIT_PUSH_ENABLED=0) ระหว่างทดสอบให้เว็บจริง
-REM พึ่ง GitHub Actions (monitoring-builder.yml) เต็มตัว 1-2 วัน ตามที่ตกลงกับผู้ใช้
-REM ทั้ง 3 สคริปต์ยังรัน + เขียนไฟล์ลงดิสก์ตามปกติทุกอย่าง แค่ไม่แตะ git เลย (ทั้ง pull และ push)
-REM กันชนกับที่ GitHub Actions เขียน/push ไฟล์เดียวกันไปแล้วทุก 15 นาทีเหมือนกัน (ปิด pull ด้วยเพราะ
-REM ถ้าเปิด pull ทิ้งไว้แต่ไม่ commit ผลลัพธ์ตัวเอง monitoring.json/inflow_6h_display.json ที่เขียนสด
-REM ทุกรอบจะชนกับ pull บ่อยมาก เสี่ยง merge conflict เขียนทับไฟล์เสียหายได้)
+REM 2026-09-09 ปิดถาวร (ตัดสินใจร่วมกับผู้ใช้ หลังพบว่า Windows + GitHub Actions
+REM (monitoring-builder.yml) push ไฟล์เดียวกันคู่ขนานกันทำให้เกิด merge conflict/deadlock ซ้ำๆ) --
+REM GitHub Actions พิสูจน์แล้วว่ารันอัตโนมัติทุก ~15 นาทีได้เชื่อถือได้สำหรับงานนี้โดยเฉพาะ (ต่างจาก
+REM Reservoir Daily Orchestration/Main Pipeline ที่ cron รายวันไม่เสถียร) จึงให้ Actions เป็นฐานเดียว
+REM ของ monitoring.json/inflow_6h_display.json/forecast_accuracy_log.csv ตัวนี้ยังรันทั้ง 3 สคริปต์
+REM + เขียนไฟล์ลงดิสก์เครื่องนี้ตามปกติทุกอย่าง (เผื่อใช้ดูสด/debug บนเครื่อง) แค่ไม่แตะ git เลย
+REM (ทั้ง pull และ push) กันชนกับ Actions ถาวร
 REM
-REM ผลข้างเคียงที่ยอมรับได้ชั่วคราว: forecast_accuracy_logger.py จะอ่าน latest.json (ที่ Colab เขียน)
-REM เป็นสำเนาเก่าค้างไว้ตั้งแต่ก่อนปิด pull (ไม่ใช่ production-critical แค่ log เปรียบเทียบใช้ทดสอบ
-REM โมเดล ไม่กระทบเว็บจริง)
-REM
-REM เปิดกลับ: เปลี่ยน GIT_PUSH_ENABLED เป็น 1 แล้วรันไฟล์นี้ใหม่ (จะ pull+push อัตโนมัติเหมือนเดิม)
-REM หรือถ้า GitHub Actions มีปัญหาแล้วอยากดึงผลจากเครื่องนี้ไป push เองทันที (ไม่ต้องรอสคริปต์) เปิด
+REM ถ้า GitHub Actions มีปัญหาแล้วอยากดึงผลจากเครื่องนี้ไป push เองครั้งเดียว (ไม่ต้องเปิดถาวร) เปิด
 REM Command Prompt ที่ D:\maenaruea-water-web แล้วรัน (add เฉพาะไฟล์ที่มีอยู่จริง/อัปเดตแล้ว):
 REM   git add "03_website/assets/data/monitoring.json" "03_website/assets/data/inflow_6h_display.json"
 REM   git add "01_data/forecasting_results/Reservoir_inflow/forecast_accuracy_log.csv" "03_website/assets/data/forecast_accuracy_log.csv"
 REM   git commit -m "Manual push from Windows (GitHub Actions issue)"
 REM   git pull --no-rebase --no-edit origin master
 REM   git push origin master
-set "GIT_PUSH_ENABLED=1"
+set "GIT_PUSH_ENABLED=0"
 REM ============================================================================
 
 set "SCRIPT_DIR=%~dp0"
