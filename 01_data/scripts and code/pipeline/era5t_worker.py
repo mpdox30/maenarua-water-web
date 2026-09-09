@@ -41,8 +41,9 @@ import json
 import sys
 import time
 import traceback
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+from typing import Optional
 
 # 7 ตัวแปรเดียวกับที่ใช้คำนวณ ETo เดิม (ดู feature_schema.md, archive/Phase3 step1 era5 download
 # et0.ipynb, และ test_era5_live.py) — dataset นี้คือ 'reanalysis-era5-single-levels' (latency สั้น
@@ -225,20 +226,42 @@ def _fetch_grib_from_cds_days(year: int, month: int, day_nums: list, time_utc: s
     return time.monotonic() - t0
 
 
-def _iso_week_days(as_of: date) -> list:
+def _iso_week_days(as_of: date, today: Optional[date] = None) -> list:
     """
-    คืนค่า list ของ date object ตั้งแต่วันจันทร์ของ ISO week ที่ as_of อยู่ ไปจนถึง as_of - 1 วัน
-    (ไม่รวมวันนี้เอง เพราะข้อมูลของวันนี้ยังไม่ควรถือว่า ERA5T พร้อมใช้แน่นอน) ถ้า as_of เป็นวันจันทร์
-    ของสัปดาห์นั้นเองจะได้ list ว่าง (ยังไม่มีวันไหนของสัปดาห์นี้ที่ "ผ่านไปแล้ว" เลย)
+    คืนค่า list ของ date object ทุกวันในสัปดาห์ ISO ที่ as_of อยู่ (วันจันทร์ถึงอาทิตย์) ที่ "ผ่านไปแล้ว
+    จริง" นับจาก today (ค่าเริ่มต้น = datetime.now(timezone.utc).date() ถ้าไม่ส่งมา)
+
+    2026-07-22 แก้บั๊กจริงที่พบระหว่างสืบสาเหตุว่าทำไม _backfill_incomplete_climate_weeks() (ใน
+    data_pipeline.py) ไม่เคยได้ ERA5T ครบ 7/7 วันสักสัปดาห์เดียวเลยแม้จะ backfill สัปดาห์ที่เก่าเกิน
+    14 วันไปแล้วก็ตาม (ยืนยันจาก log จริง 2026-07-22: backfill สัปดาห์ 2026-W27 อายุ 17 วัน ได้ CHIRPS
+    7/7 ปกติ แต่ ERA5T ได้แค่ 6/7 เสมอ — candidate_days ที่ได้มีแค่ 2026-06-29 ถึง 07-04 ขาด 07-05
+    ซึ่งเป็นวันอาทิตย์ของสัปดาห์นั้นไปเฉยๆ)
+
+    ต้นเหตุ: โค้ดเดิมกรองด้วย `d < as_of` (ไม่รวม as_of เอง) ซึ่งถูกต้องสำหรับโหมด live (as_of=วันนี้
+    จริง — ข้อมูลของ "วันนี้" ยังไม่ควรถือว่า ERA5T พร้อมใช้แน่นอน) แต่ผิดสำหรับโหมด backfill ที่
+    _backfill_incomplete_climate_weeks() เรียกด้วย as_of=วันอาทิตย์ของสัปดาห์เก่า (ไม่ใช่วันนี้จริง)
+    — การกรองด้วย as_of เอง ทำให้วันอาทิตย์ (ตัวเอง) ถูกตัดออกเสมอไม่ว่าจะเก่าแค่ไหนก็ตาม สัปดาห์แบบ
+    Mon-Sun 7 วันจึงเหลือ candidate_days แค่ 6 วันสูงสุดตลอดกาล ทำให้ 7/7 เป็นไปไม่ได้เลยผ่านทาง
+    backfill (จะเกิดปัญหาเดียวกันกับทุกสัปดาห์ ไม่ใช่แค่ W27) block ไม่ให้ readiness gate เจอสัปดาห์
+    ที่ครบจริงสักสัปดาห์เดียว ขวางไม่ให้ live prediction path เปิดใช้งานได้เลยในทางปฏิบัติ
+
+    แก้ด้วยการแยก 2 concept ที่ปนกันออกจากกัน: as_of ใช้แค่ระบุ "สัปดาห์ไหน" (หาวันจันทร์ของสัปดาห์
+    นั้น) ส่วนเกณฑ์ "วันไหนผ่านไปแล้วจริงพอจะเชื่อได้" ต้องเทียบกับ today (เวลาจริง ณ ตอนรัน) ไม่ใช่
+    as_of — โหมด live (as_of == today เสมอ) พฤติกรรมเดิมไม่เปลี่ยนเลย (d < today เทียบเท่า d < as_of)
+    โหมด backfill (today อยู่หลัง as_of มาก เพราะ min_age_days=14 การันตีไว้แล้ว) จะได้ครบ 7 วันเต็ม
+    สัปดาห์ถ้าข้อมูลจริงมีครบ
+
+    ถ้า as_of เป็นวันจันทร์ของสัปดาห์นั้นเองและ today ยังไม่ผ่านไปเลย จะได้ list ว่างเหมือนเดิม
 
     ใช้ pattern การ reconstruct วันจันทร์แบบเดียวกับ mei_feature.py/chirps_feature.py
     (ISO calendar ผ่าน date.isocalendar() + timedelta ธรรมดา ไม่ต้องพึ่ง pandas เพราะทำงานกับ
     date object ตรงๆ ได้อยู่แล้ว)
     """
+    today = today or datetime.now(timezone.utc).date()
     iso_year, iso_week, iso_weekday = as_of.isocalendar()
     monday = as_of - timedelta(days=iso_weekday - 1)
     candidate_days = [monday + timedelta(days=i) for i in range(7)]
-    return [d for d in candidate_days if d < as_of]
+    return [d for d in candidate_days if d < today]
 
 
 def _fetch_week_with_retry(days: list, time_utc: str, area, grib_dir: Path, warnings: list) -> tuple:
