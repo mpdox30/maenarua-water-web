@@ -193,36 +193,38 @@ REM รอบนี้ไป (ปลอดภัย ไม่ force อะไร
 REM ============================================================================
 git checkout -- "03_website/assets/data/latest.json" "03_website/assets/data/flood_latest.json" "03_website/assets/data/reservoir_inflow.json" "01_data/forecasting_results/latest.json" 2>nul
 
+REM 2026-09-09 แก้บั๊กจริง: commit ไฟล์ของ task นี้ก่อน pull เสมอ (เดิม pull ก่อน commit ทำให้ git
+REM ปฏิเสธ pull ทันทีทุกรอบถ้า remote ขยับไฟล์เดียวกันไปก่อนแล้ว -- ยืนยันด้วย git merge --no-commit
+REM --no-ff ตรงๆ เจอ error "would be overwritten by merge" ไม่ทิ้ง MERGE_HEAD ให้ guard จับได้เลย
+REM ทำให้ค้างถาวรไม่มีทางหลุดเอง หลังจาก GitHub Actions monitoring-builder.yml เริ่ม push ไฟล์เดียวกัน
+REM คู่ขนานด้วย) commit ก่อนแล้ว pull จะเจอ merge conflict จริง (มี MERGE_HEAD ให้ guard จับได้ตามที่
+REM ตั้งใจไว้แต่แรก) ไม่ใช่ถูกปฏิเสธเงียบๆ
+echo.
+echo [INFO] กำลัง add/commit ไฟล์ที่อัปเดตสำเร็จก่อน pull ...
+if "%BUILDER_EXIT_CODE%"=="0" git add "03_website/assets/data/monitoring.json"
+if "%INFLOW_EXIT_CODE%"=="0" git add "03_website/assets/data/inflow_6h_display.json"
+if "%LOGGER_EXIT_CODE%"=="0" git add "01_data/forecasting_results/Reservoir_inflow/forecast_accuracy_log.csv"
+if "%LOGGER_EXIT_CODE%"=="0" git add "03_website/assets/data/forecast_accuracy_log.csv"
+git diff --cached --quiet
+if errorlevel 1 (
+    git commit -m "Auto-update: monitoring.json + inflow_6h_display.json + forecast_accuracy_log.csv %DATE% %TIME%" >nul 2>&1
+) else (
+    echo [INFO] ไม่มีอะไรเปลี่ยนจากรอบก่อนในทุกไฟล์ -- ไม่มี commit ใหม่รอบนี้
+)
+
 echo.
 echo [INFO] sync กับ remote ก่อน push (merge จริง ไม่ใช่ ff-only -- ปลอดภัยคนละแบบกับ rebase) ...
 git pull --no-rebase --no-edit origin master
 if errorlevel 1 (
-    echo [WARN] git pull --no-rebase ไม่สำเร็จ ^(อาจเจอ conflict จริงในไฟล์อื่นที่ไม่รู้จัก^) -- ข้ามขั้นตอน push รอบนี้ทั้งหมด ^(ไม่ force/resolve เอง^) ถ้าเจอ .git/MERGE_HEAD ค้าง guard ด้านบนจะจับได้เองรอบถัดไป
+    echo [WARN] git pull --no-rebase ไม่สำเร็จ ^(merge conflict จริง หรือเน็ตหลุด^) -- ข้ามขั้นตอน push รอบนี้ ^(ไม่ force/resolve เอง^) commit ของรอบนี้ ^(ถ้ามี^) ยังอยู่ใน local รอ push รอบถัดไปหลังแก้ conflict ถ้าเจอ .git/MERGE_HEAD ค้าง guard ด้านบนจะจับได้เองรอบถัดไป
     goto :GIT_DONE
 )
 
-echo.
-echo [INFO] กำลัง add ไฟล์ที่อัปเดตสำเร็จขึ้น git (monitoring.json / inflow_6h_display.json / forecast_accuracy_log.csv แล้วแต่ตัวไหนสำเร็จ) ...
-
-if "%BUILDER_EXIT_CODE%"=="0" git add "03_website/assets/data/monitoring.json"
-if "%INFLOW_EXIT_CODE%"=="0" git add "03_website/assets/data/inflow_6h_display.json"
-REM 2026-08-12 เพิ่ม -- forecast_accuracy_logger.py ตอนนี้เขียน 2 ไฟล์ (log หลัก + สำเนาให้เว็บ
-REM forecast-accuracy.html fetch() ได้ตรงๆ ดู WEBSITE_LOG_CSV ในสคริปต์) ต้อง git add ทั้งคู่ ไม่งั้น
-REM หน้าเว็บจะค้างข้อมูลเก่าถาวรเพราะสำเนาไม่เคยถูก push
-if "%LOGGER_EXIT_CODE%"=="0" git add "01_data/forecasting_results/Reservoir_inflow/forecast_accuracy_log.csv"
-if "%LOGGER_EXIT_CODE%"=="0" git add "03_website/assets/data/forecast_accuracy_log.csv"
-
-git diff --cached --quiet
+git push origin master
 if errorlevel 1 (
-    git commit -m "Auto-update: monitoring.json + inflow_6h_display.json + forecast_accuracy_log.csv %DATE% %TIME%" >nul 2>&1
-    git push origin master
-    if errorlevel 1 (
-        echo [WARN] push ไม่สำเร็จ ^(เน็ตหลุด หรือ remote ไปไกลกว่าที่มี^) -- จะลองใหม่รอบถัดไปอัตโนมัติ ^(ไม่ pull/rebase เอง^)
-    ) else (
-        echo [OK] push สำเร็จ
-    )
+    echo [WARN] push ไม่สำเร็จ ^(เน็ตหลุด หรือ remote ไปไกลกว่าที่มี^) -- จะลองใหม่รอบถัดไปอัตโนมัติ ^(ไม่ pull/rebase เอง^)
 ) else (
-    echo [INFO] ไม่มีอะไรเปลี่ยนจากรอบก่อนในทุกไฟล์ ข้ามการ commit/push
+    echo [OK] push สำเร็จ
 )
 goto :GIT_DONE
 
