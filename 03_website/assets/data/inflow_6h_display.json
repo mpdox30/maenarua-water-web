@@ -1,34 +1,12 @@
 {
-  "computed_at": "2026-09-09T18:01:49.815973",
-  "reference_now": "2026-09-09T18:01:43.190293",
+  "computed_at": "2026-09-09T20:58:34.426880",
+  "reference_now": "2026-09-09T20:58:32.878879",
   "target_reservoir": "อ่างเก็บน้ำแม่นาเรือ (Mae Na Rua Reservoir)",
   "method": "display-only water-balance estimate ที่ resolution 6 ชม. (สไลด์ทีละ 1 ชม. ย้อนหลัง 84 ชม.) reuse สูตร/ค่าคงที่ตรงจาก reservoir_water_balance.py (rating curve, spillway weir, evap/infiltration รายเดือน หาร 4) -- ไม่ใช่ค่าที่โมเดล พยากรณ์ CatBoost ใช้ ใช้แสดงผลเสริมบนเว็บเท่านั้น (ดู docstring หัวไฟล์ script นี้)",
   "lookback_hours": 84,
   "window_hours": 6,
   "n_windows_computed": 79,
   "windows": [
-    {
-      "window_start": "2026-09-06T06:00:00",
-      "window_end": "2026-09-06T12:00:00",
-      "q_in_6h_m3": 120481.6,
-      "water_level_start_m": 488.234,
-      "water_level_end_m": 488.647,
-      "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
-      "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
-    },
-    {
-      "window_start": "2026-09-06T07:00:00",
-      "window_end": "2026-09-06T13:00:00",
-      "q_in_6h_m3": 0.0,
-      "water_level_start_m": 488.234,
-      "water_level_end_m": 488.179,
-      "rain_6h_mm": 0.0,
-      "release_6h_m3": 2361.6,
-      "spill_6h_m3": 0.0,
-      "release_note": "event#1(6.0h@9446.4m3/d)"
-    },
     {
       "window_start": "2026-09-06T08:00:00",
       "window_end": "2026-09-06T14:00:00",
@@ -875,15 +853,37 @@
       "release_6h_m3": 2361.6,
       "spill_6h_m3": 0.0,
       "release_note": "event#1(6.0h@9446.4m3/d)"
+    },
+    {
+      "window_start": "2026-09-09T13:00:00",
+      "window_end": "2026-09-09T19:00:00",
+      "q_in_6h_m3": 94780.6,
+      "water_level_start_m": 488.594,
+      "water_level_end_m": 488.948,
+      "rain_6h_mm": 32.0,
+      "release_6h_m3": 2361.6,
+      "spill_6h_m3": 0.0,
+      "release_note": "event#1(6.0h@9446.4m3/d)"
+    },
+    {
+      "window_start": "2026-09-09T14:00:00",
+      "window_end": "2026-09-09T20:00:00",
+      "q_in_6h_m3": 147113.5,
+      "water_level_start_m": 488.562,
+      "water_level_end_m": 489.094,
+      "rain_6h_mm": 32.2,
+      "release_6h_m3": 2361.6,
+      "spill_6h_m3": 0.0,
+      "release_note": "event#1(6.0h@9446.4m3/d)"
     }
   ],
   "peak_window": {
-    "window_start": "2026-09-06T06:00:00",
-    "window_end": "2026-09-06T12:00:00",
-    "q_in_6h_m3": 120481.6,
-    "water_level_start_m": 488.234,
-    "water_level_end_m": 488.647,
-    "rain_6h_mm": 0.0,
+    "window_start": "2026-09-09T14:00:00",
+    "window_end": "2026-09-09T20:00:00",
+    "q_in_6h_m3": 147113.5,
+    "water_level_start_m": 488.562,
+    "water_level_end_m": 489.094,
+    "rain_6h_mm": 32.2,
     "release_6h_m3": 2361.6,
     "spill_6h_m3": 0.0,
     "release_note": "event#1(6.0h@9446.4m3/d)"
