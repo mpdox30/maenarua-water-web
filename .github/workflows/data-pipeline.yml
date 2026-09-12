@@ -30,12 +30,18 @@ name: Main Data Pipeline (Forecast)
 # job.yml (แก้ 2026-09-08 พร้อมกัน) -- Actions checkout จะเห็นผลล่าสุดที่มีจริง ไม่ fallback ไป
 # hardcoded_2020 เหมือนที่จะเกิดถ้าไม่แก้จุดนี้ก่อน
 
+# 2026-09-12 ปิด schedule ถาวร (ตัดสินใจร่วมกับผู้ใช้ -- ย้ายกลับไปใช้กระบวนการเดิมทั้งหมด: Windows
+# Task Scheduler + sync_to_drive.bat + Colab notebook) -- ยืนยันจริงจาก GitHub API ว่า cron รายวันนี้
+# ไม่เคยรันอัตโนมัติเลยสักครั้ง (0 "schedule" event ใน run history ทั้งหมด มีแต่ workflow_dispatch
+# มือ) ไม่ใช่ตัวเลือกที่เชื่อถือได้สำหรับงานรายวัน -- run_pipeline.bat บน Windows (push เองอยู่แล้ว
+# ทุกครั้ง) + Colab notebook (maenaruea_pipeline_colab_CLEANED.ipynb รันมือ) เป็นฐานหลักต่อไป เหลือ
+# workflow_dispatch ไว้กดรันมือได้เท่านั้น
 on:
   workflow_dispatch: {}
-  schedule:
-    # 01:00 UTC = 08:00 ICT (UTC+7) -- เผื่อเวลาให้ Reservoir Daily Orchestration (07:30 ICT)
-    # รันเสร็จก่อน จะได้มี RES002_daily_computed.csv ของ "เมื่อวาน" ที่สดที่สุดให้ใช้
-    - cron: "0 1 * * *"
+  # schedule:
+  #   # 01:00 UTC = 08:00 ICT (UTC+7) -- เผื่อเวลาให้ Reservoir Daily Orchestration (07:30 ICT)
+  #   # รันเสร็จก่อน จะได้มี RES002_daily_computed.csv ของ "เมื่อวาน" ที่สดที่สุดให้ใช้
+  #   - cron: "0 1 * * *"
 
 permissions:
   contents: write

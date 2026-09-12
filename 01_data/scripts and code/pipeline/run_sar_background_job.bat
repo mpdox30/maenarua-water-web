@@ -70,5 +70,64 @@ echo.
 echo [INFO] sar_background_job.py exited with code %JOB_EXIT_CODE%
 echo   (0 = ปกติ ไม่ว่าจะ classify จริงหรือแค่เช็คแล้วยังไม่ถึงรอบ, 1 = check_new_sar_image() ล้มเหลว)
 
+REM ============================================================================
+REM 2026-09-12 เพิ่ม git push -- เดิมสคริปต์นี้เขียนผลลง 01_data/gis/sar_output/ บนดิสก์อย่างเดียว
+REM ไม่เคยขึ้น GitHub เลย (sar-background-job.yml เป็นตัวเดียวที่ push sar_output/ เข้า git ตั้งแต่
+REM 8 ก.ย.) ตอนนี้ปิด schedule ของ workflow นั้นถาวรแล้ว (ย้ายกลับไปใช้ Windows Task Scheduler +
+REM sync_to_drive.bat + Colab ทั้งหมด) เลยต้องให้ตัวนี้ push เอง ไม่งั้น Colab (ที่อ่าน sar_output/
+REM จาก git-clone ของ repo ตรงๆ ตั้งแต่เปลี่ยน Cell 1 ให้ git clone แทน Drive mount) จะเห็นผล SAR
+REM ค้างขึ้นเรื่อยๆ ไม่มีวันอัปเดต -- ใช้ pattern เดียวกับ run_monitoring_data_builder.bat/
+REM run_daily_wmb_refresh.bat ทุกประการ (commit ของ task นี้ก่อน แล้วค่อย pull แบบ merge จริง กัน
+REM deadlock "would be overwritten by merge")
+REM ============================================================================
+if not "%JOB_EXIT_CODE%"=="0" (
+    echo [WARN] sar_background_job.py ไม่สำเร็จ ข้ามขั้นตอน push git รอบนี้
+    goto :SKIP_GIT_PUSH
+)
+
+pushd "%SCRIPT_DIR%..\..\..\"
+
+if exist ".git\rebase-merge" goto :GIT_BUSY
+if exist ".git\rebase-apply" goto :GIT_BUSY
+if exist ".git\MERGE_HEAD" goto :GIT_BUSY
+
+REM เลิกไฟล์ที่รู้แน่ชัดว่าไม่ใช่ของ task นี้ก่อน (task อื่นเป็นคน commit เอง กันชนตอน pull)
+git checkout -- "03_website/assets/data/latest.json" "03_website/assets/data/flood_latest.json" "03_website/assets/data/reservoir_inflow.json" "01_data/forecasting_results/latest.json" 2>nul
+
+echo.
+echo [INFO] กำลัง add/commit ผล SAR ก่อน pull (กัน "would be overwritten by merge") ...
+git add "01_data/gis/sar_output/"
+git add "01_data/gis/.sar_last_classified"
+git diff --cached --quiet
+if errorlevel 1 (
+    git commit -m "Auto-update: SAR crop classification result %DATE% %TIME%" >nul 2>&1
+) else (
+    echo [INFO] sar_output/ ไม่มีอะไรเปลี่ยนจากรอบก่อน ^(ปกติมากถ้ายังไม่ถึงรอบ 30 วัน^) -- ไม่มี commit ใหม่รอบนี้
+)
+
+echo.
+echo [INFO] sync กับ remote ก่อน push (merge จริง ไม่ใช่ ff-only) ...
+git pull --no-rebase --no-edit origin master
+if errorlevel 1 (
+    echo [WARN] git pull --no-rebase ไม่สำเร็จ -- ข้ามขั้นตอน push รอบนี้ ^(ไม่ force/resolve เอง^) commit ของรอบนี้ ^(ถ้ามี^) ยังอยู่ใน local รอ push รอบถัดไป
+    goto :GIT_DONE
+)
+
+git push origin master
+if errorlevel 1 (
+    echo [WARN] push ไม่สำเร็จ ^(เน็ตหลุด หรือ remote ไปไกลกว่าที่มี^) -- จะลองใหม่รอบถัดไปอัตโนมัติ
+) else (
+    echo [OK] push สำเร็จ
+)
+goto :GIT_DONE
+
+:GIT_BUSY
+echo [WARN] เจอ rebase/merge ค้างอยู่ใน git -- ข้ามขั้นตอน push รอบนี้ทั้งหมด ^(ไปแก้ conflict มือก่อน แล้วรอบถัดไปจะกลับมา push ปกติเอง^)
+
+:GIT_DONE
+popd
+
+:SKIP_GIT_PUSH
+
 endlocal
 exit /b %JOB_EXIT_CODE%

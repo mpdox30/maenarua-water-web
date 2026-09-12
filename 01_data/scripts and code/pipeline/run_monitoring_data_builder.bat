@@ -47,22 +47,13 @@ REM ============================================================================
 setlocal enabledelayedexpansion
 
 REM ============================================================================
-REM 2026-09-09 ปิดถาวร (ตัดสินใจร่วมกับผู้ใช้ หลังพบว่า Windows + GitHub Actions
-REM (monitoring-builder.yml) push ไฟล์เดียวกันคู่ขนานกันทำให้เกิด merge conflict/deadlock ซ้ำๆ) --
-REM GitHub Actions พิสูจน์แล้วว่ารันอัตโนมัติทุก ~15 นาทีได้เชื่อถือได้สำหรับงานนี้โดยเฉพาะ (ต่างจาก
-REM Reservoir Daily Orchestration/Main Pipeline ที่ cron รายวันไม่เสถียร) จึงให้ Actions เป็นฐานเดียว
-REM ของ monitoring.json/inflow_6h_display.json/forecast_accuracy_log.csv ตัวนี้ยังรันทั้ง 3 สคริปต์
-REM + เขียนไฟล์ลงดิสก์เครื่องนี้ตามปกติทุกอย่าง (เผื่อใช้ดูสด/debug บนเครื่อง) แค่ไม่แตะ git เลย
-REM (ทั้ง pull และ push) กันชนกับ Actions ถาวร
-REM
-REM ถ้า GitHub Actions มีปัญหาแล้วอยากดึงผลจากเครื่องนี้ไป push เองครั้งเดียว (ไม่ต้องเปิดถาวร) เปิด
-REM Command Prompt ที่ D:\maenaruea-water-web แล้วรัน (add เฉพาะไฟล์ที่มีอยู่จริง/อัปเดตแล้ว):
-REM   git add "03_website/assets/data/monitoring.json" "03_website/assets/data/inflow_6h_display.json"
-REM   git add "01_data/forecasting_results/Reservoir_inflow/forecast_accuracy_log.csv" "03_website/assets/data/forecast_accuracy_log.csv"
-REM   git commit -m "Manual push from Windows (GitHub Actions issue)"
-REM   git pull --no-rebase --no-edit origin master
-REM   git push origin master
-set "GIT_PUSH_ENABLED=0"
+REM 2026-09-12 เปิดกลับถาวร (ตัดสินใจร่วมกับผู้ใช้ -- ย้ายกลับไปใช้กระบวนการเดิมทั้งหมด: Windows Task
+REM Scheduler + sync_to_drive.bat + Colab notebook เพราะพบว่าการพึ่ง GitHub Actions ทำให้ระบบไม่เสถียร
+REM โดยรวม -- ปิด schedule ของ monitoring-builder.yml ถาวรแล้วเช่นกัน เหลือแค่ workflow_dispatch มือ)
+REM Windows กลับมาเป็นฐานเดียวของ monitoring.json/inflow_6h_display.json/forecast_accuracy_log.csv
+REM ตามเดิม (ดูประวัติปัญหา pull-before-commit deadlock ที่แก้ไว้ด้านล่าง -- ยังใช้ pattern เดิมได้
+REM เพราะตอนนี้ไม่มี Actions มาชนคู่ขนานอีกแล้ว)
+set "GIT_PUSH_ENABLED=1"
 REM ============================================================================
 
 set "SCRIPT_DIR=%~dp0"
@@ -145,8 +136,18 @@ REM **2026-08-12 เพิ่ม**: forecast_accuracy_logger.py เขียน�
 REM 03_website/assets/data/ ให้หน้า forecast-accuracy.html fetch() ได้) รวมเป็น 4 ไฟล์ต่อรอบ
 REM ============================================================================
 if not "%GIT_PUSH_ENABLED%"=="1" (
-    echo [INFO] Git pull/push ปิดอยู่ชั่วคราว ^(GIT_PUSH_ENABLED=0^) -- ข้ามขั้นตอน git ทั้งหมดรอบนี้
-    echo   ^(monitoring.json/inflow_6h_display.json/forecast_accuracy_log.csv ยังเขียนลงดิสก์ปกติ แค่ไม่ pull/push เฉยๆ^)
+    echo [INFO] Git pull/push ปิดอยู่ชั่วคราว ^(GIT_PUSH_ENABLED=0^) -- ข้ามขั้นตอน commit/pull/push รอบนี้
+    echo   ^(monitoring.json/inflow_6h_display.json/forecast_accuracy_log.csv ยังเขียนลงดิสก์ปกติเผื่อดูสด แต่จะ
+    echo    "git checkout --" ทิ้งทันทีด้านล่าง กันไม่ให้ค้างเป็น dirty ถาวรในเครื่องนี้^)
+    REM 2026-09-11 แก้บั๊กจริงที่เพิ่งเจอ: ถ้าไม่ checkout ทิ้ง 4 ไฟล์นี้ทันที มันจะค้างเป็น "M" ถาวรใน
+    REM working tree ของ repo เดียวกันที่สคริปต์อื่น ^(run_pipeline.bat, run_reservoir_daily_orchestration.bat,
+    REM run_daily_wmb_refresh.bat ที่ WMB_Phayao^) ก็ใช้ร่วมกันอยู่ -- ทุกตัวที่ทำ "git pull" ไปเจอไฟล์
+    REM dirty พวกนี้แล้ว fail ด้วย "would be overwritten by merge" ทันที ยืนยันจริงจาก
+    REM run_daily_wmb_refresh.bat วันนี้ ^(2026-09-11 10:39^) -- ข้อมูลสดของ 4 ไฟล์นี้ไม่เสียหายจริง
+    REM เพราะ GitHub Actions ^(monitoring-builder.yml^) push เวอร์ชันล่าสุดของมันเองอยู่แล้วทุก ~15 นาที
+    pushd "%SCRIPT_DIR%..\..\..\"
+    git checkout -- "03_website/assets/data/monitoring.json" "03_website/assets/data/inflow_6h_display.json" "01_data/forecasting_results/Reservoir_inflow/forecast_accuracy_log.csv" "03_website/assets/data/forecast_accuracy_log.csv" 2>nul
+    popd
     goto :SKIP_GIT_PUSH
 )
 

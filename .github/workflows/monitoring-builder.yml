@@ -19,11 +19,17 @@ name: Monitoring Data Builder
 # ถ้าข้อมูลต้นทาง (wide_log Google Sheet) เหมือนกัน ผลลัพธ์ไฟล์จะเหมือนกันเป๊ะ ฝั่งที่รันทีหลังในแต่ละ
 # รอบจะเจอ "ไม่มีอะไรเปลี่ยน ข้าม commit" เฉยๆ ไม่ใช่ conflict จริง
 
+# 2026-09-12 ปิด schedule ถาวร (ตัดสินใจร่วมกับผู้ใช้ -- ย้ายกลับไปใช้กระบวนการเดิมทั้งหมด: Windows
+# Task Scheduler + sync_to_drive.bat + Colab notebook เพราะ Actions cron ทำให้ระบบไม่เสถียร -- โดยเฉพาะ
+# workflow นี้ที่ push ไฟล์เดียวกันคู่ขนานกับ run_monitoring_data_builder.bat บน Windows จนเกิด merge
+# conflict/deadlock ซ้ำๆ ในไฟล์ monitoring.json/inflow_6h_display.json/forecast_accuracy_log.csv --
+# run_monitoring_data_builder.bat กลับมา push เองแล้ว (GIT_PUSH_ENABLED=1) เหลือ workflow_dispatch
+# ไว้เป็นทางเลือกกดรันมือได้เท่านั้น ไม่ auto-fire อีกต่อไป
 on:
   workflow_dispatch: {}
-  schedule:
-    # ทุก 15 นาที -- GitHub ไม่การันตีความถี่นี้แบบเป๊ะๆ โดยเฉพาะช่วงโหลดสูง (อาจดีเลย์ได้บ้าง)
-    - cron: "*/15 * * * *"
+  # schedule:
+  #   # ทุก 15 นาที -- GitHub ไม่การันตีความถี่นี้แบบเป๊ะๆ โดยเฉพาะช่วงโหลดสูง (อาจดีเลย์ได้บ้าง)
+  #   - cron: "*/15 * * * *"
 
 permissions:
   contents: write

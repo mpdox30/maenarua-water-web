@@ -23,11 +23,17 @@ name: SAR Background Job
 # เท่านั้น) workflow นี้เพิ่มขั้นตอน push ให้ (เดิมไม่เคยขึ้น GitHub จากเครื่อง Windows เลย) --
 # ถ้าไม่ต้องการ push จริง (เช่น sar_output/ ไม่ได้ใช้ที่อื่นในเว็บ) แจ้งได้ จะตัดขั้นตอนนี้ออก
 
+# 2026-09-12 ปิด schedule ถาวร (ตัดสินใจร่วมกับผู้ใช้ -- ย้ายกลับไปใช้กระบวนการเดิมทั้งหมด:
+# Windows Task Scheduler + sync_to_drive.bat + Colab notebook เพราะ Actions cron ทำให้ระบบไม่เสถียร
+# ทั้งรันไม่ตรงเวลา/ไม่รันเลยบางวัน (reservoir-orchestration, data-pipeline) และชนกับ Windows/Colab
+# ที่ push ไฟล์เดียวกันคู่ขนาน (monitoring-builder) เหลือ workflow_dispatch ไว้เป็นทางเลือกให้กดรันมือ
+# ได้เท่านั้น ไม่ auto-fire อีกต่อไป -- run_sar_background_job.bat เพิ่ม git push ของตัวเองแล้ว
+# (ดูไฟล์นั้น) ทำหน้าที่แทนตัวนี้ทั้งหมด)
 on:
   workflow_dispatch: {}
-  schedule:
-    # 20:00 UTC วันอาทิตย์ = 03:00 ICT วันจันทร์ (UTC+7)
-    - cron: "0 20 * * 0"
+  # schedule:
+  #   # 20:00 UTC วันอาทิตย์ = 03:00 ICT วันจันทร์ (UTC+7)
+  #   - cron: "0 20 * * 0"
 
 permissions:
   contents: write

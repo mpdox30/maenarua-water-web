@@ -15,12 +15,17 @@ name: Reservoir Daily Orchestration
 # จากแหล่งเดียวกันเหมือน Windows จะได้ผลเหมือนกันเป๊ะ -- ปกติจะจบด้วย "ไม่มีอะไรเปลี่ยน ข้าม commit"
 # ในฝั่งที่รันทีหลัง ไม่ใช่ conflict
 
+# 2026-09-12 ปิด schedule ถาวร (ตัดสินใจร่วมกับผู้ใช้ -- ย้ายกลับไปใช้กระบวนการเดิมทั้งหมด: Windows
+# Task Scheduler + sync_to_drive.bat + Colab notebook) -- ยืนยันจริงจาก GitHub API ว่า cron รายวันนี้
+# แทบไม่เคยรันอัตโนมัติตรงรอบเลย (พบแค่ 1 ครั้งใน run history ทั้งหมด และดีเลย์ไปเกือบ 4.5 ชม.) ไม่ใช่
+# ตัวเลือกที่เชื่อถือได้สำหรับงานรายวัน -- run_reservoir_daily_orchestration.bat บน Windows
+# (GIT_PUSH_ENABLED=1 อยู่แล้ว) เป็นฐานหลักต่อไป เหลือ workflow_dispatch ไว้กดรันมือได้เท่านั้น
 on:
   workflow_dispatch: {}
-  schedule:
-    # 00:30 UTC = 07:30 ICT (UTC+7) -- เวลาเดียวกับ Windows Task Scheduler เดิม
-    # หมายเหตุ: GitHub ไม่การันตีว่าจะรันตรงเวลาเป๊ะ อาจดีเลย์ได้โดยเฉพาะช่วงโหลดสูง
-    - cron: "30 0 * * *"
+  # schedule:
+  #   # 00:30 UTC = 07:30 ICT (UTC+7) -- เวลาเดียวกับ Windows Task Scheduler เดิม
+  #   # หมายเหตุ: GitHub ไม่การันตีว่าจะรันตรงเวลาเป๊ะ อาจดีเลย์ได้โดยเฉพาะช่วงโหลดสูง
+  #   - cron: "30 0 * * *"
 
 permissions:
   contents: write
