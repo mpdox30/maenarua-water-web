@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-20T08:36:54.184565",
+  "generated_at": "2026-09-20T09:11:45.626122",
   "sar_trigger": {
     "as_of_date": "2026-09-20",
     "year": 2026,
@@ -9,11 +9,11 @@
   "status": "ok",
   "zone_crop_area_ha": {
     "zone_A": {
-      "rice": 1033.72,
-      "corn": 1876.2,
-      "cassava": 0.64,
-      "longan": 416.96000000000004,
-      "etc": 145.0
+      "rice": 1175.16,
+      "corn": 1329.0,
+      "cassava": 1.36,
+      "longan": 627.36,
+      "etc": 339.64
     },
     "zone_B": {
       "rice": 259.84000000000003,
@@ -49,28 +49,28 @@
     "zone_A": {
       "rice": {
         "area_2020_ha": 1510.72,
-        "area_new_ha": 1033.72,
-        "delta_pct": -31.6
+        "area_new_ha": 1175.16,
+        "delta_pct": -22.2
       },
       "corn": {
         "area_2020_ha": 621.36,
-        "area_new_ha": 1876.2,
-        "delta_pct": 202.0
+        "area_new_ha": 1329.0,
+        "delta_pct": 113.9
       },
       "longan": {
         "area_2020_ha": 461.36,
-        "area_new_ha": 416.96,
-        "delta_pct": -9.6
+        "area_new_ha": 627.36,
+        "delta_pct": 36.0
       },
       "cassava": {
         "area_2020_ha": 0.16,
-        "area_new_ha": 0.64,
-        "delta_pct": 300.0
+        "area_new_ha": 1.36,
+        "delta_pct": 750.0
       },
       "etc": {
         "area_2020_ha": 156.68,
-        "area_new_ha": 145.0,
-        "delta_pct": -7.5
+        "area_new_ha": 339.64,
+        "delta_pct": 116.8
       }
     },
     "zone_B": {
@@ -150,13 +150,15 @@
     "zone_A": {
       "pixel_area_ha": 0.04,
       "n_pixels_valid": 86813,
-      "n_pixels_outside_zone": 213857,
+      "n_pixels_outside_zone": 214419,
+      "n_pixels_missing_data": 0,
       "classified_tif_path": "D:\\maenaruea-water-web\\01_data\\gis\\sar_rasters\\crop_map_v3b_zone_A_2026.tif"
     },
     "zone_B": {
       "pixel_area_ha": 0.04,
       "n_pixels_valid": 28945,
       "n_pixels_outside_zone": 132020,
+      "n_pixels_missing_data": 0,
       "classified_tif_path": "D:\\maenaruea-water-web\\01_data\\gis\\sar_rasters\\crop_map_v3b_zone_B_2026.tif"
     }
   },
