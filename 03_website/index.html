@@ -143,20 +143,20 @@
   /* ---------- STATUS BAR ---------- */
   .status-bar {
     border-bottom: 1px solid var(--border);
-    background: linear-gradient(90deg, rgba(224,169,79,0.08), transparent 60%);
+    background: linear-gradient(90deg, rgba(69,194,173,0.08), transparent 60%);
   }
   .status-bar-inner {
     max-width: 1240px; margin: 0 auto; padding: 10px 40px;
     display: flex; align-items: center; gap: 10px;
-    font-size: 12.5px; color: var(--amber-300);
+    font-size: 12.5px; color: var(--teal-300);
   }
   .status-dot {
     width: 7px; height: 7px; border-radius: 50%;
-    background: var(--amber-400);
-    box-shadow: 0 0 0 4px rgba(224,169,79,0.18);
+    background: var(--teal-400);
+    box-shadow: 0 0 0 4px rgba(69,194,173,0.18);
     flex: none;
   }
-  .status-bar-inner strong { color: var(--amber-300); font-weight: 600; }
+  .status-bar-inner strong { color: var(--teal-300); font-weight: 600; }
   .status-bar-inner span.dim { color: var(--text-500); }
 
   /* ---------- HERO ---------- */
@@ -468,8 +468,8 @@
   <div class="status-bar-inner">
     <span class="status-dot"></span>
     <strong>สถานะข้อมูล:</strong>
-    <span>ผลพยากรณ์เป็นการ validate ย้อนหลัง (Train 2020–2022 · Calibrate 2023 · Test 2024)</span>
-    <span class="dim">— ยังไม่ใช่ระบบ live forecast เต็มรูปแบบ</span>
+    <span>ระบบพยากรณ์น้ำไหลลงอ่างและความต้องการใช้น้ำทำงานแบบ live แล้ว — โมเดลรันพยากรณ์จริงจากข้อมูลสดทุกวัน (ไม่ใช่ผล validate ย้อนหลังเหมือนก่อนหน้านี้)</span>
+    <span class="dim">— อัปเดตล่าสุด 2026-09-21</span>
   </div>
 </div>
 
@@ -823,13 +823,9 @@ fetch('assets/data/monitoring.json')
 // แผนที่แบบโต้ตอบเต็มรูปแบบ (ย้ายมาจาก gis-map.html ทั้งหมด 2026-07-19 — แทนที่พรีวิว mini-map เดิม)
 const map = L.map('map', { scrollWheelZoom: false }).setView([19.0841, 99.8491], 13);
 
+// 2026-09-21 แก้ไข: เอาเลเยอร์พื้นหลังมืด/สว่าง (CARTO) ออก ใช้ "ถนน" (OpenStreetMap) เป็นค่า default แทน
+// ตามคำขอผู้ใช้ -- อ่านง่ายกว่าและคุ้นเคยกว่าสำหรับผู้ใช้ทั่วไปที่ไม่ใช่ทีมเทคนิค
 const basemaps = {
-  dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap contributors &copy; CARTO', subdomains: 'abcd', maxZoom: 19
-  }),
-  light: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap contributors &copy; CARTO', subdomains: 'abcd', maxZoom: 19
-  }),
   streets: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors', subdomains: 'abc', maxZoom: 19
   }),
@@ -840,7 +836,7 @@ const basemaps = {
     attribution: 'Tiles &copy; Esri — Source: Esri, USGS, NOAA', maxZoom: 19
   })
 };
-let currentBase = 'dark';
+let currentBase = 'streets';
 basemaps[currentBase].addTo(map);
 
 const BasemapControl = L.Control.extend({
@@ -848,8 +844,6 @@ const BasemapControl = L.Control.extend({
   onAdd: function() {
     const div = L.DomUtil.create('div', 'basemap-control');
     const options = [
-      ['dark', 'มืด'],
-      ['light', 'สว่าง'],
       ['streets', 'ถนน'],
       ['satellite', 'ดาวเทียม'],
       ['terrain', 'ภูมิประเทศ']
