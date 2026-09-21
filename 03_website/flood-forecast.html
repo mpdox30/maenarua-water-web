@@ -793,8 +793,8 @@ function initWmbCharts(d) {
   const dates = d.dates;
 
   document.getElementById('wmbCalibNote').textContent =
-    'Calibration v10 — R² ระบบ = ' + d.calibration.r2_system + ', RMSE ' + d.calibration.rmse_mcm +
-    ' MCM, Bias ' + (d.calibration.bias_mcm >= 0 ? '+' : '') + d.calibration.bias_mcm + ' MCM (validate กับข้อมูล SAR อิสระ)';
+    'Calibration mech_E — NSE = ' + d.calibration.nse + ', KGE ' + d.calibration.kge +
+    ', PBIAS ' + (d.calibration.pbias_pct >= 0 ? '+' : '') + d.calibration.pbias_pct + '% (LOO-CV 10-fold, ข้อมูล SAR อิสระ)';
   document.getElementById('wmbFooterNote').textContent =
     d.calibration.note + ' | overflow รวม ' + d.calibration.overflow_total_mcm + ' MCM/' + d.calibration.period_days + ' วัน';
 
