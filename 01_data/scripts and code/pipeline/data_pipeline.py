@@ -1890,10 +1890,23 @@ def _wd_build_feature_vector() -> dict:
 
 def _wd_run_prediction(model: dict, features: dict) -> tuple[Optional[dict], Optional[dict]]:
     """
-    รัน two-stage prediction สำหรับ Water Demand (zone A/B):
+    รัน two-stage prediction สำหรับ Water Demand (zone A/B) ครบทุก horizon (h1-h12):
       1. Stage 1 classifier  -> prob      = P(demand > 0)
       2. Stage 2 regressor   -> magnitude = w_cat * catboost.predict(X_reg) + w_lgb * lightgbm.predict(X_reg), clip(min=0)
       3. Final                -> final    = prob * magnitude
+    ต่อ horizon h=1..WD_HORIZON -- โมเดลแยกอิสระต่อ (zone, h) เหมือนกันกับที่ _ri_run_prediction()
+    ของ Reservoir Inflow ทำ (regressors[h] แยกต่อ horizon) ใช้ X_clf/X_reg ชุดเดียวกันได้ทุก horizon
+    เพราะ feature vector ของ Water Demand ไม่มี target column y_h{h} ของ horizon ไหนปนอยู่เลย (ดู
+    _wd_get_feature_cols()/_wd_get_clf_features() ที่ exclude y_h1..y_h{WD_HORIZON} ออกไปหมดแล้ว)
+    ต่างจาก Reservoir Inflow แค่ตรงไม่มี feature พิเศษต่อ horizon แบบ rain_forecast_binary_flag
+
+    2026-09-21 แก้ -- เดิม hardcode h=1 อย่างเดียว ทั้งที่ catboost_models.pkl/lightgbm_models.pkl/
+    stage1_classifiers.pkl/stack_weights.pkl ใน Water_demand/active/ มี key (zone, h) ครบ h=1..12
+    อยู่แล้วทั้ง 2 โซน (ยืนยันแล้วก่อนแก้ด้วย joblib.load() ตรงๆ) แปลว่า h2-h12 เทรนเสร็จแต่ไม่เคยถูก
+    เรียกใช้จริงใน production pipeline เลย -- วนลูปแบบเดียวกับ _ri_run_prediction() ตอนนี้ ถ้า horizon
+    ไหนโมเดลไม่ครบ (ไม่ควรเกิดเพราะ .pkl มีครบ แต่กันไว้เผื่ออนาคตโมเดลรุ่นใหม่เทรนไม่ครบทุก horizon)
+    จะได้ None เฉพาะ key นั้น ไม่ทำให้ทั้งโซนหายไปทั้งก้อน
+
     คืนค่า tuple (zone_a_result, zone_b_result)
     """
     results = {}
@@ -1903,27 +1916,39 @@ def _wd_run_prediction(model: dict, features: dict) -> tuple[Optional[dict], Opt
             results[zone] = None
             continue
 
-        target_col = feat["target_col"]
-        h = 1
-        key = (zone, h)
+        horizon_results: dict = {}
+        for h in range(1, WD_HORIZON + 1):
+            key = (zone, h)
 
-        clf = model["stage1_classifiers"].get(key)
-        cat_model = model["catboost"].get(key)
-        lgb_model = model["lightgbm"].get(key)
-        weights = model["stack_weights"].get(key)
+            clf = model["stage1_classifiers"].get(key)
+            cat_model = model["catboost"].get(key)
+            lgb_model = model["lightgbm"].get(key)
+            weights = model["stack_weights"].get(key)
 
-        if clf is None or cat_model is None or lgb_model is None or weights is None:
+            if clf is None or cat_model is None or lgb_model is None or weights is None:
+                horizon_results[f"h{h}"] = None
+                continue
+
+            prob_active = float(clf.predict_proba(feat["X_clf"])[:, 1][0])
+
+            cat_pred = float(cat_model.predict(feat["X_reg"])[0])
+            lgb_pred = float(lgb_model.predict(feat["X_reg"])[0])
+            magnitude = weights["w_cat"] * cat_pred + weights["w_lgb"] * lgb_pred
+            magnitude = max(magnitude, 0.0)
+
+            final = prob_active * magnitude
+
+            horizon_results[f"h{h}"] = {
+                "probability_active": round(prob_active, 4),
+                "magnitude_m3": round(magnitude, 2),
+                "final_m3": round(final, 2),
+            }
+
+        # ถ้าทุก horizon ไม่มีโมเดลเลย (ไม่ควรเกิดในทางปฏิบัติ) ให้ทั้งโซนเป็น None เหมือนพฤติกรรมเดิม
+        # ก่อนแก้ (ดีกว่าส่ง horizons ที่เป็น None ล้วนไปให้หน้าเว็บ)
+        if all(v is None for v in horizon_results.values()):
             results[zone] = None
             continue
-
-        prob_active = float(clf.predict_proba(feat["X_clf"])[:, 1][0])
-
-        cat_pred = float(cat_model.predict(feat["X_reg"])[0])
-        lgb_pred = float(lgb_model.predict(feat["X_reg"])[0])
-        magnitude = weights["w_cat"] * cat_pred + weights["w_lgb"] * lgb_pred
-        magnitude = max(magnitude, 0.0)
-
-        final = prob_active * magnitude
 
         results[zone] = {
             "as_of": {"year": feat["as_of_year"], "week": feat["as_of_week"]},
@@ -1933,13 +1958,7 @@ def _wd_run_prediction(model: dict, features: dict) -> tuple[Optional[dict], Opt
             # (ml_features_phase4.csv เดิม, ยังไม่ครบ 12 สัปดาห์ต่อเนื่องสำหรับ live) เหมือน pattern
             # data_source ของ Reservoir Inflow
             "data_source": feat.get("data_source"),
-            "horizons": {
-                "h1": {
-                    "probability_active": round(prob_active, 4),
-                    "magnitude_m3": round(magnitude, 2),
-                    "final_m3": round(final, 2),
-                },
-            },
+            "horizons": horizon_results,
         }
 
     return results.get("zone_A"), results.get("zone_B")

@@ -464,7 +464,12 @@ function renderKPI(json) {
   // ผลรวม allocated_m3 ของทุกอ่าง = final_m3 เป๊ะ ไม่ใช่ตัวเลขอิสระใหม่
   const reservoirBreakdownEl = document.getElementById('kpiReservoirBreakdown');
   const reservoirBreakdownNoteEl = document.getElementById('kpiReservoirBreakdownNote');
-  const reservoirBreakdown = b1 && b1.reservoir_breakdown;
+  // 2026-09-21 แก้ -- เดิมอ่านจาก b1.reservoir_breakdown (= b.horizons.h1.reservoir_breakdown) แต่
+  // backend เขียน reservoir_breakdown ไว้เป็น sibling ของ horizons ตรงๆ (b.reservoir_breakdown) ไม่ได้
+  // ซ้อนอยู่ใน horizons.h1 เลย -- ยืนยันจากโครงสร้าง latest.json จริง (demand_zone_b มีคีย์ as_of/unit/
+  // data_source/horizons/reservoir_breakdown เรียงเท่ากันหมด) เดิมพัง 100% ของเวลา การ์ดนี้เลยโชว์
+  // "ยังไม่มีข้อมูล" เสมอไม่ว่า backend จะคำนวณสำเร็จหรือไม่ก็ตาม
+  const reservoirBreakdown = b && b.reservoir_breakdown;
   if (reservoirBreakdownEl) {
     if (reservoirBreakdown && reservoirBreakdown.reservoirs) {
       const entries = Object.entries(reservoirBreakdown.reservoirs);
