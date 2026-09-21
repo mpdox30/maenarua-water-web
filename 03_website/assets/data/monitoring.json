@@ -1,7 +1,7 @@
 {
   "meta": {
     "source": "สถานีโทรมาตร สสน. (API) ผ่าน Google Sheet wide_log (poll ทุก 10 นาที) + HII open data (tiservice.hii.or.th, รายชั่วโมงผ่าน QC, เดือนที่ปิดแล้ว) + 01_data/Reservoirs/reference (rating curve ต่ออ่าง)",
-    "updated": "2026-09-21T15:30:00",
+    "updated": "2026-09-21T15:50:00",
     "data_connected": true
   },
   "stations": [
@@ -10,17 +10,17 @@
       "name_th": "อ่างเก็บน้ำแม่นาเรือ",
       "name_en": "Mae Na Rua Reservoir",
       "spillway_msl": 489.54,
-      "water_level": 489.978,
-      "rainfall_1h": 0.6,
-      "temperature": 28.87,
-      "humidity": 86.1,
-      "pressure": 955.18,
-      "solar": 193.1,
-      "measure_datetime": "2026-09-21T15:30:00",
-      "storage_m3": 1759149.8,
+      "water_level": 489.971,
+      "rainfall_1h": 1.6,
+      "temperature": 28.77,
+      "humidity": 87.05,
+      "pressure": 955.06,
+      "solar": 191.3,
+      "measure_datetime": "2026-09-21T15:50:00",
+      "storage_m3": 1756983.5,
       "storage_max_m3": 1625463.8,
-      "capacity_pct": 108.2,
-      "distance_to_spillway_m": 0.438,
+      "capacity_pct": 108.1,
+      "distance_to_spillway_m": 0.431,
       "history": [
         {
           "t": "2026-09-07T16:00:00",
@@ -7106,7 +7106,7 @@
         },
         {
           "t": "2026-09-21T15:00:00",
-          "rain_mm": 0.6
+          "rain_mm": 1.6
         }
       ]
     },
@@ -7116,12 +7116,12 @@
       "name_en": "Phayao C.A.T. Reservoir",
       "spillway_msl": 457.07,
       "water_level": 456.413,
-      "rainfall_1h": 2.6,
-      "temperature": 26.19,
-      "humidity": 91.24,
-      "pressure": 958.37,
-      "solar": 174.0,
-      "measure_datetime": "2026-09-21T15:30:00",
+      "rainfall_1h": 3.2,
+      "temperature": 27.49,
+      "humidity": 90.84,
+      "pressure": 958.24,
+      "solar": 236.6,
+      "measure_datetime": "2026-09-21T15:50:00",
       "storage_m3": 311718.2,
       "storage_max_m3": 347778.7,
       "capacity_pct": 89.6,
@@ -14211,7 +14211,7 @@
         },
         {
           "t": "2026-09-21T15:00:00",
-          "rain_mm": 2.6
+          "rain_mm": 3.2
         }
       ]
     },
@@ -21143,11 +21143,11 @@
       "spillway_msl": 508.1,
       "water_level": 508.673,
       "rainfall_1h": 0.0,
-      "temperature": 29.33,
-      "humidity": 85.44,
-      "pressure": 952.96,
-      "solar": 176.2,
-      "measure_datetime": "2026-09-21T15:30:00",
+      "temperature": 30.09,
+      "humidity": 83.04,
+      "pressure": 952.89,
+      "solar": 159.8,
+      "measure_datetime": "2026-09-21T15:50:00",
       "storage_m3": 142839.2,
       "storage_max_m3": 122441.9,
       "capacity_pct": 116.7,
