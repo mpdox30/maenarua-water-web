@@ -134,6 +134,13 @@
   .depth-legend .bar-col { display: flex; flex-direction: column; gap: 3px; }
   .depth-legend .bar { width: 180px; height: 10px; border-radius: 4px; background: linear-gradient(90deg, #30123b 0%, #466be3 12.5%, #28bbeb 25%, #32f197 37.5%, #a4fc3b 50%, #edcf39 62.5%, #fa7d20 75%, #d02f04 87.5%, #7a0402 100%); flex: none; }
   .depth-legend .scale { display: flex; justify-content: space-between; width: 180px; font-size: 10px; color: var(--text-600); }
+  /* 2026-09-22 เพิ่ม -- แถบเลื่อนดูพยากรณ์น้ำท่วมรายวัน (ข) ซ่อนไว้จนกว่าจะเปิด layer forecast7d_series */
+  .day-slider { display: none; align-items: center; gap: 10px; margin-top: 10px; font-size: 12px; color: var(--text-500); flex-wrap: wrap; background: rgba(8,30,38,0.55); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 8px 12px; }
+  .day-slider.show { display: flex; }
+  .day-slider button { background: var(--accent-500, #2a9d8f); color: #06161c; border: none; border-radius: 6px; width: 30px; height: 26px; font-size: 13px; cursor: pointer; flex: none; }
+  .day-slider button:hover { opacity: 0.85; }
+  .day-slider input[type=range] { flex: 1; min-width: 140px; accent-color: var(--accent-500, #2a9d8f); }
+  .day-slider .day-label { min-width: 96px; text-align: right; font-variant-numeric: tabular-nums; }
 
   /* reliability */
   .rel-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
@@ -291,8 +298,14 @@
         <span id="depthLegendLabel">ความลึกน้ำท่วม</span>
         <div class="bar-col">
           <div class="bar"></div>
-          <div class="scale"><span>0 ม.</span><span>2 ม.</span><span>4 ม.+</span></div>
+          <div class="scale"><span>0 ม.</span><span id="depthLegendMid">2 ม.</span><span id="depthLegendMax">4 ม.+</span></div>
         </div>
+      </div>
+      <!-- 2026-09-22 เพิ่ม -- แถบเลื่อนดูรายวัน (ข) โผล่ขึ้นเฉพาะตอนเปิด layer "พยากรณ์น้ำท่วมรายวัน" -->
+      <div class="day-slider" id="daySlider">
+        <button id="dayPlayBtn" title="เล่น/หยุด" type="button">▶</button>
+        <input type="range" id="dayRange" min="1" max="7" value="1" step="1">
+        <span class="day-label" id="dayLabel">วันที่ 1</span>
       </div>
       <p class="map-note">แนวลำน้ำจากการสำรวจ/KML ของโครงการ (สีน้ำเงิน) | อ่างเก็บน้ำ 7 แห่ง (รวมห้วยตุ่นและห้วยม่วง ตำบลบ้านตุ่น) |
          ตำแหน่งจุดเสี่ยง = ปลายลำน้ำฝั่งกว๊าน | เลือกชั้นข้อมูลความลึกน้ำท่วมและแผนที่พื้นหลังได้จากไอคอนมุมขวาบนของแผนที่</p>
@@ -375,14 +388,27 @@ const STALE_HOURS = 48;
 const DEPTH_BOUNDS = [[19.01883856557195, 99.75718730414324], [19.158288896246347, 99.92468585009338]];
 const DEPTH_VMAX = 4.0;
 const DEPTH_LAYERS_META = {
-  yagi2024: { url: 'assets/data/flood_depth_yagi2024.png', label: 'ความลึกน้ำท่วมจริง — พายุยากิ 2567' },
-  p95:      { url: 'assets/data/flood_risk_p95.png',       label: 'แผนที่ความเสี่ยงเชิงสถิติ (P95)' },
+  // yagi2024/p95 = ข้อมูลจริง/สถิติ เทียบข้ามเวลาได้ -- vmax คงที่ 4.0 ม. เสมอ
+  yagi2024: { url: 'assets/data/flood_depth_yagi2024.png', label: 'ความลึกน้ำท่วมจริง — พายุยากิ 2567', vmax: DEPTH_VMAX },
+  p95:      { url: 'assets/data/flood_risk_p95.png',       label: 'แผนที่ความเสี่ยงเชิงสถิติ (P95)',       vmax: DEPTH_VMAX },
   // 2026-07-26 เพิ่ม -- พยากรณ์น้ำท่วม 7 วันข้างหน้าจริง (ล้นตลิ่ง+กว๊านหนุน รวมกันในค่าเดียว
   // จาก daily_update_colab.py -- ดู gen_ponding_raster_forecast.py/gen_map02_forecast.py ฝั่ง
   // WMB_Phayao) สมมติไม่มีฝนเพิ่มในช่วงพยากรณ์ (rain_forward_assumption=0.0) จึงเป็น baseline
   // อนุรักษ์นิยม ไม่ใช่ expected scenario เต็มรูปแบบ -- ดู PROJECT_MEMORY.md ข้อ 9.8 (Future work)
-  forecast7d: { url: 'assets/data/flood_depth_forecast.png', label: 'พยากรณ์น้ำท่วม 7 วันข้างหน้า (ล้นตลิ่ง+กว๊านหนุน, สมมติไม่มีฝนเพิ่ม)' },
+  // 2026-09-22 แก้ -- ความลึกจริงเป็นระดับมิลลิเมตร ใช้ vmax คงที่ 4.0 ม. เหมือน layer อื่นแล้วสี
+  // บดจนแยกไม่ออก (ทุกพิกเซล norm<0.001) จึงเปลี่ยนเป็น dynamic: เริ่มด้วย vmax ตั้งต้นนี้ก่อน
+  // render ครั้งแรก แล้ว fetch metaUrl ทันทีที่เปิด layer เพื่อได้ค่าจริงของรอบนั้นมาแก้ legend
+  // (ตัวภาพเองสร้างด้วย vmax ที่ถูกต้องอยู่แล้วจากฝั่ง gen_map02_forecast.py -- แค่ legend ต้อง sync ตาม)
+  forecast7d: { url: 'assets/data/flood_depth_forecast.png', metaUrl: 'assets/data/flood_depth_forecast_meta.json',
+                label: 'พยากรณ์น้ำท่วม 7 วันข้างหน้า (ล้นตลิ่ง+กว๊านหนุน, สมมติไม่มีฝนเพิ่ม)', vmax: DEPTH_VMAX },
 };
+// ให้ตัวเลขความลึกที่แสดง legend อ่านง่ายไม่ว่าค่าจะเล็ก (มม.) หรือใหญ่ (ม.) แค่ไหน -- คงหน่วย "ม."
+// เดียวกันทุก layer (ไม่ผสมหน่วย มม./ซม./ม. ให้สับสน) แค่ปรับจำนวนทศนิยมตามขนาดค่า
+function fmtDepth(v) {
+  if (v >= 1) return v.toFixed(1);
+  if (v >= 0.01) return v.toFixed(3);
+  return v.toFixed(4);
+}
 
 const FLAG = {
   normal:   { th: 'ปกติ',      color: 'var(--flag-normal)',   bg: 'flag-normal-bg',   hex: '#2a9d8f' },
@@ -664,17 +690,100 @@ function drawMap(d) {
   // ---------- ชั้นความลึกน้ำท่วม (เหตุการณ์ในอดีต / ความเสี่ยง) ----------
   const legend = document.getElementById('depthLegend');
   const legendLabel = document.getElementById('depthLegendLabel');
+  const legendMid = document.getElementById('depthLegendMid');
+  const legendMax = document.getElementById('depthLegendMax');
+  // ตั้งตัวเลข legend ตาม vmax ของ layer นั้นๆ (ค่าตั้งต้นจาก meta ในโค้ด -- ถูก override ด้วยค่า
+  // จริงจาก metaUrl ถ้ามี ดูด้านล่าง) -- แยกจาก DEPTH_VMAX คงที่เดิมเพราะ forecast7d เปลี่ยนทุกวัน
+  function setLegendScale(vmax) {
+    legendMid.textContent = fmtDepth(vmax / 2) + ' ม.';
+    legendMax.textContent = fmtDepth(vmax) + ' ม.+';
+  }
   const depthLayers = {};
   Object.entries(DEPTH_LAYERS_META).forEach(([key, meta]) => {
     const layer = L.imageOverlay(meta.url, DEPTH_BOUNDS, { opacity: 0.8, interactive: false });
     depthLayers[meta.label] = layer;
-    layer.on('add', () => { legend.classList.add('show'); legendLabel.textContent = meta.label + ' (0–' + DEPTH_VMAX + '+ ม.)'; });
+    layer.on('add', () => {
+      legend.classList.add('show');
+      legendLabel.textContent = meta.label + ' (0–' + fmtDepth(meta.vmax) + '+ ม.)';
+      setLegendScale(meta.vmax);
+      // 2026-09-22 เพิ่ม -- forecast7d เปลี่ยน vmax ทุกวันตามสถานการณ์จริง (ดู
+      // gen_map02_forecast.py) fetch ค่าจริงของรอบนี้มา sync legend ให้ตรงภาพเสมอ ไม่รอ cache
+      // เก่า (ถ้า fetch ไม่สำเร็จ เช่นไฟล์ยังไม่ถูกสร้างรอบแรก ก็ใช้ค่าตั้งต้น 4.0 ที่ตั้งไว้แล้วต่อไป)
+      if (meta.metaUrl) {
+        fetch(meta.metaUrl + '?t=' + Date.now()).then(r => r.ok ? r.json() : null).then(d => {
+          if (d && typeof d.vmax_m === 'number' && map.hasLayer(layer)) {
+            legendLabel.textContent = meta.label + ' (0–' + fmtDepth(d.vmax_m) + '+ ม.)';
+            setLegendScale(d.vmax_m);
+          }
+        }).catch(() => {});
+      }
+    });
     // 2026-07-26 แก้ให้ generic (เดิม hardcode เช็คแค่ 2 layer ชื่อตรงๆ พังทันทีที่เพิ่ม layer ที่ 3
     // เข้ามา) -- ซ่อน legend ก็ต่อเมื่อไม่มี depth layer ไหนเปิดอยู่เลยสักตัว ไม่ว่าจะมีกี่ตัวก็ตาม
     layer.on('remove', () => {
       const anyOtherActive = Object.values(depthLayers).some(l => map.hasLayer(l));
       if (!anyOtherActive) legend.classList.remove('show');
     });
+  });
+
+  // ---------- (ข) 2026-09-22 เพิ่ม -- layer time series รายวัน (เลื่อนดูทีละวัน) ----------
+  // ต่างจาก layer อื่นในลูปด้านบนตรงที่ไม่ใช่ URL คงที่ตัวเดียว -- ต้องสลับ URL ตามวันที่เลือกบน
+  // slider เอง (setUrl) จึงเขียนแยกจาก loop generic ข้างบน แต่ยังลงทะเบียนใน depthLayers/legend
+  // ชุดเดียวกันเพื่อให้ toggle ผ่าน L.control.layers และ share legend div เดิมได้ปกติ
+  const SERIES_LABEL = 'พยากรณ์น้ำท่วมรายวัน (เลื่อนดูทีละวัน)';
+  const seriesLayer = L.imageOverlay('assets/data/flood_depth_forecast_d1.png', DEPTH_BOUNDS,
+                                      { opacity: 0.8, interactive: false });
+  depthLayers[SERIES_LABEL] = seriesLayer;
+  const daySlider = document.getElementById('daySlider');
+  const dayRange = document.getElementById('dayRange');
+  const dayLabel = document.getElementById('dayLabel');
+  const dayPlayBtn = document.getElementById('dayPlayBtn');
+  let seriesDays = null;    // [{day,date,max_depth_m}, ...] จาก flood_depth_forecast_series_meta.json
+  let seriesVmax = DEPTH_VMAX;
+  let playTimer = null;
+
+  function stopPlay() {
+    if (playTimer) { clearInterval(playTimer); playTimer = null; dayPlayBtn.textContent = '▶'; }
+  }
+  function showDay(n) {
+    seriesLayer.setUrl('assets/data/flood_depth_forecast_d' + n + '.png');
+    dayRange.value = n;
+    const info = seriesDays && seriesDays.find(dd => dd.day === n);
+    dayLabel.textContent = info ? (info.date + ' (วันที่ ' + n + ')') : ('วันที่ ' + n);
+  }
+  dayRange.addEventListener('input', () => { stopPlay(); showDay(parseInt(dayRange.value, 10)); });
+  dayPlayBtn.addEventListener('click', () => {
+    if (playTimer) { stopPlay(); return; }
+    dayPlayBtn.textContent = '⏸';
+    playTimer = setInterval(() => {
+      let n = parseInt(dayRange.value, 10) + 1;
+      if (n > (seriesDays ? seriesDays.length : 7)) n = 1;
+      showDay(n);
+    }, 1200);
+  });
+  seriesLayer.on('add', () => {
+    legend.classList.add('show');
+    daySlider.classList.add('show');
+    legendLabel.textContent = SERIES_LABEL + ' (0–' + fmtDepth(seriesVmax) + '+ ม.)';
+    setLegendScale(seriesVmax);
+    showDay(parseInt(dayRange.value, 10) || 1);
+    // fetch metadata สดทุกครั้งที่เปิด layer (จำนวนวัน/VMAX เปลี่ยนได้ทุกวันตามผลพยากรณ์จริง)
+    fetch('assets/data/flood_depth_forecast_series_meta.json?t=' + Date.now())
+      .then(r => r.ok ? r.json() : null).then(d => {
+        if (!d || !map.hasLayer(seriesLayer)) return;
+        seriesDays = d.days || null;
+        seriesVmax = typeof d.vmax_m === 'number' ? d.vmax_m : seriesVmax;
+        dayRange.max = seriesDays ? seriesDays.length : 7;
+        legendLabel.textContent = SERIES_LABEL + ' (0–' + fmtDepth(seriesVmax) + '+ ม.)';
+        setLegendScale(seriesVmax);
+        showDay(parseInt(dayRange.value, 10) || 1);
+      }).catch(() => {});
+  });
+  seriesLayer.on('remove', () => {
+    stopPlay();
+    daySlider.classList.remove('show');
+    const anyOtherActive = Object.values(depthLayers).some(l => map.hasLayer(l));
+    if (!anyOtherActive) legend.classList.remove('show');
   });
 
   L.control.layers(baseMaps, Object.assign({ 'จุดเสี่ยงรายห้วย': markerLayer }, depthLayers), { collapsed: true }).addTo(map);
