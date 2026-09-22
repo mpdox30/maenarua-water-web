@@ -62,6 +62,7 @@ import io
 import logging
 import os
 import sys
+import time
 import urllib.request
 from pathlib import Path
 from typing import Optional
@@ -336,6 +337,53 @@ def compute_for_date(
     }
 
 
+RETRY_ATTEMPTS_MISSING_07 = 3
+RETRY_DELAY_SECONDS_MISSING_07 = 90
+
+_MISSING_07_MARKER = "ไม่มีข้อมูลระดับน้ำที่ 07:00"
+
+
+def compute_for_date_with_retry(
+    target_date: dt.date,
+    sheet_source: str | None = None,
+    release_csv: Path = RELEASE_LOG_CSV,
+) -> dict:
+    """
+    2026-09-22 เพิ่ม -- wrapper รอบ compute_for_date() เพิ่ม retry อัตโนมัติเฉพาะตอนเจอ ValueError
+    แบบ "ไม่มีข้อมูลระดับน้ำที่ 07:00" เท่านั้น (error ประเภทอื่น เช่น ไม่มีค่า evap ของเดือนนั้น จะ
+    raise ทันทีไม่มี retry เหมือนเดิม)
+
+    เหตุผล: เกิดเคสจริงวันนี้ (2026-09-22) ที่ compute_for_date(2026-09-21) fail ด้วย error นี้ ทั้งที่
+    wide_log บนชีตจริงมีข้อมูล 07:00 ของ 2026-09-21 ครบถ้วน (ยืนยันจากไฟล์ export ที่ผู้ใช้ส่งมาก่อน
+    หน้านี้ในวันเดียวกัน) -- ต้นเหตุที่น่าจะเป็นไปได้มากที่สุดคือ Google Sheets "publish to web" CSV
+    export (ที่ load_wide_log() ดึงมาใช้) มี cache delay จากชีตจริง (พฤติกรรมที่ Google เอกสารไว้ว่า
+    อาจดีเลย์ได้หลายนาทีถึงหลักชั่วโมง ไม่ใช่ real-time) ไม่ใช่ข้อมูลหายจริงจาก fetchAndLog -- เพิ่ม
+    retry รอ cache ตามทันแทนที่จะ fail ทันทีในรอบเดียว
+
+    สำคัญ: ไม่ fabricate ข้อมูลใดๆ -- แค่เรียก load_wide_log() ใหม่ (fetch สดจากแหล่งเดิม) แต่ละรอบ
+    ถ้าหลัง retry ครบ RETRY_ATTEMPTS_MISSING_07 รอบแล้วยังไม่มีข้อมูลจริง จะ raise error เดิมให้เห็น
+    ชัดเจนเหมือนเดิมทุกประการ (ตรงตามหลักการเดิมของ compute_for_date(): เห็น error ชัดดีกว่าเขียนแถว
+    ผิดๆ ลง output)
+    """
+    last_exc: ValueError | None = None
+    for attempt in range(1, RETRY_ATTEMPTS_MISSING_07 + 1):
+        try:
+            return compute_for_date(target_date, sheet_source, release_csv)
+        except ValueError as e:
+            if _MISSING_07_MARKER not in str(e):
+                raise
+            last_exc = e
+            if attempt < RETRY_ATTEMPTS_MISSING_07:
+                logger.warning(
+                    "รอบที่ %d/%d ไม่พบข้อมูล 07:00 (%s) -- อาจเป็นเพราะ publish-to-web CSV cache "
+                    "ยังไม่อัปเดตตามชีตจริง รอ %d วินาทีแล้วดึงข้อมูลใหม่...",
+                    attempt, RETRY_ATTEMPTS_MISSING_07, e, RETRY_DELAY_SECONDS_MISSING_07,
+                )
+                time.sleep(RETRY_DELAY_SECONDS_MISSING_07)
+    assert last_exc is not None
+    raise last_exc
+
+
 def run_and_append(
     target_date: dt.date,
     sheet_source: str | None = None,
@@ -343,14 +391,15 @@ def run_and_append(
     write_official: bool = True,
 ) -> dict:
     """
-    เรียก compute_for_date() แล้วเขียนผลลง output_csv (append-only) -- idempotent ต่อวันที่:
-    ถ้ามีแถวของ target_date อยู่แล้ว จะแทนที่ด้วยผลใหม่ (เผื่อ backfill/re-run ซ้ำ) ไม่ใช่เพิ่มซ้ำ
+    เรียก compute_for_date_with_retry() แล้วเขียนผลลง output_csv (append-only) -- idempotent
+    ต่อวันที่: ถ้ามีแถวของ target_date อยู่แล้ว จะแทนที่ด้วยผลใหม่ (เผื่อ backfill/re-run ซ้ำ) ไม่ใช่
+    เพิ่มซ้ำ
 
     write_official=True (default ตั้งแต่ 2026-07-18): เขียนผลลงไฟล์ทางการจริงด้วย ผ่าน
     reservoir_official_file_writer.write_computed_days() -- ถ้าล้มเหลว (เช่น ยังไม่มีไฟล์ของเดือนนั้น
     เตรียมไว้) จะ log warning แต่ไม่ raise ต่อ (shadow CSV ที่เขียนสำเร็จแล้วยังคงอยู่ ไม่เสียหาย)
     """
-    result = compute_for_date(target_date, sheet_source)
+    result = compute_for_date_with_retry(target_date, sheet_source)
 
     output_csv.parent.mkdir(parents=True, exist_ok=True)
     existing_rows = []
