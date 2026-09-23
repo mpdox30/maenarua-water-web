@@ -421,6 +421,69 @@ def _wd_season_enc(iso_week: int) -> int:
     return 0
 
 
+# ---------------------------------------------------------------------------
+# Water Demand -- Kc target-week feature (deploy 2026-09-23, ดู #52-57, sync จาก data_pipeline.py)
+# ---------------------------------------------------------------------------
+# ยืนยันจาก error breakdown ว่า Kc ของข้าว (พืชหลักทั้งสองโซน) กระโดดแบบ step function
+# ตอนเข้าสู่ฤดูปลูก (week 26->27) ทำให้โมเดลเดิมที่มีแค่ WoY_sin/cos (smooth seasonality)
+# ทำนายพลาดหนักช่วงนั้น -- แก้ด้วยการป้อน "Kc ถ่วงน้ำหนักพื้นที่ของสัปดาห์เป้าหมาย" (target week
+# = as_of + h สัปดาห์) เป็น feature ต่อ horizon โดยตรง เพราะ Kc รู้ล่วงหน้าแน่นอน 100% ไม่ต้องเดา
+# (สคริปต์ทดลอง: add_kc_target_features.py, train_stage2_kc_plus_2025.py,
+# train_stage2_train2022_test2024_25.py ใน Water_demand/active/ -- ผลตรวจ apples-to-apples แล้ว
+# zone_A MAE -5.9% ถึง -8.8% (ขึ้นกับ TEST years), zone_B -2.1% ถึง -3.3% เทียบ baseline เดิม)
+#
+# สูตรเดียวกับ add_kc_target_features.py::build_kc_weighted_lookup() เป๊ะ แต่ไม่ hardcode พื้นที่
+# ซ้ำเป็นชุดที่ 3 -- reuse sar_classification.AREA_2020_HA_BY_ZONE (ตัวเดียวกับที่
+# _wd_get_area_zone_ha() ใช้อยู่แล้ว) กรองตัด crop 'etc' ออก (ไม่มี Kc นิยาม)
+
+_wd_kc_weighted_lookup_cache: Optional[dict] = None
+
+
+def _wd_kc_weighted_lookup() -> dict:
+    """
+    คืน dict[(zone, week)] -> Kc ถ่วงน้ำหนักพื้นที่ (เฉลี่ยข้าม crop ทุกตัวใน zone ยกเว้น 'etc')
+    cache ไว้ใน module-level variable (พื้นที่ hardcode ปี 2020 คงที่ระหว่างรัน pipeline หนึ่งรอบ)
+    """
+    global _wd_kc_weighted_lookup_cache
+    if _wd_kc_weighted_lookup_cache is not None:
+        return _wd_kc_weighted_lookup_cache
+
+    import sar_classification as sc
+
+    kc_lookup = _wd_load_kc_lookup()
+    out: dict = {}
+    for zone, areas_ha in sc.AREA_2020_HA_BY_ZONE.items():
+        areas = {crop: ha for crop, ha in areas_ha.items() if crop != "etc" and ha}
+        total_area = sum(areas.values())
+        for week in range(1, 53):
+            if total_area <= 0:
+                out[(zone, week)] = 0.0
+                continue
+            weighted_sum = 0.0
+            for crop, area_ha in areas.items():
+                kc_val = kc_lookup.get((crop, week), 0.0)
+                weighted_sum += kc_val * area_ha
+            out[(zone, week)] = weighted_sum / total_area
+
+    _wd_kc_weighted_lookup_cache = out
+    logger.info("สร้าง Kc weighted lookup (target-week feature) สำเร็จ (%d รายการ)", len(out))
+    return out
+
+
+def _wd_kc_target_h(zone: str, as_of_year: int, as_of_week: int, h: int) -> float:
+    """
+    Kc ถ่วงน้ำหนักพื้นที่ของ "สัปดาห์เป้าหมาย" (as_of + h สัปดาห์) สำหรับ zone ที่กำหนด -- สูตร
+    เดียวกับ add_kc_target_features.py::target_week_for() เป๊ะ (cap iso_week ที่ 52 เพราะ
+    kc_weekly_lookup_all_crops.csv มีแค่ week 1-52)
+    """
+    from datetime import date
+
+    as_of_date = date.fromisocalendar(as_of_year, as_of_week, 1)
+    target_date = as_of_date + timedelta(weeks=h)
+    target_week = min(target_date.isocalendar()[1], 52)
+    return _wd_kc_weighted_lookup().get((zone, target_week), 0.0)
+
+
 def _wd_get_area_zone_ha(zone: str, sar_result: Optional[dict]) -> dict:
     """
     เลือกพื้นที่ (ha) ต่อ crop ของ zone ที่จะใช้คำนวณ NIR/GIR สด -- ใช้ผล SAR crop classification
@@ -2064,8 +2127,16 @@ def _wd_run_prediction(model: dict, features: dict) -> tuple[Optional[dict], Opt
     เกิดเพราะ .pkl มีครบ แต่กันไว้เผื่ออนาคตโมเดลรุ่นใหม่เทรนไม่ครบทุก horizon) จะได้ None เฉพาะ key นั้น
     ไม่ทำให้ทั้งโซนหายไปทั้งก้อน
 
+    2026-09-23 แก้ (deploy Kc feature, sync จาก data_pipeline.py ดู #52-57) -- catboost_models.pkl/
+    lightgbm_models.pkl/stack_weights.pkl (Stage2 magnitude regressor) ตอนนี้เป็นเวอร์ชัน train ด้วย
+    kc_target_h{h} เพิ่มเข้ามาต่อ horizon แล้ว (37 base features + 1 Kc = 38) ต้องต่อ X_reg เดิม เข้า
+    กับค่า Kc ของสัปดาห์เป้าหมาย (as_of + h) คำนวณสดผ่าน _wd_kc_target_h() ก่อนป้อนเข้า cat_model/
+    lgb_model เท่านั้น -- Stage1 classifier (X_clf) ยังใช้ X_reg/X_clf เดิมแบบไม่มี Kc เหมือนเดิม
+
     คืนค่า tuple (zone_a_result, zone_b_result)
     """
+    import numpy as np
+
     results = {}
     for zone in ("zone_A", "zone_B"):
         feat = features.get(zone)
@@ -2088,8 +2159,17 @@ def _wd_run_prediction(model: dict, features: dict) -> tuple[Optional[dict], Opt
 
             prob_active = float(clf.predict_proba(feat["X_clf"])[:, 1][0])
 
-            cat_pred = float(cat_model.predict(feat["X_reg"])[0])
-            lgb_pred = float(lgb_model.predict(feat["X_reg"])[0])
+            try:
+                kc_val = _wd_kc_target_h(zone, feat["as_of_year"], feat["as_of_week"], h)
+            except Exception:
+                logger.exception(
+                    "คำนวณ Kc target-week feature ล้มเหลว (%s h%d) -- ใช้ 0.0 แทน", zone, h,
+                )
+                kc_val = 0.0
+            X_reg_kc = np.concatenate([feat["X_reg"], [[kc_val]]], axis=1)
+
+            cat_pred = float(cat_model.predict(X_reg_kc)[0])
+            lgb_pred = float(lgb_model.predict(X_reg_kc)[0])
             magnitude = weights["w_cat"] * cat_pred + weights["w_lgb"] * lgb_pred
             magnitude = max(magnitude, 0.0)
 
