@@ -112,15 +112,20 @@ WD_KC_LOOKUP_CSV = WATER_DEMAND_MODEL_DIR / "kc_weekly_lookup_all_crops.csv"
 #      เป็น 2 ปี (2023+2024) แล้ว -- สัปดาห์พีค pulse-irrigation เกิดซ้ำทุกปี ทำให้ normalized-residual
 #      รอบ point estimate เดียว (final_m3) ไม่เหมาะกับ shape ข้อมูลที่ skew/bursty แบบนี้
 #   2) CQR (Conformalized Quantile Regression) -- cqr_intervals.json + cqr_quantile_models.pkl
-#      (build_cqr_intervals.py) -- **ใช้จริงใน production ตอนนี้** เพราะเทรนโมเดล quantile
-#      regression แยกต่างหาก (LightGBM objective=quantile) ที่ปรับ shape การกระจายตาม feature ได้
-#      เอง จับ skew ได้เป็นธรรมชาติกว่า -- เทียบกับ live prediction จริงแล้วได้ interval แคบกว่า
-#      Mondrian 28-76% ขึ้นกับ horizon (Zone A) โดย coverage ยังใกล้เป้า 90% เท่าเดิม (ยืนยันด้วย
-#      two-way holdout: calibrate 2023->test 2024 และกลับกัน)
+#      (build_cqr_intervals.py) -- ใช้ q_hat ตัวเดียว (global) รวมทุกสัปดาห์ -- **superseded
+#      โดยวิธีที่ 3 ด้านล่างแล้ว** (เก็บไฟล์ไว้เป็น reference/เปรียบเทียบ)
+#   3) Mondrian-CQR (build_mondrian_cqr_intervals.py) -- **ใช้จริงใน production ตอนนี้** ใช้
+#      โมเดล quantile regression ตัวเดิมจาก (2) แต่แยก q_hat ตาม regime wet(y>0)/dry(y==0)
+#      แบบเดียวกับที่ Mondrian+Normalized เดิมทำ (regime ตอน inference เลือกจาก stage1
+#      probability_active >= stage1_thresholds[(zone,h)]) -- เหตุผล: การรวม conformity score
+#      จากทุกสัปดาห์เป็น q_hat เดียว (วิธีที่ 2) ทำให้สัปดาห์ dry (21-44% ของปี ที่โมเดลควอนไทล์
+#      ทำนายแคบและแม่นอยู่แล้ว) ถูกดึงช่วงให้กว้างเกินจำเป็นจากสัปดาห์ wet ที่ error สูงกว่ามาก --
+#      แยก regime ลด dry-week interval width ลง 89-94% (Zone A/B) โดย coverage สองทาง
+#      (two-way holdout) ยังอยู่ที่ 93-95% (เกินเป้า 90% เล็กน้อย ยังปลอดภัย)
 #
-# ถ้าไฟล์ CQR ไม่มี (เช่นยังไม่เคย build) prediction ยังทำงานได้ปกติ แค่ไม่มี interval แนบมา
+# ถ้าไฟล์ Mondrian-CQR ไม่มี (เช่นยังไม่เคย build) prediction ยังทำงานได้ปกติ แค่ไม่มี interval แนบมา
 WD_CQR_MODELS_PKL = WATER_DEMAND_MODEL_DIR / "cqr_quantile_models.pkl"
-WD_CQR_INTERVALS_JSON = WATER_DEMAND_MODEL_DIR / "cqr_intervals.json"
+WD_MONDRIAN_CQR_INTERVALS_JSON = WATER_DEMAND_MODEL_DIR / "mondrian_cqr_intervals.json"
 WD_IRRIGATION_EFFICIENCY = 0.90  # IE เฉพาะ zone_B (irrigated) เท่านั้น -- zone_A (rainfed) ไม่มี term นี้
 
 RESERVOIR_INFLOW_MODEL_DIR = PROJECT_ROOT / "01_data" / "scripts and code" / "Reservoir_inflow" / "active"
@@ -379,24 +384,25 @@ def _wd_load_models(model_dir: Path = WATER_DEMAND_MODEL_DIR) -> dict:
         len(models["stage1_classifiers"]), len(models["stack_weights"]),
     )
 
-    # 2026-09-23 เพิ่ม -- โหลด CQR quantile models + q_hat (ดู WD_CQR_MODELS_PKL/WD_CQR_INTERVALS_JSON
-    # ด้านบน) ไม่ raise ถ้าไม่มีไฟล์/อ่านไม่ได้ -- แค่ log warning แล้วให้ prediction ทำงานต่อโดยไม่มี
-    # lower_m3/upper_m3 แนบมา (ไม่ critical เท่าตัวพยากรณ์หลัก final_m3)
+    # 2026-09-23 เพิ่ม -- โหลด CQR quantile models + Mondrian-CQR q_hat แยก regime (ดู
+    # WD_CQR_MODELS_PKL/WD_MONDRIAN_CQR_INTERVALS_JSON ด้านบน) ไม่ raise ถ้าไม่มีไฟล์/อ่านไม่ได้ --
+    # แค่ log warning แล้วให้ prediction ทำงานต่อโดยไม่มี lower_m3/upper_m3 แนบมา (ไม่ critical
+    # เท่าตัวพยากรณ์หลัก final_m3)
     try:
         models["cqr_quantile_models"] = joblib.load(WD_CQR_MODELS_PKL)
-        with open(WD_CQR_INTERVALS_JSON, encoding="utf-8") as f:
-            cqr = json.load(f)
-        models["cqr_intervals"] = cqr.get("quantiles")
+        with open(WD_MONDRIAN_CQR_INTERVALS_JSON, encoding="utf-8") as f:
+            mcqr = json.load(f)
+        models["mondrian_cqr_intervals"] = mcqr.get("quantiles")
         logger.info(
-            "Loaded Water Demand CQR intervals จาก %s (calibrated %s)",
-            WD_CQR_INTERVALS_JSON, cqr.get("_meta", {}).get("computed_at"),
+            "Loaded Water Demand Mondrian-CQR intervals จาก %s (calibrated %s)",
+            WD_MONDRIAN_CQR_INTERVALS_JSON, mcqr.get("_meta", {}).get("computed_at"),
         )
     except Exception:
         models["cqr_quantile_models"] = None
-        models["cqr_intervals"] = None
+        models["mondrian_cqr_intervals"] = None
         logger.warning(
-            "ไม่พบ/อ่าน cqr_quantile_models.pkl หรือ cqr_intervals.json ไม่สำเร็จ -- Water Demand "
-            "prediction จะไม่มี lower_m3/upper_m3 แนบมา (ไม่กระทบค่าพยากรณ์หลัก final_m3)",
+            "ไม่พบ/อ่าน cqr_quantile_models.pkl หรือ mondrian_cqr_intervals.json ไม่สำเร็จ -- "
+            "Water Demand prediction จะไม่มี lower_m3/upper_m3 แนบมา (ไม่กระทบค่าพยากรณ์หลัก final_m3)",
         )
 
     return models
@@ -1984,26 +1990,31 @@ def _wd_run_prediction(model: dict, features: dict) -> tuple[Optional[dict], Opt
                 "final_m3": round(final, 2),
             }
 
-            # 2026-09-23 เพิ่ม -- แนบ lower_m3/upper_m3 ด้วย CQR (Conformalized Quantile Regression,
-            # ดู build_cqr_intervals.py) -- แทนที่ Mondrian+Normalized เดิม (เก็บไฟล์นั้นไว้เป็น
-            # reference แต่เลิกใช้จริงแล้ว เหตุผลดู comment ที่ WD_CQR_MODELS_PKL ด้านบน)
+            # 2026-09-23 เพิ่ม -- แนบ lower_m3/upper_m3 ด้วย Mondrian-CQR (ดู
+            # build_mondrian_cqr_intervals.py) -- ใช้โมเดล quantile regression เดิมจาก CQR
+            # (cqr_quantile_models.pkl) แต่แยก q_hat ตาม regime wet/dry แบบ Mondrian เพื่อไม่ให้
+            # สัปดาห์ dry (โมเดล quantile ทำนายแคบ/แม่นอยู่แล้ว) ถูกดึงช่วงกว้างจากสัปดาห์ wet --
+            # regime ตอน inference เลือกจาก prob_active เทียบ stage1_thresholds เหมือน Mondrian เดิม
             # bound ตรงนี้คำนวณจาก y_h{h} (raw target) ตรงๆ ผ่านโมเดล quantile regression แยก
-            # ไม่ได้ผูกกับ final_m3/epsilon แบบเดิม
+            # ไม่ได้ผูกกับ final_m3/epsilon แบบ Mondrian+Normalized รุ่นแรก
             cqr_models = model.get("cqr_quantile_models")
-            cqr_intervals = model.get("cqr_intervals")
-            if cqr_models is not None and cqr_intervals is not None:
+            mcqr_intervals = model.get("mondrian_cqr_intervals")
+            if cqr_models is not None and mcqr_intervals is not None:
                 try:
                     q_lo_model = cqr_models[(zone, h, "lo")]
                     q_hi_model = cqr_models[(zone, h, "hi")]
                     q_lo = max(float(q_lo_model.predict(feat["X_reg"])[0]), 0.0)
                     q_hi = max(float(q_hi_model.predict(feat["X_reg"])[0]), q_lo)
-                    q_hat = cqr_intervals[zone][str(h)]["q_hat"]
+                    regime = mcqr_intervals[zone][str(h)]
+                    threshold = regime["threshold"]
+                    active = prob_active >= threshold
+                    q_hat = regime["q_hat_wet"] if active else regime["q_hat_dry"]
                     result_h["lower_m3"] = round(max(q_lo - q_hat, 0.0), 2)
                     result_h["upper_m3"] = round(q_hi + q_hat, 2)
-                    result_h["interval_note"] = "90% CQR (Conformalized Quantile Regression) prediction interval"
+                    result_h["interval_note"] = "90% Mondrian-CQR prediction interval (wet/dry regime-split)"
                 except (KeyError, TypeError):
                     logger.warning(
-                        "ไม่มี CQR interval สำหรับ (%s, h%d) -- ข้าม", zone, h,
+                        "ไม่มี Mondrian-CQR interval สำหรับ (%s, h%d) -- ข้าม", zone, h,
                     )
 
             horizon_results[f"h{h}"] = result_h
