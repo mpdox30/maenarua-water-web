@@ -4,184 +4,186 @@
     "alpha": 0.1,
     "target_coverage": 0.9,
     "epsilon_m3": 1000,
-    "calib_year": 2023,
-    "test_year_for_validation": 2024,
+    "calib_years": [
+      2023,
+      2024
+    ],
+    "calib_years_note": "2026-09-23 (รอบ 2): ขยายจากปี 2023 ปีเดียวเป็น 2023+2024 รวมกัน (ทั้งคู่ out-of-sample จากโมเดลที่เทรนด้วย 2020-2022 เท่านั้น) เพราะปี 2023 เดี่ยวๆ เป็นปีสุดขั้วที่สุดในรอบ 5 ปี (mean/p90/max demand สูงสุด) ทำให้ q_wet เดิมกว้างเกินจำเป็น -- ยืนยันด้วย two-way holdout (calibrate 2023->test 2024 และกลับกัน) ก่อนรวม ทั้งสองทางได้ coverage ใกล้เป้า 90% สม่ำเสมอ ไม่มีทางใดทางหนึ่ง overfit -- ไม่เหลือ test year แยกต่างหากอีกต่อไปหลังรวม (ข้อจำกัดที่ยอมรับได้ เพราะ two-way check ข้างต้นตรวจสอบ generalization ไปแล้ว)",
     "regime_rule": "active (wet) if stage1 probability_active >= stage1_thresholds[(zone,h)], else dry",
     "interval_formula": "half = q_regime * (abs(final_m3) + epsilon); lower = max(final_m3 - half, 0); upper = final_m3 + half",
-    "computed_at": "2026-09-23T10:46:41",
-    "note": "q_wet/q_dry recomputed 2026-09-23 -- ไม่เคยมี artifact ก่อนหน้านี้ notebook ต้นทางไม่มี saved cell outputs"
+    "computed_at": "2026-09-23T10:58:38"
   },
   "quantiles": {
     "zone_A": {
       "1": {
-        "q_wet": 14.27501,
-        "q_dry": 0.983533,
+        "q_wet": 13.916082,
+        "q_dry": 0.983642,
         "threshold": 0.4,
-        "n_calib_wet": 41,
-        "n_calib_dry": 11
+        "n_calib_wet": 77,
+        "n_calib_dry": 26
       },
       "2": {
-        "q_wet": 12.427468,
-        "q_dry": 0.982982,
+        "q_wet": 11.126705,
+        "q_dry": 0.983773,
         "threshold": 0.45,
-        "n_calib_wet": 41,
-        "n_calib_dry": 11
+        "n_calib_wet": 76,
+        "n_calib_dry": 26
       },
       "3": {
-        "q_wet": 12.488982,
-        "q_dry": 0.975662,
+        "q_wet": 11.780911,
+        "q_dry": 0.976183,
         "threshold": 0.3,
-        "n_calib_wet": 41,
-        "n_calib_dry": 11
+        "n_calib_wet": 75,
+        "n_calib_dry": 26
       },
       "4": {
-        "q_wet": 8.912318,
-        "q_dry": 0.98792,
+        "q_wet": 8.776601,
+        "q_dry": 0.987822,
         "threshold": 0.475,
-        "n_calib_wet": 41,
-        "n_calib_dry": 11
+        "n_calib_wet": 74,
+        "n_calib_dry": 26
       },
       "5": {
-        "q_wet": 8.842359,
-        "q_dry": 0.982426,
+        "q_wet": 8.845358,
+        "q_dry": 0.982585,
         "threshold": 0.35,
-        "n_calib_wet": 41,
-        "n_calib_dry": 11
+        "n_calib_wet": 73,
+        "n_calib_dry": 26
       },
       "6": {
-        "q_wet": 16.958088,
-        "q_dry": 0.983733,
+        "q_wet": 17.034195,
+        "q_dry": 0.983811,
         "threshold": 0.3,
-        "n_calib_wet": 41,
-        "n_calib_dry": 11
+        "n_calib_wet": 72,
+        "n_calib_dry": 26
       },
       "7": {
-        "q_wet": 14.55911,
-        "q_dry": 0.984937,
+        "q_wet": 13.915815,
+        "q_dry": 0.985026,
         "threshold": 0.2,
-        "n_calib_wet": 41,
-        "n_calib_dry": 11
+        "n_calib_wet": 71,
+        "n_calib_dry": 26
       },
       "8": {
-        "q_wet": 12.686808,
-        "q_dry": 0.982972,
+        "q_wet": 9.576776,
+        "q_dry": 0.983084,
         "threshold": 0.55,
-        "n_calib_wet": 41,
-        "n_calib_dry": 11
+        "n_calib_wet": 70,
+        "n_calib_dry": 26
       },
       "9": {
-        "q_wet": 17.254605,
-        "q_dry": 0.990717,
+        "q_wet": 15.594577,
+        "q_dry": 0.989916,
         "threshold": 0.275,
-        "n_calib_wet": 41,
-        "n_calib_dry": 11
+        "n_calib_wet": 69,
+        "n_calib_dry": 26
       },
       "10": {
-        "q_wet": 18.372117,
-        "q_dry": 0.993659,
+        "q_wet": 23.933861,
+        "q_dry": 0.99152,
         "threshold": 0.175,
-        "n_calib_wet": 41,
-        "n_calib_dry": 11
+        "n_calib_wet": 68,
+        "n_calib_dry": 26
       },
       "11": {
-        "q_wet": 9.479231,
-        "q_dry": 0.986086,
+        "q_wet": 10.22021,
+        "q_dry": 0.986093,
         "threshold": 0.4,
-        "n_calib_wet": 41,
-        "n_calib_dry": 11
+        "n_calib_wet": 67,
+        "n_calib_dry": 26
       },
       "12": {
-        "q_wet": 10.025511,
-        "q_dry": 0.989312,
+        "q_wet": 10.658338,
+        "q_dry": 0.988853,
         "threshold": 0.35,
-        "n_calib_wet": 41,
-        "n_calib_dry": 11
+        "n_calib_wet": 66,
+        "n_calib_dry": 26
       }
     },
     "zone_B": {
       "1": {
-        "q_wet": 23.694444,
-        "q_dry": 0.963022,
+        "q_wet": 14.703411,
+        "q_dry": 0.938197,
         "threshold": 0.35,
-        "n_calib_wet": 38,
-        "n_calib_dry": 14
+        "n_calib_wet": 71,
+        "n_calib_dry": 32
       },
       "2": {
-        "q_wet": 10.700767,
-        "q_dry": 0.932511,
+        "q_wet": 10.170231,
+        "q_dry": 0.929827,
         "threshold": 0.35,
-        "n_calib_wet": 38,
-        "n_calib_dry": 14
+        "n_calib_wet": 70,
+        "n_calib_dry": 32
       },
       "3": {
-        "q_wet": 48.86221,
-        "q_dry": 0.92722,
+        "q_wet": 11.274832,
+        "q_dry": 0.906452,
         "threshold": 0.275,
-        "n_calib_wet": 38,
-        "n_calib_dry": 14
+        "n_calib_wet": 69,
+        "n_calib_dry": 32
       },
       "4": {
-        "q_wet": 25.744193,
-        "q_dry": 0.939736,
+        "q_wet": 18.743123,
+        "q_dry": 0.904732,
         "threshold": 0.3,
-        "n_calib_wet": 38,
-        "n_calib_dry": 14
+        "n_calib_wet": 68,
+        "n_calib_dry": 32
       },
       "5": {
-        "q_wet": 38.70608,
-        "q_dry": 0.963119,
+        "q_wet": 26.833284,
+        "q_dry": 0.931674,
         "threshold": 0.2,
-        "n_calib_wet": 38,
-        "n_calib_dry": 14
+        "n_calib_wet": 67,
+        "n_calib_dry": 32
       },
       "6": {
-        "q_wet": 20.178621,
-        "q_dry": 0.950372,
+        "q_wet": 14.484621,
+        "q_dry": 0.927199,
         "threshold": 0.3,
-        "n_calib_wet": 38,
-        "n_calib_dry": 14
+        "n_calib_wet": 66,
+        "n_calib_dry": 32
       },
       "7": {
-        "q_wet": 16.075227,
-        "q_dry": 0.945675,
+        "q_wet": 15.682767,
+        "q_dry": 0.928324,
         "threshold": 0.375,
-        "n_calib_wet": 38,
-        "n_calib_dry": 14
+        "n_calib_wet": 65,
+        "n_calib_dry": 32
       },
       "8": {
-        "q_wet": 32.14329,
-        "q_dry": 0.945321,
+        "q_wet": 23.450458,
+        "q_dry": 0.892897,
         "threshold": 0.3,
-        "n_calib_wet": 38,
-        "n_calib_dry": 14
+        "n_calib_wet": 64,
+        "n_calib_dry": 32
       },
       "9": {
-        "q_wet": 24.473676,
-        "q_dry": 0.969095,
+        "q_wet": 20.420433,
+        "q_dry": 0.952974,
         "threshold": 0.2,
-        "n_calib_wet": 38,
-        "n_calib_dry": 14
+        "n_calib_wet": 63,
+        "n_calib_dry": 32
       },
       "10": {
-        "q_wet": 18.56367,
-        "q_dry": 0.970121,
+        "q_wet": 16.839648,
+        "q_dry": 0.952277,
         "threshold": 0.35,
-        "n_calib_wet": 38,
-        "n_calib_dry": 14
+        "n_calib_wet": 62,
+        "n_calib_dry": 32
       },
       "11": {
-        "q_wet": 16.774483,
-        "q_dry": 0.970714,
+        "q_wet": 15.802524,
+        "q_dry": 0.939983,
         "threshold": 0.35,
-        "n_calib_wet": 38,
-        "n_calib_dry": 14
+        "n_calib_wet": 61,
+        "n_calib_dry": 32
       },
       "12": {
-        "q_wet": 40.203903,
-        "q_dry": 0.950022,
+        "q_wet": 22.529474,
+        "q_dry": 0.936096,
         "threshold": 0.35,
-        "n_calib_wet": 38,
-        "n_calib_dry": 14
+        "n_calib_wet": 60,
+        "n_calib_dry": 32
       }
     }
   }
