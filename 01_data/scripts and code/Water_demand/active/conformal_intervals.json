@@ -1,0 +1,188 @@
+{
+  "_meta": {
+    "methodology": "Mondrian + Normalized conformal prediction (Variant D, combined_final_pipeline.ipynb Step 4v3)",
+    "alpha": 0.1,
+    "target_coverage": 0.9,
+    "epsilon_m3": 1000,
+    "calib_year": 2023,
+    "test_year_for_validation": 2024,
+    "regime_rule": "active (wet) if stage1 probability_active >= stage1_thresholds[(zone,h)], else dry",
+    "interval_formula": "half = q_regime * (abs(final_m3) + epsilon); lower = max(final_m3 - half, 0); upper = final_m3 + half",
+    "computed_at": "2026-09-23T10:46:41",
+    "note": "q_wet/q_dry recomputed 2026-09-23 -- ไม่เคยมี artifact ก่อนหน้านี้ notebook ต้นทางไม่มี saved cell outputs"
+  },
+  "quantiles": {
+    "zone_A": {
+      "1": {
+        "q_wet": 14.27501,
+        "q_dry": 0.983533,
+        "threshold": 0.4,
+        "n_calib_wet": 41,
+        "n_calib_dry": 11
+      },
+      "2": {
+        "q_wet": 12.427468,
+        "q_dry": 0.982982,
+        "threshold": 0.45,
+        "n_calib_wet": 41,
+        "n_calib_dry": 11
+      },
+      "3": {
+        "q_wet": 12.488982,
+        "q_dry": 0.975662,
+        "threshold": 0.3,
+        "n_calib_wet": 41,
+        "n_calib_dry": 11
+      },
+      "4": {
+        "q_wet": 8.912318,
+        "q_dry": 0.98792,
+        "threshold": 0.475,
+        "n_calib_wet": 41,
+        "n_calib_dry": 11
+      },
+      "5": {
+        "q_wet": 8.842359,
+        "q_dry": 0.982426,
+        "threshold": 0.35,
+        "n_calib_wet": 41,
+        "n_calib_dry": 11
+      },
+      "6": {
+        "q_wet": 16.958088,
+        "q_dry": 0.983733,
+        "threshold": 0.3,
+        "n_calib_wet": 41,
+        "n_calib_dry": 11
+      },
+      "7": {
+        "q_wet": 14.55911,
+        "q_dry": 0.984937,
+        "threshold": 0.2,
+        "n_calib_wet": 41,
+        "n_calib_dry": 11
+      },
+      "8": {
+        "q_wet": 12.686808,
+        "q_dry": 0.982972,
+        "threshold": 0.55,
+        "n_calib_wet": 41,
+        "n_calib_dry": 11
+      },
+      "9": {
+        "q_wet": 17.254605,
+        "q_dry": 0.990717,
+        "threshold": 0.275,
+        "n_calib_wet": 41,
+        "n_calib_dry": 11
+      },
+      "10": {
+        "q_wet": 18.372117,
+        "q_dry": 0.993659,
+        "threshold": 0.175,
+        "n_calib_wet": 41,
+        "n_calib_dry": 11
+      },
+      "11": {
+        "q_wet": 9.479231,
+        "q_dry": 0.986086,
+        "threshold": 0.4,
+        "n_calib_wet": 41,
+        "n_calib_dry": 11
+      },
+      "12": {
+        "q_wet": 10.025511,
+        "q_dry": 0.989312,
+        "threshold": 0.35,
+        "n_calib_wet": 41,
+        "n_calib_dry": 11
+      }
+    },
+    "zone_B": {
+      "1": {
+        "q_wet": 23.694444,
+        "q_dry": 0.963022,
+        "threshold": 0.35,
+        "n_calib_wet": 38,
+        "n_calib_dry": 14
+      },
+      "2": {
+        "q_wet": 10.700767,
+        "q_dry": 0.932511,
+        "threshold": 0.35,
+        "n_calib_wet": 38,
+        "n_calib_dry": 14
+      },
+      "3": {
+        "q_wet": 48.86221,
+        "q_dry": 0.92722,
+        "threshold": 0.275,
+        "n_calib_wet": 38,
+        "n_calib_dry": 14
+      },
+      "4": {
+        "q_wet": 25.744193,
+        "q_dry": 0.939736,
+        "threshold": 0.3,
+        "n_calib_wet": 38,
+        "n_calib_dry": 14
+      },
+      "5": {
+        "q_wet": 38.70608,
+        "q_dry": 0.963119,
+        "threshold": 0.2,
+        "n_calib_wet": 38,
+        "n_calib_dry": 14
+      },
+      "6": {
+        "q_wet": 20.178621,
+        "q_dry": 0.950372,
+        "threshold": 0.3,
+        "n_calib_wet": 38,
+        "n_calib_dry": 14
+      },
+      "7": {
+        "q_wet": 16.075227,
+        "q_dry": 0.945675,
+        "threshold": 0.375,
+        "n_calib_wet": 38,
+        "n_calib_dry": 14
+      },
+      "8": {
+        "q_wet": 32.14329,
+        "q_dry": 0.945321,
+        "threshold": 0.3,
+        "n_calib_wet": 38,
+        "n_calib_dry": 14
+      },
+      "9": {
+        "q_wet": 24.473676,
+        "q_dry": 0.969095,
+        "threshold": 0.2,
+        "n_calib_wet": 38,
+        "n_calib_dry": 14
+      },
+      "10": {
+        "q_wet": 18.56367,
+        "q_dry": 0.970121,
+        "threshold": 0.35,
+        "n_calib_wet": 38,
+        "n_calib_dry": 14
+      },
+      "11": {
+        "q_wet": 16.774483,
+        "q_dry": 0.970714,
+        "threshold": 0.35,
+        "n_calib_wet": 38,
+        "n_calib_dry": 14
+      },
+      "12": {
+        "q_wet": 40.203903,
+        "q_dry": 0.950022,
+        "threshold": 0.35,
+        "n_calib_wet": 38,
+        "n_calib_dry": 14
+      }
+    }
+  }
+}

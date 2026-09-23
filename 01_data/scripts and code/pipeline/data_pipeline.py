@@ -102,6 +102,13 @@ WD_TARGET_LAGS = [1, 2, 3, 4]
 WD_TARGET_LAG_WINDOWS_REG = [1, 2, 3, 4, 8, 12]  # LAG_WINDOWS เดิมใน build_feature_matrix()
 WD_ROLL_WINDOWS = [4, 8]  # ROLL_WINDOWS เดิมใน build_feature_matrix()
 WD_KC_LOOKUP_CSV = WATER_DEMAND_MODEL_DIR / "kc_weekly_lookup_all_crops.csv"
+
+# 2026-09-23 เพิ่ม -- Mondrian + Normalized conformal prediction intervals (Variant D ตาม
+# combined_final_pipeline.ipynb Step 4v3) re-calibrate จากโมเดล production จริงใน active/ ด้วย
+# build_conformal_intervals.py (เก็บ q_norm_wet/q_norm_dry ต่อ (zone, horizon) -- ดู docstring ของ
+# ไฟล์นั้นสำหรับ methodology เต็ม) ใช้ประกอบ final_m3 เพื่อได้ lower_m3/upper_m3 ต่อ horizon --
+# ถ้าไฟล์นี้ไม่มี (เช่นยังไม่เคย re-calibrate) prediction ยังทำงานได้ปกติ แค่ไม่มี interval แนบมา
+WD_CONFORMAL_INTERVALS_JSON = WATER_DEMAND_MODEL_DIR / "conformal_intervals.json"
 WD_IRRIGATION_EFFICIENCY = 0.90  # IE เฉพาะ zone_B (irrigated) เท่านั้น -- zone_A (rainfed) ไม่มี term นี้
 
 RESERVOIR_INFLOW_MODEL_DIR = PROJECT_ROOT / "01_data" / "scripts and code" / "Reservoir_inflow" / "active"
@@ -359,6 +366,25 @@ def _wd_load_models(model_dir: Path = WATER_DEMAND_MODEL_DIR) -> dict:
         len(models["catboost"]), len(models["lightgbm"]),
         len(models["stage1_classifiers"]), len(models["stack_weights"]),
     )
+
+    # 2026-09-23 เพิ่ม -- โหลด conformal interval quantiles ถ้ามี (ดู WD_CONFORMAL_INTERVALS_JSON
+    # ด้านบน) ไม่ raise ถ้าไม่มีไฟล์/อ่านไม่ได้ -- แค่ log warning แล้วให้ prediction ทำงานต่อโดยไม่มี
+    # lower_m3/upper_m3 แนบมา (ไม่ critical เท่าตัวพยากรณ์หลัก)
+    try:
+        with open(WD_CONFORMAL_INTERVALS_JSON, encoding="utf-8") as f:
+            conformal = json.load(f)
+        models["conformal_intervals"] = conformal.get("quantiles")
+        logger.info(
+            "Loaded Water Demand conformal intervals จาก %s (calibrated %s)",
+            WD_CONFORMAL_INTERVALS_JSON, conformal.get("_meta", {}).get("computed_at"),
+        )
+    except Exception:
+        models["conformal_intervals"] = None
+        logger.warning(
+            "ไม่พบ/อ่าน conformal_intervals.json ไม่สำเร็จ (%s) -- Water Demand prediction จะไม่มี "
+            "lower_m3/upper_m3 แนบมา (ไม่กระทบค่าพยากรณ์หลัก final_m3)", WD_CONFORMAL_INTERVALS_JSON,
+        )
+
     return models
 
 
@@ -1938,11 +1964,34 @@ def _wd_run_prediction(model: dict, features: dict) -> tuple[Optional[dict], Opt
 
             final = prob_active * magnitude
 
-            horizon_results[f"h{h}"] = {
+            result_h = {
                 "probability_active": round(prob_active, 4),
                 "magnitude_m3": round(magnitude, 2),
                 "final_m3": round(final, 2),
             }
+
+            # 2026-09-23 เพิ่ม -- แนบ lower_m3/upper_m3 (90% Mondrian + Normalized conformal
+            # interval, ดู build_conformal_intervals.py) ถ้ามี conformal_intervals.json โหลดสำเร็จ
+            # regime (wet/dry) ตัดสินจาก threshold เดียวกับที่ใช้ตอน calibrate (stage1_thresholds
+            # ต่อ (zone, h)) -- ไม่ใช่แค่ prob_active > 0.5 เฉยๆ ต้องสอดคล้องกับตอน calibrate เป๊ะ
+            conformal = model.get("conformal_intervals")
+            if conformal is not None:
+                try:
+                    q_entry = conformal[zone][str(h)]
+                    thr = q_entry["threshold"]
+                    q = q_entry["q_wet"] if prob_active >= thr else q_entry["q_dry"]
+                    epsilon = 1000.0  # ต้องตรงกับ EPSILON ใน build_conformal_intervals.py
+                    half = q * (abs(final) + epsilon)
+                    result_h["lower_m3"] = round(max(final - half, 0.0), 2)
+                    result_h["upper_m3"] = round(final + half, 2)
+                    result_h["interval_note"] = "90% Mondrian + Normalized conformal prediction interval"
+                except (KeyError, TypeError):
+                    logger.warning(
+                        "ไม่มี conformal interval สำหรับ (%s, h%d) ใน conformal_intervals.json -- ข้าม",
+                        zone, h,
+                    )
+
+            horizon_results[f"h{h}"] = result_h
 
         # ถ้าทุก horizon ไม่มีโมเดลเลย (ไม่ควรเกิดในทางปฏิบัติ) ให้ทั้งโซนเป็น None เหมือนพฤติกรรมเดิม
         # ก่อนแก้ (ดีกว่าส่ง horizons ที่เป็น None ล้วนไปให้หน้าเว็บ)
