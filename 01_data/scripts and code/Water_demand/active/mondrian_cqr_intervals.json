@@ -17,7 +17,7 @@
     "regime_rule": "active (wet) if stage1 probability_active >= stage1_thresholds[(zone,h)], else dry",
     "interval_formula": "q_hat = q_hat_wet if active else q_hat_dry; lower = max(q_lo(x) - q_hat, 0); upper = q_hi(x) + q_hat",
     "uses_quantile_models_from": "cqr_quantile_models.pkl (shared, ไม่ได้ retrain)",
-    "computed_at": "2026-09-23T11:13:46"
+    "computed_at": "2026-09-23T14:17:21"
   },
   "quantiles": {
     "zone_A": {
@@ -29,80 +29,80 @@
         "n_calib_dry": 26
       },
       "2": {
-        "q_hat_wet": 215619.98,
+        "q_hat_wet": 215577.71,
         "q_hat_dry": 29914.66,
         "threshold": 0.45,
-        "n_calib_wet": 76,
+        "n_calib_wet": 77,
         "n_calib_dry": 26
       },
       "3": {
-        "q_hat_wet": 168697.7,
+        "q_hat_wet": 168677.13,
         "q_hat_dry": 3720.68,
         "threshold": 0.3,
-        "n_calib_wet": 75,
+        "n_calib_wet": 77,
         "n_calib_dry": 26
       },
       "4": {
-        "q_hat_wet": 214038.84,
+        "q_hat_wet": 214027.78,
         "q_hat_dry": 468.73,
         "threshold": 0.475,
-        "n_calib_wet": 74,
+        "n_calib_wet": 77,
         "n_calib_dry": 26
       },
       "5": {
-        "q_hat_wet": 197181.46,
+        "q_hat_wet": 197118.29,
         "q_hat_dry": 4259.82,
         "threshold": 0.35,
-        "n_calib_wet": 73,
+        "n_calib_wet": 77,
         "n_calib_dry": 26
       },
       "6": {
-        "q_hat_wet": 207876.63,
+        "q_hat_wet": 207788.97,
         "q_hat_dry": 3971.81,
         "threshold": 0.3,
-        "n_calib_wet": 72,
+        "n_calib_wet": 77,
         "n_calib_dry": 26
       },
       "7": {
-        "q_hat_wet": 199327.72,
+        "q_hat_wet": 199285.66,
         "q_hat_dry": 1099.89,
         "threshold": 0.2,
-        "n_calib_wet": 71,
+        "n_calib_wet": 77,
         "n_calib_dry": 26
       },
       "8": {
-        "q_hat_wet": 169688.12,
+        "q_hat_wet": 169520.62,
         "q_hat_dry": 31073.32,
         "threshold": 0.55,
-        "n_calib_wet": 70,
+        "n_calib_wet": 77,
         "n_calib_dry": 26
       },
       "9": {
-        "q_hat_wet": 122639.18,
+        "q_hat_wet": 122575.73,
         "q_hat_dry": 31073.32,
         "threshold": 0.275,
-        "n_calib_wet": 69,
+        "n_calib_wet": 77,
         "n_calib_dry": 26
       },
       "10": {
-        "q_hat_wet": 173084.36,
+        "q_hat_wet": 153210.3,
         "q_hat_dry": 170.16,
         "threshold": 0.175,
-        "n_calib_wet": 68,
+        "n_calib_wet": 77,
         "n_calib_dry": 26
       },
       "11": {
-        "q_hat_wet": 165646.8,
+        "q_hat_wet": 164830.66,
         "q_hat_dry": 2871.39,
         "threshold": 0.4,
-        "n_calib_wet": 67,
+        "n_calib_wet": 77,
         "n_calib_dry": 26
       },
       "12": {
-        "q_hat_wet": 130287.37,
+        "q_hat_wet": 94623.69,
         "q_hat_dry": 24045.38,
         "threshold": 0.35,
-        "n_calib_wet": 66,
+        "n_calib_wet": 77,
         "n_calib_dry": 26
       }
     },
@@ -115,81 +115,81 @@
         "n_calib_dry": 32
       },
       "2": {
-        "q_hat_wet": 43222.91,
+        "q_hat_wet": 43216.69,
         "q_hat_dry": 9409.14,
         "threshold": 0.35,
-        "n_calib_wet": 70,
+        "n_calib_wet": 71,
         "n_calib_dry": 32
       },
       "3": {
-        "q_hat_wet": 53069.73,
+        "q_hat_wet": 53063.71,
         "q_hat_dry": 947.23,
         "threshold": 0.275,
-        "n_calib_wet": 69,
+        "n_calib_wet": 71,
         "n_calib_dry": 32
       },
       "4": {
-        "q_hat_wet": 42182.2,
+        "q_hat_wet": 36459.64,
         "q_hat_dry": 7670.26,
         "threshold": 0.3,
-        "n_calib_wet": 68,
+        "n_calib_wet": 71,
         "n_calib_dry": 32
       },
       "5": {
-        "q_hat_wet": 51999.86,
+        "q_hat_wet": 50022.73,
         "q_hat_dry": 1534.28,
         "threshold": 0.2,
-        "n_calib_wet": 67,
+        "n_calib_wet": 71,
         "n_calib_dry": 32
       },
       "6": {
-        "q_hat_wet": 50813.26,
-        "q_hat_dry": 25.2,
+        "q_hat_wet": 35762.25,
+        "q_hat_dry": 40.9,
         "threshold": 0.3,
-        "n_calib_wet": 66,
-        "n_calib_dry": 32
+        "n_calib_wet": 70,
+        "n_calib_dry": 33
       },
       "7": {
-        "q_hat_wet": 41636.11,
-        "q_hat_dry": 19.01,
+        "q_hat_wet": 33860.54,
+        "q_hat_dry": 24.58,
         "threshold": 0.375,
-        "n_calib_wet": 65,
-        "n_calib_dry": 32
+        "n_calib_wet": 70,
+        "n_calib_dry": 33
       },
       "8": {
-        "q_hat_wet": 53383.38,
-        "q_hat_dry": 1298.98,
+        "q_hat_wet": 52468.85,
+        "q_hat_dry": 2002.0,
         "threshold": 0.3,
-        "n_calib_wet": 64,
-        "n_calib_dry": 32
+        "n_calib_wet": 70,
+        "n_calib_dry": 33
       },
       "9": {
-        "q_hat_wet": 45073.6,
+        "q_hat_wet": 38285.83,
         "q_hat_dry": 877.18,
         "threshold": 0.2,
-        "n_calib_wet": 63,
-        "n_calib_dry": 32
+        "n_calib_wet": 69,
+        "n_calib_dry": 34
       },
       "10": {
-        "q_hat_wet": 58051.87,
-        "q_hat_dry": 23.68,
+        "q_hat_wet": 48584.47,
+        "q_hat_dry": 23.61,
         "threshold": 0.35,
-        "n_calib_wet": 62,
-        "n_calib_dry": 32
+        "n_calib_wet": 69,
+        "n_calib_dry": 34
       },
       "11": {
-        "q_hat_wet": 38426.82,
-        "q_hat_dry": 1121.99,
+        "q_hat_wet": 34564.3,
+        "q_hat_dry": 1472.32,
         "threshold": 0.35,
-        "n_calib_wet": 61,
-        "n_calib_dry": 32
+        "n_calib_wet": 69,
+        "n_calib_dry": 34
       },
       "12": {
-        "q_hat_wet": 35913.02,
-        "q_hat_dry": 0.0,
+        "q_hat_wet": 30186.45,
+        "q_hat_dry": 6.01,
         "threshold": 0.35,
-        "n_calib_wet": 60,
-        "n_calib_dry": 32
+        "n_calib_wet": 69,
+        "n_calib_dry": 34
       }
     }
   }
