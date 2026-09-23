@@ -1,0 +1,123 @@
+{
+  "_meta": {
+    "methodology": "Conformalized Quantile Regression (CQR) -- LightGBM quantile regression + split conformal",
+    "alpha": 0.1,
+    "quantile_lo": 0.05,
+    "quantile_hi": 0.95,
+    "target_coverage": 0.9,
+    "train_years": [
+      2020,
+      2021,
+      2022
+    ],
+    "calib_years": [
+      2023,
+      2024
+    ],
+    "interval_formula": "lower = max(q_lo(x) - q_hat, 0); upper = q_hi(x) + q_hat",
+    "note": "Bound ค่า y_h{h} (raw target) ตรงๆ ไม่ผูกกับ final_m3 (prob*magnitude) แบบ Mondrian+Normalized เดิม -- ใช้เป็นทางเลือกเปรียบเทียบสำหรับ Zone A โดยเฉพาะ ที่ยังกว้างอยู่หลังขยาย calibration เป็น 2 ปี",
+    "computed_at": "2026-09-23T11:04:05"
+  },
+  "quantiles": {
+    "zone_A": {
+      "1": {
+        "q_hat": 115114.43,
+        "n_calib": 103
+      },
+      "2": {
+        "q_hat": 148800.74,
+        "n_calib": 102
+      },
+      "3": {
+        "q_hat": 89820.98,
+        "n_calib": 101
+      },
+      "4": {
+        "q_hat": 82171.68,
+        "n_calib": 100
+      },
+      "5": {
+        "q_hat": 75883.52,
+        "n_calib": 99
+      },
+      "6": {
+        "q_hat": 146849.82,
+        "n_calib": 98
+      },
+      "7": {
+        "q_hat": 158073.39,
+        "n_calib": 97
+      },
+      "8": {
+        "q_hat": 100916.11,
+        "n_calib": 96
+      },
+      "9": {
+        "q_hat": 60487.9,
+        "n_calib": 95
+      },
+      "10": {
+        "q_hat": 112759.52,
+        "n_calib": 94
+      },
+      "11": {
+        "q_hat": 106937.25,
+        "n_calib": 93
+      },
+      "12": {
+        "q_hat": 80164.34,
+        "n_calib": 92
+      }
+    },
+    "zone_B": {
+      "1": {
+        "q_hat": 32769.45,
+        "n_calib": 103
+      },
+      "2": {
+        "q_hat": 25935.98,
+        "n_calib": 102
+      },
+      "3": {
+        "q_hat": 42713.86,
+        "n_calib": 101
+      },
+      "4": {
+        "q_hat": 27017.37,
+        "n_calib": 100
+      },
+      "5": {
+        "q_hat": 24593.44,
+        "n_calib": 99
+      },
+      "6": {
+        "q_hat": 32119.15,
+        "n_calib": 98
+      },
+      "7": {
+        "q_hat": 29075.64,
+        "n_calib": 97
+      },
+      "8": {
+        "q_hat": 37267.56,
+        "n_calib": 96
+      },
+      "9": {
+        "q_hat": 28834.56,
+        "n_calib": 95
+      },
+      "10": {
+        "q_hat": 41458.13,
+        "n_calib": 94
+      },
+      "11": {
+        "q_hat": 22781.54,
+        "n_calib": 93
+      },
+      "12": {
+        "q_hat": 22323.17,
+        "n_calib": 92
+      }
+    }
+  }
+}
