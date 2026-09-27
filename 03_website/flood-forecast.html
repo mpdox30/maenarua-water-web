@@ -968,13 +968,24 @@ function drawMap(d) {
           attributionControl: { compact: true },
         });
         map3dInstance = map3d;
+        window.__wmbMap3d = map3d; // ไว้ debug จาก console ได้ (getPitch()/getTerrain()/resize())
         map3d.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
         // 2026-09-27 แก้บั๊ก -- pitch ที่ตั้งใน constructor ไม่ทำงานเสมอไปกับบางเวอร์ชัน/สไตล์
         // raster-only จึงตั้งซ้ำแบบ explicit (jumpTo ทันทีไม่รอ animation) ทั้งก่อนและหลัง 'load'
         // เพื่อบังคับมุมกล้องเอียงจริง ๆ ให้เห็นความสูงของเสา/อาคาร ไม่ใช่มองตรงจากบนลงล่าง
-        map3d.jumpTo({ pitch: 60, bearing: -12 });
-        map3d.on('load', () => {
+        // 2026-09-27 เพิ่มอีกชั้น -- บาง browser/GPU สถานะภายใน (getPitch()) ถูกต้องแต่เฟรมที่ render
+        // ค้างอยู่ที่มุมตรง (โดยเฉพาะถ้า container ยังไม่นิ่งตอน 'load' ยิง) จึงเรียก resize() +
+        // jumpTo ซ้ำอีกรอบตอน 'idle' (หลัง tile รอบแรกโหลดเสร็จจริง) และ fallback ด้วย setTimeout
+        function forcePitch() {
+          map3d.resize();
           map3d.jumpTo({ pitch: 60, bearing: -12 });
+          map3d.triggerRepaint();
+        }
+        map3d.jumpTo({ pitch: 60, bearing: -12 });
+        map3d.once('idle', forcePitch);
+        setTimeout(forcePitch, 1200);
+        map3d.on('load', () => {
+          forcePitch();
           if (terrainEnabled) map3d.setTerrain({ source: 'terrain-dem', exaggeration: TERRAIN_EXAGGERATION });
           const initialDay = parseInt(dayRange.value, 10) || 1;
           deckOverlay3D = new deck.MapboxOverlay({
