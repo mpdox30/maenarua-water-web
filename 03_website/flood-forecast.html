@@ -154,6 +154,9 @@
   .map3d-source-toggle button { background: transparent; border: none; color: var(--text-500); border-radius: 999px; padding: 6px 14px; font-size: 11.5px; font-family: "IBM Plex Sans Thai", sans-serif; cursor: pointer; white-space: nowrap; }
   .map3d-source-toggle button:hover { color: var(--text-100); }
   .map3d-source-toggle button.active { background: var(--teal-500); color: #06161c; font-weight: 600; }
+  .map3d-terrain-toggle { position: absolute; top: 10px; left: 10px; z-index: 5; background: rgba(8,30,38,0.7); border: none; color: var(--text-500); border-radius: 999px; padding: 6px 14px; font-size: 11.5px; font-family: "IBM Plex Sans Thai", sans-serif; cursor: pointer; white-space: nowrap; }
+  .map3d-terrain-toggle:hover { color: var(--text-100); }
+  .map3d-terrain-toggle.active { background: var(--amber-400); color: #06161c; font-weight: 600; }
   .map3d-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--text-500); font-size: 13px; background: rgba(8,30,38,0.65); z-index: 6; border-radius: var(--radius-lg); }
 
   /* reliability */
@@ -319,6 +322,7 @@
           <button type="button" data-source="p95">ความเสี่ยงเชิงสถิติ (P95)</button>
           <button type="button" data-source="yagi2024">เหตุการณ์จริง พายุยากิ 2567</button>
         </div>
+        <button type="button" class="map3d-terrain-toggle active" id="map3dTerrainToggle">ภูมิประเทศ 3 มิติ: เปิด</button>
       </div>
       <div class="depth-legend" id="depthLegend">
         <span id="depthLegendLabel">ความลึกน้ำท่วม</span>
@@ -886,6 +890,8 @@ function drawMap(d) {
   }
 
   let is3DActive = false;
+  let terrainEnabled = true;
+  const TERRAIN_EXAGGERATION = 1.3;
   function updateDaySliderVisibility() {
     const seriesOn = map.hasLayer(seriesLayer);
     const need3DSlider = is3DActive && current3DSource === 'forecast';
@@ -911,6 +917,7 @@ function drawMap(d) {
 
   let map3dInitPromise = null;
   let deckOverlay3D = null;
+  let map3dInstance = null;
   function initMap3D() {
     if (map3dInitPromise) return map3dInitPromise;
     const el3d = document.getElementById('riskMap3D');
@@ -924,23 +931,36 @@ function drawMap(d) {
       loadBuildingsData3D(),
     ])
       .then(() => new Promise((resolve) => {
+        const TERRAIN_BOUNDS = [99.75718730414324, 19.01883856557195, 99.92468585009338, 19.158288896246347];
         const OSM_STYLE = {
           version: 8,
-          sources: { osm: {
-            type: 'raster',
-            tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'],
-            tileSize: 256, attribution: '© OpenStreetMap contributors',
-          }},
+          sources: {
+            osm: {
+              type: 'raster',
+              tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+              tileSize: 256, attribution: '© OpenStreetMap contributors',
+            },
+            'terrain-dem': {
+              // 2026-09-27 เพิ่ม -- terrain-RGB tile เข้ารหัสจาก LiDAR DTM 5m ของโปรเจกต์เอง
+              // (rio-rgbify, base=-10000, interval=0.1 = สูตร encoding "mapbox" มาตรฐาน)
+              type: 'raster-dem',
+              tiles: ['assets/data/terrain/{z}/{x}/{y}.png'],
+              tileSize: 512, encoding: 'mapbox',
+              minzoom: 9, maxzoom: 15,
+              bounds: TERRAIN_BOUNDS,
+            },
+          },
           layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
         };
         const map3d = new maplibregl.Map({
           container: 'riskMap3D', style: OSM_STYLE,
           center: [99.87, 19.115], zoom: 12, pitch: 60, bearing: -12,
-          maxPitch: 75,
+          maxPitch: 85, maxZoom: 17,
           attributionControl: { compact: true },
         });
+        map3dInstance = map3d;
         map3d.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
         // 2026-09-27 แก้บั๊ก -- pitch ที่ตั้งใน constructor ไม่ทำงานเสมอไปกับบางเวอร์ชัน/สไตล์
         // raster-only จึงตั้งซ้ำแบบ explicit (jumpTo ทันทีไม่รอ animation) ทั้งก่อนและหลัง 'load'
@@ -948,6 +968,7 @@ function drawMap(d) {
         map3d.jumpTo({ pitch: 60, bearing: -12 });
         map3d.on('load', () => {
           map3d.jumpTo({ pitch: 60, bearing: -12 });
+          if (terrainEnabled) map3d.setTerrain({ source: 'terrain-dem', exaggeration: TERRAIN_EXAGGERATION });
           const initialDay = parseInt(dayRange.value, 10) || 1;
           deckOverlay3D = new deck.MapboxOverlay({
             interleaved: false,
@@ -1018,6 +1039,19 @@ function drawMap(d) {
         updateDaySliderVisibility();
         if (window.__update3DDay) window.__update3DDay(parseInt(dayRange.value, 10) || 1);
       });
+    });
+  }
+
+  // 2026-09-27 เพิ่ม -- ปุ่มเปิด/ปิดภูมิประเทศ 3 มิติ (drape จาก LiDAR DTM ของโปรเจกต์เอง)
+  const map3dTerrainToggle = document.getElementById('map3dTerrainToggle');
+  if (map3dTerrainToggle) {
+    map3dTerrainToggle.addEventListener('click', () => {
+      terrainEnabled = !terrainEnabled;
+      map3dTerrainToggle.classList.toggle('active', terrainEnabled);
+      map3dTerrainToggle.textContent = terrainEnabled ? 'ภูมิประเทศ 3 มิติ: เปิด' : 'ภูมิประเทศ 3 มิติ: ปิด';
+      if (map3dInstance && map3dInstance.isStyleLoaded()) {
+        map3dInstance.setTerrain(terrainEnabled ? { source: 'terrain-dem', exaggeration: TERRAIN_EXAGGERATION } : null);
+      }
     });
   }
 
