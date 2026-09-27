@@ -150,6 +150,10 @@
   #riskMap3D.show { display: block; }
   #riskMap3D .maplibregl-ctrl-attrib { font-size: 10px; }
   .map3d-hint { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(8,30,38,0.85); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 6px 12px; font-size: 11px; color: var(--text-500); z-index: 5; pointer-events: none; text-align: center; max-width: 90%; }
+  .map3d-source-toggle { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 5; background: rgba(8,30,38,0.7); border-radius: 999px; padding: 4px; }
+  .map3d-source-toggle button { background: transparent; border: none; color: var(--text-500); border-radius: 999px; padding: 6px 14px; font-size: 11.5px; font-family: "IBM Plex Sans Thai", sans-serif; cursor: pointer; white-space: nowrap; }
+  .map3d-source-toggle button:hover { color: var(--text-100); }
+  .map3d-source-toggle button.active { background: var(--teal-500); color: #06161c; font-weight: 600; }
   .map3d-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--text-500); font-size: 13px; background: rgba(8,30,38,0.65); z-index: 6; border-radius: var(--radius-lg); }
 
   /* reliability */
@@ -308,7 +312,14 @@
         <button type="button" id="view3dBtn">แผนที่ 3 มิติ — เสาน้ำล้นตลิ่ง</button>
       </div>
       <div id="riskMap"></div>
-      <div id="riskMap3D"><div class="map3d-hint">อาคารจริงจาก OpenStreetMap — สีเทา = ไม่คาดว่าได้รับผลกระทบ, เหลือง/ส้ม/แดง = ยิ่งเข้มยิ่งเสี่ยงน้ำท่วมมาก (ความสูงเกินจริงเพื่อให้เห็นชัด) — ลากเมาส์เพื่อหมุน/เอียงมุมมอง เลื่อนวันที่ด้านล่างแผนที่</div></div>
+      <div id="riskMap3D">
+        <div class="map3d-hint">อาคารจริงจาก OpenStreetMap — สีเทา = ไม่คาดว่าได้รับผลกระทบ, เหลือง/ส้ม/แดง = ยิ่งเข้มยิ่งเสี่ยงน้ำท่วมมาก (ความสูงเกินจริงเพื่อให้เห็นชัด) — ลากเมาส์เพื่อหมุน/เอียงมุมมอง</div>
+        <div class="map3d-source-toggle" id="map3dSourceToggle">
+          <button type="button" class="active" data-source="forecast">พยากรณ์ 7 วันข้างหน้า</button>
+          <button type="button" data-source="p95">ความเสี่ยงเชิงสถิติ (P95)</button>
+          <button type="button" data-source="yagi2024">เหตุการณ์จริง พายุยากิ 2567</button>
+        </div>
+      </div>
       <div class="depth-legend" id="depthLegend">
         <span id="depthLegendLabel">ความลึกน้ำท่วม</span>
         <div class="bar-col">
@@ -818,45 +829,67 @@ function drawMap(d) {
   const forecastDates = d.kwan_forecast.map(f => f.date); // 7 วัน ตรงกับ day slider เดิม
   const BUILDING_BASE_HEIGHT_M = 4;   // ความสูงอาคารทั่วไป (ไม่มี tag height/levels จริงส่วนใหญ่)
   const BUILDING_EXTRA_MAX_M = 140;   // ความสูงเสริมสูงสุด (เกินจริงตั้งใจ เพื่อให้เห็นความต่างชัด)
+  // 2026-09-27 เพิ่ม -- 3 แหล่งข้อมูลสลับได้: พยากรณ์ 7 วัน (รายวัน), P95 เชิงสถิติ, ยากิ 2567 จริง
+  // (P95/ยากิ กู้ค่าความลึกจาก PNG เดิมของเว็บด้วยการ invert turbo colormap เพราะ raster ค่าจริง
+  // ต้นฉบับไม่ได้ persist ไว้ -- ดู gen_buildings_flood_risk.py ฝั่ง WMB_Phayao) แต่ละแหล่งมีสเกล
+  // ความรุนแรงคนละระดับ (พยากรณ์ = มม., P95/ยากิ = เมตร) จึงต้อง normalize แยกกันคนละค่า
   let buildingsData = null;
-  let buildingsMaxDepth = 0.0005;
+  let current3DSource = 'forecast'; // 'forecast' | 'p95' | 'yagi2024'
+  let buildingsMaxDepth = { forecast: 0.0005, p95: 0.0005, yagi2024: 0.0005 };
   function loadBuildingsData3D() {
     return fetch('assets/data/buildings_flood_risk.geojson', { cache: 'no-store' })
       .then(r => r.ok ? r.json() : { features: [] })
       .then(fc => {
         buildingsData = fc.features || [];
-        const allDepths = buildingsData.flatMap(f => (f.properties && f.properties.depths) || []);
-        buildingsMaxDepth = Math.max(0.0005, ...(allDepths.length ? allDepths : [0]));
+        const fcVals = buildingsData.flatMap(f => (f.properties && f.properties.depths) || []);
+        const p95Vals = buildingsData.map(f => (f.properties && f.properties.depth_p95) || 0);
+        const yagiVals = buildingsData.map(f => (f.properties && f.properties.depth_yagi2024) || 0);
+        buildingsMaxDepth = {
+          forecast: Math.max(0.0005, ...(fcVals.length ? fcVals : [0])),
+          p95: Math.max(0.0005, ...(p95Vals.length ? p95Vals : [0])),
+          yagi2024: Math.max(0.0005, ...(yagiVals.length ? yagiVals : [0])),
+        };
       })
       .catch(() => { buildingsData = []; });
   }
-  function buildingHeightForDepth(depth) {
-    if (!depth || depth <= 0) return BUILDING_BASE_HEIGHT_M;
-    return BUILDING_BASE_HEIGHT_M + (depth / buildingsMaxDepth) * BUILDING_EXTRA_MAX_M;
+  function depthForSource3D(props, source, dayN) {
+    if (source === 'p95') return (props && props.depth_p95) || 0;
+    if (source === 'yagi2024') return (props && props.depth_yagi2024) || 0;
+    return ((props && props.depths) || [])[dayN - 1] || 0;
   }
-  function buildingColorForDepth(depth) {
+  function buildingHeightForDepth(depth, source) {
+    if (!depth || depth <= 0) return BUILDING_BASE_HEIGHT_M;
+    return BUILDING_BASE_HEIGHT_M + (depth / buildingsMaxDepth[source]) * BUILDING_EXTRA_MAX_M;
+  }
+  function buildingColorForDepth(depth, source) {
     if (!depth || depth <= 0) return [90, 110, 108, 190]; // เทาอมเขียว เป็นกลาง -- ไม่มีความเสี่ยง
-    const t = Math.min(1, depth / buildingsMaxDepth);
+    const t = Math.min(1, depth / buildingsMaxDepth[source]);
     if (t < 0.34) return [224, 169, 79, 235];  // เฝ้าระวัง (เหลือง/ส้มอ่อน)
     if (t < 0.67) return [224, 118, 63, 235];  // เตือนภัย (ส้ม)
     return [224, 82, 82, 235];                 // วิกฤต (แดง)
   }
   function buildBuildingsLayer3D(dayN) {
+    const source = current3DSource;
     return new deck.GeoJsonLayer({
       id: 'flood-buildings',
       data: buildingsData || [],
       extruded: true, filled: true, stroked: true,
-      getElevation: f => buildingHeightForDepth(((f.properties || {}).depths || [])[dayN - 1] || 0),
-      getFillColor: f => buildingColorForDepth(((f.properties || {}).depths || [])[dayN - 1] || 0),
+      getElevation: f => buildingHeightForDepth(depthForSource3D(f.properties, source, dayN), source),
+      getFillColor: f => buildingColorForDepth(depthForSource3D(f.properties, source, dayN), source),
       getLineColor: [255, 255, 255, 50], lineWidthMinPixels: 1,
       pickable: true, autoHighlight: true, highlightColor: [255, 255, 255, 130],
+      updateTriggers: {
+        getElevation: [source, dayN],
+        getFillColor: [source, dayN],
+      },
     });
   }
 
   let is3DActive = false;
   function updateDaySliderVisibility() {
     const seriesOn = map.hasLayer(seriesLayer);
-    if (seriesOn || is3DActive) daySlider.classList.add('show');
+    const need3DSlider = is3DActive && current3DSource === 'forecast';
+    if (seriesOn || need3DSlider) daySlider.classList.add('show');
     else daySlider.classList.remove('show');
   }
 
@@ -922,11 +955,16 @@ function drawMap(d) {
             getTooltip: ({ object }) => {
               if (!object) return null;
               const dayN = parseInt(dayRange.value, 10) || 1;
-              const depth = ((object.properties || {}).depths || [])[dayN - 1] || 0;
+              const depth = depthForSource3D(object.properties, current3DSource, dayN);
               const nm = (object.properties && object.properties.name_th) || 'อาคาร';
+              const srcLabel = current3DSource === 'p95' ? 'ความเสี่ยงเชิงสถิติ (P95)'
+                : current3DSource === 'yagi2024' ? 'เหตุการณ์จริง พายุยากิ 2567'
+                : 'พยากรณ์ 7 วันข้างหน้า';
               const line = depth > 0
-                ? 'ความลึกน้ำท่วมคาดการณ์: ' + (depth * 100).toFixed(2) + ' ซม.'
-                : 'ไม่คาดว่าจะได้รับผลกระทบ (วันที่เลือก)';
+                ? (depth >= 0.1
+                    ? 'ความลึกน้ำท่วม (' + srcLabel + '): ' + depth.toFixed(2) + ' ม.'
+                    : 'ความลึกน้ำท่วม (' + srcLabel + '): ' + (depth * 100).toFixed(2) + ' ซม.')
+                : 'ไม่คาดว่าจะได้รับผลกระทบ (' + srcLabel + ')';
               return {
                 html: '<b>' + nm + '</b><br>' + line,
                 style: { backgroundColor: '#081e26', color: '#eef6f4', fontSize: '12px', borderRadius: '6px', padding: '6px 10px' },
@@ -968,6 +1006,20 @@ function drawMap(d) {
     updateDaySliderVisibility();
     setTimeout(() => map.invalidateSize(), 60);
   });
+
+  // 2026-09-27 เพิ่ม -- ปุ่มสลับแหล่งข้อมูลใน 3D (พยากรณ์ 7 วัน / P95 / ยากิ 2567)
+  const map3dSourceToggle = document.getElementById('map3dSourceToggle');
+  if (map3dSourceToggle) {
+    map3dSourceToggle.querySelectorAll('button[data-source]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        current3DSource = btn.dataset.source;
+        map3dSourceToggle.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updateDaySliderVisibility();
+        if (window.__update3DDay) window.__update3DDay(parseInt(dayRange.value, 10) || 1);
+      });
+    });
+  }
 
   // 2026-07-26 เพิ่ม -- ปุ่มดูแผนที่แบบเต็มจอ (Fullscreen API ตรงๆ ไม่พึ่ง plugin ภายนอก, โค้ดเดียวกับ index.html)
   const FullscreenControl = L.Control.extend({
