@@ -157,6 +157,11 @@
   .map3d-terrain-toggle { position: absolute; top: 10px; left: 10px; z-index: 5; background: rgba(8,30,38,0.7); border: none; color: var(--text-500); border-radius: 999px; padding: 6px 14px; font-size: 11.5px; font-family: "IBM Plex Sans Thai", sans-serif; cursor: pointer; white-space: nowrap; }
   .map3d-terrain-toggle:hover { color: var(--text-100); }
   .map3d-terrain-toggle.active { background: var(--amber-400); color: #06161c; font-weight: 600; }
+  /* 2026-09-27 เพิ่ม -- สลับพื้นแผนที่ 3 มิติ ระหว่าง OSM ถนนจริง กับไล่สีตามความสูง (hypsometric tint)
+     + อ่างเก็บน้ำ/ลำน้ำ วางไว้ใต้ปุ่มภูมิประเทศเดิม ไม่แทนที่ */
+  .map3d-basemap-toggle { position: absolute; top: 46px; left: 10px; z-index: 5; background: rgba(8,30,38,0.7); border: none; color: var(--text-500); border-radius: 999px; padding: 6px 14px; font-size: 11.5px; font-family: "IBM Plex Sans Thai", sans-serif; cursor: pointer; white-space: nowrap; }
+  .map3d-basemap-toggle:hover { color: var(--text-100); }
+  .map3d-basemap-toggle.active { background: var(--teal-500); color: #06161c; font-weight: 600; }
   .map3d-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--text-500); font-size: 13px; background: rgba(8,30,38,0.65); z-index: 6; border-radius: var(--radius-lg); }
 
   /* reliability */
@@ -323,6 +328,7 @@
           <button type="button" data-source="yagi2024">เหตุการณ์จริง พายุยากิ 2567</button>
         </div>
         <button type="button" class="map3d-terrain-toggle active" id="map3dTerrainToggle">ภูมิประเทศ 3 มิติ: เปิด</button>
+        <button type="button" class="map3d-basemap-toggle" id="map3dBasemapToggle">พื้นแผนที่: OSM ถนนจริง</button>
       </div>
       <div class="depth-legend" id="depthLegend">
         <span id="depthLegendLabel">ความลึกน้ำท่วม</span>
@@ -926,6 +932,7 @@ function drawMap(d) {
 
   let is3DActive = false;
   let terrainEnabled = true;
+  let colorBasemapEnabled = false;
   const TERRAIN_EXAGGERATION = 1.3;
   function updateDaySliderVisibility() {
     const seriesOn = map.hasLayer(seriesLayer);
@@ -969,6 +976,10 @@ function drawMap(d) {
         // ขอบเขต DTM ที่เติมส่วน nodata + ขยายขอบ (buffer 8กม.) แล้ว -- กว้างกว่าพื้นที่ศึกษาเดิม
         // เพื่อไม่ให้ camera มุมเอียงเห็น "หน้าผา 0 เมตร" ตรงขอบข้อมูลจริง (ดู gen_terrain_tiles.py)
         const TERRAIN_BOUNDS = [99.68088092896885, 18.946129552609445, 100.00121177133353, 19.230881779834917];
+        // 2026-09-27 เพิ่ม -- ขอบเขต DTM จริง (ไม่ padding) สำหรับ layer สีไล่ระดับความสูง
+        // (ต่างจาก TERRAIN_BOUNDS ด้านบนซึ่งเป็นขอบเขต DTM ที่ถูก pad ออกไปอีก 8กม. เพื่อใช้กับ mesh
+        // ภูมิประเทศเท่านั้น -- layer สีนี้ตั้งใจให้แสดงเฉพาะพื้นที่สำรวจจริง นอกนั้นโปร่งใส)
+        const TERRAIN_COLOR_BOUNDS = [99.75718730414324, 19.018815663533623, 99.92470415542907, 19.158288896246347];
         const OSM_STYLE = {
           version: 8,
           sources: {
@@ -979,6 +990,19 @@ function drawMap(d) {
                       'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'],
               tileSize: 256, attribution: '© OpenStreetMap contributors',
             },
+            'terrain-color': {
+              // 2026-09-27 เพิ่ม -- พื้นแผนที่ไล่สีตามความสูง (hypsometric tint + hillshade) จาก DTM
+              // เดียวกับ terrain-dem แต่เป็น raster สี RGBA ธรรมดา (ไม่ใช่ raster-dem เข้ารหัสความสูง)
+              // ทำจาก DTM ต้นฉบับ "ไม่ pad" -- นอกพื้นที่สำรวจจริงเป็นโปร่งใส (alpha=0) ไม่ใช่การเติมค่า
+              // แบบ nearest-neighbor เหมือน terrain-dem เพราะถ้าเอามาลงสี/hillshade จะเห็นรอย Voronoi
+              // เป็นเส้นรัศมีชัดเจนมาก (ต่างจาก mesh ภูมิประเทศที่ padding อยู่ไกลจากกล้องจนมองไม่เห็น)
+              type: 'raster',
+              tiles: ['assets/data/terrain_color/{z}/{x}/{y}.png'],
+              tileSize: 256, minzoom: 10, maxzoom: 15,
+              bounds: TERRAIN_COLOR_BOUNDS,
+            },
+            reservoirs: { type: 'geojson', data: 'assets/data/wmb_reservoirs7.geojson.json' },
+            canals: { type: 'geojson', data: 'assets/data/wmb_canals.geojson.json' },
             'terrain-dem': {
               // 2026-09-27 เพิ่ม -- terrain-RGB tile เข้ารหัสจาก LiDAR DTM 5m ของโปรเจกต์เอง
               // (rio-rgbify, base=-10000, interval=0.1 = สูตร encoding "mapbox" มาตรฐาน)
@@ -994,7 +1018,19 @@ function drawMap(d) {
               bounds: TERRAIN_BOUNDS,
             },
           },
-          layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
+          layers: [
+            { id: 'osm', type: 'raster', source: 'osm' },
+            { id: 'terrain-color', type: 'raster', source: 'terrain-color', layout: { visibility: 'none' } },
+            { id: 'reservoirs-fill', type: 'fill', source: 'reservoirs',
+              paint: { 'fill-color': '#0d8ef0', 'fill-opacity': 0.85 },
+              layout: { visibility: 'none' } },
+            { id: 'reservoirs-outline', type: 'line', source: 'reservoirs',
+              paint: { 'line-color': '#bfe6ff', 'line-width': 1 },
+              layout: { visibility: 'none' } },
+            { id: 'canals-line', type: 'line', source: 'canals',
+              paint: { 'line-color': '#5ec8f5', 'line-width': 1.4 },
+              layout: { visibility: 'none' } },
+          ],
         };
         const map3d = new maplibregl.Map({
           container: 'riskMap3D', style: OSM_STYLE,
@@ -1025,6 +1061,14 @@ function drawMap(d) {
         map3d.on('load', () => {
           forcePitch();
           if (terrainEnabled) map3d.setTerrain({ source: 'terrain-dem', exaggeration: TERRAIN_EXAGGERATION });
+          if (colorBasemapEnabled) {
+            // เผื่อผู้ใช้กดปุ่มสลับพื้นแผนที่ก่อนแผนที่ 3 มิติจะ init เสร็จ -- sync สถานะให้ตรงกัน
+            map3d.setLayoutProperty('osm', 'visibility', 'none');
+            map3d.setLayoutProperty('terrain-color', 'visibility', 'visible');
+            map3d.setLayoutProperty('reservoirs-fill', 'visibility', 'visible');
+            map3d.setLayoutProperty('reservoirs-outline', 'visibility', 'visible');
+            map3d.setLayoutProperty('canals-line', 'visibility', 'visible');
+          }
           const initialDay = parseInt(dayRange.value, 10) || 1;
           deckOverlay3D = new deck.MapboxOverlay({
             // interleaved: true -- ให้ deck.gl วาดปนกับ layer ของ MapLibre (รวม terrain) โดยใช้
@@ -1109,6 +1153,28 @@ function drawMap(d) {
       map3dTerrainToggle.textContent = terrainEnabled ? 'ภูมิประเทศ 3 มิติ: เปิด' : 'ภูมิประเทศ 3 มิติ: ปิด';
       if (map3dInstance && map3dInstance.isStyleLoaded()) {
         map3dInstance.setTerrain(terrainEnabled ? { source: 'terrain-dem', exaggeration: TERRAIN_EXAGGERATION } : null);
+      }
+    });
+  }
+
+  // 2026-09-27 เพิ่ม -- ปุ่มสลับพื้นแผนที่ 3 มิติ ระหว่าง OSM ถนนจริง กับไล่สีตามความสูง (hypsometric
+  // tint + hillshade) พร้อมอ่างเก็บน้ำ/ลำน้ำ -- สไตล์เดียวกับภาพตัวอย่างที่ผู้ใช้ยืนยันแล้ว (มุมมองทิศจริง
+  // ไม่แตะต้อง bearing/pitch ของกล้องเดิม)
+  const map3dBasemapToggle = document.getElementById('map3dBasemapToggle');
+  if (map3dBasemapToggle) {
+    map3dBasemapToggle.addEventListener('click', () => {
+      colorBasemapEnabled = !colorBasemapEnabled;
+      map3dBasemapToggle.classList.toggle('active', colorBasemapEnabled);
+      map3dBasemapToggle.textContent = colorBasemapEnabled
+        ? 'พื้นแผนที่: ไล่สีความสูง'
+        : 'พื้นแผนที่: OSM ถนนจริง';
+      if (map3dInstance && map3dInstance.isStyleLoaded()) {
+        const vis = colorBasemapEnabled ? 'visible' : 'none';
+        map3dInstance.setLayoutProperty('osm', 'visibility', colorBasemapEnabled ? 'none' : 'visible');
+        map3dInstance.setLayoutProperty('terrain-color', 'visibility', vis);
+        map3dInstance.setLayoutProperty('reservoirs-fill', 'visibility', vis);
+        map3dInstance.setLayoutProperty('reservoirs-outline', 'visibility', vis);
+        map3dInstance.setLayoutProperty('canals-line', 'visibility', vis);
       }
     });
   }
