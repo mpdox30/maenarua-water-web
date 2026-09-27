@@ -308,7 +308,7 @@
         <button type="button" id="view3dBtn">แผนที่ 3 มิติ — เสาน้ำล้นตลิ่ง</button>
       </div>
       <div id="riskMap"></div>
-      <div id="riskMap3D"><div class="map3d-hint">ความสูง/สีของเสา = ปริมาณน้ำล้นตลิ่งคาดการณ์ต่อวัน (ล้าน ลบ.ม.) ที่ตำแหน่งจริงของแต่ละห้วย — ลากเมาส์เพื่อหมุน/เอียงมุมมอง เลื่อนวันที่ด้านล่างแผนที่</div></div>
+      <div id="riskMap3D"><div class="map3d-hint">อาคารจริงจาก OpenStreetMap — สีเทา = ไม่คาดว่าได้รับผลกระทบ, เหลือง/ส้ม/แดง = ยิ่งเข้มยิ่งเสี่ยงน้ำท่วมมาก (ความสูงเกินจริงเพื่อให้เห็นชัด) — ลากเมาส์เพื่อหมุน/เอียงมุมมอง เลื่อนวันที่ด้านล่างแผนที่</div></div>
       <div class="depth-legend" id="depthLegend">
         <span id="depthLegendLabel">ความลึกน้ำท่วม</span>
         <div class="bar-col">
@@ -805,37 +805,52 @@ function drawMap(d) {
 
   L.control.layers(baseMaps, Object.assign({ 'จุดเสี่ยงรายห้วย': markerLayer }, depthLayers), { collapsed: true }).addTo(map);
 
-  // ---------- (3D) 2026-09-27 เพิ่ม -- มุมมอง 3 มิติ: เสาแสดงปริมาณน้ำล้นตลิ่งต่อวันต่อ node ----------
+  // ---------- (3D) 2026-09-27 เพิ่ม -- มุมมอง 3 มิติ: อาคารจริงยกสูง/ระบายสีตามความเสี่ยงน้ำท่วม ----------
   // เพิ่มเติมจากแผนที่ 2D เดิม (ไม่แทนที่ ไม่แก้โค้ด Leaflet ด้านบนเลย) สลับดูได้ด้วยปุ่ม 2 ปุ่ม
   // ใช้ MapLibre GL JS (raster OSM tiles เดิม รองรับ pitch/bearing จริง ต่างจาก Leaflet) + deck.gl
-  // ColumnLayer วางทับพิกัดจริงของแต่ละ node (lat/lon จาก d.nodes เดิม) — โหลด library แบบ lazy
-  // (inject <script> ตอนกดปุ่ม 3D ครั้งแรกเท่านั้น) เพื่อไม่ให้หน้าเว็บโหลดหนักขึ้นถ้าไม่มีใครกดดู
-  // หมายเหตุ: ฝนพยากรณ์ล่วงหน้า=0 เสมอ (สมมุติฐานโมเดล) จึงทำเฉพาะเสาน้ำล้นตลิ่งก่อน (ตามที่ผู้ใช้เลือก)
-  const forecastDates = d.kwan_forecast.map(f => f.date); // 7 วัน ตรงกับ overflow_forecast/day slider
-  const nodeOverflowByDate = {};
-  d.overflow_forecast.forEach(r => {
-    if (!nodeOverflowByDate[r.node]) nodeOverflowByDate[r.node] = {};
-    nodeOverflowByDate[r.node][r.date] = r.mcm;
-  });
-  const node3DList = Object.entries(d.nodes).filter(([node]) => !HIDDEN_MAP_NODES.has(node)).map(([node, p]) => ({
-    node, lat: p.lat, lon: p.lon, name_th: p.name_th,
-    byDate: nodeOverflowByDate[node] || {},
-    flagHex: FLAG[nodeFlagLevel(d, node)].hex,
-  }));
-  const maxMcmAll = Math.max(0.0005, ...node3DList.flatMap(n => Object.values(n.byDate).length ? Object.values(n.byDate) : [0]));
-  const MAP3D_TARGET_MAX_M = 380;
-  function heightForMcm(mcm) { return Math.max(4, (mcm / maxMcmAll) * MAP3D_TARGET_MAX_M); }
-  function hexToRgbArr(hex) {
-    const v = parseInt(hex.replace('#', ''), 16);
-    return [(v >> 16) & 255, (v >> 8) & 255, v & 255];
+  // GeoJsonLayer วาดผังอาคารจริง (ดึงจาก OpenStreetMap ผ่าน Overpass โดยผู้ใช้ export มาให้ เนื่องจาก
+  // sandbox ของผมเข้าถึง Overpass API ตรงไม่ได้) แล้ว sample ความลึกน้ำท่วมคาดการณ์ 7 วันจาก
+  // paddy_ponding_depth_forecast_dN.tif ต่ออาคาร (ดู sample_building_flood.py) — โหลด library +
+  // ข้อมูลอาคารแบบ lazy (ตอนกดปุ่ม 3D ครั้งแรกเท่านั้น)
+  // ปรับรุ่นก่อนหน้า (เสาที่ node ทั้ง 10 จุด) เป็นอาคารจริงตามคำขอ เพราะเสาที่ node ดูเป็นนามธรรม
+  // เกินไป ไม่สื่อความหมายกับผู้ใช้จริง -- อาคารจริงให้บริบทเชิงพื้นที่ที่จับต้องได้กว่ามาก
+  // หมายเหตุ: ฝนพยากรณ์ล่วงหน้า=0 เสมอ (สมมุติฐานโมเดล) จึงทำเฉพาะความเสี่ยงน้ำท่วมก่อน
+  const forecastDates = d.kwan_forecast.map(f => f.date); // 7 วัน ตรงกับ day slider เดิม
+  const BUILDING_BASE_HEIGHT_M = 4;   // ความสูงอาคารทั่วไป (ไม่มี tag height/levels จริงส่วนใหญ่)
+  const BUILDING_EXTRA_MAX_M = 140;   // ความสูงเสริมสูงสุด (เกินจริงตั้งใจ เพื่อให้เห็นความต่างชัด)
+  let buildingsData = null;
+  let buildingsMaxDepth = 0.0005;
+  function loadBuildingsData3D() {
+    return fetch('assets/data/buildings_flood_risk.geojson', { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : { features: [] })
+      .then(fc => {
+        buildingsData = fc.features || [];
+        const allDepths = buildingsData.flatMap(f => (f.properties && f.properties.depths) || []);
+        buildingsMaxDepth = Math.max(0.0005, ...(allDepths.length ? allDepths : [0]));
+      })
+      .catch(() => { buildingsData = []; });
   }
-  function column3DDataForDay(n) {
-    const dateStr = forecastDates[n - 1];
-    return node3DList.map(nd => ({
-      node: nd.node, name_th: nd.name_th, lon: nd.lon, lat: nd.lat,
-      mcm: (dateStr && nd.byDate[dateStr]) || 0,
-      color: hexToRgbArr(nd.flagHex),
-    }));
+  function buildingHeightForDepth(depth) {
+    if (!depth || depth <= 0) return BUILDING_BASE_HEIGHT_M;
+    return BUILDING_BASE_HEIGHT_M + (depth / buildingsMaxDepth) * BUILDING_EXTRA_MAX_M;
+  }
+  function buildingColorForDepth(depth) {
+    if (!depth || depth <= 0) return [90, 110, 108, 190]; // เทาอมเขียว เป็นกลาง -- ไม่มีความเสี่ยง
+    const t = Math.min(1, depth / buildingsMaxDepth);
+    if (t < 0.34) return [224, 169, 79, 235];  // เฝ้าระวัง (เหลือง/ส้มอ่อน)
+    if (t < 0.67) return [224, 118, 63, 235];  // เตือนภัย (ส้ม)
+    return [224, 82, 82, 235];                 // วิกฤต (แดง)
+  }
+  function buildBuildingsLayer3D(dayN) {
+    return new deck.GeoJsonLayer({
+      id: 'flood-buildings',
+      data: buildingsData || [],
+      extruded: true, filled: true, stroked: true,
+      getElevation: f => buildingHeightForDepth(((f.properties || {}).depths || [])[dayN - 1] || 0),
+      getFillColor: f => buildingColorForDepth(((f.properties || {}).depths || [])[dayN - 1] || 0),
+      getLineColor: [255, 255, 255, 50], lineWidthMinPixels: 1,
+      pickable: true, autoHighlight: true, highlightColor: [255, 255, 255, 130],
+    });
   }
 
   let is3DActive = false;
@@ -863,17 +878,6 @@ function drawMap(d) {
 
   let map3dInitPromise = null;
   let deckOverlay3D = null;
-  function buildColumnLayer3D(dayN) {
-    return new deck.ColumnLayer({
-      id: 'flood-columns',
-      data: column3DDataForDay(dayN),
-      diskResolution: 24, radius: 200, extruded: true,
-      getElevation: dd => heightForMcm(dd.mcm),
-      getFillColor: dd => dd.color,
-      getPosition: dd => [dd.lon, dd.lat],
-      pickable: true, autoHighlight: true, highlightColor: [255, 255, 255, 120],
-    });
-  }
   function initMap3D() {
     if (map3dInitPromise) return map3dInitPromise;
     const el3d = document.getElementById('riskMap3D');
@@ -881,8 +885,11 @@ function drawMap(d) {
     loadingDiv.className = 'map3d-loading'; loadingDiv.textContent = 'กำลังโหลดแผนที่ 3 มิติ…';
     el3d.appendChild(loadingDiv);
     loadCssOnce3D('https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.css');
-    map3dInitPromise = loadScriptOnce3D('https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.js')
-      .then(() => loadScriptOnce3D('https://unpkg.com/deck.gl@^9.0.0/dist.min.js'))
+    map3dInitPromise = Promise.all([
+      loadScriptOnce3D('https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.js')
+        .then(() => loadScriptOnce3D('https://unpkg.com/deck.gl@^9.0.0/dist.min.js')),
+      loadBuildingsData3D(),
+    ])
       .then(() => new Promise((resolve) => {
         const OSM_STYLE = {
           version: 8,
@@ -897,18 +904,33 @@ function drawMap(d) {
         };
         const map3d = new maplibregl.Map({
           container: 'riskMap3D', style: OSM_STYLE,
-          center: [99.87, 19.115], zoom: 12, pitch: 55, bearing: -12,
+          center: [99.87, 19.115], zoom: 12, pitch: 60, bearing: -12,
+          maxPitch: 75,
           attributionControl: { compact: true },
         });
         map3d.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
+        // 2026-09-27 แก้บั๊ก -- pitch ที่ตั้งใน constructor ไม่ทำงานเสมอไปกับบางเวอร์ชัน/สไตล์
+        // raster-only จึงตั้งซ้ำแบบ explicit (jumpTo ทันทีไม่รอ animation) ทั้งก่อนและหลัง 'load'
+        // เพื่อบังคับมุมกล้องเอียงจริง ๆ ให้เห็นความสูงของเสา/อาคาร ไม่ใช่มองตรงจากบนลงล่าง
+        map3d.jumpTo({ pitch: 60, bearing: -12 });
         map3d.on('load', () => {
+          map3d.jumpTo({ pitch: 60, bearing: -12 });
           const initialDay = parseInt(dayRange.value, 10) || 1;
           deckOverlay3D = new deck.MapboxOverlay({
             interleaved: false,
-            layers: [buildColumnLayer3D(initialDay)],
-            getTooltip: ({ object }) => object && {
-              html: '<b>' + object.name_th + '</b><br>น้ำล้นตลิ่งคาดการณ์: ' + object.mcm.toFixed(4) + ' ล้าน ลบ.ม./วัน',
-              style: { backgroundColor: '#081e26', color: '#eef6f4', fontSize: '12px', borderRadius: '6px', padding: '6px 10px' },
+            layers: [buildBuildingsLayer3D(initialDay)],
+            getTooltip: ({ object }) => {
+              if (!object) return null;
+              const dayN = parseInt(dayRange.value, 10) || 1;
+              const depth = ((object.properties || {}).depths || [])[dayN - 1] || 0;
+              const nm = (object.properties && object.properties.name_th) || 'อาคาร';
+              const line = depth > 0
+                ? 'ความลึกน้ำท่วมคาดการณ์: ' + (depth * 100).toFixed(2) + ' ซม.'
+                : 'ไม่คาดว่าจะได้รับผลกระทบ (วันที่เลือก)';
+              return {
+                html: '<b>' + nm + '</b><br>' + line,
+                style: { backgroundColor: '#081e26', color: '#eef6f4', fontSize: '12px', borderRadius: '6px', padding: '6px 10px' },
+              };
             },
           });
           map3d.addControl(deckOverlay3D);
@@ -925,7 +947,7 @@ function drawMap(d) {
   }
   window.__update3DDay = function(n) {
     if (!deckOverlay3D) return;
-    deckOverlay3D.setProps({ layers: [buildColumnLayer3D(n)] });
+    deckOverlay3D.setProps({ layers: [buildBuildingsLayer3D(n)] });
   };
 
   const view2dBtn = document.getElementById('view2dBtn');
