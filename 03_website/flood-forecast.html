@@ -1034,8 +1034,15 @@ function drawMap(d) {
         };
         const map3d = new maplibregl.Map({
           container: 'riskMap3D', style: OSM_STYLE,
-          center: [99.87, 19.115], zoom: 12, pitch: 60, bearing: -12,
-          maxPitch: 85, maxZoom: 17,
+          // 2026-09-27 แก้บั๊กสำคัญ -- zoom เริ่มต้นเดิม (12) ต่ำกว่า minzoom ของ terrain-dem (13)
+          // ตรวจสอบพบว่า MapLibre "ไม่" ทำ overzoom fallback ให้ raster-dem source ที่ผูกกับ
+          // setTerrain() เหมือน raster ธรรมดา -- ถ้า camera zoom < source.minzoom จะไม่โหลด DEM tile
+          // เลยสักไทล์เดียว (ยืนยันด้วย network log จริง: 0 requests ตอน zoom 12, โหลดปกติทันทีที่ zoom
+          // ขยับถึง 13) ทำให้ terrain mesh แบนราบตลอดตอนเปิดมุมมอง 3 มิติครั้งแรก (มองไม่ออกตอนใช้พื้น
+          // OSM เพราะตึก/ถนนช่วยพรางไว้ แต่เห็นชัดมากตอนสลับไปพื้นไล่สีความสูงที่โล่งกว่า) แก้โดยตั้ง
+          // zoom เริ่มต้นให้สูงกว่า minzoom เสมอ
+          center: [99.87, 19.115], zoom: 13.2, pitch: 60, bearing: -12,
+          maxPitch: 85, maxZoom: 17, minZoom: 13,
           attributionControl: { compact: true },
         });
         map3dInstance = map3d;
