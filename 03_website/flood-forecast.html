@@ -141,6 +141,16 @@
   .day-slider button:hover { opacity: 0.85; }
   .day-slider input[type=range] { flex: 1; min-width: 140px; accent-color: var(--accent-500, #2a9d8f); }
   .day-slider .day-label { min-width: 96px; text-align: right; font-variant-numeric: tabular-nums; }
+  /* 2026-09-27 เพิ่ม -- สลับดูแผนที่ 2D/3D (เสาแสดงปริมาณน้ำล้นตลิ่งต่อวัน) เพิ่มเติมจากแผนที่เดิม ไม่แทนที่ */
+  .map-view-toggle { display: flex; gap: 8px; margin-bottom: 10px; }
+  .map-view-toggle button { background: var(--surface); border: 1px solid var(--border-strong); color: var(--text-300); border-radius: 999px; padding: 6px 16px; font-size: 12.5px; font-family: "IBM Plex Sans Thai", sans-serif; cursor: pointer; transition: background .15s, color .15s; }
+  .map-view-toggle button:hover { background: var(--surface-hover); }
+  .map-view-toggle button.active { background: var(--teal-500); color: #06161c; border-color: var(--teal-500); font-weight: 600; }
+  #riskMap3D { height: 440px; border-radius: var(--radius-lg); border: 1px solid var(--border-strong); display: none; position: relative; background: #0d2a34; }
+  #riskMap3D.show { display: block; }
+  #riskMap3D .maplibregl-ctrl-attrib { font-size: 10px; }
+  .map3d-hint { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(8,30,38,0.85); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 6px 12px; font-size: 11px; color: var(--text-500); z-index: 5; pointer-events: none; text-align: center; max-width: 90%; }
+  .map3d-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--text-500); font-size: 13px; background: rgba(8,30,38,0.65); z-index: 6; border-radius: var(--radius-lg); }
 
   /* reliability */
   .rel-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
@@ -293,7 +303,12 @@
         <h2>แผนที่จุดเสี่ยง</h2>
         <p>สีของแต่ละจุดตามระดับเตือนของลำน้ำนั้นใน 7 วันข้างหน้า — คลิกดูรายละเอียด</p>
       </div>
+      <div class="map-view-toggle" id="mapViewToggle">
+        <button type="button" id="view2dBtn" class="active">แผนที่ 2 มิติ</button>
+        <button type="button" id="view3dBtn">แผนที่ 3 มิติ — เสาน้ำล้นตลิ่ง</button>
+      </div>
       <div id="riskMap"></div>
+      <div id="riskMap3D"><div class="map3d-hint">ความสูง/สีของเสา = ปริมาณน้ำล้นตลิ่งคาดการณ์ต่อวัน (ล้าน ลบ.ม.) ที่ตำแหน่งจริงของแต่ละห้วย — ลากเมาส์เพื่อหมุน/เอียงมุมมอง เลื่อนวันที่ด้านล่างแผนที่</div></div>
       <div class="depth-legend" id="depthLegend">
         <span id="depthLegendLabel">ความลึกน้ำท่วม</span>
         <div class="bar-col">
@@ -750,6 +765,8 @@ function drawMap(d) {
     dayRange.value = n;
     const info = seriesDays && seriesDays.find(dd => dd.day === n);
     dayLabel.textContent = info ? (info.date + ' (วันที่ ' + n + ')') : ('วันที่ ' + n);
+    // 2026-09-27 เพิ่ม -- sync มุมมอง 3D (ถ้าเปิดอยู่/สร้างแล้ว) ให้เปลี่ยนวันตาม slider เดียวกัน
+    if (window.__update3DDay) window.__update3DDay(n);
   }
   dayRange.addEventListener('input', () => { stopPlay(); showDay(parseInt(dayRange.value, 10)); });
   dayPlayBtn.addEventListener('click', () => {
@@ -763,7 +780,7 @@ function drawMap(d) {
   });
   seriesLayer.on('add', () => {
     legend.classList.add('show');
-    daySlider.classList.add('show');
+    updateDaySliderVisibility();
     legendLabel.textContent = SERIES_LABEL + ' (0–' + fmtDepth(seriesVmax) + '+ ม.)';
     setLegendScale(seriesVmax);
     showDay(parseInt(dayRange.value, 10) || 1);
@@ -781,12 +798,154 @@ function drawMap(d) {
   });
   seriesLayer.on('remove', () => {
     stopPlay();
-    daySlider.classList.remove('show');
+    updateDaySliderVisibility();
     const anyOtherActive = Object.values(depthLayers).some(l => map.hasLayer(l));
     if (!anyOtherActive) legend.classList.remove('show');
   });
 
   L.control.layers(baseMaps, Object.assign({ 'จุดเสี่ยงรายห้วย': markerLayer }, depthLayers), { collapsed: true }).addTo(map);
+
+  // ---------- (3D) 2026-09-27 เพิ่ม -- มุมมอง 3 มิติ: เสาแสดงปริมาณน้ำล้นตลิ่งต่อวันต่อ node ----------
+  // เพิ่มเติมจากแผนที่ 2D เดิม (ไม่แทนที่ ไม่แก้โค้ด Leaflet ด้านบนเลย) สลับดูได้ด้วยปุ่ม 2 ปุ่ม
+  // ใช้ MapLibre GL JS (raster OSM tiles เดิม รองรับ pitch/bearing จริง ต่างจาก Leaflet) + deck.gl
+  // ColumnLayer วางทับพิกัดจริงของแต่ละ node (lat/lon จาก d.nodes เดิม) — โหลด library แบบ lazy
+  // (inject <script> ตอนกดปุ่ม 3D ครั้งแรกเท่านั้น) เพื่อไม่ให้หน้าเว็บโหลดหนักขึ้นถ้าไม่มีใครกดดู
+  // หมายเหตุ: ฝนพยากรณ์ล่วงหน้า=0 เสมอ (สมมุติฐานโมเดล) จึงทำเฉพาะเสาน้ำล้นตลิ่งก่อน (ตามที่ผู้ใช้เลือก)
+  const forecastDates = d.kwan_forecast.map(f => f.date); // 7 วัน ตรงกับ overflow_forecast/day slider
+  const nodeOverflowByDate = {};
+  d.overflow_forecast.forEach(r => {
+    if (!nodeOverflowByDate[r.node]) nodeOverflowByDate[r.node] = {};
+    nodeOverflowByDate[r.node][r.date] = r.mcm;
+  });
+  const node3DList = Object.entries(d.nodes).filter(([node]) => !HIDDEN_MAP_NODES.has(node)).map(([node, p]) => ({
+    node, lat: p.lat, lon: p.lon, name_th: p.name_th,
+    byDate: nodeOverflowByDate[node] || {},
+    flagHex: FLAG[nodeFlagLevel(d, node)].hex,
+  }));
+  const maxMcmAll = Math.max(0.0005, ...node3DList.flatMap(n => Object.values(n.byDate).length ? Object.values(n.byDate) : [0]));
+  const MAP3D_TARGET_MAX_M = 380;
+  function heightForMcm(mcm) { return Math.max(4, (mcm / maxMcmAll) * MAP3D_TARGET_MAX_M); }
+  function hexToRgbArr(hex) {
+    const v = parseInt(hex.replace('#', ''), 16);
+    return [(v >> 16) & 255, (v >> 8) & 255, v & 255];
+  }
+  function column3DDataForDay(n) {
+    const dateStr = forecastDates[n - 1];
+    return node3DList.map(nd => ({
+      node: nd.node, name_th: nd.name_th, lon: nd.lon, lat: nd.lat,
+      mcm: (dateStr && nd.byDate[dateStr]) || 0,
+      color: hexToRgbArr(nd.flagHex),
+    }));
+  }
+
+  let is3DActive = false;
+  function updateDaySliderVisibility() {
+    const seriesOn = map.hasLayer(seriesLayer);
+    if (seriesOn || is3DActive) daySlider.classList.add('show');
+    else daySlider.classList.remove('show');
+  }
+
+  function loadScriptOnce3D(src) {
+    return new Promise((resolve, reject) => {
+      if (document.querySelector('script[data-src3d="' + src + '"]')) { resolve(); return; }
+      const s = document.createElement('script');
+      s.src = src; s.dataset.src3d = src;
+      s.onload = () => resolve(); s.onerror = () => reject(new Error('load fail: ' + src));
+      document.head.appendChild(s);
+    });
+  }
+  function loadCssOnce3D(href) {
+    if (document.querySelector('link[data-css3d="' + href + '"]')) return;
+    const l = document.createElement('link');
+    l.rel = 'stylesheet'; l.href = href; l.dataset.css3d = href;
+    document.head.appendChild(l);
+  }
+
+  let map3dInitPromise = null;
+  let deckOverlay3D = null;
+  function buildColumnLayer3D(dayN) {
+    return new deck.ColumnLayer({
+      id: 'flood-columns',
+      data: column3DDataForDay(dayN),
+      diskResolution: 24, radius: 200, extruded: true,
+      getElevation: dd => heightForMcm(dd.mcm),
+      getFillColor: dd => dd.color,
+      getPosition: dd => [dd.lon, dd.lat],
+      pickable: true, autoHighlight: true, highlightColor: [255, 255, 255, 120],
+    });
+  }
+  function initMap3D() {
+    if (map3dInitPromise) return map3dInitPromise;
+    const el3d = document.getElementById('riskMap3D');
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'map3d-loading'; loadingDiv.textContent = 'กำลังโหลดแผนที่ 3 มิติ…';
+    el3d.appendChild(loadingDiv);
+    loadCssOnce3D('https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.css');
+    map3dInitPromise = loadScriptOnce3D('https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.js')
+      .then(() => loadScriptOnce3D('https://unpkg.com/deck.gl@^9.0.0/dist.min.js'))
+      .then(() => new Promise((resolve) => {
+        const OSM_STYLE = {
+          version: 8,
+          sources: { osm: {
+            type: 'raster',
+            tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+            tileSize: 256, attribution: '© OpenStreetMap contributors',
+          }},
+          layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
+        };
+        const map3d = new maplibregl.Map({
+          container: 'riskMap3D', style: OSM_STYLE,
+          center: [99.87, 19.115], zoom: 12, pitch: 55, bearing: -12,
+          attributionControl: { compact: true },
+        });
+        map3d.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
+        map3d.on('load', () => {
+          const initialDay = parseInt(dayRange.value, 10) || 1;
+          deckOverlay3D = new deck.MapboxOverlay({
+            interleaved: false,
+            layers: [buildColumnLayer3D(initialDay)],
+            getTooltip: ({ object }) => object && {
+              html: '<b>' + object.name_th + '</b><br>น้ำล้นตลิ่งคาดการณ์: ' + object.mcm.toFixed(4) + ' ล้าน ลบ.ม./วัน',
+              style: { backgroundColor: '#081e26', color: '#eef6f4', fontSize: '12px', borderRadius: '6px', padding: '6px 10px' },
+            },
+          });
+          map3d.addControl(deckOverlay3D);
+          loadingDiv.remove();
+          resolve();
+        });
+      }))
+      .catch((err) => {
+        console.error('โหลดแผนที่ 3 มิติไม่สำเร็จ:', err);
+        loadingDiv.textContent = 'โหลดแผนที่ 3 มิติไม่สำเร็จ — ตรวจการเชื่อมต่ออินเทอร์เน็ต';
+        map3dInitPromise = null; // อนุญาตให้กดปุ่มลองใหม่ได้ถ้าโหลดไม่สำเร็จ
+      });
+    return map3dInitPromise;
+  }
+  window.__update3DDay = function(n) {
+    if (!deckOverlay3D) return;
+    deckOverlay3D.setProps({ layers: [buildColumnLayer3D(n)] });
+  };
+
+  const view2dBtn = document.getElementById('view2dBtn');
+  const view3dBtn = document.getElementById('view3dBtn');
+  const riskMap3DEl = document.getElementById('riskMap3D');
+  const riskMapEl = document.getElementById('riskMap');
+  view3dBtn.addEventListener('click', () => {
+    is3DActive = true;
+    view3dBtn.classList.add('active'); view2dBtn.classList.remove('active');
+    riskMapEl.style.display = 'none'; riskMap3DEl.classList.add('show');
+    updateDaySliderVisibility();
+    initMap3D().then(() => { if (window.__update3DDay) window.__update3DDay(parseInt(dayRange.value, 10) || 1); });
+  });
+  view2dBtn.addEventListener('click', () => {
+    is3DActive = false;
+    view2dBtn.classList.add('active'); view3dBtn.classList.remove('active');
+    riskMapEl.style.display = ''; riskMap3DEl.classList.remove('show');
+    updateDaySliderVisibility();
+    setTimeout(() => map.invalidateSize(), 60);
+  });
 
   // 2026-07-26 เพิ่ม -- ปุ่มดูแผนที่แบบเต็มจอ (Fullscreen API ตรงๆ ไม่พึ่ง plugin ภายนอก, โค้ดเดียวกับ index.html)
   const FullscreenControl = L.Control.extend({
