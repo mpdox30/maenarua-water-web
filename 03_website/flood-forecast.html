@@ -872,6 +872,41 @@ function drawMap(d) {
     if (t < 0.67) return [224, 118, 63, 235];  // เตือนภัย (ส้ม)
     return [224, 82, 82, 235];                 // วิกฤต (แดง)
   }
+  // 2026-09-27 เพิ่ม -- ทำให้อาคาร "ตั้งอยู่บนพื้นดินจริง" แทนที่จะลอยที่ความสูง 0 เมตร (sea-level)
+  // ในขณะที่ terrain ภูมิประเทศจริงอยู่ที่ ~385-1600+ ม. -- deck.gl ไม่รู้จัก terrain ของ MapLibre
+  // เองโดยอัตโนมัติ (โหมด non-interleaved วาดคนละชั้นกัน) จึงต้อง query ความสูงพื้นดินจริงต่ออาคาร
+  // ด้วย map.queryTerrainElevation() แล้วฝัง z ลงในพิกัด geometry เอง (ค่ามาตรฐานที่ deck.gl
+  // ใช้เป็นฐานก่อนอัดความสูงอาคารทับด้วย getElevation)
+  function addZToCoords(coords, z) {
+    if (typeof coords[0] === 'number') return [coords[0], coords[1], z];
+    return coords.map(c => addZToCoords(c, z));
+  }
+  let terrainZReady = false;
+  function tryInjectTerrainZOnce() {
+    if (terrainZReady || !buildingsData || !buildingsData.length) return false;
+    if (!map3dInstance || !map3dInstance.getTerrain()) return false;
+    const updated = [];
+    for (const f of buildingsData) {
+      const geom = f.geometry;
+      if (!geom || !geom.coordinates) { updated.push(f); continue; }
+      let pt = geom.coordinates;
+      while (Array.isArray(pt[0])) pt = pt[0];
+      const z = map3dInstance.queryTerrainElevation([pt[0], pt[1]]);
+      if (z === null || z === undefined) return false; // terrain tile บริเวณนี้ยังโหลดไม่เสร็จ รอรอบหน้า
+      updated.push({ ...f, geometry: { ...geom, coordinates: addZToCoords(geom.coordinates, z) } });
+    }
+    buildingsData = updated;
+    terrainZReady = true;
+    return true;
+  }
+  function retryInjectTerrainZ(retriesLeft) {
+    if (tryInjectTerrainZOnce()) {
+      if (window.__update3DDay) window.__update3DDay(parseInt(dayRange.value, 10) || 1);
+    } else if (retriesLeft > 0) {
+      setTimeout(() => retryInjectTerrainZ(retriesLeft - 1), 1000);
+    }
+  }
+
   function buildBuildingsLayer3D(dayN) {
     const source = current3DSource;
     return new deck.GeoJsonLayer({
@@ -983,13 +1018,18 @@ function drawMap(d) {
         }
         map3d.jumpTo({ pitch: 60, bearing: -12 });
         map3d.once('idle', forcePitch);
+        // 2026-09-27 เพิ่ม -- รอ terrain โหลดเสร็จ (idle) แล้วค่อยฝังความสูงพื้นดินจริงลงอาคาร
+        // (ก่อนหน้านี้อาคารลอยที่ 0 ม. ในขณะที่พื้นจริงอยู่สูงกว่ามาก ทำให้ดูเหมือนลอยตัดกับภูมิประเทศ)
+        map3d.once('idle', () => retryInjectTerrainZ(8));
         setTimeout(forcePitch, 1200);
         map3d.on('load', () => {
           forcePitch();
           if (terrainEnabled) map3d.setTerrain({ source: 'terrain-dem', exaggeration: TERRAIN_EXAGGERATION });
           const initialDay = parseInt(dayRange.value, 10) || 1;
           deckOverlay3D = new deck.MapboxOverlay({
-            interleaved: false,
+            // interleaved: true -- ให้ deck.gl วาดปนกับ layer ของ MapLibre (รวม terrain) โดยใช้
+            // depth buffer ร่วมกัน จำเป็นสำหรับให้อาคารถูกบัง/โผล่ถูกต้องเทียบกับภูเขาจริง
+            interleaved: true,
             layers: [buildBuildingsLayer3D(initialDay)],
             getTooltip: ({ object }) => {
               if (!object) return null;
