@@ -28,6 +28,9 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: write  # ต้องมีสิทธิ์นี้ถึงจะเรียก DELETE /actions/artifacts ได้ (ขั้นตอนล้าง
+                   # stale github-pages artifact ด้านล่าง) -- ไม่มีสิทธิ์นี้จะได้ 403 เงียบๆ
+                   # (มี || true กันไม่ให้ step fail แต่ artifact เก่าจะไม่ถูกลบจริง)
 
 concurrency:
   group: "pages"
@@ -48,6 +51,27 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
+
+      # 2026-09-28 เพิ่ม -- เจอปัญหาจริง: deploy-pages@v4 error "Multiple artifacts named
+      # 'github-pages' were unexpectedly found for this workflow run. Artifact count is 2."
+      # สาเหตุ: ถ้า run นี้เคยถูกกด "Re-run jobs" มาก่อน (ไม่ว่าจะ manual หรือระบบอื่น) artifact
+      # ที่ upload ไปแล้วในรอบก่อนหน้า (attempt เดิม) จะยังค้างอยู่ ไม่ถูกลบอัตโนมัติ -- พอ
+      # upload-pages-artifact รันซ้ำใน attempt ใหม่ จะกลายเป็น 2 artifact ชื่อ "github-pages"
+      # ซ้อนกันใน run เดียวกัน ทำให้ deploy-pages เลือกไม่ถูกว่าจะ deploy อันไหน (นี่คือบั๊กที่รู้จัก
+      # กันดีของ actions/deploy-pages หลัง re-run ไม่ใช่ปัญหาจากโค้ดเว็บไซต์เอง) -- workflow นี้เสี่ยง
+      # โดนบ่อยเพราะถูก trigger จากหลายทาง (push ทุก ~15 นาทีจาก Windows Task Scheduler +
+      # workflow_run จาก 4 เวิร์กโฟลว์อื่น + manual dispatch) ลบ artifact เก่าทิ้งก่อน upload ใหม่
+      # ทุกครั้งกันบั๊กนี้ถาวร ไม่ต้องพึ่งการจำไม่กด "Re-run jobs" ซ้ำ
+      - name: Clean up stale github-pages artifact from any previous attempt of this run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
+            --jq '.artifacts[] | select(.name=="github-pages") | .id' | \
+          while read -r artifact_id; do
+            echo "Deleting stale github-pages artifact id=$artifact_id"
+            gh api -X DELETE "repos/${{ github.repository }}/actions/artifacts/$artifact_id" || true
+          done
 
       - name: Upload 03_website/ as Pages artifact
         uses: actions/upload-pages-artifact@v3
