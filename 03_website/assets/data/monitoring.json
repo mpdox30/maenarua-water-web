@@ -1,7 +1,7 @@
 {
   "meta": {
     "source": "สถานีโทรมาตร สสน. (API) ผ่าน Google Sheet wide_log (poll ทุก 10 นาที) + HII open data (tiservice.hii.or.th, รายชั่วโมงผ่าน QC, เดือนที่ปิดแล้ว) + 01_data/Reservoirs/reference (rating curve ต่ออ่าง)",
-    "updated": "2026-09-28T09:50:00",
+    "updated": "2026-09-28T10:00:00",
     "data_connected": true
   },
   "stations": [
@@ -12,11 +12,11 @@
       "spillway_msl": 489.54,
       "water_level": 489.662,
       "rainfall_1h": 0.0,
-      "temperature": 27.81,
-      "humidity": 86.58,
-      "pressure": 957.01,
-      "solar": 298.8,
-      "measure_datetime": "2026-09-28T09:50:00",
+      "temperature": 28.36,
+      "humidity": 80.58,
+      "pressure": 957.11,
+      "solar": 211.2,
+      "measure_datetime": "2026-09-28T10:00:00",
       "storage_m3": 1662314.7,
       "storage_max_m3": 1625463.8,
       "capacity_pct": 102.3,
@@ -741,6 +741,10 @@
         {
           "t": "2026-09-28T09:00:00",
           "level": 489.668
+        },
+        {
+          "t": "2026-09-28T10:00:00",
+          "level": 489.662
         }
       ],
       "rainfall_hourly": [
@@ -3751,6 +3755,10 @@
         {
           "t": "2026-09-28T09:00:00",
           "rain_mm": 0.0
+        },
+        {
+          "t": "2026-09-28T10:00:00",
+          "rain_mm": 0.0
         }
       ]
     },
@@ -3761,11 +3769,11 @@
       "spillway_msl": 457.07,
       "water_level": 456.437,
       "rainfall_1h": 0.0,
-      "temperature": 30.3,
-      "humidity": 75.31,
-      "pressure": 960.64,
-      "solar": 622.0,
-      "measure_datetime": "2026-09-28T09:50:00",
+      "temperature": 30.48,
+      "humidity": 68.83,
+      "pressure": 960.72,
+      "solar": 424.2,
+      "measure_datetime": "2026-09-28T10:00:00",
       "storage_m3": 312994.8,
       "storage_max_m3": 347778.7,
       "capacity_pct": 90.0,
@@ -4342,6 +4350,10 @@
         {
           "t": "2026-09-28T09:00:00",
           "level": 456.438
+        },
+        {
+          "t": "2026-09-28T10:00:00",
+          "level": 456.437
         }
       ],
       "rainfall_hourly": [
@@ -7204,6 +7216,10 @@
         {
           "t": "2026-09-28T09:00:00",
           "rain_mm": 0.0
+        },
+        {
+          "t": "2026-09-28T10:00:00",
+          "rain_mm": 0.0
         }
       ]
     },
@@ -7214,11 +7230,11 @@
       "spillway_msl": 478.1,
       "water_level": 478.69,
       "rainfall_1h": 0.0,
-      "temperature": 30.9,
-      "humidity": 76.2,
-      "pressure": 957.5,
-      "solar": 451.5,
-      "measure_datetime": "2026-09-28T09:30:00",
+      "temperature": 30.5,
+      "humidity": 75.7,
+      "pressure": 957.7,
+      "solar": 364.4,
+      "measure_datetime": "2026-09-28T10:00:00",
       "storage_m3": 549412.3,
       "storage_max_m3": 495467.8,
       "capacity_pct": 110.9,
@@ -7798,6 +7814,10 @@
         },
         {
           "t": "2026-09-28T09:00:00",
+          "level": 478.69
+        },
+        {
+          "t": "2026-09-28T10:00:00",
           "level": 478.69
         }
       ],
@@ -10573,6 +10593,10 @@
         {
           "t": "2026-09-28T09:00:00",
           "rain_mm": 0.0
+        },
+        {
+          "t": "2026-09-28T10:00:00",
+          "rain_mm": 0.0
         }
       ]
     },
@@ -10583,11 +10607,11 @@
       "spillway_msl": 508.1,
       "water_level": 508.719,
       "rainfall_1h": 0.0,
-      "temperature": 29.44,
-      "humidity": 76.02,
-      "pressure": 954.95,
-      "solar": 737.0,
-      "measure_datetime": "2026-09-28T09:50:00",
+      "temperature": 29.07,
+      "humidity": 81.61,
+      "pressure": 955.09,
+      "solar": 362.1,
+      "measure_datetime": "2026-09-28T10:00:00",
       "storage_m3": 144596.0,
       "storage_max_m3": 122441.9,
       "capacity_pct": 118.1,
@@ -11163,6 +11187,10 @@
         },
         {
           "t": "2026-09-28T09:00:00",
+          "level": 508.719
+        },
+        {
+          "t": "2026-09-28T10:00:00",
           "level": 508.719
         }
       ],
@@ -14025,6 +14053,10 @@
         },
         {
           "t": "2026-09-28T09:00:00",
+          "rain_mm": 0.0
+        },
+        {
+          "t": "2026-09-28T10:00:00",
           "rain_mm": 0.0
         }
       ]
