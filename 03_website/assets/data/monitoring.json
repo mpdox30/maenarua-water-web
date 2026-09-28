@@ -1,7 +1,7 @@
 {
   "meta": {
     "source": "สถานีโทรมาตร สสน. (API) ผ่าน Google Sheet wide_log (poll ทุก 10 นาที) + HII open data (tiservice.hii.or.th, รายชั่วโมงผ่าน QC, เดือนที่ปิดแล้ว) + 01_data/Reservoirs/reference (rating curve ต่ออ่าง)",
-    "updated": "2026-09-28T14:10:00",
+    "updated": "2026-09-28T14:20:00",
     "data_connected": true
   },
   "stations": [
@@ -12,11 +12,11 @@
       "spillway_msl": 489.54,
       "water_level": 489.662,
       "rainfall_1h": 0.0,
-      "temperature": 27.1,
-      "humidity": 91.72,
-      "pressure": 955.81,
-      "solar": 210.7,
-      "measure_datetime": "2026-09-28T14:10:00",
+      "temperature": 26.94,
+      "humidity": 89.13,
+      "pressure": 955.64,
+      "solar": 174.2,
+      "measure_datetime": "2026-09-28T14:20:00",
       "storage_m3": 1662314.7,
       "storage_max_m3": 1625463.8,
       "capacity_pct": 102.3,
@@ -3800,12 +3800,12 @@
       "name_en": "Phayao C.A.T. Reservoir",
       "spillway_msl": 457.07,
       "water_level": 456.438,
-      "rainfall_1h": 0.0,
-      "temperature": 26.13,
-      "humidity": 91.74,
-      "pressure": 959.24,
-      "solar": 233.1,
-      "measure_datetime": "2026-09-28T14:10:00",
+      "rainfall_1h": 0.2,
+      "temperature": 25.97,
+      "humidity": 87.73,
+      "pressure": 959.1,
+      "solar": 197.8,
+      "measure_datetime": "2026-09-28T14:20:00",
       "storage_m3": 313048.0,
       "storage_max_m3": 347778.7,
       "capacity_pct": 90.0,
@@ -7283,7 +7283,7 @@
         },
         {
           "t": "2026-09-28T14:00:00",
-          "rain_mm": 0.0
+          "rain_mm": 0.2
         }
       ]
     },
@@ -10703,11 +10703,11 @@
       "spillway_msl": 508.1,
       "water_level": 508.719,
       "rainfall_1h": 0.0,
-      "temperature": 25.63,
-      "humidity": 92.43,
-      "pressure": 953.64,
-      "solar": 188.1,
-      "measure_datetime": "2026-09-28T14:10:00",
+      "temperature": 25.49,
+      "humidity": 92.45,
+      "pressure": 953.53,
+      "solar": 168.5,
+      "measure_datetime": "2026-09-28T14:20:00",
       "storage_m3": 144596.0,
       "storage_max_m3": 122441.9,
       "capacity_pct": 118.1,
