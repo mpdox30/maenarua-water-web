@@ -470,6 +470,11 @@ function renderKPI(json) {
   // data_source/horizons/reservoir_breakdown เรียงเท่ากันหมด) เดิมพัง 100% ของเวลา การ์ดนี้เลยโชว์
   // "ยังไม่มีข้อมูล" เสมอไม่ว่า backend จะคำนวณสำเร็จหรือไม่ก็ตาม
   const reservoirBreakdown = b && b.reservoir_breakdown;
+  // 2026-09-30 เพิ่ม -- backend ส่ง reason code มาด้วยแล้ว (data_pipeline.py:
+  // _wd_allocate_zone_b_reservoir_breakdown()) แยกกรณี "ข้อมูล SAR/climate ยังไม่พร้อม" ออกจาก
+  // "สัปดาห์นี้ไม่มี deficit ต้องเติมน้ำเลย" (สถานะปกติช่วงหน้าฝน ไม่ใช่ข้อมูลขาด) -- เดิมทั้งสองเคส
+  // โชว์ข้อความเดียวกันหมด ทำให้เข้าใจผิดว่าระบบข้อมูลเสียเวลาที่จริงคือไม่มีอะไรต้องเติมน้ำ
+  const reservoirBreakdownReason = b && b.reservoir_breakdown_reason;
   if (reservoirBreakdownEl) {
     if (reservoirBreakdown && reservoirBreakdown.reservoirs) {
       const entries = Object.entries(reservoirBreakdown.reservoirs);
@@ -483,6 +488,10 @@ function renderKPI(json) {
       }).join('');
       if (reservoirBreakdownNoteEl) reservoirBreakdownNoteEl.textContent =
         'จัดสรรจากค่าพยากรณ์ Zone B (' + fmtInt(reservoirBreakdown.total_m3) + ' ลบ.ม./สัปดาห์) ตามสัดส่วน FAO-56 ต่ออ่าง';
+    } else if (reservoirBreakdownReason === 'zero_deficit') {
+      reservoirBreakdownEl.innerHTML = '<span style="font-size:13px; color:var(--text-600); font-weight:400;">ไม่มีความต้องการใช้น้ำสัปดาห์นี้</span>';
+      if (reservoirBreakdownNoteEl) reservoirBreakdownNoteEl.textContent =
+        'ฝนตกเพียงพอสัปดาห์นี้ (P_eff ≥ ETc ทุกพืชทุกอ่าง) จึงไม่มี deficit ให้แบ่งตามอ่าง';
     } else {
       reservoirBreakdownEl.innerHTML = '<span style="font-size:13px; color:var(--text-600); font-weight:400;">ยังไม่มีข้อมูล</span>';
       if (reservoirBreakdownNoteEl) reservoirBreakdownNoteEl.textContent =

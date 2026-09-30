@@ -722,7 +722,7 @@ def _wd_get_zone_b_reservoir_areas(sar_result: Optional[dict]) -> Optional[dict]
 def _wd_compute_zone_b_reservoir_gir_ratio(
     sar_result: Optional[dict], iso_week: int,
     et0_mm_week: Optional[float], p_eff_mm: Optional[float],
-) -> Optional[dict]:
+) -> dict:
     """
     2026-07-22 เพิ่ม — คำนวณ "สัดส่วน" ความต้องการใช้น้ำ FAO-56 ของ zone_B ต่ออ่าง (ไม่ใช่ตัวเลข m3
     สุดท้ายที่จะโชว์) ใช้แบ่งตัวเลขพยากรณ์จริงจากโมเดล (final_m3 ของ demand_zone_b, h=1) ตามสัดส่วนนี้
@@ -737,15 +737,24 @@ def _wd_compute_zone_b_reservoir_gir_ratio(
     ใช้ et0_mm_week/p_eff_mm ของ "สัปดาห์นี้" ตัวเดียวกับที่ _fetch_climate_features_step() ใช้คำนวณ
     GIR_B_m3 รวมทั้งโซน ให้สัดส่วนสอดคล้องกับตัวเลขที่บันทึกคู่กันในแถวเดียวกันของ ml_features_live.csv
 
-    คืน dict {"reservoirs": {reservoir_name_th: {"share": 0-1, "fao56_estimate_m3": float}, ...},
-    "fao56_total_m3": float, "basis": "sar_live", "note": str} หรือ None พร้อม log เหตุผล (climate
-    สัปดาห์นี้ยังไม่พร้อม, SAR ยังไม่เคยรันสำเร็จ, หรือผลรวม FAO-56 ทุกอ่างเป็น 0 หารสัดส่วนไม่ได้)
+    2026-09-30 แก้ไข — คืน dict เสมอ (ไม่คืน None เปล่าๆ แล้ว) เพิ่ม key "reason" แยกให้ชัดว่า
+    คำนวณไม่ได้เพราะอะไร (frontend ใช้ค่านี้เลือกข้อความที่ถูกต้อง แทนข้อความรวม "ยังไม่มีข้อมูล"
+    เดิมที่ทำให้เข้าใจผิดว่าข้อมูลขาดเวลาที่จริงคือสัปดาห์นี้ไม่มี deficit ต้องเติมน้ำ):
+      - "missing_sar": SAR ยังไม่เคยรันสำเร็จ หรือรันสำเร็จแต่เป็นก่อนฟีเจอร์ zone_b_reservoir_area_ha
+      - "missing_climate": et0_mm_week หรือ p_eff_mm ของสัปดาห์นี้ยังไม่พร้อมใช้
+      - "zero_deficit": SAR + climate พร้อมทั้งคู่ แต่ผลรวม FAO-56 ทุกอ่าง = 0 (P_eff >= ETc
+        ทุกพืชทุกอ่าง ไม่มี deficit ต้องเติมน้ำสัปดาห์นี้ -- สถานะปกติ ไม่ใช่ข้อมูลขาด)
+      - "ok": คำนวณสำเร็จ มี key "reservoirs" ให้ใช้ต่อ
+
+    คืน dict {"reservoirs": {reservoir_name_th: {"share": 0-1, "fao56_estimate_m3": float}, ...}
+    หรือ None ถ้า reason != "ok", "fao56_total_m3": float, "basis": "sar_live", "note": str,
+    "reason": str}
     """
     reservoir_areas = _wd_get_zone_b_reservoir_areas(sar_result)
     if not reservoir_areas:
-        return None
+        return {"reservoirs": None, "reason": "missing_sar"}
     if et0_mm_week is None or p_eff_mm is None:
-        return None
+        return {"reservoirs": None, "reason": "missing_climate"}
 
     per_reservoir_m3: dict = {}
     for reservoir_name, area_ha_by_crop in reservoir_areas.items():
@@ -763,7 +772,7 @@ def _wd_compute_zone_b_reservoir_gir_ratio(
             "P_eff >= ETc ทุกพืชทุกอ่าง ไม่มี deficit ต้องเติมน้ำเลย) -- reservoir_breakdown จะไม่แสดงรอบนี้",
             grand_total,
         )
-        return None
+        return {"reservoirs": None, "reason": "zero_deficit"}
 
     breakdown = {
         name: {"share": round(m3 / grand_total, 6), "fao56_estimate_m3": round(m3, 2)}
@@ -774,6 +783,7 @@ def _wd_compute_zone_b_reservoir_gir_ratio(
         "fao56_total_m3": round(grand_total, 2),
         "basis": "sar_live",
         "note": "สัดส่วนคำนวณจาก FAO-56 GIR ต่ออ่าง (พื้นที่ SAR classification ล่าสุด x climate สัปดาห์นี้)",
+        "reason": "ok",
     }
 
 
@@ -1554,11 +1564,12 @@ def _fetch_climate_features_step(as_of_date: Optional[Any] = None) -> dict:
                 sar_result=sar_result, iso_week=as_of_week,
                 et0_mm_week=et0_mm_week, p_eff_mm=chirps_z.get("p_eff_mm"),
             )
-            if result["gir_b_reservoir_ratio"] is None:
+            if result["gir_b_reservoir_ratio"]["reservoirs"] is None:
                 logger.info(
-                    "zone_B: ยังคำนวณสัดส่วน GIR ต่ออ่างไม่ได้รอบนี้ (SAR ยังไม่มี "
+                    "zone_B: ยังคำนวณสัดส่วน GIR ต่ออ่างไม่ได้รอบนี้ (reason=%s -- SAR ยังไม่มี "
                     "zone_b_reservoir_area_ha, หรือ climate สัปดาห์นี้ยังไม่พร้อม, หรือผลรวม FAO-56 "
-                    "เป็น 0) -- reservoir_breakdown ใน latest.json จะไม่มีรอบนี้"
+                    "เป็น 0) -- reservoir_breakdown ใน latest.json จะไม่มีรอบนี้",
+                    result["gir_b_reservoir_ratio"]["reason"],
                 )
 
         rows_to_append.append(row)
@@ -2130,7 +2141,7 @@ def _wd_run_prediction(model: dict, features: dict) -> tuple[Optional[dict], Opt
 
 def _wd_allocate_zone_b_reservoir_breakdown(
     demand_zone_b: Optional[dict], gir_b_reservoir_ratio: Optional[dict],
-) -> Optional[dict]:
+) -> tuple:
     """
     2026-07-22 เพิ่ม — แบ่งตัวเลขพยากรณ์จริงของโมเดล (demand_zone_b["horizons"]["h1"]["final_m3"])
     ตามสัดส่วน FAO-56 ต่ออ่างที่คำนวณไว้แล้วใน _fetch_climate_features_step() (ดู
@@ -2141,18 +2152,27 @@ def _wd_allocate_zone_b_reservoir_breakdown(
     เท่ากับ final_m3 เป๊ะ (แค่คูณด้วย share ที่ normalize รวมเป็น 1 อยู่แล้วจาก
     _wd_compute_zone_b_reservoir_gir_ratio()) เป็นการ "จัดสรร" ตัวเลขเดิม ไม่ใช่ตัวเลขอิสระใหม่
 
-    คืน dict {"reservoirs": {reservoir_name_th: {"allocated_m3", "share", "fao56_estimate_m3"}, ...},
-    "total_m3": float, "basis": str, "note": str} หรือ None ถ้า demand_zone_b หรือ
-    gir_b_reservoir_ratio ไม่พร้อมใช้ (ไม่ raise)
+    2026-09-30 แก้ไข — คืน tuple (breakdown_dict_or_None, reason) เสมอ แทนที่จะคืนแค่ dict/None
+    เฉยๆ เพื่อส่งต่อ reason ("missing_sar" | "missing_climate" | "zero_deficit" | "missing_inputs"
+    | "ok") ไปให้ run_pipeline() เก็บเป็น predictions["demand_zone_b"]["reservoir_breakdown_reason"]
+    ใน latest.json -- ให้หน้าเว็บแยกได้ว่า "ยังไม่มีข้อมูล SAR/climate" กับ "สัปดาห์นี้ไม่มี deficit
+    ต้องเติมน้ำ" (สถานะปกติ ไม่ใช่บั๊ก) ออกจากกัน แทนข้อความรวมเดิมที่ทำให้เข้าใจผิด
+
+    คืน (dict, "ok") เมื่อสำเร็จ — dict คือ {"reservoirs": {reservoir_name_th: {"allocated_m3",
+    "share", "fao56_estimate_m3"}, ...}, "total_m3": float, "basis": str, "note": str}
+    คืน (None, reason) เมื่อไม่สำเร็จ (ไม่ raise)
     """
     if not demand_zone_b or not gir_b_reservoir_ratio:
-        return None
+        return None, "missing_inputs"
+    reason = gir_b_reservoir_ratio.get("reason", "missing_inputs")
+    if not gir_b_reservoir_ratio.get("reservoirs"):
+        return None, reason
     try:
         final_m3 = demand_zone_b["horizons"]["h1"]["final_m3"]
     except (KeyError, TypeError):
-        return None
+        return None, "missing_inputs"
     if final_m3 is None:
-        return None
+        return None, "missing_inputs"
 
     breakdown = {
         name: {
@@ -2163,7 +2183,7 @@ def _wd_allocate_zone_b_reservoir_breakdown(
         for name, info in gir_b_reservoir_ratio.get("reservoirs", {}).items()
     }
     if not breakdown:
-        return None
+        return None, reason
 
     return {
         "reservoirs": breakdown,
@@ -2174,7 +2194,7 @@ def _wd_allocate_zone_b_reservoir_breakdown(
             "(พื้นที่/ชนิดพืชจาก SAR classification ล่าสุด x climate สัปดาห์นี้) -- ผลรวมทุกอ่าง = "
             "final_m3 เป๊ะ ไม่ใช่ตัวเลขอิสระจากโมเดลแยกต่ออ่าง (ยังไม่มีโมเดลแบบนั้น)"
         ),
-    }
+    }, "ok"
 
 
 def _ri_load_metadata() -> dict:
@@ -3032,18 +3052,24 @@ def run_pipeline() -> PipelineResult:
         # ใน Step 2 (_fetch_climate_features_step()) -- ห่อ try/except แยก ไม่ให้พังกระทบ prediction หลัก
         if predictions.get("demand_zone_b") is not None:
             try:
-                reservoir_breakdown = _wd_allocate_zone_b_reservoir_breakdown(
+                reservoir_breakdown, breakdown_reason = _wd_allocate_zone_b_reservoir_breakdown(
                     predictions["demand_zone_b"], climate_result.get("gir_b_reservoir_ratio"),
                 )
                 predictions["demand_zone_b"]["reservoir_breakdown"] = reservoir_breakdown
+                # 2026-09-30 เพิ่ม -- reason code ให้หน้าเว็บแยก "ไม่มีข้อมูล SAR/climate" ออกจาก
+                # "สัปดาห์นี้ไม่มี deficit ต้องเติมน้ำ" (ดู _wd_allocate_zone_b_reservoir_breakdown()
+                # docstring สำหรับค่าที่เป็นไปได้ทั้งหมด)
+                predictions["demand_zone_b"]["reservoir_breakdown_reason"] = breakdown_reason
                 if reservoir_breakdown is None:
                     logger.info(
-                        "demand_zone_b: ยังแบ่งตามอ่างไม่ได้รอบนี้ (gir_b_reservoir_ratio ไม่พร้อมใช้ "
-                        "-- ดู log Step 2/5 ประกอบ) -- reservoir_breakdown จะเป็น null ใน latest.json"
+                        "demand_zone_b: ยังแบ่งตามอ่างไม่ได้รอบนี้ (reason=%s -- ดู log Step 2/5 "
+                        "ประกอบ) -- reservoir_breakdown จะเป็น null ใน latest.json",
+                        breakdown_reason,
                     )
             except Exception as exc:
                 logger.exception("_wd_allocate_zone_b_reservoir_breakdown() ล้มเหลวไม่คาดคิด (ไม่กระทบ prediction หลัก)")
                 predictions["demand_zone_b"]["reservoir_breakdown"] = None
+                predictions["demand_zone_b"]["reservoir_breakdown_reason"] = "error"
                 errors.append("reservoir_breakdown: " + str(exc))
     except Exception as exc:
         logger.exception("Step 4/5 ล้มเหลว (load_latest_model / run_prediction)")
