@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>บัญชีน้ำรายวัน | ข้อมูลประกอบการตัดสินใจเพื่อการบริหารจัดการน้ำ ตำบลแม่นาเรือ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-950: #06161c;
+    --bg-900: #081e26;
+    --bg-800: #0d2a34;
+    --bg-700: #123643;
+    --surface: rgba(255,255,255,0.045);
+    --surface-hover: rgba(255,255,255,0.075);
+    --border: rgba(157,201,201,0.16);
+    --border-strong: rgba(157,201,201,0.32);
+    --teal-300: #7fe0d1;
+    --teal-400: #45c2ad;
+    --teal-500: #2a9d8f;
+    --teal-glow: rgba(69,194,173,0.35);
+    --amber-400: #e0a94f;
+    --amber-300: #f0c47c;
+    --text-100: #eef6f4;
+    --text-300: #c4d6d3;
+    --text-500: #8aa3a0;
+    --text-600: #66807d;
+    --radius-lg: 18px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: radial-gradient(ellipse 1200px 700px at 15% -10%, #103743 0%, transparent 60%),
+                radial-gradient(ellipse 900px 600px at 100% 10%, #0e2f2a 0%, transparent 55%),
+                var(--bg-950);
+    color: var(--text-300);
+    font-family: "IBM Plex Sans Thai", "Sarabun", sans-serif;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 { font-family: "Noto Serif Thai", "Space Grotesk", serif; color: var(--text-100); font-weight: 600; letter-spacing: 0.01em; margin: 0; }
+  a { color: inherit; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: "Space Grotesk", "IBM Plex Sans Thai", sans-serif; font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--teal-300); font-weight: 600; }
+  .eyebrow::before { content: ""; width: 16px; height: 1px; background: var(--teal-400); display: inline-block; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 40px; }
+
+  header.site-header { position: sticky; top: 0; z-index: 40; background: rgba(6,22,28,0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+  .header-inner { max-width: 1240px; margin: 0 auto; padding: 16px 40px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; flex: 1 1 auto; min-width: 0; }
+  .brand-mark { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 35% 30%, rgba(127,224,209,0.35), transparent 70%); flex: none; }
+  .brand-mark svg { width: 18px; height: 18px; }
+  .brand-text-th { font-family: "Noto Serif Thai", serif; font-size: 14px; color: var(--text-100); font-weight: 600; line-height: 1.35; max-width: 320px; }
+  .brand-text-en { font-family: "Space Grotesk", sans-serif; font-size: 10px; letter-spacing: 0.06em; color: var(--text-500); margin-top: 2px; }
+  nav.main-nav { flex: none; display: flex; gap: 28px; align-items: center; }
+  nav.main-nav a { text-decoration: none; font-size: 13.5px; color: var(--text-500); font-weight: 500; padding: 6px 2px; border-bottom: 1px solid transparent; transition: color .2s, border-color .2s; white-space: nowrap; }
+  nav.main-nav a:hover { color: var(--teal-300); border-color: var(--teal-400); }
+  nav.main-nav a.current { color: var(--text-100); border-color: var(--amber-400); }
+
+  .nav-toggle { display: none; flex: none; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border-strong); background: var(--surface); align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .nav-toggle span { display: block; width: 18px; height: 2px; background: var(--text-100); border-radius: 2px; }
+  .nav-toggle span + span { margin-top: 4px; }
+  .mobile-nav { display: none; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: rgba(6,22,28,0.98); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); padding: 8px 24px 16px; }
+  .mobile-nav a { display: block; padding: 12px 4px; font-size: 14px; color: var(--text-300); text-decoration: none; border-bottom: 1px solid var(--border); }
+  .mobile-nav a:last-child { border-bottom: none; }
+  .mobile-nav a.current { color: var(--teal-300); font-weight: 600; }
+  .mobile-nav.open { display: flex; }
+
+  .status-bar { border-bottom: 1px solid var(--border); background: linear-gradient(90deg, rgba(224,169,79,0.08), transparent 60%); }
+  .status-bar-inner { max-width: 1240px; margin: 0 auto; padding: 10px 40px; display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--amber-300); flex-wrap: wrap; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber-400); box-shadow: 0 0 0 4px rgba(224,169,79,0.18); flex: none; }
+  .status-bar-inner strong { color: var(--amber-300); font-weight: 600; }
+  .status-bar-inner span.dim { color: var(--text-500); }
+
+  .page-hero { padding: 56px 0 40px; }
+  .page-hero h1 { font-size: 32px; line-height: 1.3; margin: 14px 0 16px; max-width: 720px; }
+  .page-hero p.lead { color: var(--text-500); font-size: 14.5px; max-width: 680px; margin: 0 0 22px; }
+  .hero-tags { display: flex; gap: 10px; flex-wrap: wrap; }
+  .tag { display: inline-flex; align-items: center; gap: 7px; background: var(--surface); border: 1px solid var(--border); color: var(--text-300); font-size: 12px; padding: 7px 14px; border-radius: 999px; font-weight: 500; }
+  .tag .dot { width: 7px; height: 7px; border-radius: 50%; }
+
+  section.section { padding: 48px 0; border-top: 1px solid var(--border); }
+  .section-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 32px; flex-wrap: wrap; }
+  .section-head h2 { font-size: 23px; margin-top: 8px; }
+  .section-head p { color: var(--text-500); font-size: 13.5px; max-width: 480px; margin: 8px 0 0; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px 20px; position: relative; overflow: hidden; transition: transform .22s ease, border-color .22s ease, background .22s ease; }
+  .kpi-card:hover { transform: translateY(-4px); border-color: var(--border-strong); background: var(--surface-hover); }
+  .kpi-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(69,194,173,0.12); border: 1px solid rgba(69,194,173,0.28); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 16px; }
+  .kpi-card.accent-amber .kpi-icon { background: rgba(224,169,79,0.12); border-color: rgba(224,169,79,0.32); }
+  .kpi-label { font-size: 12px; color: var(--text-500); margin-bottom: 8px; font-weight: 500; }
+  .kpi-value { font-family: "Space Grotesk", sans-serif; font-size: 27px; font-weight: 600; color: var(--text-100); }
+  .kpi-unit { font-size: 12px; color: var(--text-500); margin-left: 5px; font-weight: 400; }
+  .kpi-note { font-size: 11.5px; color: var(--text-600); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+  .filter-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+  .filter-bar label { font-size: 12.5px; color: var(--text-500); font-weight: 600; }
+  .filter-bar select {
+    font-family: inherit; font-size: 13.5px; color: var(--text-100); background: var(--bg-800);
+    border: 1px solid var(--border-strong); border-radius: 999px; padding: 8px 16px; cursor: pointer;
+  }
+  .filter-bar select:hover { border-color: var(--teal-400); }
+  .month-summary { font-size: 12.5px; color: var(--text-500); }
+  .month-summary strong { color: var(--teal-300); }
+
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; white-space: nowrap; }
+  table.data-table th, table.data-table td { text-align: right; padding: 10px 13px; border-bottom: 1px solid var(--border); }
+  table.data-table th:first-child, table.data-table td:first-child { text-align: left; }
+  table.data-table th { color: var(--text-500); font-weight: 600; font-size: 10.8px; text-transform: uppercase; letter-spacing: 0.03em; position: sticky; top: 0; background: var(--bg-900); }
+  table.data-table td { color: var(--text-300); font-variant-numeric: tabular-nums; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tr:hover td { background: rgba(255,255,255,0.03); }
+  table.data-table td.hl { color: var(--teal-300); font-weight: 600; }
+  table.data-table td.spill { color: var(--amber-300); }
+  .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 8px 20px; overflow-x: auto; max-height: 640px; overflow-y: auto; }
+
+  .disclaimer-box { margin-top: 22px; padding: 18px 22px; border-radius: var(--radius-md); background: rgba(224,169,79,0.06); border: 1px solid rgba(224,169,79,0.26); }
+  .disclaimer-box h4 { font-size: 13px; color: var(--amber-300); margin-bottom: 10px; font-family: "IBM Plex Sans Thai", sans-serif; font-weight: 600; }
+  .disclaimer-box p { margin: 0; font-size: 12.5px; color: var(--text-500); }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
+  .badge-ok { background: rgba(69,194,173,0.14); color: var(--teal-300); border: 1px solid rgba(69,194,173,0.35); }
+  .badge-low { background: rgba(224,169,79,0.16); color: var(--amber-300); border: 1px solid rgba(224,169,79,0.42); }
+
+  footer.site-footer { border-top: 1px solid var(--border); padding: 32px 0 40px; }
+  .footer-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+  .footer-inner p { margin: 0; font-size: 12px; color: var(--text-600); }
+
+  .loading-note, .error-note { padding: 20px; text-align: center; color: var(--text-500); font-size: 13px; }
+  .error-note { color: #ff9f8a; }
+
+  @media (max-width: 980px) {
+    .wrap, .header-inner, .status-bar-inner { padding-left: 24px; padding-right: 24px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    nav.main-nav { display: none; }
+    .nav-toggle { display: flex; }
+  }
+  @media (max-width: 560px) {
+    .page-hero h1 { font-size: 25px; }
+    .kpi-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 5 11 5 15.5C5 19.09 8.13 22 12 22C15.87 22 19 19.09 19 15.5C19 11 12 2 12 2Z" stroke="#7fe0d1" stroke-width="1.4"/></svg>
+      </span>
+      <span>
+        <div class="brand-text-th">ข้อมูลประกอบการตัดสินใจเพื่อการบริหารจัดการน้ำ ตำบลแม่นาเรือ</div>
+        <div class="brand-text-en">Decision support data for water management<br>Mae Na Rua Subdistrict</div>
+      </span>
+    </a>
+    <nav class="main-nav">
+      <a href="index.html">หน้าแรก</a>
+      <a href="monitoring.html">สถานการณ์น้ำ</a>
+      <a href="inflow-forecast.html">คาดการณ์น้ำไหลลงอ่าง</a>
+      <a href="water-demand.html">คาดการณ์ความต้องการใช้น้ำ</a>
+      <a href="flood-forecast.html">คาดการณ์น้ำท่วม</a>
+      <a href="water-balance.html" class="current">สมดุลน้ำ</a>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="เปิดเมนู" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="mobile-nav" id="mobileNav">
+      <a href="index.html">หน้าแรก</a>
+      <a href="monitoring.html">สถานการณ์น้ำ</a>
+      <a href="inflow-forecast.html">คาดการณ์น้ำไหลลงอ่าง</a>
+      <a href="water-demand.html">คาดการณ์ความต้องการใช้น้ำ</a>
+      <a href="flood-forecast.html">คาดการณ์น้ำท่วม</a>
+      <a href="water-balance.html" class="current">สมดุลน้ำ</a>
+    </nav>
+  </div>
+</header>
+<script>
+(function(){
+  var btn = document.getElementById('navToggle');
+  var panel = document.getElementById('mobileNav');
+  if (btn && panel) {
+    btn.addEventListener('click', function(){
+      var isOpen = panel.classList.toggle('open');
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+  }
+})();
+</script>
+
+<div class="status-bar">
+  <div class="status-bar-inner">
+    <span class="status-dot"></span>
+    <strong>สถานะข้อมูล:</strong>
+    <span id="statusText">กำลังโหลดข้อมูลจาก water_ledger.json…</span>
+  </div>
+</div>
+
+<main>
+  <section class="page-hero">
+    <div class="wrap">
+      <div class="eyebrow">บัญชีน้ำรายวัน · อ่างเก็บน้ำแม่นาเรือ</div>
+      <h1>สมดุลน้ำอ่างเก็บน้ำแม่นาเรือ</h1>
+      <p class="lead">
+        ตารางบัญชีน้ำรายวัน (Inflow = ΔS − R + O + Spill + E) ดึงตรงจากไฟล์บัญชีน้ำรายเดือนที่กรมชลประทาน/
+        เจ้าหน้าที่อ่างบันทึกไว้จริง (01_data/Reservoirs/inflow/&lt;ปี&gt;/&lt;ปี&gt;_&lt;เดือน&gt;_MNR.xlsx
+        ชีต "บัญชีน้ำ") เลือกดูย้อนหลังเป็นรายเดือนได้ด้านล่าง
+      </p>
+      <div class="hero-tags" id="heroTags">
+        <span class="tag" id="heroRangeTag">กำลังโหลดข้อมูล…</span>
+        <span class="tag" id="heroGeneratedTag">กำลังโหลดข้อมูล…</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">ข้อมูลล่าสุดที่มี</div>
+          <h2>สถานะอ่างเก็บน้ำ</h2>
+        </div>
+        <p>ค่าของวันล่าสุดที่บัญชีน้ำบันทึกไว้ครบ (ไม่ใช่วันปัจจุบันเสมอไป — ดูหมายเหตุด้านล่างตาราง)</p>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon">📅</div>
+          <div class="kpi-label">วันที่ล่าสุดในบัญชี</div>
+          <div class="kpi-value" id="kpiLatestDate">—</div>
+          <div class="kpi-note">แถวล่าสุดที่มีค่าระดับน้ำบันทึกไว้ในไฟล์บัญชีน้ำ</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">🌊</div>
+          <div class="kpi-label">ระดับน้ำ</div>
+          <div class="kpi-value" id="kpiLatestLevel">—<span class="kpi-unit">ม.รทก.</span></div>
+          <div class="kpi-note" id="kpiLatestVolumeNote">ปริมาตรน้ำ: —</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">💧</div>
+          <div class="kpi-label">น้ำไหลเข้า (วันล่าสุด)</div>
+          <div class="kpi-value" id="kpiLatestInflow">—<span class="kpi-unit">ลบ.ม./วัน</span></div>
+          <div class="kpi-note" id="kpiLatestSpillNote">ล้นทางระบายน้ำล้น: —</div>
+        </div>
+        <div class="kpi-card accent-amber">
+          <div class="kpi-icon">🗂️</div>
+          <div class="kpi-label">ช่วงข้อมูลที่มี</div>
+          <div class="kpi-value" id="kpiMonthsCount" style="font-size:22px;">—</div>
+          <div class="kpi-note" id="kpiMonthsRange">—</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">ตารางบัญชีน้ำรายวัน</div>
+          <h2>เลือกดูย้อนหลังเป็นรายเดือน</h2>
+        </div>
+        <p>ทุกแถวคือข้อมูลจริงจากไฟล์บัญชีน้ำของเดือนนั้นๆ ไม่ใช่ค่าพยากรณ์</p>
+      </div>
+      <div class="filter-bar">
+        <label for="monthSelect">เดือน:</label>
+        <select id="monthSelect"></select>
+        <span class="month-summary" id="monthSummary"></span>
+      </div>
+      <div class="table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>วันที่</th>
+              <th>ระดับน้ำ (ม.รทก.)</th>
+              <th>ปริมาตรน้ำ (ลบ.ม.)</th>
+              <th>น้ำไหลเข้า (ลบ.ม.)</th>
+              <th>ระบายผ่านท่อ O (ลบ.ม.)</th>
+              <th>ล้นสปิลเวย์ (ลบ.ม.)</th>
+              <th>ฝนสะสม 24ชม. (มม.)</th>
+              <th>น้ำท่าจากฝน R (ลบ.ม.)</th>
+              <th>การระเหย E (ลบ.ม.)</th>
+              <th>การรั่วซึม (ลบ.ม.)</th>
+              <th>ΔS (ลบ.ม.)</th>
+            </tr>
+          </thead>
+          <tbody id="ledgerTableBody">
+            <tr><td colspan="11" class="loading-note">กำลังโหลดข้อมูล…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="disclaimer-box">
+        <h4>⚠ หมายเหตุข้อมูล</h4>
+        <p>
+          ตารางนี้สร้างจากไฟล์ Excel บัญชีน้ำรายเดือนโดยสคริปต์
+          <code>01_data/scripts and code/pipeline/build_water_ledger_json.py</code> (รันแยกเป็นรอบๆ ไม่ได้
+          ผูกกับ pipeline อัตโนมัติทุก ~15 นาทีเหมือนหน้าอื่น — ต้องรันสคริปต์ใหม่เพื่ออัปเดตข้อมูลหลังมีการ
+          กรอกบัญชีน้ำเดือนล่าสุดเพิ่ม) สูตร Inflow (M3) = ΔS − R + O + Spill + E ตามต้นแบบ Excel เดิมของอ่าง
+          เก็บน้ำแม่นาเรือ — แถวที่ยังไม่มีการกรอกระดับน้ำ (เช่นวันที่ยังไม่ถึง หรือ pipeline รายวันยังไม่เขียน)
+          จะไม่แสดงในตาราง
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div>
+      <div class="brand-text-th">ข้อมูลประกอบการตัดสินใจเพื่อการบริหารจัดการน้ำ ตำบลแม่นาเรือ</div>
+      <p style="margin-top:4px;">School of ICT มหาวิทยาลัยพะเยา ร่วมกับ Hydro-Informatics Institute (HII)</p>
+    </div>
+    <p id="footerUpdated">กำลังโหลดเวลาที่อัปเดตล่าสุด…</p>
+  </div>
+</footer>
+
+<script>
+// ข้อมูลบัญชีน้ำรายวันทั้งหมด (ดึงจาก Excel ด้วย build_water_ledger_json.py แบบ manual -- ไม่ได้ผูกกับ
+// data_pipeline.py อัตโนมัติ ดูหมายเหตุในหน้า)
+const DATA_ENDPOINT = 'assets/data/water_ledger.json';
+
+const THAI_MONTH = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
+                     "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+
+let ledger = null;
+
+function fmtNum(n, digits) {
+  if (n === null || n === undefined || Number.isNaN(n)) return '—';
+  return Number(n).toLocaleString('en-US', { minimumFractionDigits: digits || 0, maximumFractionDigits: digits || 0 });
+}
+function fmtInt(n) { return fmtNum(n, 0); }
+function fmtLevel(n) { return fmtNum(n, 3); }
+
+function thaiMonthLabel(ym) {
+  const [y, m] = ym.split('-').map(Number);
+  return `${THAI_MONTH[m - 1]} ${y + 543}`;
+}
+
+function thaiDateLabel(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return `${d} ${THAI_MONTH[m - 1]} ${y + 543}`;
+}
+
+function populateMonthSelect() {
+  const sel = document.getElementById('monthSelect');
+  sel.innerHTML = ledger.months_available.map(ym =>
+    `<option value="${ym}">${thaiMonthLabel(ym)}</option>`
+  ).join('');
+  // ค่าเริ่มต้น = เดือนล่าสุดที่มีข้อมูล
+  sel.value = ledger.months_available[ledger.months_available.length - 1];
+  sel.addEventListener('change', () => renderMonthTable(sel.value));
+}
+
+function renderMonthTable(ym) {
+  const rows = ledger.rows.filter(r => `${String(r.year).padStart(4,'0')}-${String(r.month).padStart(2,'0')}` === ym);
+  const tbody = document.getElementById('ledgerTableBody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="11" class="loading-note">ไม่มีข้อมูลในเดือนนี้</td></tr>`;
+    document.getElementById('monthSummary').textContent = '';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>${thaiDateLabel(r.date)}</td>
+      <td>${fmtLevel(r.water_level_m)}</td>
+      <td>${fmtInt(r.water_volume_m3)}</td>
+      <td class="hl">${fmtInt(r.inflow_m3)}</td>
+      <td>${fmtInt(r.outlet_release_m3)}</td>
+      <td class="${r.spill_m3 > 0 ? 'spill' : ''}">${fmtInt(r.spill_m3)}</td>
+      <td>${fmtNum(r.rain_24h_mm, 1)}</td>
+      <td>${fmtInt(r.runoff_m3)}</td>
+      <td>${fmtInt(r.evap_m3)}</td>
+      <td>${fmtInt(r.infiltration_m3)}</td>
+      <td>${fmtInt(r.delta_s_m3)}</td>
+    </tr>
+  `).join('');
+
+  const totalInflow = rows.reduce((s, r) => s + (r.inflow_m3 || 0), 0);
+  const totalSpill = rows.reduce((s, r) => s + (r.spill_m3 || 0), 0);
+  const totalRain = rows.reduce((s, r) => s + (r.rain_24h_mm || 0), 0);
+  document.getElementById('monthSummary').innerHTML =
+    `${rows.length} วัน · น้ำไหลเข้ารวม <strong>${fmtInt(totalInflow)}</strong> ลบ.ม. · ` +
+    `ล้นสปิลเวย์รวม <strong>${fmtInt(totalSpill)}</strong> ลบ.ม. · ฝนสะสมรวม <strong>${fmtNum(totalRain,1)}</strong> มม.`;
+}
+
+function renderKPIs() {
+  const rows = ledger.rows;
+  const latest = rows[rows.length - 1];
+  document.getElementById('kpiLatestDate').textContent = latest ? thaiDateLabel(latest.date) : '—';
+  document.getElementById('kpiLatestLevel').innerHTML = latest ? `${fmtLevel(latest.water_level_m)}<span class="kpi-unit">ม.รทก.</span>` : '—';
+  document.getElementById('kpiLatestVolumeNote').textContent = latest ? `ปริมาตรน้ำ: ${fmtInt(latest.water_volume_m3)} ลบ.ม.` : '—';
+  document.getElementById('kpiLatestInflow').innerHTML = latest ? `${fmtInt(latest.inflow_m3)}<span class="kpi-unit">ลบ.ม./วัน</span>` : '—';
+  document.getElementById('kpiLatestSpillNote').textContent = latest ? `ล้นทางระบายน้ำล้น: ${fmtInt(latest.spill_m3)} ลบ.ม.` : '—';
+  document.getElementById('kpiMonthsCount').textContent = `${ledger.months_available.length} เดือน`;
+  if (ledger.months_available.length) {
+    const first = ledger.months_available[0];
+    const last = ledger.months_available[ledger.months_available.length - 1];
+    document.getElementById('kpiMonthsRange').textContent = `${thaiMonthLabel(first)} ถึง ${thaiMonthLabel(last)}`;
+  }
+}
+
+fetch(DATA_ENDPOINT)
+  .then(res => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+  .then(json => {
+    ledger = json;
+    document.getElementById('statusText').textContent =
+      `โหลดข้อมูลสำเร็จ — ${ledger.rows.length} แถว จาก ${ledger.months_available.length} เดือน`;
+    const first = ledger.months_available[0];
+    const last = ledger.months_available[ledger.months_available.length - 1];
+    document.getElementById('heroRangeTag').innerHTML =
+      `<span class="dot" style="background:var(--teal-400)"></span>ข้อมูล ${thaiMonthLabel(first)} – ${thaiMonthLabel(last)}`;
+    let genDate = '—';
+    try { genDate = new Date(ledger.generated_at).toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Bangkok' }) + ' น.'; } catch (e) {}
+    document.getElementById('heroGeneratedTag').innerHTML =
+      `<span class="dot" style="background:var(--amber-400)"></span>สร้างไฟล์นี้เมื่อ ${genDate}`;
+    document.getElementById('footerUpdated').textContent = `สร้างตารางบัญชีน้ำนี้เมื่อ ${genDate}`;
+    renderKPIs();
+    populateMonthSelect();
+    renderMonthTable(ledger.months_available[ledger.months_available.length - 1]);
+  })
+  .catch(err => {
+    document.getElementById('statusText').textContent = 'โหลดข้อมูลไม่สำเร็จ: ' + err.message;
+    document.getElementById('ledgerTableBody').innerHTML =
+      `<tr><td colspan="11" class="error-note">โหลด water_ledger.json ไม่สำเร็จ: ${err.message}</td></tr>`;
+  });
+</script>
+
+</body>
+</html>
