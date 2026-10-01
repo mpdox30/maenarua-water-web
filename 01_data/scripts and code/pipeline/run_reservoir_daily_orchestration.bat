@@ -78,6 +78,26 @@ echo   (0 = สำเร็จ, non-zero = error -- เช็ค log ด้า�
 echo    shadow CSV จะยังเขียนสำเร็จแยกต่างหากเสมอถ้าคำนวณได้ ไม่ขึ้นกับไฟล์ทางการ)
 
 REM ============================================================================
+REM 2026-10-01 เพิ่ม -- รี-เจน assets/data/water_ledger.json (หน้า water-balance.html) ทุกครั้งที่
+REM เขียนไฟล์ทางการสำเร็จ เดิมต้องรัน build_water_ledger_json.py เองทุกวันแยกต่างหาก -- ย้ายมารวมที่นี่
+REM เพราะ run_reservoir_daily_orchestration.bat เป็น job เดียวที่แก้ไฟล์ Excel บัญชีน้ำ (ต้นทางของ
+REM water_ledger.json) ข้ามขั้นตอนนี้ถ้า orchestration ล้มเหลว (ไฟล์ Excel ไม่เปลี่ยน ไม่จำเป็นต้อง
+REM รี-เจนซ้ำ) ความล้มเหลวของขั้นตอนนี้เองไม่ทำให้ ORCH_EXIT_CODE เปลี่ยน (ไม่ critical เท่าตัวเขียนไฟล์ทางการ)
+REM ============================================================================
+if "%ORCH_EXIT_CODE%"=="0" (
+    echo.
+    echo [INFO] Rebuilding assets/data/water_ledger.json จากไฟล์บัญชีน้ำล่าสุด ...
+    "%VENV_PYTHON%" build_water_ledger_json.py
+    if errorlevel 1 (
+        echo [WARN] build_water_ledger_json.py ล้มเหลว -- หน้า water-balance.html จะยังใช้ไฟล์ json เดิม
+    ) else (
+        echo [OK] water_ledger.json อัปเดตแล้ว
+    )
+) else (
+    echo [INFO] ข้าม build_water_ledger_json.py รอบนี้ ^(orchestration ไม่สำเร็จ, ไฟล์ Excel ไม่เปลี่ยน^)
+)
+
+REM ============================================================================
 REM 2026-08-12 เพิ่ม -- push ไฟล์ทางการ + shadow CSV ขึ้น GitHub ทุกรอบที่รันสำเร็จ
 REM
 REM ก่อนหน้านี้สคริปต์นี้ไม่มีขั้นตอน git ใดๆ เลย -- ไฟล์ทางการรายเดือน (inflow/<year>/*.xlsx) และ
@@ -115,14 +135,17 @@ if errorlevel 1 (
 
 git add "01_data/Reservoirs/inflow/"
 git add "01_data/Reservoirs/inflow_auto/RES002_daily_computed.csv"
+REM 2026-10-01 เพิ่ม -- commit/push water_ledger.json (หน้า water-balance.html) พร้อมกันไปเลย
+REM เพราะสร้างมาจากไฟล์ทางการชุดเดียวกันด้านบน ไม่ต้องรอรอบ push แยก
+git add "03_website/assets/data/water_ledger.json"
 git diff --cached --quiet
 if errorlevel 1 (
-    git commit -m "Auto-update: reservoir official file + shadow CSV %DATE% %TIME%" >nul 2>&1
+    git commit -m "Auto-update: reservoir official file + shadow CSV + water_ledger.json %DATE% %TIME%" >nul 2>&1
     git push origin master
     if errorlevel 1 (
-        echo [WARN] push ไฟล์ทางการ/shadow CSV ไม่สำเร็จ -- จะลองใหม่รอบถัดไปอัตโนมัติ
+        echo [WARN] push ไฟล์ทางการ/shadow CSV/water_ledger.json ไม่สำเร็จ -- จะลองใหม่รอบถัดไปอัตโนมัติ
     ) else (
-        echo [OK] push ไฟล์ทางการ/shadow CSV สำเร็จ
+        echo [OK] push ไฟล์ทางการ/shadow CSV/water_ledger.json สำเร็จ
     )
 ) else (
     echo [INFO] ไม่มีอะไรเปลี่ยนจากรอบก่อน -- ข้ามการ commit/push

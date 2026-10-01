@@ -71,18 +71,27 @@ jobs:
           RESERVOIR_RELEASE_SHEET_CSV_URL: ${{ secrets.RESERVOIR_RELEASE_SHEET_CSV_URL }}
         run: python reservoir_daily_orchestration.py
 
+      # 2026-10-01 เพิ่ม -- รี-เจน assets/data/water_ledger.json (หน้า water-balance.html) พร้อมกัน
+      # ทุกครั้งที่ไฟล์ทางการเปลี่ยน -- pattern เดียวกับที่เพิ่มใน run_reservoir_daily_orchestration.bat
+      # (schedule ของ workflow นี้ปิดอยู่ถาวรตั้งแต่ 2026-09-12 เหลือแค่ workflow_dispatch มือ แต่ยังควร
+      # sync ไว้เผื่อมีคนกดรันเอง จะได้ไม่ได้ไฟล์ Excel ใหม่แต่ water_ledger.json ค้างของเก่า)
+      - name: Rebuild water_ledger.json
+        working-directory: 01_data/scripts and code/pipeline
+        run: python build_water_ledger_json.py
+
       - name: Sync กับ remote ก่อน push (merge จริง ไม่ใช่ ff-only -- pattern เดียวกับ .bat)
         run: git pull --no-rebase --no-edit origin master
 
-      - name: Commit + push ไฟล์ทางการ + shadow CSV ถ้ามีอะไรเปลี่ยนจริง
+      - name: Commit + push ไฟล์ทางการ + shadow CSV + water_ledger.json ถ้ามีอะไรเปลี่ยนจริง
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add "01_data/Reservoirs/inflow/"
           git add "01_data/Reservoirs/inflow_auto/RES002_daily_computed.csv"
+          git add "03_website/assets/data/water_ledger.json"
           if git diff --cached --quiet; then
             echo "[INFO] ไม่มีอะไรเปลี่ยนจากรอบก่อน -- ข้ามการ commit/push"
           else
-            git commit -m "Auto-update (GitHub Actions): reservoir official file + shadow CSV"
+            git commit -m "Auto-update (GitHub Actions): reservoir official file + shadow CSV + water_ledger.json"
             git push origin master
           fi
