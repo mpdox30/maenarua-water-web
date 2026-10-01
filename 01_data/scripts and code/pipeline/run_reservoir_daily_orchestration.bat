@@ -83,8 +83,24 @@ REM เขียนไฟล์ทางการสำเร็จ เดิม
 REM เพราะ run_reservoir_daily_orchestration.bat เป็น job เดียวที่แก้ไฟล์ Excel บัญชีน้ำ (ต้นทางของ
 REM water_ledger.json) ข้ามขั้นตอนนี้ถ้า orchestration ล้มเหลว (ไฟล์ Excel ไม่เปลี่ยน ไม่จำเป็นต้อง
 REM รี-เจนซ้ำ) ความล้มเหลวของขั้นตอนนี้เองไม่ทำให้ ORCH_EXIT_CODE เปลี่ยน (ไม่ critical เท่าตัวเขียนไฟล์ทางการ)
+REM
+REM 2026-10-01 เพิ่ม (ต่อ) -- recompute_corrected_ledger.py ต้องรันก่อน build_water_ledger_json.py เสมอ
+REM (สร้าง "ฉบับสูตรสปิลเวย์แก้ไข" ที่ D:\WMB_Phayao\01_raw_data\Reservoirs\บัญชีน้ำ\ จากไฟล์ทางการที่
+REM เพิ่งเขียนด้านบน + telemetry รายชั่วโมงล่าสุด -- build_water_ledger_json.py เปลี่ยนมาอ่านโฟลเดอร์นี้
+REM แทนไฟล์ทางการโดยตรงแล้ว ดู docstring ของ recompute_corrected_ledger.py สำหรับรายละเอียดสูตร/
+REM การ sanity-check เต็มๆ -- อยู่คนละ drive (D:\WMB_Phayao) จึงเรียกด้วย full path ตรงๆ ไม่ cd ไปที่นั่น
+REM (สคริปต์ hardcode path ของตัวเองไว้แล้วทั้งหมด ไม่ต้องพึ่ง cwd)
 REM ============================================================================
 if "%ORCH_EXIT_CODE%"=="0" (
+    echo.
+    echo [INFO] Rebuilding D:\WMB_Phayao\01_raw_data\Reservoirs\บัญชีน้ำ\ (สูตรสปิลเวย์แก้ไข) ...
+    "%VENV_PYTHON%" "D:\WMB_Phayao\01_raw_data\Reservoirs\บัญชีน้ำ\recompute_corrected_ledger.py"
+    if errorlevel 1 (
+        echo [WARN] recompute_corrected_ledger.py ล้มเหลว -- water_ledger.json รอบนี้จะใช้ผลลัพธ์เก่า
+    ) else (
+        echo [OK] ฉบับสูตรสปิลเวย์แก้ไขอัปเดตแล้ว
+    )
+
     echo.
     echo [INFO] Rebuilding assets/data/water_ledger.json จากไฟล์บัญชีน้ำล่าสุด ...
     "%VENV_PYTHON%" build_water_ledger_json.py
@@ -94,7 +110,8 @@ if "%ORCH_EXIT_CODE%"=="0" (
         echo [OK] water_ledger.json อัปเดตแล้ว
     )
 ) else (
-    echo [INFO] ข้าม build_water_ledger_json.py รอบนี้ ^(orchestration ไม่สำเร็จ, ไฟล์ Excel ไม่เปลี่ยน^)
+    echo [INFO] ข้าม recompute_corrected_ledger.py / build_water_ledger_json.py รอบนี้ ^(orchestration
+    echo   ไม่สำเร็จ, ไฟล์ Excel ไม่เปลี่ยน^)
 )
 
 REM ============================================================================

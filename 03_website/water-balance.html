@@ -285,22 +285,27 @@
               <th>การระเหย E (ลบ.ม.)</th>
               <th>การรั่วซึม (ลบ.ม.)</th>
               <th>ΔS (ลบ.ม.)</th>
+              <th>หมายเหตุ</th>
             </tr>
           </thead>
           <tbody id="ledgerTableBody">
-            <tr><td colspan="11" class="loading-note">กำลังโหลดข้อมูล…</td></tr>
+            <tr><td colspan="12" class="loading-note">กำลังโหลดข้อมูล…</td></tr>
           </tbody>
         </table>
       </div>
       <div class="disclaimer-box">
-        <h4>⚠ หมายเหตุข้อมูล</h4>
-        <p>
-          ตารางนี้สร้างจากไฟล์ Excel บัญชีน้ำรายเดือนโดยสคริปต์
-          <code>01_data/scripts and code/pipeline/build_water_ledger_json.py</code> (รันแยกเป็นรอบๆ ไม่ได้
-          ผูกกับ pipeline อัตโนมัติทุก ~15 นาทีเหมือนหน้าอื่น — ต้องรันสคริปต์ใหม่เพื่ออัปเดตข้อมูลหลังมีการ
-          กรอกบัญชีน้ำเดือนล่าสุดเพิ่ม) สูตร Inflow (M3) = ΔS − R + O + Spill + E ตามต้นแบบ Excel เดิมของอ่าง
-          เก็บน้ำแม่นาเรือ — แถวที่ยังไม่มีการกรอกระดับน้ำ (เช่นวันที่ยังไม่ถึง หรือ pipeline รายวันยังไม่เขียน)
-          จะไม่แสดงในตาราง
+        <h4>⚠ หมายเหตุข้อมูล — สูตรสปิลเวย์ฉบับแก้ไข (ใช้เฉพาะหน้านี้)</h4>
+        <p id="formulaNote">กำลังโหลดข้อมูล…</p>
+        <p style="margin-top:10px;">
+          ตารางนี้สร้างจากไฟล์ "ฉบับสูตรสปิลเวย์แก้ไข" (<code>D:\WMB_Phayao\01_raw_data\Reservoirs\บัญชีน้ำ</code>,
+          เขียนโดย <code>recompute_corrected_ledger.py</code>) ไม่ใช่ไฟล์ทางการ production — ค่า
+          "น้ำไหลเข้า" และ "ล้นสปิลเวย์" ในตารางนี้จึงอาจต่างจากไฟล์ทางการ/โมเดลพยากรณ์ที่ใช้งานจริงใน
+          ส่วนอื่นของเว็บ ส่วนคอลัมน์อื่น (ระดับน้ำ ปริมาตร ระบายผ่านท่อ ฝน น้ำท่า การระเหย การรั่วซึม ΔS)
+          ดึงจากไฟล์ทางการตรงๆ ไม่เปลี่ยน — แถวที่คอลัมน์ "หมายเหตุ" ขึ้นว่า "ใช้ค่าเดิม" คือวันที่ยังไม่มี
+          ข้อมูลระดับน้ำรายชั่วโมงครบพอจะคำนวณสูตรใหม่ได้ (เช่น วันแรกๆ ของข้อมูล) จึงใช้ค่าจากไฟล์ทางการแทน
+          สูตร Inflow (M3) = ΔS − R + O + Spill + E เหมือนต้นแบบเดิมทุกจุด เปลี่ยนแค่วิธีคำนวณ Spill —
+          รันสคริปต์สร้างตารางนี้แบบ manual หรือผูกไว้ต่อท้าย reservoir_daily_orchestration.py ก็ได้ (ดู
+          comment ในสคริปต์) แถวที่ยังไม่มีการกรอกระดับน้ำ (เช่นวันที่ยังไม่ถึง) จะไม่แสดงในตาราง
         </p>
       </div>
     </div>
@@ -358,11 +363,13 @@ function renderMonthTable(ym) {
   const rows = ledger.rows.filter(r => `${String(r.year).padStart(4,'0')}-${String(r.month).padStart(2,'0')}` === ym);
   const tbody = document.getElementById('ledgerTableBody');
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="11" class="loading-note">ไม่มีข้อมูลในเดือนนี้</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="12" class="loading-note">ไม่มีข้อมูลในเดือนนี้</td></tr>`;
     document.getElementById('monthSummary').textContent = '';
     return;
   }
-  tbody.innerHTML = rows.map(r => `
+  tbody.innerHTML = rows.map(r => {
+    const isFallback = (r.note || '').indexOf('ใช้ค่าเดิม') !== -1;
+    return `
     <tr>
       <td>${thaiDateLabel(r.date)}</td>
       <td>${fmtLevel(r.water_level_m)}</td>
@@ -375,8 +382,9 @@ function renderMonthTable(ym) {
       <td>${fmtInt(r.evap_m3)}</td>
       <td>${fmtInt(r.infiltration_m3)}</td>
       <td>${fmtInt(r.delta_s_m3)}</td>
-    </tr>
-  `).join('');
+      <td style="white-space:normal; font-size:11px; ${isFallback ? 'color:var(--amber-300);' : 'color:var(--text-600);'}">${r.note || ''}</td>
+    </tr>`;
+  }).join('');
 
   const totalInflow = rows.reduce((s, r) => s + (r.inflow_m3 || 0), 0);
   const totalSpill = rows.reduce((s, r) => s + (r.spill_m3 || 0), 0);
@@ -417,6 +425,8 @@ fetch(DATA_ENDPOINT)
     document.getElementById('heroGeneratedTag').innerHTML =
       `<span class="dot" style="background:var(--amber-400)"></span>สร้างไฟล์นี้เมื่อ ${genDate}`;
     document.getElementById('footerUpdated').textContent = `สร้างตารางบัญชีน้ำนี้เมื่อ ${genDate}`;
+    document.getElementById('formulaNote').textContent =
+      ledger.formula_note || 'ไม่มีข้อมูล formula_note ใน water_ledger.json (ไฟล์รุ่นเก่า)';
     renderKPIs();
     populateMonthSelect();
     renderMonthTable(ledger.months_available[ledger.months_available.length - 1]);
@@ -424,7 +434,7 @@ fetch(DATA_ENDPOINT)
   .catch(err => {
     document.getElementById('statusText').textContent = 'โหลดข้อมูลไม่สำเร็จ: ' + err.message;
     document.getElementById('ledgerTableBody').innerHTML =
-      `<tr><td colspan="11" class="error-note">โหลด water_ledger.json ไม่สำเร็จ: ${err.message}</td></tr>`;
+      `<tr><td colspan="12" class="error-note">โหลด water_ledger.json ไม่สำเร็จ: ${err.message}</td></tr>`;
   });
 </script>
 

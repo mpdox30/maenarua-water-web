@@ -18,15 +18,23 @@ template ไม่ใช่ความผิดพลาดของข้อ�
 2026-10-01 สร้างครั้งแรก -- รันแบบ manual เท่านั้น (python build_water_ledger_json.py) ไม่ได้ผูกกับ
 data_pipeline.py อัตโนมัติทุก ~15 นาทีเหมือนไฟล์ latest.json อื่นๆ -- ต้องรันซ้ำเองหลังกรอกบัญชีน้ำเดือนใหม่
 เพิ่ม ถ้าจะทำให้อัตโนมัติ แนะนำเรียกจากท้าย reservoir_daily_orchestration.py หลังเขียนบัญชีน้ำประจำวันเสร็จ
+
+2026-10-01 แก้ -- เปลี่ยนแหล่งข้อมูลจากไฟล์ทางการ production (01_data/Reservoirs/inflow/) มาเป็นไฟล์
+"ฉบับสูตรสปิลเวย์แก้ไข" ที่ D:\WMB_Phayao\01_raw_data\Reservoirs\บัญชีน้ำ\ แทน (เขียนโดย
+D:\WMB_Phayao\01_raw_data\Reservoirs\บัญชีน้ำ\recompute_corrected_ledger.py -- ดู docstring ของไฟล์นั้น
+สำหรับรายละเอียดสูตร/การ sanity-check เต็มๆ) ตามที่ผู้ใช้ขอ -- สูตรนี้ใช้เฉพาะหน้า water-balance.html
+เท่านั้น ไม่กระทบไฟล์ทางการ/โมเดล ML/ส่วนอื่นใดใน production เลย คอลัมน์โครงสร้างเหมือนไฟล์ทางการทุกจุด
+บวกคอลัมน์ L (หมายเหตุ) บอกว่าวันนั้นคำนวณด้วยสูตรใหม่จริง หรือ fallback ใช้ค่าเดิม (เช่น telemetry
+รายชั่วโมงยังไม่ครบ) -- เก็บ note นี้ไว้ใน JSON ด้วยให้หน้าเว็บแสดงความโปร่งใส
 """
 import json
 from pathlib import Path
 import openpyxl
 
-# repo root = 3 ระดับขึ้นไปจากตำแหน่งสคริปต์นี้ (01_data/scripts and code/pipeline/<this file>)
-# ใช้ path สัมพัทธ์ ไม่ hardcode เพื่อให้รันได้ทั้งจากเครื่อง Windows ของผู้ใช้จริงและจากสภาพแวดล้อมอื่น
+# 2026-10-01 แก้ -- hardcode absolute path ข้าม drive (D:\WMB_Phayao คนละ drive กับ repo นี้
+# D:\maenaruea-water-web ใช้ path สัมพัทธ์ข้าม drive ไม่ได้)
 ROOT = Path(__file__).resolve().parents[3]
-INFLOW_DIR = ROOT / "01_data" / "Reservoirs" / "inflow"
+INFLOW_DIR = Path(r"D:\WMB_Phayao\01_raw_data\Reservoirs\บัญชีน้ำ")
 OUT_PATH = ROOT / "03_website" / "assets" / "data" / "water_ledger.json"
 
 THAI_MONTH = {
@@ -37,7 +45,7 @@ THAI_MONTH = {
 MONTH_NUM = {name: i + 1 for i, name in enumerate(THAI_MONTH.keys())}
 
 COLS = ["day", "water_level_m", "water_volume_m3", "inflow_m3", "outlet_release_m3",
-        "spill_m3", "rain_24h_mm", "runoff_m3", "evap_m3", "infiltration_m3", "delta_s_m3"]
+        "spill_m3", "rain_24h_mm", "runoff_m3", "evap_m3", "infiltration_m3", "delta_s_m3", "note"]
 
 
 def extract_month_file(path: Path):
@@ -58,7 +66,7 @@ def extract_month_file(path: Path):
 
     rows = []
     for r in range(6, 38):
-        vals = [ws.cell(row=r, column=c).value for c in range(1, 12)]
+        vals = [ws.cell(row=r, column=c).value for c in range(1, 13)]
         day = vals[0]
         if day is None or not isinstance(day, (int, float)):
             continue
@@ -76,10 +84,14 @@ def extract_month_file(path: Path):
 
 def main():
     all_rows = []
-    files = sorted(INFLOW_DIR.glob("*/*_MNR.xlsx"))
+    # 2026-10-01 แก้ -- ไฟล์ฉบับแก้ไขอยู่แบบ flat ใต้โฟลเดอร์เดียว (ไม่มี subfolder ปีเหมือนไฟล์ทางการ
+    # production เดิมที่เป็น inflow/<year>/<year>_<Month>_MNR.xlsx)
+    files = sorted(INFLOW_DIR.glob("*_MNR.xlsx"))
     for f in files:
         rows = extract_month_file(f)
-        print(f"{f.relative_to(ROOT)}: {len(rows)} day-rows")
+        # 2026-10-01 แก้ -- f.relative_to(ROOT) พังตั้งแต่ INFLOW_DIR ย้ายไปอยู่คนละ drive (D:\WMB_Phayao)
+        # กับ ROOT (D:\maenaruea-water-web) ใช้ f.name เฉยๆ พอสำหรับ log
+        print(f"{f.name}: {len(rows)} day-rows")
         all_rows.extend(rows)
 
     all_rows.sort(key=lambda r: r["date"])
@@ -89,7 +101,16 @@ def main():
     payload = {
         "generated_at": None,
         "unit_note": "Water Level = MSL (m); Volume/Inflow/O/Spill/Runoff/Evap/Infiltration/DeltaS = m3 (ยกเว้น rain_24h_mm = mm)",
-        "source_note": "ดึงจาก 01_data/Reservoirs/inflow/<year>/<year>_<Month>_MNR.xlsx ชีต 'บัญชีน้ำ' ด้วย build_water_ledger_json.py",
+        "source_note": (
+            "ดึงจาก D:\\WMB_Phayao\\01_raw_data\\Reservoirs\\บัญชีน้ำ\\<year>_<Month>_MNR.xlsx "
+            "('ฉบับสูตรสปิลเวย์แก้ไข' -- เขียนโดย recompute_corrected_ledger.py, ไม่ใช่ไฟล์ทางการ "
+            "production) ด้วย build_water_ledger_json.py"
+        ),
+        "formula_note": (
+            "Spill คำนวณด้วย critical-flow + Manning friction model (n=0.017) แทนสูตร Q=1.82*L*H^1.5 "
+            "เดิม -- ใช้เฉพาะหน้า water-balance.html เท่านั้น ไม่กระทบไฟล์ทางการ/โมเดล ML ใน production "
+            "ดูคอลัมน์ note ต่อแถวว่าวันนั้นคำนวณด้วยสูตรใหม่จริง หรือ fallback ใช้ค่าเดิม"
+        ),
         "months_available": months_present,
         "rows": all_rows,
     }
