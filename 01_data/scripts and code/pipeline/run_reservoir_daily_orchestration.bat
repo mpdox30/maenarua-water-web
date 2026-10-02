@@ -1,4 +1,11 @@
 @echo off
+REM 2026-10-02 เพิ่ม -- บังคับ console code page เป็น UTF-8 (65001) ก่อนบรรทัดอื่นใด เพราะไฟล์นี้มี
+REM path ที่มีอักษรไทย (D:\WMB_Phayao\...\บัญชีน้ำ\) ฝังอยู่ตรงๆ -- ถ้า cmd ยังใช้ code page เดิม
+REM (OEM/ANSI เช่น 874) ตอนอ่านไฟล์ .bat นี้ (เซฟเป็น UTF-8 ไม่มี BOM) ตัวอักษรไทยในพาธจะถูกตีความ
+REM ผิด กลายเป็น byte แปลกๆ ปนกับอักษรไทยบางตัว ทำให้ python หา path ไม่เจอ (No such file or
+REM directory) ทั้งที่ path มีอยู่จริง -- เจอปัญหานี้จริงตอนรันครั้งแรก (2026-10-02) กับ
+REM recompute_corrected_ledger.py ตั้ง chcp 65001 ให้ตรงกับ encoding ไฟล์ก่อน แก้ปัญหานี้ได้ทั้งหมด
+chcp 65001 >nul
 REM ============================================================================
 REM run_reservoir_daily_orchestration.bat
 REM ----------------------------------------------------------------------------
@@ -93,7 +100,7 @@ REM (สคริปต์ hardcode path ของตัวเองไว้แ
 REM ============================================================================
 if "%ORCH_EXIT_CODE%"=="0" (
     echo.
-    echo [INFO] Rebuilding D:\WMB_Phayao\01_raw_data\Reservoirs\บัญชีน้ำ\ (สูตรสปิลเวย์แก้ไข) ...
+    echo [INFO] Rebuilding D:\WMB_Phayao\01_raw_data\Reservoirs\บัญชีน้ำ\ ^(สูตรสปิลเวย์แก้ไข^) ...
     "%VENV_PYTHON%" "D:\WMB_Phayao\01_raw_data\Reservoirs\บัญชีน้ำ\recompute_corrected_ledger.py"
     if errorlevel 1 (
         echo [WARN] recompute_corrected_ledger.py ล้มเหลว -- water_ledger.json รอบนี้จะใช้ผลลัพธ์เก่า
