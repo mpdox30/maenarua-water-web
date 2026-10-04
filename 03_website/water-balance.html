@@ -108,16 +108,16 @@
   .month-summary { font-size: 12.5px; color: var(--text-500); }
   .month-summary strong { color: var(--teal-300); }
 
-  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; white-space: nowrap; }
-  table.data-table th, table.data-table td { text-align: right; padding: 10px 13px; border-bottom: 1px solid var(--border); }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; line-height: 1.2; }
+  table.data-table th, table.data-table td { text-align: right; padding: 3px 8px; border-bottom: 1px solid var(--border); }
   table.data-table th:first-child, table.data-table td:first-child { text-align: left; }
-  table.data-table th { color: var(--text-500); font-weight: 600; font-size: 10.8px; text-transform: uppercase; letter-spacing: 0.03em; position: sticky; top: 0; background: var(--bg-900); }
+  table.data-table th { color: var(--text-500); font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0; white-space: normal; vertical-align: bottom; line-height: 1.25; padding-top: 6px; padding-bottom: 6px; position: sticky; top: 0; background: var(--bg-900); }
   table.data-table td { color: var(--text-300); font-variant-numeric: tabular-nums; }
   table.data-table tr:last-child td { border-bottom: none; }
   table.data-table tr:hover td { background: rgba(255,255,255,0.03); }
   table.data-table td.hl { color: var(--teal-300); font-weight: 600; }
   table.data-table td.spill { color: var(--amber-300); }
-  .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 8px 20px; overflow-x: auto; max-height: 640px; overflow-y: auto; }
+  .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 4px 12px; overflow-x: auto; }
 
   .disclaimer-box { margin-top: 22px; padding: 18px 22px; border-radius: var(--radius-md); background: rgba(224,169,79,0.06); border: 1px solid rgba(224,169,79,0.26); }
   .disclaimer-box h4 { font-size: 13px; color: var(--amber-300); margin-bottom: 10px; font-family: "IBM Plex Sans Thai", sans-serif; font-weight: 600; }
@@ -285,11 +285,10 @@
               <th>การระเหย E (ลบ.ม.)</th>
               <th>การรั่วซึม (ลบ.ม.)</th>
               <th>ΔS (ลบ.ม.)</th>
-              <th>หมายเหตุ</th>
             </tr>
           </thead>
           <tbody id="ledgerTableBody">
-            <tr><td colspan="12" class="loading-note">กำลังโหลดข้อมูล…</td></tr>
+            <tr><td colspan="11" class="loading-note">กำลังโหลดข้อมูล…</td></tr>
           </tbody>
         </table>
       </div>
@@ -301,8 +300,8 @@
           เขียนโดย <code>recompute_corrected_ledger.py</code>) ไม่ใช่ไฟล์ทางการ production — ค่า
           "น้ำไหลเข้า" และ "ล้นสปิลเวย์" ในตารางนี้จึงอาจต่างจากไฟล์ทางการ/โมเดลพยากรณ์ที่ใช้งานจริงใน
           ส่วนอื่นของเว็บ ส่วนคอลัมน์อื่น (ระดับน้ำ ปริมาตร ระบายผ่านท่อ ฝน น้ำท่า การระเหย การรั่วซึม ΔS)
-          ดึงจากไฟล์ทางการตรงๆ ไม่เปลี่ยน — แถวที่คอลัมน์ "หมายเหตุ" ขึ้นว่า "ใช้ค่าเดิม" คือวันที่ยังไม่มี
-          ข้อมูลระดับน้ำรายชั่วโมงครบพอจะคำนวณสูตรใหม่ได้ (เช่น วันแรกๆ ของข้อมูล) จึงใช้ค่าจากไฟล์ทางการแทน
+          ดึงจากไฟล์ทางการตรงๆ ไม่เปลี่ยน — วันที่ยังไม่มี
+          ข้อมูลระดับน้ำรายชั่วโมงครบพอจะคำนวณสูตรใหม่ได้ (เช่น วันแรกๆ ของข้อมูล) จะใช้ค่า Spill/Inflow จากไฟล์ทางการแทน
           สูตร Inflow (M3) = ΔS − R + O + Spill + E เหมือนต้นแบบเดิมทุกจุด เปลี่ยนแค่วิธีคำนวณ Spill —
           รันสคริปต์สร้างตารางนี้แบบ manual หรือผูกไว้ต่อท้าย reservoir_daily_orchestration.py ก็ได้ (ดู
           comment ในสคริปต์) แถวที่ยังไม่มีการกรอกระดับน้ำ (เช่นวันที่ยังไม่ถึง) จะไม่แสดงในตาราง
@@ -363,12 +362,11 @@ function renderMonthTable(ym) {
   const rows = ledger.rows.filter(r => `${String(r.year).padStart(4,'0')}-${String(r.month).padStart(2,'0')}` === ym);
   const tbody = document.getElementById('ledgerTableBody');
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="12" class="loading-note">ไม่มีข้อมูลในเดือนนี้</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11" class="loading-note">ไม่มีข้อมูลในเดือนนี้</td></tr>`;
     document.getElementById('monthSummary').textContent = '';
     return;
   }
   tbody.innerHTML = rows.map(r => {
-    const isFallback = (r.note || '').indexOf('ใช้ค่าเดิม') !== -1;
     return `
     <tr>
       <td>${thaiDateLabel(r.date)}</td>
@@ -382,7 +380,6 @@ function renderMonthTable(ym) {
       <td>${fmtInt(r.evap_m3)}</td>
       <td>${fmtInt(r.infiltration_m3)}</td>
       <td>${fmtInt(r.delta_s_m3)}</td>
-      <td style="white-space:normal; font-size:11px; ${isFallback ? 'color:var(--amber-300);' : 'color:var(--text-600);'}">${r.note || ''}</td>
     </tr>`;
   }).join('');
 
@@ -434,7 +431,7 @@ fetch(DATA_ENDPOINT)
   .catch(err => {
     document.getElementById('statusText').textContent = 'โหลดข้อมูลไม่สำเร็จ: ' + err.message;
     document.getElementById('ledgerTableBody').innerHTML =
-      `<tr><td colspan="12" class="error-note">โหลด water_ledger.json ไม่สำเร็จ: ${err.message}</td></tr>`;
+      `<tr><td colspan="11" class="error-note">โหลด water_ledger.json ไม่สำเร็จ: ${err.message}</td></tr>`;
   });
 </script>
 
