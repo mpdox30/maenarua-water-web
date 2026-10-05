@@ -165,7 +165,7 @@
       <a href="inflow-forecast.html">คาดการณ์น้ำไหลลงอ่าง</a>
       <a href="water-demand.html">คาดการณ์ความต้องการใช้น้ำ</a>
       <a href="flood-forecast.html">คาดการณ์น้ำท่วม</a>
-      <a href="water-balance.html" class="current">สมดุลน้ำ</a>
+      <a href="water-balance.html" class="current">บัญชีน้ำ</a>
     </nav>
     <button class="nav-toggle" id="navToggle" aria-label="เปิดเมนู" aria-expanded="false">
       <span></span><span></span><span></span>
@@ -176,7 +176,7 @@
       <a href="inflow-forecast.html">คาดการณ์น้ำไหลลงอ่าง</a>
       <a href="water-demand.html">คาดการณ์ความต้องการใช้น้ำ</a>
       <a href="flood-forecast.html">คาดการณ์น้ำท่วม</a>
-      <a href="water-balance.html" class="current">สมดุลน้ำ</a>
+      <a href="water-balance.html" class="current">บัญชีน้ำ</a>
     </nav>
   </div>
 </header>
@@ -205,11 +205,9 @@
   <section class="page-hero">
     <div class="wrap">
       <div class="eyebrow">บัญชีน้ำรายวัน · อ่างเก็บน้ำแม่นาเรือ</div>
-      <h1>สมดุลน้ำอ่างเก็บน้ำแม่นาเรือ</h1>
+      <h1>บัญชีน้ำอ่างเก็บน้ำแม่นาเรือ</h1>
       <p class="lead">
-        ตารางบัญชีน้ำรายวัน (Inflow = ΔS − R + O + Spill + E) ดึงตรงจากไฟล์บัญชีน้ำรายเดือนที่กรมชลประทาน/
-        เจ้าหน้าที่อ่างบันทึกไว้จริง (01_data/Reservoirs/inflow/&lt;ปี&gt;/&lt;ปี&gt;_&lt;เดือน&gt;_MNR.xlsx
-        ชีต "บัญชีน้ำ") เลือกดูย้อนหลังเป็นรายเดือนได้ด้านล่าง
+        ตารางบัญชีน้ำรายวัน ใช้ข้อมูลจากสถานีโทรมาตรและบันทึกการปล่อยน้ำของอ่างเก็บน้ำแม่นาเรือที่บันทึกไว้จริง เลือกดูย้อนหลังเป็นรายเดือนได้ด้านล่าง
       </p>
       <div class="hero-tags" id="heroTags">
         <span class="tag" id="heroRangeTag">กำลังโหลดข้อมูล…</span>
@@ -291,21 +289,6 @@
             <tr><td colspan="11" class="loading-note">กำลังโหลดข้อมูล…</td></tr>
           </tbody>
         </table>
-      </div>
-      <div class="disclaimer-box">
-        <h4>⚠ หมายเหตุข้อมูล — สูตรสปิลเวย์ฉบับแก้ไข (ใช้เฉพาะหน้านี้)</h4>
-        <p id="formulaNote">กำลังโหลดข้อมูล…</p>
-        <p style="margin-top:10px;">
-          ตารางนี้สร้างจากไฟล์ "ฉบับสูตรสปิลเวย์แก้ไข" (<code>D:\WMB_Phayao\01_raw_data\Reservoirs\บัญชีน้ำ</code>,
-          เขียนโดย <code>recompute_corrected_ledger.py</code>) ไม่ใช่ไฟล์ทางการ production — ค่า
-          "น้ำไหลเข้า" และ "ล้นสปิลเวย์" ในตารางนี้จึงอาจต่างจากไฟล์ทางการ/โมเดลพยากรณ์ที่ใช้งานจริงใน
-          ส่วนอื่นของเว็บ ส่วนคอลัมน์อื่น (ระดับน้ำ ปริมาตร ระบายผ่านท่อ ฝน น้ำท่า การระเหย การรั่วซึม ΔS)
-          ดึงจากไฟล์ทางการตรงๆ ไม่เปลี่ยน — วันที่ยังไม่มี
-          ข้อมูลระดับน้ำรายชั่วโมงครบพอจะคำนวณสูตรใหม่ได้ (เช่น วันแรกๆ ของข้อมูล) จะใช้ค่า Spill/Inflow จากไฟล์ทางการแทน
-          สูตร Inflow (M3) = ΔS − R + O + Spill + E เหมือนต้นแบบเดิมทุกจุด เปลี่ยนแค่วิธีคำนวณ Spill —
-          รันสคริปต์สร้างตารางนี้แบบ manual หรือผูกไว้ต่อท้าย reservoir_daily_orchestration.py ก็ได้ (ดู
-          comment ในสคริปต์) แถวที่ยังไม่มีการกรอกระดับน้ำ (เช่นวันที่ยังไม่ถึง) จะไม่แสดงในตาราง
-        </p>
       </div>
     </div>
   </section>
@@ -422,8 +405,6 @@ fetch(DATA_ENDPOINT)
     document.getElementById('heroGeneratedTag').innerHTML =
       `<span class="dot" style="background:var(--amber-400)"></span>สร้างไฟล์นี้เมื่อ ${genDate}`;
     document.getElementById('footerUpdated').textContent = `สร้างตารางบัญชีน้ำนี้เมื่อ ${genDate}`;
-    document.getElementById('formulaNote').textContent =
-      ledger.formula_note || 'ไม่มีข้อมูล formula_note ใน water_ledger.json (ไฟล์รุ่นเก่า)';
     renderKPIs();
     populateMonthSelect();
     renderMonthTable(ledger.months_available[ledger.months_available.length - 1]);
