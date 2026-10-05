@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-04T09:04:13.440274+00:00",
+ "generated_at": "2026-10-05T01:52:41.941020+00:00",
  "unit_note": "Water Level = MSL (m); Volume/Inflow/O/Spill/Runoff/Evap/Infiltration/DeltaS = m3 (ยกเว้น rain_24h_mm = mm)",
  "source_note": "ดึงจาก D:\\WMB_Phayao\\01_raw_data\\Reservoirs\\บัญชีน้ำ\\<year>_<Month>_MNR.xlsx ('ฉบับสูตรสปิลเวย์แก้ไข' -- เขียนโดย recompute_corrected_ledger.py, ไม่ใช่ไฟล์ทางการ production) ด้วย build_water_ledger_json.py",
  "formula_note": "Spill คำนวณด้วย critical-flow + Manning friction model (n=0.017) แทนสูตร Q=1.82*L*H^1.5 เดิม -- ใช้เฉพาะหน้า water-balance.html เท่านั้น ไม่กระทบไฟล์ทางการ/โมเดล ML ใน production ดูคอลัมน์ note ต่อแถวว่าวันนั้นคำนวณด้วยสูตรใหม่จริง หรือ fallback ใช้ค่าเดิม",
@@ -7910,6 +7910,23 @@
    "year": 2026,
    "month": 10,
    "date": "2026-10-03"
+  },
+  {
+   "day": 4,
+   "water_level_m": 489.489,
+   "water_volume_m3": 1607444.5930314,
+   "inflow_m3": 0,
+   "outlet_release_m3": 0,
+   "spill_m3": 0,
+   "rain_24h_mm": 0,
+   "runoff_m3": 0,
+   "evap_m3": 759.961172649214,
+   "infiltration_m3": 303.98018800424,
+   "delta_s_m3": -6000.338916399982,
+   "note": "critical-flow + Manning friction (n=0.017)",
+   "year": 2026,
+   "month": 10,
+   "date": "2026-10-04"
   }
  ]
 }
