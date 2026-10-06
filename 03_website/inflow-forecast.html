@@ -178,6 +178,15 @@
   .pip-estimate-value { font-family: "Space Grotesk", sans-serif; font-size: 22px; color: var(--text-100); font-weight: 600; }
   .pip-estimate-note { font-size: 11.5px; color: var(--text-600); margin-top: 8px; line-height: 1.6; }
   .pip-estimate-note b { color: var(--text-300); }
+  /* 2026-10-06: กล่อง "รอบปัจจุบันยังไม่ปิดบัญชี" -- แสดงสิ่งที่เกิดขึ้นหลัง 07:00 ของ as_of_date จนถึงตอนนี้ (บัญชีรายวันยังไม่คำนวณ) */
+  .pip-live-box { margin-top: 16px; padding: 14px 16px; border-radius: var(--radius-md); background: rgba(80,160,255,0.08); border: 1px solid rgba(80,160,255,0.35); }
+  .pip-live-box.alert { background: rgba(255,110,90,0.10); border-color: rgba(255,110,90,0.5); }
+  .pip-live-title { font-size: 12.5px; color: #8fc4ff; font-weight: 600; margin-bottom: 6px; }
+  .pip-live-box.alert .pip-live-title { color: #ff9d8e; }
+  .pip-live-grid { display: flex; flex-wrap: wrap; gap: 8px 28px; }
+  .pip-live-item .l { font-size: 11.5px; color: var(--text-500); }
+  .pip-live-item .v { font-family: "Space Grotesk", sans-serif; font-size: 20px; color: var(--text-100); font-weight: 600; }
+  .pip-live-item .v small { font-size: 11.5px; color: var(--text-500); font-weight: 400; margin-left: 3px; }
 
   .access-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
   .access-card { border-radius: var(--radius-md); padding: 20px; border: 1px solid var(--border); background: var(--surface); border-top: 3px solid var(--teal-400); }
@@ -352,6 +361,15 @@
         </div>
         <div class="kpi-note" id="pipEstimateFallback" style="border-top:1px solid var(--border); padding-top:12px; display:none;">
           ไม่สามารถโหลดข้อมูลประมาณการช่วง 6 ชม. ได้ในขณะนี้
+        </div>
+
+        <div class="pip-live-box" id="pipLiveBox" style="display:none;">
+          <div class="pip-live-title" id="pipLiveTitle">🔴 รอบปัจจุบัน (ยังไม่ปิดบัญชีรายวัน)</div>
+          <div class="pip-live-grid" id="pipLiveGrid"></div>
+          <div class="pip-estimate-note">
+            *ค่าประมาณชั่วคราวจากระดับน้ำ/ฝนโทรมาตรที่เข้ามาแล้วหลังรอบ 07:00 ล่าสุด คำนวณด้วยสูตร water-balance เดิม
+            — <b>ตัวเลขข้างบน (บัญชีรายวัน/การพยากรณ์ H1–H7) ยังไม่รวมช่วงนี้</b> จะรวมเมื่อระบบปิดบัญชีรอบถัดไปตอนเช้า
+          </div>
         </div>
       </div>
 
@@ -953,6 +971,37 @@ function renderInflowContext(f) {
 // เลขคนละวัน
 const INFLOW_6H_ENDPOINT = 'assets/data/inflow_6h_display.json';
 
+// รอบปัจจุบัน: หน้าต่าง 6 ชม. ทั้งหมดที่จบหลัง 07:00 ของ as_of_date (ช่วงที่บัญชีรายวันยังไม่ครอบคลุม)
+function renderLiveOpenWindow(d, cutoff) {
+  const box = document.getElementById('pipLiveBox');
+  if (!box) return;
+  box.style.display = 'none';
+  const ws = (d.windows || []).slice().sort((a, b) => new Date(a.window_end) - new Date(b.window_end));
+  const open = ws.filter(w => new Date(w.window_end).getTime() > cutoff.getTime());
+  if (!open.length) return;
+  const last = open[open.length - 1];
+  const lastEnd = new Date(last.window_end).getTime();
+  // ฝนสะสม: ต่อหน้าต่าง 6 ชม. แบบไม่ซ้อนทับ (ถอยหลังจากหน้าต่างล่าสุดทีละ 6 ชม.) จนถึง cutoff
+  let rain = 0, t = lastEnd;
+  const byEnd = new Map(ws.map(w => [new Date(w.window_end).getTime(), w]));
+  while (t > cutoff.getTime() && byEnd.has(t)) { rain += byEnd.get(t).rain_6h_mm || 0; t -= 6 * 3600 * 1000; }
+  const peak = open.reduce((a, b) => (b.q_in_6h_m3 > a.q_in_6h_m3 ? b : a));
+  const first = open[0];
+  const lvStart = first.water_level_start_m, lvNow = last.water_level_end_m;
+  const delta = (lvNow != null && lvStart != null) ? (lvNow - lvStart) : null;
+  const fmtT = iso => new Date(iso).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Bangkok' });
+  const item = (l, v, u) => '<div class="pip-live-item"><div class="l">' + l + '</div><div class="v">' + v + (u ? '<small>' + u + '</small>' : '') + '</div></div>';
+  document.getElementById('pipLiveTitle').textContent =
+    (peak.q_in_6h_m3 > 20000 ? '🔴 ' : '🔵 ') + 'รอบปัจจุบัน (ยังไม่ปิดบัญชีรายวัน) — ข้อมูลถึง ' + fmtT(last.window_end) + ' น.';
+  document.getElementById('pipLiveGrid').innerHTML =
+    item('น้ำไหลเข้าสูงสุดใน 6 ชม. (สิ้นสุด ' + fmtT(peak.window_end) + ')', fmtNum(peak.q_in_6h_m3, 0), 'ลบ.ม.') +
+    item('ฝนสะสมหลัง 07:00 รอบล่าสุด', fmtNum(rain, 1), 'มม.') +
+    item('ระดับน้ำล่าสุด', fmtNum(lvNow, 3), 'ม.รทก.') +
+    (delta != null ? item('เปลี่ยนจากต้นรอบ', (delta >= 0 ? '+' : '') + fmtNum(delta * 100, 1), 'ซม.') : '');
+  box.classList.toggle('alert', peak.q_in_6h_m3 > 20000);
+  box.style.display = '';
+}
+
 function renderInflow6hEstimate(f) {
   const box = document.getElementById('pipEstimateBox');
   const fallback = document.getElementById('pipEstimateFallback');
@@ -973,11 +1022,13 @@ function renderInflow6hEstimate(f) {
         return wEnd > windowStart.getTime() && wEnd <= windowEnd.getTime();
       });
       if (!sameDay.length) {
+        renderLiveOpenWindow(d, windowEnd);
         throw new Error(
           'ไม่มีหน้าต่าง 6 ชม. ที่คำนวณได้ตรงกับช่วงวันเดียวกับ Q_in ด้านบน (' + f.as_of_date + ') '
           + '-- ข้อมูลที่มี (n_windows_computed=' + d.n_windows_computed + ') อาจยังไม่คลุมช่วงนี้'
         );
       }
+      renderLiveOpenWindow(d, windowEnd);
       const p = sameDay.reduce((a, b) => (b.q_in_6h_m3 > a.q_in_6h_m3 ? b : a));
       const endT = new Date(p.window_end);
       const timeStr = endT.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Bangkok' });
