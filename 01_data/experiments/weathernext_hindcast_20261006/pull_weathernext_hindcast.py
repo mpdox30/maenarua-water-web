@@ -76,8 +76,9 @@ def init_ee(personal: bool = False):
 def probe(ee) -> int:
     print(f"[probe] asset = {ASSET}")
     try:
-        coll = ee.ImageCollection(ASSET)
-        last = coll.sort("system:time_start", False).first()
+        # ห้าม sort ทั้ง collection (หลายล้านภาพ -> timeout) ต้องกรองวันที่ก่อนเสมอ
+        coll = ee.ImageCollection(ASSET).filterDate("2026-10-05T00:00:00Z", "2026-10-05T07:00:00Z")
+        last = coll.first()
         props = last.toDictionary(["start_time", "end_time", "forecast_hour", "ensemble_member"]).getInfo()
         print("[probe] OK เข้าถึง collection ได้; image ล่าสุด:", props)
     except Exception as exc:
@@ -102,7 +103,10 @@ def pull_one(ee, init: dt.datetime, leads: list[int]) -> list[dict]:
     """ดึงสถิติ ensemble ของฝน 6 ชม. ที่จุดสำหรับ init เดียว (หลาย lead) ด้วยการเรียก EE ครั้งเดียว"""
     pt = ee.Geometry.Point([TARGET_LON, TARGET_LAT])
     box = pt.buffer(PIXEL_M * 1.5).bounds()
+    # กรองช่วงเวลาก่อน (ใช้ index) ครอบคลุมทั้งกรณี system:time_start = init หรือ = valid time
+    # แล้วค่อยกรอง start_time ให้ตรง init
     coll = (ee.ImageCollection(ASSET)
+            .filterDate(_iso(init - dt.timedelta(hours=1)), _iso(init + dt.timedelta(hours=max(leads) + 1)))
             .filter(ee.Filter.eq("start_time", _iso(init)))
             .select(BAND))
 
