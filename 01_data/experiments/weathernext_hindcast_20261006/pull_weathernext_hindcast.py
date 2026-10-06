@@ -48,8 +48,18 @@ for p in ("pt", "bx"):
              f"{p}_prob_ge1", f"{p}_prob_ge5", f"{p}_prob_ge10"]
 
 
-def init_ee():
+def init_ee(personal: bool = False):
     import ee
+    if personal:
+        # ใช้บัญชีส่วนตัวที่ผ่าน allowlist (ไม่ใช้ service account ของ pipeline)
+        try:
+            ee.Initialize(project=GEE_PROJECT)
+        except Exception as exc:
+            print(f"[auth] ยังไม่ได้ login ({exc}) -> เปิด browser ให้ login ด้วยบัญชีที่กรอกฟอร์ม WeatherNext")
+            ee.Authenticate()
+            ee.Initialize(project=GEE_PROJECT)
+        print("[auth] personal_credential")
+        return ee
     here = Path(__file__).resolve().parent
     pipe = here.parents[1] / "scripts and code" / "pipeline"
     sys.path.insert(0, str(pipe))
@@ -137,6 +147,8 @@ def pull_one(ee, init: dt.datetime, leads: list[int]) -> list[dict]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--probe", action="store_true")
+    ap.add_argument("--personal", action="store_true",
+                    help="ใช้ personal credential (บัญชีที่ผ่าน allowlist) แทน service account")
     ap.add_argument("--start", help="วันแรกของ init (UTC) YYYY-MM-DD")
     ap.add_argument("--end", help="วันสุดท้าย (ไม่รวม) YYYY-MM-DD")
     ap.add_argument("--out", default="wn_hindcast.csv")
@@ -145,7 +157,7 @@ def main() -> int:
     ap.add_argument("--sleep", type=float, default=0.2)
     a = ap.parse_args()
 
-    ee = init_ee()
+    ee = init_ee(a.personal)
     if a.probe:
         return probe(ee)
     if not (a.start and a.end):
