@@ -17,13 +17,20 @@ sys.path.insert(0, EXP)
 import run_compare as rc
 import run_foresight as rf
 
-OFFSET = 12
+import argparse
+_ap = argparse.ArgumentParser()
+_ap.add_argument("--csv", default="wn3_hindcast_2026.csv")
+_ap.add_argument("--offset", type=int, default=12)
+_ap.add_argument("--tag", default="")
+_ap.add_argument("--src", default="pt", choices=["pt", "bx", "bxmax"], help="pt=pixel เดียว, bx=เฉลี่ย 3x3, bxmax=สูงสุด 3x3")
+_A = _ap.parse_args()
+OFFSET = _A.offset
 KMAX = 6
-P = "pt_total_precipitation_1hr_"
-w = pd.read_csv(os.path.join(H, "wn3_hindcast_2026.csv"), parse_dates=["init_utc"])
+P = _A.src + "_total_precipitation_1hr_"
+w = pd.read_csv(os.path.join(H, _A.csv), parse_dates=["init_utc"])
 w["init_utc"] = w.init_utc.dt.tz_localize(None)
 w = w.set_index(["init_utc", "lead_h"]).sort_index()
-col = {"mean": P + "mean_mm", "p90": P + "p90_mm", "imerg": "pt_imerg_tp_1hr_mean_mm"}
+col = {"mean": P + "mean_mm", "p90": P + "p90_mm", "imerg": _A.src + "_imerg_tp_1hr_mean_mm"}
 inits = set(w.index.get_level_values(0))
 
 df = pd.read_csv(os.path.join(EXP, "Training_v2_6h.csv"), parse_dates=["Datetime"]).sort_values("Datetime").reset_index(drop=True)
@@ -72,7 +79,7 @@ for k in range(1, KMAX + 1):
 cmp_ = pd.DataFrame(rows)
 pd.set_option("display.width", 250); pd.set_option("display.max_columns", 30)
 print(cmp_.round(2).to_string(index=False))
-cmp_.to_csv(os.path.join(H, "wn3_vs_gauge.csv"), index=False)
+cmp_.to_csv(os.path.join(H, f"wn3_vs_gauge{_A.tag}.csv"), index=False)
 
 # ---------- 2) เป็นฟีเจอร์ของโมเดล ----------
 def clean(d):
@@ -116,4 +123,4 @@ for h in range(1, KMAX + 1):
     res.append(r)
 R = pd.DataFrame(res)
 print(R.round(3).to_string(index=False))
-R.to_csv(os.path.join(H, "wn3_cv_results.csv"), index=False)
+R.to_csv(os.path.join(H, f"wn3_cv_results{_A.tag}.csv"), index=False)

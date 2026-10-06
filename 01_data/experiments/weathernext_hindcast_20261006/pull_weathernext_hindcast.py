@@ -129,6 +129,9 @@ WN3_BANDS = [f"total_precipitation_1hr_{s}" for s in WN3_STATS] + ["imerg_tp_1hr
 WN3_COLS = ["init_utc", "lead_h", "valid_end_utc"]
 for _p in ("pt", "bx"):
     WN3_COLS += [f"{_p}_{b}_mm" for b in WN3_BANDS]
+# 2026-10-06: ค่าสูงสุดของ pixel ในกล่อง 3x3 (ฝนหนักอาจเลื่อนตำแหน่งข้าม pixel) เฉพาะ band หลัก
+WN3_MAXBANDS = ["total_precipitation_1hr_mean", "total_precipitation_1hr_p90", "imerg_tp_1hr_mean"]
+WN3_COLS += [f"bxmax_{b}_mm" for b in WN3_MAXBANDS]
 
 
 def pull_one_wn3(ee, asset: str, pix_m: int, init: dt.datetime, leads: list[int]) -> list[dict]:
@@ -145,6 +148,7 @@ def pull_one_wn3(ee, asset: str, pix_m: int, init: dt.datetime, leads: list[int]
             "h": h,
             "pt": img.reduceRegion(ee.Reducer.first(), pt, pix_m),
             "bx": img.reduceRegion(ee.Reducer.mean(), box, pix_m),
+            "bxmax": img.reduceRegion(ee.Reducer.max(), box, pix_m),
         })
 
     fc = ee.FeatureCollection(ee.List(leads).map(per_lead)).getInfo()
@@ -157,6 +161,9 @@ def pull_one_wn3(ee, asset: str, pix_m: int, init: dt.datetime, leads: list[int]
             d = p[tag] or {}
             for b in WN3_BANDS:
                 row[f"{tag}_{b}_mm"] = d.get(b)
+        dm = p.get("bxmax") or {}
+        for b in WN3_MAXBANDS:
+            row[f"bxmax_{b}_mm"] = dm.get(b)
         out.append(row)
     return out
 
