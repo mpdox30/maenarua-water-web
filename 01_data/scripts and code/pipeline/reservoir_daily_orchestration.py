@@ -31,8 +31,10 @@ reservoir_daily_orchestration.py
 
 === วิธีใช้ ===
 
-    python reservoir_daily_orchestration.py                     # รันของ "เมื่อวาน" (ค่า default)
-    python reservoir_daily_orchestration.py --date 2026-07-13   # รันของวันที่ระบุ (backfill)
+    python reservoir_daily_orchestration.py                     # default (ตั้งแต่ 2026-10-06): หน้าต่างล่าสุดที่ปิดแล้ว
+                                                                  #   (หลัง 07:20 ICT = "วันนี้") + catch-up ย้อนเติมวันที่ขาด
+                                                                  #   สูงสุด 3 วัน (--catchup-days 0 = ปิด)
+    python reservoir_daily_orchestration.py --date 2026-07-13   # รันของวันที่ระบุ (backfill, วันเดียว ไม่ catch-up)
     python reservoir_daily_orchestration.py --sheet-source /path/to/local_export.xlsx
                                                                   # ใช้ไฟล์ local แทน CSV URL
 
@@ -347,6 +349,7 @@ def compute_for_date_with_retry(
     target_date: dt.date,
     sheet_source: str | None = None,
     release_csv: Path = RELEASE_LOG_CSV,
+    attempts: int | None = None,
 ) -> dict:
     """
     2026-09-22 เพิ่ม -- wrapper รอบ compute_for_date() เพิ่ม retry อัตโนมัติเฉพาะตอนเจอ ValueError
@@ -365,19 +368,21 @@ def compute_for_date_with_retry(
     ชัดเจนเหมือนเดิมทุกประการ (ตรงตามหลักการเดิมของ compute_for_date(): เห็น error ชัดดีกว่าเขียนแถว
     ผิดๆ ลง output)
     """
+    # 2026-10-06: attempts=1 ใช้กับวัน catch-up ย้อนหลัง (ไม่ต้องรอ cache เพราะข้อมูลเก่าควรอยู่ครบแล้ว)
+    max_attempts = attempts if attempts is not None else RETRY_ATTEMPTS_MISSING_07
     last_exc: ValueError | None = None
-    for attempt in range(1, RETRY_ATTEMPTS_MISSING_07 + 1):
+    for attempt in range(1, max_attempts + 1):
         try:
             return compute_for_date(target_date, sheet_source, release_csv)
         except ValueError as e:
             if _MISSING_07_MARKER not in str(e):
                 raise
             last_exc = e
-            if attempt < RETRY_ATTEMPTS_MISSING_07:
+            if attempt < max_attempts:
                 logger.warning(
                     "รอบที่ %d/%d ไม่พบข้อมูล 07:00 (%s) -- อาจเป็นเพราะ publish-to-web CSV cache "
                     "ยังไม่อัปเดตตามชีตจริง รอ %d วินาทีแล้วดึงข้อมูลใหม่...",
-                    attempt, RETRY_ATTEMPTS_MISSING_07, e, RETRY_DELAY_SECONDS_MISSING_07,
+                    attempt, max_attempts, e, RETRY_DELAY_SECONDS_MISSING_07,
                 )
                 time.sleep(RETRY_DELAY_SECONDS_MISSING_07)
     assert last_exc is not None
@@ -389,6 +394,7 @@ def run_and_append(
     sheet_source: str | None = None,
     output_csv: Path = OUTPUT_CSV,
     write_official: bool = True,
+    attempts: int | None = None,
 ) -> dict:
     """
     เรียก compute_for_date_with_retry() แล้วเขียนผลลง output_csv (append-only) -- idempotent
@@ -399,7 +405,7 @@ def run_and_append(
     reservoir_official_file_writer.write_computed_days() -- ถ้าล้มเหลว (เช่น ยังไม่มีไฟล์ของเดือนนั้น
     เตรียมไว้) จะ log warning แต่ไม่ raise ต่อ (shadow CSV ที่เขียนสำเร็จแล้วยังคงอยู่ ไม่เสียหาย)
     """
-    result = compute_for_date_with_retry(target_date, sheet_source)
+    result = compute_for_date_with_retry(target_date, sheet_source, attempts=attempts)
 
     output_csv.parent.mkdir(parents=True, exist_ok=True)
     existing_rows = []
@@ -434,21 +440,117 @@ def run_and_append(
     return result
 
 
+ICT = dt.timezone(dt.timedelta(hours=7))
+# หน้าต่าง "วัน D" = 07:00 ของ D-1 ถึง 07:00 ของ D (ดู compute_for_date) จึงปิดที่ 07:00 ของ D
+# เผื่อเวลาให้ข้อมูล 07:00 เข้าชีต/publish-to-web cache: ก่อน 07:20 ICT ถือว่ายังไม่ปิด
+WINDOW_CLOSE_READY_HOUR = 7
+WINDOW_CLOSE_READY_MINUTE = 20
+DEFAULT_CATCHUP_DAYS = 3
+
+
+def latest_closed_window_date(now: dt.datetime | None = None) -> dt.date:
+    """
+    2026-10-06: วันที่ของหน้าต่างล่าสุดที่ "ปิดแล้ว" ณ เวลา now (ICT)
+    -- หลัง 07:20 น. = วันนี้ (หน้าต่างที่เพิ่งปิด 07:00) / ก่อน 07:20 น. = เมื่อวาน
+    เดิม default คือ "เมื่อวาน" เสมอ ทำให้แถวล่าสุดช้ากว่าที่ควรเป็น 1 วันเต็ม (แถวของวัน D
+    ไม่ถูกคำนวณจนถึงเช้า D+1) ทั้งที่ข้อมูลครบตั้งแต่ 07:00 ของ D
+    """
+    now = (now or dt.datetime.now(ICT)).astimezone(ICT)
+    ready = now.replace(hour=WINDOW_CLOSE_READY_HOUR, minute=WINDOW_CLOSE_READY_MINUTE,
+                        second=0, microsecond=0)
+    return now.date() if now >= ready else now.date() - dt.timedelta(days=1)
+
+
+def _dates_in_output_csv(output_csv: Path = OUTPUT_CSV) -> set[str]:
+    if not output_csv.exists():
+        return set()
+    with open(output_csv, newline="", encoding="utf-8") as f:
+        return {r["date"] for r in csv.DictReader(f)}
+
+
+def _ensure_official_month_file(d: dt.date) -> None:
+    """
+    2026-10-06: ด้วย default ใหม่ แถวของวันที่ 1 ของเดือนจะถูกคำนวณเช้าวันที่ 1 (เดิมคือเช้าวันที่ 2)
+    ไฟล์ทางการของเดือนใหม่ต้องมีก่อน ไม่งั้นเขียนไฟล์ทางการไม่ได้ จึงสร้างให้อัตโนมัติจากเดือนก่อน
+    (create_new_month_official_file.py -- ไม่เขียนทับไฟล์ที่มีอยู่ ไม่แตะไฟล์ต้นแบบ)
+    ล้มเหลวได้โดยไม่บล็อก: log warning แล้ว run_and_append() จะรายงานเรื่องเขียนไฟล์ทางการไม่ได้เอง
+    """
+    try:
+        if rofw.official_file_path(d).exists():
+            return
+        import create_new_month_official_file as cnm
+        cnm.create_new_month_file(d.year, d.month)
+        logger.info("สร้างไฟล์ทางการของเดือน %d-%02d อัตโนมัติจากเดือนก่อน", d.year, d.month)
+    except Exception:
+        logger.exception("สร้างไฟล์ทางการของเดือน %d-%02d อัตโนมัติไม่สำเร็จ", d.year, d.month)
+
+
+def run_default(
+    sheet_source: str | None = None,
+    write_official: bool = True,
+    catchup_days: int = DEFAULT_CATCHUP_DAYS,
+    now: dt.datetime | None = None,
+) -> tuple[dict | None, list[dt.date]]:
+    """
+    โหมด default (ไม่ระบุ --date): คำนวณหน้าต่างล่าสุดที่ปิดแล้ว + ย้อนเติมวันที่ขาดภายใน
+    `catchup_days` วันก่อนหน้า (เช่น เครื่อง Windows ปิดอยู่ ทำให้รอบก่อนๆ ไม่ได้รัน)
+
+    - เติมเฉพาะวันที่ยังไม่มีใน shadow CSV (ไม่เขียนไฟล์ทางการซ้ำ ไม่สร้าง backup เพิ่มโดยไม่จำเป็น)
+    - รันเรียงจากเก่าไปใหม่ (ลำดับแถวต้องต่อเนื่อง เพราะ pipeline พยากรณ์ใช้ lag แบบนับแถว)
+    - วัน catch-up ที่ล้มเหลวจะ log error แล้วไปต่อ (ไม่บล็อกวันล่าสุด) -- ผลสำเร็จวัดจากวันล่าสุดเท่านั้น
+    คืน (ผลของวันล่าสุดหรือ None ถ้าล้มเหลว, รายการวันที่ล้มเหลว)
+    """
+    latest = latest_closed_window_date(now)
+    have = _dates_in_output_csv()
+    pending = [latest - dt.timedelta(days=k) for k in range(catchup_days, 0, -1)
+               if (latest - dt.timedelta(days=k)).isoformat() not in have]
+    logger.info("default run: หน้าต่างล่าสุดที่ปิดแล้ว=%s | catch-up ที่ต้องเติม=%s",
+                latest, [d.isoformat() for d in pending] or "ไม่มี")
+    failed: list[dt.date] = []
+    if write_official:
+        for d in sorted({*pending, latest}):
+            _ensure_official_month_file(d)
+    for d in pending:
+        try:
+            run_and_append(d, sheet_source=sheet_source, write_official=write_official, attempts=1)
+        except Exception:
+            logger.exception("catch-up วันที่ %s ล้มเหลว -- ข้ามไป (ต้อง backfill เองด้วย --date)", d)
+            failed.append(d)
+    try:
+        result = run_and_append(latest, sheet_source=sheet_source, write_official=write_official)
+    except Exception:
+        logger.exception("คำนวณวันล่าสุด %s ล้มเหลว", latest)
+        failed.append(latest)
+        return None, failed
+    return result, failed
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--date", type=str, default=None, help="วันที่ต้องการคำนวณ (YYYY-MM-DD) default=เมื่อวาน")
+    parser.add_argument("--date", type=str, default=None,
+                        help="วันที่ต้องการคำนวณ (YYYY-MM-DD) -- ถ้าระบุ จะคำนวณวันเดียว ไม่ catch-up; "
+                             "default = หน้าต่างล่าสุดที่ปิดแล้ว (หลัง 07:20 ICT = วันนี้) + catch-up ย้อนหลัง")
+    parser.add_argument("--catchup-days", type=int, default=DEFAULT_CATCHUP_DAYS,
+                        help="โหมด default: ย้อนเติมวันที่ขาดสูงสุดกี่วัน (0 = ปิด catch-up)")
     parser.add_argument("--sheet-source", type=str, default=None, help="path ไฟล์ local หรือ CSV URL (default: env var)")
     parser.add_argument("--skip-official-write", action="store_true",
                          help="ปิดการเขียนไฟล์ทางการจริง (กลับไปเขียนแค่ shadow CSV เหมือนก่อน 2026-07-18)")
     args = parser.parse_args()
 
-    target_date = (
-        dt.date.fromisoformat(args.date) if args.date
-        else dt.date.today() - dt.timedelta(days=1)
-    )
+    if args.date:
+        result = run_and_append(dt.date.fromisoformat(args.date), sheet_source=args.sheet_source,
+                                write_official=not args.skip_official_write)
+        print(result)
+        return
 
-    result = run_and_append(target_date, sheet_source=args.sheet_source, write_official=not args.skip_official_write)
+    result, failed = run_default(sheet_source=args.sheet_source,
+                                 write_official=not args.skip_official_write,
+                                 catchup_days=args.catchup_days)
     print(result)
+    if failed:
+        print(f"[WARN] วันที่ล้มเหลว: {[d.isoformat() for d in failed]}")
+    if result is None:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -17,7 +17,7 @@ REM ทุกครั้งที่รันจะ backup ไฟล์ทา�
 REM
 REM ใช้ .venv เดียวกับ run_pipeline.bat ที่ D:\maenaruea-water-web\.venv
 REM
-REM ค่า default ของ reservoir_daily_orchestration.py คือคำนวณของ "เมื่อวาน" เสมอ (--date ไม่ระบุ)
+REM ค่า default ของ reservoir_daily_orchestration.py (ตั้งแต่ 2026-10-06) คือคำนวณ "หน้าต่างล่าสุดที่ปิดแล้ว" (หลัง 07:20 = วันนี้) + catch-up ย้อนเติมวันที่ขาดสูงสุด 3 วัน
 REM เหมาะกับรันทุกเช้าหลังข้อมูล 07:00 เข้า Google Sheet log แล้ว (เช่น 07:30-08:00 น.)
 REM
 REM ต้องตั้ง env var RESERVOIR_TELEMETRY_SHEET_CSV_URL ไว้ก่อน (ไม่งั้นจะ fallback ไปใช้ค่า
