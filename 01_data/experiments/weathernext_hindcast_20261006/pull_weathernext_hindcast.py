@@ -99,6 +99,68 @@ def _iso(t: dt.datetime) -> str:
     return t.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def probe_wn3(ee, key: str) -> int:
+    asset, pix = WN3_ASSETS[key]
+    print(f"[probe] asset = {asset}")
+    try:
+        first = (ee.ImageCollection(asset)
+                 .filterDate("2026-10-05T00:00:00Z", "2026-10-05T02:00:00Z").first())
+        print("[probe] OK เข้าถึงได้; image:",
+              first.toDictionary(["start_time", "end_time", "forecast_hour"]).getInfo())
+    except Exception as exc:
+        print("[probe] FAIL:", exc)
+        return 1
+    rows = pull_one_wn3(ee, asset, pix, dt.datetime(2026, 10, 5, 0), [1, 6, 12, 13])
+    for r in rows:
+        print(f"[probe] init {r['init_utc']} +{r['lead_h']}h  pt_mean={r['pt_total_precipitation_1hr_mean_mm']} mm  "
+              f"p90={r['pt_total_precipitation_1hr_p90_mm']}  imerg={r['pt_imerg_tp_1hr_mean_mm']}")
+    return 0
+
+
+# ---------------------------------------------------------------- WeatherNext 3 ----
+# EE ให้เฉพาะสถิติสรุป (mean/p10/p25/p50/p75/p90) ต่อภาพ ไม่มี ensemble member
+# lead ทีละ 1 ชม. (1..360 สำหรับ init 00/06/12/18Z) -> ได้แถวรายชั่วโมง รวมเป็นฝน 6 ชม. ตอนวิเคราะห์
+WN3_ASSETS = {
+    "wn3_0p1": ("projects/gcp-public-data-weathernext/assets/weathernext_3_0_0_0p1deg", 11132),
+    "wn3_0p05": ("projects/gcp-public-data-weathernext/assets/weathernext_3_0_0_0p05deg", 5566),
+}
+WN3_STATS = ["mean", "p10", "p25", "p50", "p75", "p90"]
+WN3_BANDS = [f"total_precipitation_1hr_{s}" for s in WN3_STATS] + ["imerg_tp_1hr_mean", "experimental_tp_1hr_mean"]
+WN3_COLS = ["init_utc", "lead_h", "valid_end_utc"]
+for _p in ("pt", "bx"):
+    WN3_COLS += [f"{_p}_{b}_mm" for b in WN3_BANDS]
+
+
+def pull_one_wn3(ee, asset: str, pix_m: int, init: dt.datetime, leads: list[int]) -> list[dict]:
+    pt = ee.Geometry.Point([TARGET_LON, TARGET_LAT])
+    box = pt.buffer(pix_m * 1.5).bounds()
+    coll = (ee.ImageCollection(asset)
+            .filterDate(_iso(init - dt.timedelta(hours=1)), _iso(init + dt.timedelta(hours=max(leads) + 1)))
+            .filter(ee.Filter.eq("start_time", _iso(init))))
+
+    def per_lead(h):
+        h = ee.Number(h)
+        img = coll.filter(ee.Filter.eq("forecast_hour", h)).select(WN3_BANDS).mosaic().multiply(1000.0)  # mm
+        return ee.Feature(None, {
+            "h": h,
+            "pt": img.reduceRegion(ee.Reducer.first(), pt, pix_m),
+            "bx": img.reduceRegion(ee.Reducer.mean(), box, pix_m),
+        })
+
+    fc = ee.FeatureCollection(ee.List(leads).map(per_lead)).getInfo()
+    out = []
+    for f in fc["features"]:
+        p = f["properties"]
+        h = int(p["h"])
+        row = {"init_utc": _iso(init), "lead_h": h, "valid_end_utc": _iso(init + dt.timedelta(hours=h))}
+        for tag in ("pt", "bx"):
+            d = p[tag] or {}
+            for b in WN3_BANDS:
+                row[f"{tag}_{b}_mm"] = d.get(b)
+        out.append(row)
+    return out
+
+
 def pull_one(ee, init: dt.datetime, leads: list[int]) -> list[dict]:
     """ดึงสถิติ ensemble ของฝน 6 ชม. ที่จุดสำหรับ init เดียว (หลาย lead) ด้วยการเรียก EE ครั้งเดียว"""
     pt = ee.Geometry.Point([TARGET_LON, TARGET_LAT])
@@ -151,6 +213,8 @@ def pull_one(ee, init: dt.datetime, leads: list[int]) -> list[dict]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--probe", action="store_true")
+    ap.add_argument("--asset", default="wn2", choices=["wn2", "wn3_0p1", "wn3_0p05"],
+                    help="wn2 = WeatherNext 2 (64 members, 0.25deg, 6h) | wn3_* = WeatherNext 3 (สถิติสรุป, 1h)")
     ap.add_argument("--personal", action="store_true",
                     help="ใช้ personal credential (บัญชีที่ผ่าน allowlist) แทน service account")
     ap.add_argument("--start", help="วันแรกของ init (UTC) YYYY-MM-DD")
@@ -162,12 +226,15 @@ def main() -> int:
     a = ap.parse_args()
 
     ee = init_ee(a.personal)
+    wn3 = a.asset in WN3_ASSETS
     if a.probe:
-        return probe(ee)
+        return probe_wn3(ee, a.asset) if wn3 else probe(ee)
     if not (a.start and a.end):
         ap.error("ต้องระบุ --start และ --end (หรือใช้ --probe)")
 
-    leads = list(range(6, a.max_lead + 1, 6))
+    leads = list(range(1, a.max_lead + 1)) if wn3 else list(range(6, a.max_lead + 1, 6))
+    if wn3:
+        w3_asset, w3_pix = WN3_ASSETS[a.asset]
     hours = [int(x) for x in a.inits.split(",")]
     out = Path(a.out)
     if not out.is_absolute():
@@ -189,13 +256,14 @@ def main() -> int:
 
     fails = 0
     with out.open("a", encoding="utf-8", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=COLS)
+        w = csv.DictWriter(fh, fieldnames=WN3_COLS if wn3 else COLS)
         if new_file:
             w.writeheader()
         for i, t in enumerate(todo, 1):
             for attempt in range(3):
                 try:
-                    rows = pull_one(ee, t, leads)
+                    rows = (pull_one_wn3(ee, w3_asset, w3_pix, t, leads) if wn3
+                            else pull_one(ee, t, leads))
                     break
                 except Exception as exc:
                     rows = None
