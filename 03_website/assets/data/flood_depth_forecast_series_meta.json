@@ -1,48 +1,48 @@
 {
- "vmax_m": 0.05,
- "raw_max_m": 0.03265,
- "generated_at": "2026-09-22",
+ "vmax_m": 0.02,
+ "raw_max_m": 0.01816,
+ "generated_at": "2026-10-07",
  "days": [
   {
    "day": 1,
-   "date": "2026-09-23",
-   "max_depth_m": 0.03265,
+   "date": "2026-10-08",
+   "max_depth_m": 0.01816,
    "wet_px": 144358
   },
   {
    "day": 2,
-   "date": "2026-09-24",
-   "max_depth_m": 0.03147,
+   "date": "2026-10-09",
+   "max_depth_m": 0.01751,
    "wet_px": 144358
   },
   {
    "day": 3,
-   "date": "2026-09-25",
-   "max_depth_m": 0.03032,
+   "date": "2026-10-10",
+   "max_depth_m": 0.01688,
    "wet_px": 144358
   },
   {
    "day": 4,
-   "date": "2026-09-26",
-   "max_depth_m": 0.02924,
+   "date": "2026-10-11",
+   "max_depth_m": 0.01628,
    "wet_px": 144358
   },
   {
    "day": 5,
-   "date": "2026-09-27",
-   "max_depth_m": 0.02819,
+   "date": "2026-10-12",
+   "max_depth_m": 0.01569,
    "wet_px": 144358
   },
   {
    "day": 6,
-   "date": "2026-09-28",
-   "max_depth_m": 0.02718,
+   "date": "2026-10-13",
+   "max_depth_m": 0.01511,
    "wet_px": 144358
   },
   {
    "day": 7,
-   "date": "2026-09-29",
-   "max_depth_m": 0.02619,
+   "date": "2026-10-14",
+   "max_depth_m": 0.01458,
    "wet_px": 144358
   }
  ]
