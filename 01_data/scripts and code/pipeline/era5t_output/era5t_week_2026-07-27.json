@@ -1,0 +1,58 @@
+{
+  "worker_script": "era5t_worker.py",
+  "run_at": "2026-07-27T03:00:36.474038Z",
+  "mode": "weekly",
+  "requested_date": null,
+  "as_of_date": "2026-07-27",
+  "dataset": "reanalysis-era5-single-levels",
+  "time_utc_used": "12:00",
+  "grib_source": "cds_live_week:none + rolling:['D:\\\\maenaruea-water-web\\\\01_data\\\\scripts and code\\\\pipeline\\\\era5t_output\\\\era5t_week_202607_20-26.grib']",
+  "fetch_elapsed_sec": null,
+  "grib_size_bytes": null,
+  "variables": null,
+  "valid_time": null,
+  "latitude": null,
+  "longitude": null,
+  "n_grib_datasets": null,
+  "missing_variables": null,
+  "iso_year": 2026,
+  "iso_week": 31,
+  "candidate_days": [],
+  "n_days_in_week": 2,
+  "daily_breakdown": [
+    {
+      "ETo_mm_day": 0.2562382481459617,
+      "T_c": 25.212304687500023,
+      "RH_pct": 87.58485085305885,
+      "VPD_kPa": 0.3982853075620092,
+      "u2_ms": 0.9645875714248074,
+      "Rn_MJ": -0.05647584,
+      "date": "2026-07-20"
+    },
+    {
+      "ETo_mm_day": 0.2789049521444297,
+      "T_c": 24.817163085937523,
+      "RH_pct": 92.5203817620669,
+      "VPD_kPa": 0.23436947336506275,
+      "u2_ms": 1.7977028113465463,
+      "Rn_MJ": -0.019111879999999998,
+      "date": "2026-07-21"
+    }
+  ],
+  "ET0_mm_week": 0.5351,
+  "T_mean": 25.0147,
+  "RH_pct": 90.0526,
+  "VPD_kPa": 0.3163,
+  "u2_ms": 1.3811,
+  "Rn_MJ": -0.0378,
+  "is_rolling_estimate": true,
+  "rolling_window": {
+    "start": "2026-07-20",
+    "end": "2026-07-26"
+  },
+  "warnings": [
+    "as_of_date=2026-07-27 เป็นวันจันทร์ของสัปดาห์นี้เอง (หรือก่อนหน้านั้น) — ยังไม่มีวันไหนของสัปดาห์นี้ที่ผ่านไปแล้วเลย ข้ามการยิง CDS รอบนี้",
+    "สัปดาห์ปฏิทิน ISO (2026-W31) ไม่มีข้อมูล จริงเลยสักวัน — ใช้ rolling 7-day window แทน (2026-07-20 ถึง 2026-07-26, 2 วันที่มีข้อมูลจริงในช่วงนั้น) เป็นค่าประมาณการ (is_rolling_estimate=true — ไม่ใช่ผลรวมของสัปดาห์ปฏิทินจริง ห้ามป้อนเข้าโมเดลตรงๆ)"
+  ],
+  "fetch_error": null
+}

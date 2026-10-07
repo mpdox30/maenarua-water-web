@@ -606,7 +606,7 @@ def _build_s1_weekly_vvvh_stack(aoi_geom, year: int):
 
 def _download_ee_image_geotiff(
     image, region_geom, scale: int, out_path: Path, crs: str = SAR_EXPORT_CRS, grid_n: int = 1,
-) -> Path:
+):
     """
     ดาวน์โหลด ee.Image (ควร .clip() ตาม zone ไว้ก่อนแล้ว) เป็น GeoTIFF ไฟล์เดียว ผ่าน
     ee.Image.getDownloadURL() (synchronous HTTP, ไม่ใช่ ee.batch.Export — ดูเหตุผลด้านบน)
@@ -614,8 +614,28 @@ def _download_ee_image_geotiff(
     ถ้า single-shot (grid_n=1) ล้มเหลว (มักเป็นเพราะเกิน GEE synchronous request size limit)
     จะ retry แบบแบ่ง region เป็น grid_n x grid_n tile ดาวน์โหลดทีละ tile แล้ว mosaic กลับด้วย
     rasterio.merge โดยไล่ grid_n = 2, 3, 4 ก่อนจะ raise ถ้ายังล้มเหลวอยู่
+
+    คืนค่า: (out_path, missing_data_bounds_4326) -- missing_data_bounds_4326 คือ list ของ
+    (minx, miny, maxx, maxy) ใน EPSG:4326 ของ tile ที่ดาวน์โหลดไม่สำเร็จแม้ retry แล้ว (ปกติควร
+    เป็น list ว่าง)
+
+    2026-09-20 แก้บั๊กข้อมูลเสียหายแบบเงียบ (ยืนยันจากรันจริง): เดิมเมื่อ tile ไหนดาวน์โหลดไม่สำเร็จ
+    (เช่น 503 Service Unavailable ชั่วคราวจาก GEE) โค้ดจะ "ข้าม" tile นั้นไปเฉยๆ แต่
+    rasterio.merge.merge() ยังคงสร้าง mosaic เต็มขนาดตามเดิม แล้วเติมพื้นที่ที่หายไปด้วยค่า 0 ทุก
+    band (ไม่ใช่ NaN/nodata) เพราะไม่ได้ตั้ง nodata ใดๆ ในการ merge -- ค่า 0 ปลอมนี้ไหลตรงเข้า
+    classifier เป็น "ข้อมูลจริง" (ไม่ถูก sanity-check ใดจับได้ เพราะ 0 != NaN) แล้วถูกนับพื้นที่เป็น
+    พืชจริงในผลลัพธ์สุดท้าย -- ยืนยันจากรันจริงวันนี้: zone_A tile (1,0) ล้มเหลว ครอบคลุมพื้นที่จริง
+    ของ zone_A ถึง 32.6% (คำนวณจาก zone_a_rainfed.shp) เท่ากับเกือบหนึ่งในสามของพื้นที่ที่รายงานว่า
+    classify ได้ จริงๆ แล้วมาจาก feature vector เป็น 0 ล้วน ไม่ใช่ข้อมูลดาวเทียมจริงเลย
+
+    แก้ 2 ชั้น: (1) เพิ่ม retry-with-backoff ต่อ tile ก่อนยอมแพ้ (503 มักเป็นปัญหาชั่วคราว ลด
+    โอกาสเกิด missing data ตั้งแต่ต้นทาง) (2) ถ้า tile ไหนยังล้มเหลวหลัง retry ครบแล้วจริงๆ บันทึก
+    ขอบเขตของมันไว้ใน missing_data_bounds_4326 ส่งต่อให้ _classify_raster_local() ตัดพื้นที่นั้นออก
+    จากการนับ crop_area_ha อย่างชัดเจน (=255/unclassified) แทนที่จะปล่อยให้ 0 ปลอมถูกนับเป็นพืชจริง
+    แบบเงียบๆ เหมือนเดิม
     """
     import requests
+    import time
 
     def _fetch(geom, dest_path: Path) -> Path:
         url = image.getDownloadURL({
@@ -634,9 +654,30 @@ def _download_ee_image_geotiff(
                     f.write(chunk)
         return dest_path
 
+    def _fetch_with_retry(geom, dest_path: Path, max_attempts: int = 3, backoff_s=(5, 20)) -> Path:
+        # 2026-09-20 เพิ่ม -- ยืนยันจากรันจริงว่า tile ล้มเหลวด้วย 503 Service Unavailable ซึ่งมักเป็น
+        # ปัญหาชั่วคราวฝั่ง GEE server ระหว่าง tile ที่เหลือ (ต่างสถานการณ์กับ 400 "request size เกิน
+        # limit" ตอน single-shot ซึ่ง retry ไปก็ผิดซ้ำเหมือนเดิมแน่ๆ -- แต่ยอมรับ cost ของการ retry
+        # เปล่าประโยชน์ไม่กี่สิบวินาทีในกรณีนั้น เพื่อความเรียบง่าย ไม่ต้อง parse HTTP status code แยก)
+        last_exc = None
+        for attempt in range(max_attempts):
+            try:
+                return _fetch(geom, dest_path)
+            except Exception as exc:
+                last_exc = exc
+                if attempt < max_attempts - 1:
+                    wait_s = backoff_s[min(attempt, len(backoff_s) - 1)]
+                    logger.warning(
+                        "ดาวน์โหลด %s ล้มเหลวรอบที่ %d/%d (%s) -- รอ %ds แล้วลองใหม่",
+                        dest_path.name, attempt + 1, max_attempts, exc, wait_s,
+                    )
+                    time.sleep(wait_s)
+        raise last_exc
+
     if grid_n <= 1:
         try:
-            return _fetch(region_geom, out_path)
+            _fetch_with_retry(region_geom, out_path)
+            return out_path, []
         except Exception as exc:
             logger.warning(
                 "getDownloadURL() single-shot ล้มเหลว (%s) -- ลอง fallback แบ่ง tile 2x2", exc,
@@ -657,19 +698,22 @@ def _download_ee_image_geotiff(
     import ee
 
     tile_paths = []
+    missing_data_bounds_4326 = []  # [(minx,miny,maxx,maxy), ...] ของ tile ที่ล้มเหลวแม้ retry แล้วจริงๆ
     for i in range(grid_n):
         for j in range(grid_n):
-            tile_rect = ee.Geometry.Rectangle(
-                [minx + i * dx, miny + j * dy, minx + (i + 1) * dx, miny + (j + 1) * dy]
-            )
+            tile_bounds = (minx + i * dx, miny + j * dy, minx + (i + 1) * dx, miny + (j + 1) * dy)
+            tile_rect = ee.Geometry.Rectangle(list(tile_bounds))
             tile_path = out_path.with_name(f"{out_path.stem}_tile{i}_{j}.tif")
             try:
-                _fetch(tile_rect, tile_path)
+                _fetch_with_retry(tile_rect, tile_path)
                 tile_paths.append(tile_path)
             except Exception as exc:
-                logger.warning(
-                    "ดาวน์โหลด tile (%d,%d)/%dx%d ล้มเหลว (%s) -- ข้าม tile นี้", i, j, grid_n, grid_n, exc,
+                logger.error(
+                    "ดาวน์โหลด tile (%d,%d)/%dx%d ล้มเหลวแม้ retry 3 รอบแล้ว (%s) -- บันทึกขอบเขตไว้ตัด "
+                    "ออกจากการ classify เป็น unclassified (ไม่เติม 0 ปลอมเข้าไปนับเป็นพืชจริงเหมือนเดิม)",
+                    i, j, grid_n, grid_n, exc,
                 )
+                missing_data_bounds_4326.append(tile_bounds)
 
     if not tile_paths:
         if grid_n < 4:
@@ -719,11 +763,15 @@ def _download_ee_image_geotiff(
     for p in tile_paths:
         p.unlink(missing_ok=True)
 
-    logger.info("ดาวน์โหลด %s สำเร็จผ่าน grid %dx%d tile (%d tile จริง)", out_path.name, grid_n, grid_n, len(tile_paths))
-    return out_path
+    logger.info(
+        "ดาวน์โหลด %s สำเร็จผ่าน grid %dx%d tile (%d tile จริง%s)",
+        out_path.name, grid_n, grid_n, len(tile_paths),
+        f" -- {len(missing_data_bounds_4326)} tile ล้มเหลว-ตัดออกจาก classify" if missing_data_bounds_4326 else "",
+    )
+    return out_path, missing_data_bounds_4326
 
 
-def _classify_raster_local(tif_path: Path, rf: dict, zone_geom_native=None) -> dict:
+def _classify_raster_local(tif_path: Path, rf: dict, zone_geom_native=None, missing_data_bounds_4326: list = None) -> dict:
     """
     Classify ทุก pixel ของ raster ที่ดาวน์โหลดมาแบบ local — ตาม pattern เดียวกับ
     Retrain3.ipynb cell 16 (generate_crop_map_v3b) เป๊ะ: reshape raster array ทั้งก้อนเป็น
@@ -762,8 +810,17 @@ def _classify_raster_local(tif_path: Path, rf: dict, zone_geom_native=None) -> d
     เต็มที่แบบ offline (ดู module-level comment เหนือ SAR_MASK_SENTINEL/เดิม OUTSIDE_ZONE_SENTINEL
     สำหรับรายละเอียดเต็มของทั้ง 2 รอบการแก้)
 
-    คืน dict: {"class_map": np.ndarray (rows,cols) ค่า 0-4 หรือ 255=nodata นอกโซน,
-               "pixel_area_ha": float, "crop_area_ha": dict, "n_pixels_valid": int}
+    missing_data_bounds_4326: list ของ (minx,miny,maxx,maxy) ใน EPSG:4326 จาก
+    _download_ee_image_geotiff() -- ขอบเขตของ tile ที่ดาวน์โหลดไม่สำเร็จ (ถ้ามี) จะถูก reproject
+    มาที่ CRS ของ raster นี้แล้ว rasterize ตัดออกจากการ classify (=255) เหมือนพื้นที่นอกโซน แทนที่
+    จะปล่อยให้ค่า 0 ที่ rasterio.merge() เติมเข้าไปแทน tile ที่หายไปถูกนับเป็นข้อมูลพืชจริงแบบ
+    เงียบๆ (ดู docstring ของ _download_ee_image_geotiff() สำหรับที่มาเต็มของบั๊กนี้ ยืนยันจากรันจริง
+    2026-09-20: zone_A เจอ tile ล้มเหลว 1 อัน ครอบคลุมพื้นที่จริงของ zone_A ถึง 32.6%)
+
+    คืน dict: {"class_map": np.ndarray (rows,cols) ค่า 0-4 หรือ 255=nodata (นอกโซน หรือ tile
+    ดาวน์โหลดไม่สำเร็จ), "pixel_area_ha": float, "crop_area_ha": dict, "n_pixels_valid": int,
+    "n_pixels_outside_zone": int, "n_pixels_missing_data": int (ในโซนจริงแต่ตัดออกเพราะ tile
+    ดาวน์โหลดไม่สำเร็จ -- ควรเป็น 0 ปกติ)}
     """
     import rasterio
     from rasterio.features import rasterize
@@ -773,6 +830,7 @@ def _classify_raster_local(tif_path: Path, rf: dict, zone_geom_native=None) -> d
         arr = src.read()  # (bands, rows, cols) -- ไม่ใช้ masked=True อีกต่อไป (เหตุผลดู docstring ด้านบน)
         rows, cols = src.height, src.width
         transform = src.transform
+        raster_crs = src.crs
 
     n_bands = arr.shape[0]
     # 2026-07-12 แก้: สลับลำดับความสำคัญ -- ใช้ FULL_IMG_BAND_ORDER (ลำดับที่เรารู้เองจากตอนสร้าง
@@ -868,6 +926,40 @@ def _classify_raster_local(tif_path: Path, rf: dict, zone_geom_native=None) -> d
         100.0 * outside_zone_mask.sum() / outside_zone_mask.size if outside_zone_mask.size else 0.0,
     )
 
+    # --- missing-data detection: tile ที่ดาวน์โหลดไม่สำเร็จ (2026-09-20) -- reproject bounds จาก
+    # EPSG:4326 มาที่ raster_crs แล้ว rasterize ตัดออกจากการ classify เหมือน outside_zone_mask
+    # ใช้ all_touched=True (ต่างจาก zone mask ที่ใช้ False) เจตนา -- ยอมตัดพื้นที่ออกกว้างกว่าจริง
+    # เล็กน้อย (จาก distortion ตอน reproject bbox มุมฉากข้าม CRS) ดีกว่าเสี่ยงเหลือพิกเซลข้อมูลปลอม
+    # (ค่า 0 จาก merge()) หลุดรอดไปนับเป็นพืชจริง
+    missing_data_mask = np.zeros((rows, cols), dtype=bool)
+    if missing_data_bounds_4326:
+        from pyproj import Transformer
+        from shapely.geometry import box as _shapely_box
+
+        transformer = Transformer.from_crs("EPSG:4326", raster_crs, always_xy=True)
+        missing_geoms_native = []
+        for (mnx, mny, mxx, mxy) in missing_data_bounds_4326:
+            xs_n, ys_n = transformer.transform([mnx, mnx, mxx, mxx], [mny, mxy, mny, mxy])
+            missing_geoms_native.append(_shapely_box(min(xs_n), min(ys_n), max(xs_n), max(ys_n)))
+        missing_data_mask = rasterize(
+            [(g, 1) for g in missing_geoms_native],
+            out_shape=(rows, cols),
+            transform=transform,
+            fill=0,
+            dtype="uint8",
+            all_touched=True,
+        ).astype(bool)
+        n_missing_in_zone = int((missing_data_mask & inside_zone_mask).sum())
+        logger.warning(
+            "%s: พบ %d tile ที่ดาวน์โหลดไม่สำเร็จ -- ตัด %d pixel (%.2f ha) ในโซนจริงออกจากการ "
+            "classify เป็น unclassified (255) แทนที่จะนับค่า 0 ปลอมเป็นพืชจริง (ดู docstring ของ "
+            "_download_ee_image_geotiff() สำหรับที่มาของบั๊กนี้)",
+            tif_path.name, len(missing_data_bounds_4326), n_missing_in_zone,
+            n_missing_in_zone * abs(transform.a * transform.e) / 10000,
+        )
+
+    exclude_mask = outside_zone_mask | missing_data_mask
+
     flat = arr.reshape(n_bands, -1).T  # (n_pixel, n_bands)
     df = pd.DataFrame(flat, columns=columns)
 
@@ -884,10 +976,12 @@ def _classify_raster_local(tif_path: Path, rf: dict, zone_geom_native=None) -> d
     preds = classify_feature_matrix(rf, df)  # ใช้ pipeline เดียวกับตอน sampleRegions() ทุกจุด
     class_map = preds.reshape(rows, cols).astype(np.uint8)
     class_map_masked = class_map.copy()
-    class_map_masked[outside_zone_mask] = 255  # nodata -- ตรงกับ convention ของ Retrain3.ipynb cell 16
+    # 2026-09-20 เปลี่ยนจาก outside_zone_mask -> exclude_mask (= outside_zone_mask | missing_data_mask)
+    # เพื่อตัด tile ที่ดาวน์โหลดไม่สำเร็จออกด้วย ไม่ใช่แค่พื้นที่นอกโซนอย่างเดียวเหมือนเดิม
+    class_map_masked[exclude_mask] = 255  # nodata -- ตรงกับ convention ของ Retrain3.ipynb cell 16
 
     pixel_area_ha = abs(transform.a * transform.e) / 10000  # คำนวณจาก transform จริง ไม่ใช่ scale ที่ขอ
-    valid = ~outside_zone_mask
+    valid = ~exclude_mask
     classes, counts = np.unique(class_map[valid], return_counts=True)
     crop_area_ha = {CLASS_LABELS[int(c)]: float(n) * pixel_area_ha for c, n in zip(classes, counts) if int(c) in CLASS_LABELS}
 
@@ -898,6 +992,7 @@ def _classify_raster_local(tif_path: Path, rf: dict, zone_geom_native=None) -> d
         "crop_area_ha": crop_area_ha,
         "n_pixels_valid": int(valid.sum()),
         "n_pixels_outside_zone": int(outside_zone_mask.sum()),
+        "n_pixels_missing_data": int((missing_data_mask & inside_zone_mask).sum()) if zone_geom_native is not None else int(missing_data_mask.sum()),
     }
 
 
@@ -1222,21 +1317,38 @@ def trigger_crop_classification(sar_trigger: dict, marker_path: Path = SAR_LAST_
 
             try:
                 logger.info("%s: เริ่มดาวน์โหลด composite image (S2+S1, %d bands)...", zone_label, 86)
-                _download_ee_image_geotiff(zone_img, zone_geom_4326, scale=20, out_path=raw_tif_path)
+                raw_tif_path, missing_data_bounds_4326 = _download_ee_image_geotiff(
+                    zone_img, zone_geom_4326, scale=20, out_path=raw_tif_path
+                )
                 logger.info("%s: ดาวน์โหลดสำเร็จ (%s) -- เริ่ม classify local", zone_label, raw_tif_path.name)
 
-                classify_result = _classify_raster_local(raw_tif_path, rf, zone_geom_native=zdata["geom_native"])
+                classify_result = _classify_raster_local(
+                    raw_tif_path, rf, zone_geom_native=zdata["geom_native"],
+                    missing_data_bounds_4326=missing_data_bounds_4326,
+                )
                 crop_area_ha = classify_result["crop_area_ha"]
                 result["zone_crop_area_ha"][zone_label] = crop_area_ha
                 result["raster_meta"][zone_label] = {
                     "pixel_area_ha": classify_result["pixel_area_ha"],
                     "n_pixels_valid": classify_result["n_pixels_valid"],
                     "n_pixels_outside_zone": classify_result["n_pixels_outside_zone"],
+                    "n_pixels_missing_data": classify_result["n_pixels_missing_data"],
                     "classified_tif_path": str(classified_tif_path),
                 }
+                if classify_result["n_pixels_missing_data"] > 0:
+                    # 2026-09-20 เพิ่ม -- แจ้งชัดเจนแยกจาก "นอกโซน" ปกติ เพราะนี่คือพื้นที่ในโซนจริงที่
+                    # ไม่มีข้อมูลดาวเทียมจริงให้ classify (tile ดาวน์โหลดไม่สำเร็จ) ควรสังเกตเห็นง่ายๆ
+                    # ใน log ไม่ใช่ปะปนไปกับพื้นที่นอกโซนที่เป็นเรื่องปกติทุกรอบ
+                    result["errors"].append(
+                        f"{zone_label}: {classify_result['n_pixels_missing_data']} pixel "
+                        f"({classify_result['n_pixels_missing_data'] * classify_result['pixel_area_ha']:.1f} ha) "
+                        "ในโซนจริงไม่ได้ classify เพราะดาวน์โหลด tile ดาวเทียมไม่สำเร็จ (ไม่นับรวมใน crop_area_ha)"
+                    )
                 logger.info(
-                    "%s: classify เสร็จ -- %d pixel ในโซนจริง (%d pixel นอกโซนถูกตัดออก) พื้นที่: %s",
+                    "%s: classify เสร็จ -- %d pixel ในโซนจริง (%d pixel นอกโซนถูกตัดออก, %d pixel ในโซน "
+                    "แต่ tile ดาวน์โหลดไม่สำเร็จถูกตัดออก) พื้นที่: %s",
                     zone_label, classify_result["n_pixels_valid"], classify_result["n_pixels_outside_zone"],
+                    classify_result["n_pixels_missing_data"],
                     {k: round(v, 1) for k, v in crop_area_ha.items()},
                 )
 

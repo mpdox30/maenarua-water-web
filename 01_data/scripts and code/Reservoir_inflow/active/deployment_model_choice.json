@@ -12,6 +12,13 @@
       "rain_forecast_threshold_mm": null,
       "bias_correction_m3_per_day": 0.0,
       "note": "test_nse/walkforward_cv_nse ด้านบนเป็นของโมเดลรุ่นก่อน (fixed iterations) -- ดู model_metadata.json > live_backtest_2026-09-07 สำหรับตัวเลขของโมเดลที่ deploy จริงตอนนี้"
+    },
+    "updated_2026-10_newspill": {
+      "bias_correction_m3_per_day": 0.0,
+      "uses_rain_forecast_binary": false,
+      "rain_forecast_threshold_mm": null,
+      "training_data_source": "Training_Values_newspill_offset0_20261007.csv",
+      "note": "test_nse/walkforward เดิมเป็นของรุ่นก่อน -- ดู daily_newspill_retrain_20261007/cv_*summary.csv"
     }
   },
   "2": {
@@ -27,6 +34,13 @@
       "rain_forecast_threshold_mm": null,
       "bias_correction_m3_per_day": 0.0,
       "note": "test_nse/walkforward_cv_nse ด้านบนเป็นของโมเดลรุ่นก่อน (fixed iterations) -- ดู model_metadata.json > live_backtest_2026-09-07 สำหรับตัวเลขของโมเดลที่ deploy จริงตอนนี้"
+    },
+    "updated_2026-10_newspill": {
+      "bias_correction_m3_per_day": 0.0,
+      "uses_rain_forecast_binary": false,
+      "rain_forecast_threshold_mm": null,
+      "training_data_source": "Training_Values_newspill_offset0_20261007.csv",
+      "note": "test_nse/walkforward เดิมเป็นของรุ่นก่อน -- ดู daily_newspill_retrain_20261007/cv_*summary.csv"
     }
   },
   "3": {
@@ -42,6 +56,13 @@
       "rain_forecast_threshold_mm": 27.3,
       "bias_correction_m3_per_day": 610.9,
       "note": "test_nse/walkforward_cv_nse ด้านบนเป็นของโมเดลรุ่นก่อน (fixed iterations) -- ดู model_metadata.json > live_backtest_2026-09-07 สำหรับตัวเลขของโมเดลที่ deploy จริงตอนนี้"
+    },
+    "updated_2026-10_newspill": {
+      "bias_correction_m3_per_day": 0.0,
+      "uses_rain_forecast_binary": false,
+      "rain_forecast_threshold_mm": null,
+      "training_data_source": "Training_Values_newspill_offset0_20261007.csv",
+      "note": "test_nse/walkforward เดิมเป็นของรุ่นก่อน -- ดู daily_newspill_retrain_20261007/cv_*summary.csv"
     }
   },
   "4": {
@@ -57,6 +78,13 @@
       "rain_forecast_threshold_mm": null,
       "bias_correction_m3_per_day": 4241.9,
       "note": "test_nse/walkforward_cv_nse ด้านบนเป็นของโมเดลรุ่นก่อน (fixed iterations) -- ดู model_metadata.json > live_backtest_2026-09-07 สำหรับตัวเลขของโมเดลที่ deploy จริงตอนนี้"
+    },
+    "updated_2026-10_newspill": {
+      "bias_correction_m3_per_day": 0.0,
+      "uses_rain_forecast_binary": false,
+      "rain_forecast_threshold_mm": null,
+      "training_data_source": "Training_Values_newspill_offset0_20261007.csv",
+      "note": "test_nse/walkforward เดิมเป็นของรุ่นก่อน -- ดู daily_newspill_retrain_20261007/cv_*summary.csv"
     }
   },
   "5": {
@@ -72,6 +100,13 @@
       "rain_forecast_threshold_mm": null,
       "bias_correction_m3_per_day": 2605.5,
       "note": "test_nse/walkforward_cv_nse ด้านบนเป็นของโมเดลรุ่นก่อน (fixed iterations) -- ดู model_metadata.json > live_backtest_2026-09-07 สำหรับตัวเลขของโมเดลที่ deploy จริงตอนนี้"
+    },
+    "updated_2026-10_newspill": {
+      "bias_correction_m3_per_day": 0.0,
+      "uses_rain_forecast_binary": false,
+      "rain_forecast_threshold_mm": null,
+      "training_data_source": "Training_Values_newspill_offset0_20261007.csv",
+      "note": "test_nse/walkforward เดิมเป็นของรุ่นก่อน -- ดู daily_newspill_retrain_20261007/cv_*summary.csv"
     }
   },
   "6": {
@@ -87,6 +122,13 @@
       "rain_forecast_threshold_mm": 3.1,
       "bias_correction_m3_per_day": 6583.5,
       "note": "test_nse/walkforward_cv_nse ด้านบนเป็นของโมเดลรุ่นก่อน (fixed iterations) -- ดู model_metadata.json > live_backtest_2026-09-07 สำหรับตัวเลขของโมเดลที่ deploy จริงตอนนี้"
+    },
+    "updated_2026-10_newspill": {
+      "bias_correction_m3_per_day": 0.0,
+      "uses_rain_forecast_binary": true,
+      "rain_forecast_threshold_mm": 3.1,
+      "training_data_source": "Training_Values_newspill_offset0_20261007.csv",
+      "note": "test_nse/walkforward เดิมเป็นของรุ่นก่อน -- ดู daily_newspill_retrain_20261007/cv_*summary.csv"
     }
   },
   "7": {
@@ -102,6 +144,13 @@
       "rain_forecast_threshold_mm": 61.0,
       "bias_correction_m3_per_day": 13153.2,
       "note": "test_nse/walkforward_cv_nse ด้านบนเป็นของโมเดลรุ่นก่อน (fixed iterations) -- ดู model_metadata.json > live_backtest_2026-09-07 สำหรับตัวเลขของโมเดลที่ deploy จริงตอนนี้"
+    },
+    "updated_2026-10_newspill": {
+      "bias_correction_m3_per_day": 0.0,
+      "uses_rain_forecast_binary": false,
+      "rain_forecast_threshold_mm": null,
+      "training_data_source": "Training_Values_newspill_offset0_20261007.csv",
+      "note": "test_nse/walkforward เดิมเป็นของรุ่นก่อน -- ดู daily_newspill_retrain_20261007/cv_*summary.csv"
     }
   }
 }

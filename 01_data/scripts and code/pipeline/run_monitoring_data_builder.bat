@@ -183,12 +183,21 @@ REM ทำอะไรไม่ได้ ต้อง merge จริง — ใ
 REM ทำให้ค้างกลางคันจากอุบัติเหตุครั้งก่อน: merge ที่ conflict จริงจะ fail แบบ non-interactive
 REM ทันที ทิ้ง .git/MERGE_HEAD ไว้ให้ guard ด้านบนจับได้ในรอบถัดไป ไม่ค้างกลางคันแบบ rebase)
 REM
-REM ขั้นตอน: 1) เลิกไฟล์ 4 ไฟล์ที่รู้ว่าไม่ใช่ของ task นี้ก่อน (เสีย local copy ไปก็ไม่กระทบอะไร --
-REM Colab เขียนใหม่ผ่าน Drive sync ซ้ำอยู่แล้ว) 2) pull --no-rebase (merge จริง ไม่ใช่ ff-only)
+REM ขั้นตอน: 1) เลิกไฟล์ที่รู้ว่าไม่ใช่ของ task นี้ก่อน (เสีย local copy ไปก็ไม่กระทบอะไร --
+REM Colab/run_pipeline.bat เขียนใหม่ผ่าน Drive sync ซ้ำอยู่แล้ว) 2) pull --no-rebase (merge จริง ไม่ใช่ ff-only)
 REM 3) ถ้า pull ยัง fail อยู่ (เช่นเจอไฟล์ที่ไม่รู้จักอีกตัวที่ dirty+conflict) แค่ warn แล้วข้าม push
 REM รอบนี้ไป (ปลอดภัย ไม่ force อะไร)
+REM
+REM 2026-09-14 เพิ่ม "ml_features_live.csv" เข้าลิสต์นี้ด้วย -- เจอบั๊กจริง: ค้าง push ไม่ผ่านตั้งแต่
+REM ~09:50 ทั้งวัน (non-fast-forward ซ้ำทุกรอบ 15 นาที ไม่มี error โผล่ให้เห็นเพราะรันผ่าน Task
+REM Scheduler เงียบๆ) สาเหตุคือไฟล์นี้ (เขียนโดย data_pipeline.py/run_pipeline.bat ไม่ใช่ของ task นี้)
+REM ค้างเป็น "modified" ในเครื่องจาก Drive sync เหมือน 4 ไฟล์ latest.json/flood_latest.json/
+REM reservoir_inflow.json ด้านบนเป๊ะ แต่ไม่เคยอยู่ใน checkout list นี้มาก่อน ทำให้ "git pull --no-rebase"
+REM fail ด้วย "would be overwritten by merge" ทุกรอบ (ไม่ทิ้ง MERGE_HEAD เพราะ fail ก่อนถึงขั้น merge
+REM จริง -- git status เลยดูปกติ ไม่มีร่องรอย conflict ค้างให้เห็น) push เลยถูก reject แบบ
+REM non-fast-forward สะสมไปเรื่อยๆ จนกว่าจะมีคนสังเกตเห็นจากหน้าเว็บไม่อัปเดต
 REM ============================================================================
-git checkout -- "03_website/assets/data/latest.json" "03_website/assets/data/flood_latest.json" "03_website/assets/data/reservoir_inflow.json" "01_data/forecasting_results/latest.json" 2>nul
+git checkout -- "03_website/assets/data/latest.json" "03_website/assets/data/flood_latest.json" "03_website/assets/data/reservoir_inflow.json" "01_data/forecasting_results/latest.json" "01_data/scripts and code/pipeline/ml_features_live.csv" 2>nul
 
 REM 2026-09-09 แก้บั๊กจริง: commit ไฟล์ของ task นี้ก่อน pull เสมอ (เดิม pull ก่อน commit ทำให้ git
 REM ปฏิเสธ pull ทันทีทุกรอบถ้า remote ขยับไฟล์เดียวกันไปก่อนแล้ว -- ยืนยันด้วย git merge --no-commit

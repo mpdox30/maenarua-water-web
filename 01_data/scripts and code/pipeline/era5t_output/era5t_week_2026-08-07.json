@@ -1,0 +1,67 @@
+{
+  "worker_script": "era5t_worker.py",
+  "run_at": "2026-08-07T01:36:18.604608Z",
+  "mode": "weekly",
+  "requested_date": null,
+  "as_of_date": "2026-08-07",
+  "dataset": "reanalysis-era5-single-levels",
+  "time_utc_used": "12:00",
+  "grib_source": "cds_live_week:none + rolling:['D:\\\\maenaruea-water-web\\\\01_data\\\\scripts and code\\\\pipeline\\\\era5t_output\\\\era5t_week_202607_31-31.grib', 'D:\\\\maenaruea-water-web\\\\01_data\\\\scripts and code\\\\pipeline\\\\era5t_output\\\\era5t_week_202608_01-06.grib']",
+  "fetch_elapsed_sec": null,
+  "grib_size_bytes": null,
+  "variables": null,
+  "valid_time": null,
+  "latitude": null,
+  "longitude": null,
+  "n_grib_datasets": null,
+  "missing_variables": null,
+  "iso_year": 2026,
+  "iso_week": 32,
+  "candidate_days": [
+    "2026-08-03",
+    "2026-08-04",
+    "2026-08-05",
+    "2026-08-06"
+  ],
+  "n_days_in_week": 2,
+  "daily_breakdown": [
+    {
+      "ETo_mm_day": 0.564548797984326,
+      "T_c": 27.397027587890648,
+      "RH_pct": 82.38607434098391,
+      "VPD_kPa": 0.6427732149377636,
+      "u2_ms": 1.4200705151030089,
+      "Rn_MJ": -0.03355379999999999,
+      "date": "2026-07-31"
+    },
+    {
+      "ETo_mm_day": 0.6238103868494631,
+      "T_c": 27.463494873046898,
+      "RH_pct": 81.16420322166405,
+      "VPD_kPa": 0.6900389705733043,
+      "u2_ms": 1.484210688672229,
+      "Rn_MJ": -0.05586131999999999,
+      "date": "2026-08-01"
+    }
+  ],
+  "ET0_mm_week": 1.1884,
+  "T_mean": 27.4303,
+  "RH_pct": 81.7751,
+  "VPD_kPa": 0.6664,
+  "u2_ms": 1.4521,
+  "Rn_MJ": -0.0447,
+  "is_rolling_estimate": true,
+  "rolling_window": {
+    "start": "2026-07-31",
+    "end": "2026-08-06"
+  },
+  "warnings": [
+    "ดึงข้อมูลวัน [datetime.date(2026, 8, 3), datetime.date(2026, 8, 4), datetime.date(2026, 8, 5), datetime.date(2026, 8, 6)] ไม่สำเร็จ (HTTPError: 400 Client Error: Bad Request for url: https://cds.climate.copernicus.eu/api/retrieve/v1/processes/reanalysis-era5-single-levels/execution\ninvalid request\nNone of the data you have requested is available yet, please revise the period requested. The latest date available for this dataset is: 2026-08-02 01:00) — ตัดวันล่าสุด (2026-08-06) ออกแล้วลองใหม่ (อาจเป็นเพราะ ERA5T ยังไม่ปล่อยข้อมูล ของวันนั้นจริงๆ)",
+    "ดึงข้อมูลวัน [datetime.date(2026, 8, 3), datetime.date(2026, 8, 4), datetime.date(2026, 8, 5)] ไม่สำเร็จ (HTTPError: 400 Client Error: Bad Request for url: https://cds.climate.copernicus.eu/api/retrieve/v1/processes/reanalysis-era5-single-levels/execution\ninvalid request\nNone of the data you have requested is available yet, please revise the period requested. The latest date available for this dataset is: 2026-08-02 01:00) — ตัดวันล่าสุด (2026-08-05) ออกแล้วลองใหม่ (อาจเป็นเพราะ ERA5T ยังไม่ปล่อยข้อมูล ของวันนั้นจริงๆ)",
+    "ดึงข้อมูลวัน [datetime.date(2026, 8, 3), datetime.date(2026, 8, 4)] ไม่สำเร็จ (HTTPError: 400 Client Error: Bad Request for url: https://cds.climate.copernicus.eu/api/retrieve/v1/processes/reanalysis-era5-single-levels/execution\ninvalid request\nNone of the data you have requested is available yet, please revise the period requested. The latest date available for this dataset is: 2026-08-02 01:00) — ตัดวันล่าสุด (2026-08-04) ออกแล้วลองใหม่ (อาจเป็นเพราะ ERA5T ยังไม่ปล่อยข้อมูล ของวันนั้นจริงๆ)",
+    "ดึงข้อมูลวัน [datetime.date(2026, 8, 3)] ไม่สำเร็จ (HTTPError: 400 Client Error: Bad Request for url: https://cds.climate.copernicus.eu/api/retrieve/v1/processes/reanalysis-era5-single-levels/execution\ninvalid request\nNone of the data you have requested is available yet, please revise the period requested. The latest date available for this dataset is: 2026-08-02 01:00) — ตัดวันล่าสุด (2026-08-03) ออกแล้วลองใหม่ (อาจเป็นเพราะ ERA5T ยังไม่ปล่อยข้อมูล ของวันนั้นจริงๆ)",
+    "ไม่สามารถดึงข้อมูลของกลุ่มวัน [datetime.date(2026, 8, 3), datetime.date(2026, 8, 4), datetime.date(2026, 8, 5), datetime.date(2026, 8, 6)] ได้เลยแม้แต่วันเดียว",
+    "สัปดาห์ปฏิทิน ISO (2026-W32) ไม่มีข้อมูล จริงเลยสักวัน — ใช้ rolling 7-day window แทน (2026-07-31 ถึง 2026-08-06, 2 วันที่มีข้อมูลจริงในช่วงนั้น) เป็นค่าประมาณการ (is_rolling_estimate=true — ไม่ใช่ผลรวมของสัปดาห์ปฏิทินจริง ห้ามป้อนเข้าโมเดลตรงๆ)"
+  ],
+  "fetch_error": null
+}

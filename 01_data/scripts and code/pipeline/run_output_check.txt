@@ -1,0 +1,26 @@
+============================================================
+  Mae Na Rua Reservoir Daily Orchestration - run_reservoir_daily_orchestration.bat
+  Tue 09/22/2026 10:18:42.08
+============================================================
+[INFO] Using Python: D:\maenaruea-water-web\01_data\scripts and code\pipeline\..\..\..\.venv\Scripts\python.exe
+[INFO] Running reservoir_daily_orchestration.py (target date = ‡πÄ‡∏°‡∏∑‡πà‡∏≠‡∏ß‡∏≤‡∏ô, ‡πÄ‡∏Ç‡∏µ‡∏¢‡∏ô‡∏ó‡∏±‡πâ‡∏á shadow CSV + ‡πÑ‡∏ü‡∏•‡πå‡∏ó‡∏≤‡∏á‡∏Å‡∏≤‡∏£) ...
+
+2026-09-22 10:18:42,195 [WARNING] ‰¡Ë‰¥È√–∫ÿ source ·≈–‰¡Ë‰¥Èµ—Èß env var RESERVOIR_TELEMETRY_SHEET_CSV_URL -- „™È DEFAULT_SHEET_CSV_URL ·∑π (·π–π”„ÀÈµ—Èß env var ∫π‡§√◊ËÕß∑’Ë√—π scheduled task ®√‘ß·∑π°“√æ÷Ëß§Ë“ default π’È)
+Traceback (most recent call last):
+  File "D:\maenaruea-water-web\01_data\scripts and code\pipeline\reservoir_daily_orchestration.py", line 406, in <module>
+    main()
+    ~~~~^^
+  File "D:\maenaruea-water-web\01_data\scripts and code\pipeline\reservoir_daily_orchestration.py", line 401, in main
+    result = run_and_append(target_date, sheet_source=args.sheet_source, write_official=not args.skip_official_write)
+  File "D:\maenaruea-water-web\01_data\scripts and code\pipeline\reservoir_daily_orchestration.py", line 353, in run_and_append
+    result = compute_for_date(target_date, sheet_source)
+  File "D:\maenaruea-water-web\01_data\scripts and code\pipeline\reservoir_daily_orchestration.py", line 287, in compute_for_date
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: ‰¡Ë¡’¢ÈÕ¡Ÿ≈√–¥—∫πÈ”∑’Ë 07:00 ¢Õß«—π∑’Ë 2026-09-21 „π telemetry log -- ‰¡Ë “¡“√∂§”π«≥‰¥È (µ√«® Õ∫«Ë“ log Õ—ª‡¥µ∂÷ß«—ππ’È·≈È«À√◊Õ¬—ß)
+
+[INFO] reservoir_daily_orchestration.py exited with code 1
+  (0 = ‡∏™‡∏≥‡πÄ‡∏£‡πá‡∏à, non-zero = error -- ‡πÄ‡∏ä‡πá‡∏Ñ log ‡∏î‡πâ‡∏≤‡∏ô‡∏ö‡∏ô ‡πÇ‡∏î‡∏¢‡πÄ‡∏â‡∏û‡∏≤‡∏∞‡∏ñ‡πâ‡∏≤‡πÄ‡∏Ç‡∏µ‡∏¢‡∏ô‡πÑ‡∏ü‡∏•‡πå‡∏ó‡∏≤‡∏á‡∏Å‡∏≤‡∏£‡∏•‡πâ‡∏°‡πÄ‡∏´‡∏•‡∏ß
+   shadow CSV ‡∏à‡∏∞‡∏¢‡∏±‡∏á‡πÄ‡∏Ç‡∏µ‡∏¢‡∏ô‡∏™‡∏≥‡πÄ‡∏£‡πá‡∏à‡πÅ‡∏¢‡∏Å‡∏ï‡πà‡∏≤‡∏á‡∏´‡∏≤‡∏Å‡πÄ‡∏™‡∏°‡∏≠‡∏ñ‡πâ‡∏≤‡∏Ñ‡∏≥‡∏ô‡∏ß‡∏ì‡πÑ‡∏î‡πâ ‡πÑ‡∏°‡πà‡∏Ç‡∏∂‡πâ‡∏ô‡∏Å‡∏±‡∏ö‡πÑ‡∏ü‡∏•‡πå‡∏ó‡∏≤‡∏á‡∏Å‡∏≤‡∏£)
+[WARN] reservoir_daily_orchestration.py ‡πÑ‡∏°‡πà‡∏™‡∏≥‡πÄ‡∏£‡πá‡∏à -- ‡∏Ç‡πâ‡∏≤‡∏°‡∏Ç‡∏±‡πâ‡∏ô‡∏ï‡∏≠‡∏ô push git ‡∏£‡∏≠‡∏ö‡∏ô‡∏µ‡πâ

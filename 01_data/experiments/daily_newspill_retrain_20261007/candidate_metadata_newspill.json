@@ -1,0 +1,141 @@
+{
+  "horizons": {
+    "1": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)"
+      ],
+      "tree_count": 34,
+      "n_train_rows": 390,
+      "rain_forecast_threshold_mm": null
+    },
+    "2": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)"
+      ],
+      "tree_count": 55,
+      "n_train_rows": 389,
+      "rain_forecast_threshold_mm": null
+    },
+    "3": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)"
+      ],
+      "tree_count": 74,
+      "n_train_rows": 388,
+      "rain_forecast_threshold_mm": null
+    },
+    "4": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)"
+      ],
+      "tree_count": 87,
+      "n_train_rows": 387,
+      "rain_forecast_threshold_mm": null
+    },
+    "5": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)"
+      ],
+      "tree_count": 69,
+      "n_train_rows": 386,
+      "rain_forecast_threshold_mm": null
+    },
+    "6": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)",
+        "b"
+      ],
+      "tree_count": 126,
+      "n_train_rows": 385,
+      "rain_forecast_threshold_mm": 3.1
+    },
+    "7": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)"
+      ],
+      "tree_count": 293,
+      "n_train_rows": 384,
+      "rain_forecast_threshold_mm": null
+    }
+  },
+  "dataset": "Training_Values_newspill_offset0_20261007.csv",
+  "bias_correction": null,
+  "note": "CANDIDATE ONLY -- เทรนด้วย Q_in สูตร spill ใหม่ (offset 0). H6 ใช้ binary rain-forecast (Rain_fcst_cum_h6 > threshold). ไม่มี bias correction. ยังไม่ deploy"
+}

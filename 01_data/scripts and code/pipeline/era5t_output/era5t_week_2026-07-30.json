@@ -1,0 +1,65 @@
+{
+  "worker_script": "era5t_worker.py",
+  "run_at": "2026-07-30T02:04:25.575545Z",
+  "mode": "weekly",
+  "requested_date": null,
+  "as_of_date": "2026-07-30",
+  "dataset": "reanalysis-era5-single-levels",
+  "time_utc_used": "12:00",
+  "grib_source": "cds_live_week:none + rolling:['D:\\\\maenaruea-water-web\\\\01_data\\\\scripts and code\\\\pipeline\\\\era5t_output\\\\era5t_week_202607_23-29.grib']",
+  "fetch_elapsed_sec": null,
+  "grib_size_bytes": null,
+  "variables": null,
+  "valid_time": null,
+  "latitude": null,
+  "longitude": null,
+  "n_grib_datasets": null,
+  "missing_variables": null,
+  "iso_year": 2026,
+  "iso_week": 31,
+  "candidate_days": [
+    "2026-07-27",
+    "2026-07-28",
+    "2026-07-29"
+  ],
+  "n_days_in_week": 2,
+  "daily_breakdown": [
+    {
+      "ETo_mm_day": 0.6091399036606759,
+      "T_c": 26.993432617187523,
+      "RH_pct": 79.45222391743599,
+      "VPD_kPa": 0.7323159003138726,
+      "u2_ms": 1.292913492003609,
+      "Rn_MJ": -0.004072720000000016,
+      "date": "2026-07-23"
+    },
+    {
+      "ETo_mm_day": 0.46877556792566594,
+      "T_c": 27.999353027343773,
+      "RH_pct": 82.89962999544186,
+      "VPD_kPa": 0.6463577290144342,
+      "u2_ms": 1.1901409888289602,
+      "Rn_MJ": -0.04016868,
+      "date": "2026-07-24"
+    }
+  ],
+  "ET0_mm_week": 1.0779,
+  "T_mean": 27.4964,
+  "RH_pct": 81.1759,
+  "VPD_kPa": 0.6893,
+  "u2_ms": 1.2415,
+  "Rn_MJ": -0.0221,
+  "is_rolling_estimate": true,
+  "rolling_window": {
+    "start": "2026-07-23",
+    "end": "2026-07-29"
+  },
+  "warnings": [
+    "ดึงข้อมูลวัน [datetime.date(2026, 7, 27), datetime.date(2026, 7, 28), datetime.date(2026, 7, 29)] ไม่สำเร็จ (HTTPError: 400 Client Error: Bad Request for url: https://cds.climate.copernicus.eu/api/retrieve/v1/processes/reanalysis-era5-single-levels/execution\ninvalid request\nNone of the data you have requested is available yet, please revise the period requested. The latest date available for this dataset is: 2026-07-25 02:00) — ตัดวันล่าสุด (2026-07-29) ออกแล้วลองใหม่ (อาจเป็นเพราะ ERA5T ยังไม่ปล่อยข้อมูล ของวันนั้นจริงๆ)",
+    "ดึงข้อมูลวัน [datetime.date(2026, 7, 27), datetime.date(2026, 7, 28)] ไม่สำเร็จ (HTTPError: 400 Client Error: Bad Request for url: https://cds.climate.copernicus.eu/api/retrieve/v1/processes/reanalysis-era5-single-levels/execution\ninvalid request\nNone of the data you have requested is available yet, please revise the period requested. The latest date available for this dataset is: 2026-07-25 02:00) — ตัดวันล่าสุด (2026-07-28) ออกแล้วลองใหม่ (อาจเป็นเพราะ ERA5T ยังไม่ปล่อยข้อมูล ของวันนั้นจริงๆ)",
+    "ดึงข้อมูลวัน [datetime.date(2026, 7, 27)] ไม่สำเร็จ (HTTPError: 400 Client Error: Bad Request for url: https://cds.climate.copernicus.eu/api/retrieve/v1/processes/reanalysis-era5-single-levels/execution\ninvalid request\nNone of the data you have requested is available yet, please revise the period requested. The latest date available for this dataset is: 2026-07-25 02:00) — ตัดวันล่าสุด (2026-07-27) ออกแล้วลองใหม่ (อาจเป็นเพราะ ERA5T ยังไม่ปล่อยข้อมูล ของวันนั้นจริงๆ)",
+    "ไม่สามารถดึงข้อมูลของกลุ่มวัน [datetime.date(2026, 7, 27), datetime.date(2026, 7, 28), datetime.date(2026, 7, 29)] ได้เลยแม้แต่วันเดียว",
+    "สัปดาห์ปฏิทิน ISO (2026-W31) ไม่มีข้อมูล จริงเลยสักวัน — ใช้ rolling 7-day window แทน (2026-07-23 ถึง 2026-07-29, 2 วันที่มีข้อมูลจริงในช่วงนั้น) เป็นค่าประมาณการ (is_rolling_estimate=true — ไม่ใช่ผลรวมของสัปดาห์ปฏิทินจริง ห้ามป้อนเข้าโมเดลตรงๆ)"
+  ],
+  "fetch_error": null
+}

@@ -56,9 +56,23 @@ import data_pipeline  # noqa: E402
 BACKFILL_YEAR = 2025
 ML_FEATURES_LIVE_CSV = data_pipeline.ML_FEATURES_LIVE_CSV
 
-# ถ้า True: ถ้าเจอ wd_area_basis != "static_2020" จะแค่ log warning แล้วรันต่อ (ยอมรับพื้นที่ใหม่)
+# ถ้า True: ถ้าเจอ wd_area_basis != "static_2020"/"hardcoded_2020" จะแค่ log warning แล้วรันต่อ
 # ถ้า False (ค่าเริ่มต้น, แนะนำ): หยุดทันทีให้ตรวจสอบก่อน -- ดู docstring หัวไฟล์
 ALLOW_NON_STATIC_2020_AREA = False
+
+# 2026-09-23 แก้ (หลัง user รันจริงแล้วเจอ wd_area_basis="sar_live" สัปดาห์ 1/2025 -- เครื่องนี้มีผล
+# SAR classification cache ปัจจุบัน (2026) อยู่ ซึ่ง _fetch_climate_features_step() เรียก
+# get_sar_crop_classification() แบบ "เอาผลล่าสุดตอนนี้เสมอ" ไม่ time-aware -- ทำให้สัปดาห์ปี 2025 ที่
+# กำลัง backfill ใช้พื้นที่ SAR ของปี 2026 แทน ผิดหลักการ "ไม่ look-ahead" ที่
+# _wd_find_area_source_for_date() ทำไว้ถูกต้องอยู่แล้ว (ดูฟังก์ชันนั้นใน data_pipeline.py -- สแกนหา
+# SAR result ที่ generated_at <= as_of_date เท่านั้น ซึ่งสำหรับปี 2025 จะไม่มีไฟล์ไหนผ่านเงื่อนไขเลย
+# เพราะ SAR job เริ่มรันปี 2026 ทั้งหมด -- คำตอบที่ถูกต้องคือ hardcoded_2020 เสมอสำหรับปี 2025)
+#
+# แก้โดย monkeypatch get_sar_crop_classification() ให้คืน None ชั่วคราวระหว่างสคริปต์นี้ทำงาน --
+# _wd_get_area_zone_ha() เช็ค "if not sar_result: return ... hardcoded_2020" อยู่แล้วเป็นเงื่อนไขแรก
+# (ดูโค้ดฟังก์ชันนั้น) ทำให้ผลลัพธ์เท่ากับ _wd_find_area_source_for_date() ที่ถูกต้องพอดี โดยไม่ต้อง
+# เขียน NIR/GIR ใหม่เอง (ยังใช้ _fetch_climate_features_step() เดิมทุกอย่างนอกจากจุดนี้)
+data_pipeline.get_sar_crop_classification = lambda *a, **k: None
 
 
 def iso_week_sunday(year: int, week: int) -> date:
@@ -80,9 +94,33 @@ def already_backfilled(year: int, week: int) -> set:
     return set(sub["zone"].unique())
 
 
+def _clean_bad_basis_rows():
+    """ลบแถวปี 2025 เก่าที่เผลอเขียนด้วย wd_area_basis ผิด (เช่น 'sar_live' จากก่อนแก้ monkeypatch
+    ด้านบน) ออกก่อนเริ่ม -- ไม่งั้น resume logic (already_backfilled) จะเห็นว่ามีแถวอยู่แล้วแล้วข้ามไป
+    ทั้งที่ basis ผิด"""
+    if not ML_FEATURES_LIVE_CSV.exists():
+        return
+    df = pd.read_csv(ML_FEATURES_LIVE_CSV)
+    if "wd_area_basis" not in df.columns:
+        return
+    ok_basis = {"static_2020", "hardcoded_2020"}
+    is_2025 = df["year"] == BACKFILL_YEAR
+    bad = is_2025 & ~df["wd_area_basis"].isin(ok_basis)
+    n_bad = int(bad.sum())
+    if n_bad > 0:
+        print(f"[cleanup] ลบ {n_bad} แถวปี 2025 เก่าที่ wd_area_basis ผิด (ก่อนแก้ monkeypatch SAR) "
+              f"เพื่อให้ backfill ใหม่แทนที่:")
+        print(df[bad][["zone", "year", "week", "wd_area_basis"]].to_string(index=False))
+        df = df[~bad]
+        df.to_csv(ML_FEATURES_LIVE_CSV, index=False)
+        print()
+
+
 def main():
     print(f"=== Backfill climate features ปี {BACKFILL_YEAR} เข้า {ML_FEATURES_LIVE_CSV} ===")
     print("ใช้ _fetch_climate_features_step() เดียวกับ pipeline รายวันจริง (ไม่เขียนสูตรใหม่)\n")
+
+    _clean_bad_basis_rows()
 
     n_weeks = 52
     for week in range(1, n_weeks + 1):
@@ -113,8 +151,9 @@ def main():
         # ---- ตรวจสอบ wd_area_basis ของแถวที่เพิ่งเขียน ----
         live_df = pd.read_csv(ML_FEATURES_LIVE_CSV)
         just_written = live_df[(live_df["year"] == BACKFILL_YEAR) & (live_df["week"] == week)]
+        ok_basis = {"static_2020", "hardcoded_2020"}
         bad_basis = just_written[
-            just_written.get("wd_area_basis", pd.Series(dtype=object)) != "static_2020"
+            ~just_written.get("wd_area_basis", pd.Series(dtype=object)).isin(ok_basis)
         ]
         if len(bad_basis) > 0 and not ALLOW_NON_STATIC_2020_AREA:
             print("!" * 78)

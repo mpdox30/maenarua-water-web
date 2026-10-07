@@ -1,0 +1,24 @@
+{
+  "chosen_params": {
+    "iterations": 300,
+    "depth": 2,
+    "learning_rate": 0.0121759578591452,
+    "l2_leaf_reg": 31.27438558692472,
+    "min_data_in_leaf": 25,
+    "subsample": 0.9868547519916756,
+    "rsm": 0.6502309452463372,
+    "random_strength": 1.0,
+    "loss_function": "MAE",
+    "od_type": "Iter",
+    "od_wait": 30,
+    "random_seed": 42,
+    "verbose": false
+  },
+  "h5_v2_tree_count": 64,
+  "h5_v1_tree_count": 272,
+  "tail15pct_holdout_n": 58,
+  "tail15pct_nse_v1_prod": 0.5906825433626878,
+  "tail15pct_nse_v2_new": 0.330418891348189,
+  "tail15pct_mae_v1_prod": 60674.0031407709,
+  "tail15pct_mae_v2_new": 74765.76404540296
+}

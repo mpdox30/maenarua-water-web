@@ -1,0 +1,105 @@
+{
+  "worker_script": "era5t_worker.py",
+  "run_at": "2026-09-23T06:06:30.041543Z",
+  "mode": "weekly",
+  "requested_date": null,
+  "as_of_date": "2025-05-25",
+  "dataset": "reanalysis-era5-single-levels",
+  "time_utc_used": "12:00",
+  "grib_source": "cds_live_week:['D:\\\\maenaruea-water-web\\\\01_data\\\\scripts and code\\\\pipeline\\\\era5t_output\\\\era5t_week_202505_19-25.grib']",
+  "fetch_elapsed_sec": null,
+  "grib_size_bytes": null,
+  "variables": null,
+  "valid_time": null,
+  "latitude": null,
+  "longitude": null,
+  "n_grib_datasets": null,
+  "missing_variables": null,
+  "iso_year": 2025,
+  "iso_week": 21,
+  "candidate_days": [
+    "2025-05-19",
+    "2025-05-20",
+    "2025-05-21",
+    "2025-05-22",
+    "2025-05-23",
+    "2025-05-24",
+    "2025-05-25"
+  ],
+  "n_days_in_week": 7,
+  "daily_breakdown": [
+    {
+      "ETo_mm_day": 0.5680051076486435,
+      "T_c": 28.005334472656273,
+      "RH_pct": 80.1281177571547,
+      "VPD_kPa": 0.7513766504693451,
+      "u2_ms": 1.259910960563333,
+      "Rn_MJ": -0.06999672,
+      "date": "2025-05-19"
+    },
+    {
+      "ETo_mm_day": 0.8464611747852637,
+      "T_c": 30.403497314453148,
+      "RH_pct": 72.16970062472437,
+      "VPD_kPa": 1.2084636758207834,
+      "u2_ms": 1.2767642227912475,
+      "Rn_MJ": -0.08435588,
+      "date": "2025-05-20"
+    },
+    {
+      "ETo_mm_day": 0.5367649284985314,
+      "T_c": 27.614984130859398,
+      "RH_pct": 81.39778574458363,
+      "VPD_kPa": 0.6875405818628821,
+      "u2_ms": 1.2647987296653722,
+      "Rn_MJ": -0.04042256,
+      "date": "2025-05-21"
+    },
+    {
+      "ETo_mm_day": 1.111131644658627,
+      "T_c": 30.528314208984398,
+      "RH_pct": 70.13107088894972,
+      "VPD_kPa": 1.306272466827314,
+      "u2_ms": 1.5633862205997275,
+      "Rn_MJ": -0.05441563999999999,
+      "date": "2025-05-22"
+    },
+    {
+      "ETo_mm_day": 0.45213078463044143,
+      "T_c": 29.904901123046898,
+      "RH_pct": 72.15006756850674,
+      "VPD_kPa": 1.175260298783496,
+      "u2_ms": 0.67597913636316,
+      "Rn_MJ": -0.07943364,
+      "date": "2025-05-23"
+    },
+    {
+      "ETo_mm_day": 0.04907600992157263,
+      "T_c": 27.705224609375023,
+      "RH_pct": 84.06660215378213,
+      "VPD_kPa": 0.5920111392315905,
+      "u2_ms": 0.1572621106372011,
+      "Rn_MJ": -0.04657788,
+      "date": "2025-05-24"
+    },
+    {
+      "ETo_mm_day": 0.2460814497225018,
+      "T_c": 27.261163330078148,
+      "RH_pct": 85.70108624644645,
+      "VPD_kPa": 0.517668329397666,
+      "u2_ms": 0.7703209892367773,
+      "Rn_MJ": -0.0622302,
+      "date": "2025-05-25"
+    }
+  ],
+  "ET0_mm_week": 3.8097,
+  "T_mean": 28.7748,
+  "RH_pct": 77.9635,
+  "VPD_kPa": 0.8912,
+  "u2_ms": 0.9955,
+  "Rn_MJ": -0.0625,
+  "is_rolling_estimate": false,
+  "rolling_window": null,
+  "warnings": [],
+  "fetch_error": null
+}

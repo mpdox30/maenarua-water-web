@@ -1,0 +1,18 @@
+Date range: 2025-06-27 00:00:00 to 2026-07-24 00:00:00
+Rows: 393 | Cols: 22
+Targets: ['y1=Q_in_t+1 (m3/day)', 'y2=Q_in_t+2 (m3/day)', 'y3=Q_in_t+3 (m3/day)', 'y4=Q_in_t+4 (m3/day)', 'y5=Q_in_t+5 (m3/day)', 'y6=Q_in_t+6 (m3/day)', 'y7=Q_in_t+7 (m3/day)']
+Features: ['Q_in_t (m3/day)', 'Water_Level_t (m)', 'Storage_S_t (m3)', 'DeltaS_t (m3/day)', '%Full_t', 'Rain_obs_t (mm)', 'API_t (mm)']
+Forward-filling 1 NaN value(s) in DeltaS_t (documented limitation).
+Rows used: 386 | Date range: 2025-06-27 00:00:00 to 2026-07-17 00:00:00
+Segments: wet_before=221 days | dry_window=104 days (42 zero) | wet_after=61 days
+Split sizes: train=271, val=58, test=57
+Persistence baseline (held-out test):
+ H  Baseline_NSE
+ 1      0.549735
+ 2      0.108110
+ 3     -0.386537
+ 4     -0.616198
+ 5     -0.524237
+ 6     -0.365266
+ 7     -0.195682
+=== CatBoost === (0s elapsed)

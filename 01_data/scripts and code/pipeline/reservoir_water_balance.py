@@ -49,7 +49,9 @@ FLOW_RATE_INLET_CSV = REFERENCE_DIR / "flow_rate_inlet.csv"
 FLOW_RATE_SPILLWAY_CSV = REFERENCE_DIR / "flow_rate_spillway.csv"
 
 # ปรับตาม "ตารางปล่อยน้ำ" ของแม่นาเรือ — พารามิเตอร์ weir formula จากชีต "น้ำล้นสปิลเวย์"
-SPILLWAY_LEVEL_ADJ_OFFSET_M = 0.155   # water_level (ADJ) = water_level - 0.155
+SPILLWAY_LEVEL_ADJ_OFFSET_M = 0.155   # (เลิกใช้ในสูตรใหม่ 2026-10 -- เก็บไว้อ้างอิง)
+SPILLWAY_FRICTION_CURVE_CSV = REFERENCE_DIR / "spillway_friction_curve_n017.csv"
+_spill_curve_cache = None   # water_level (ADJ) = water_level - 0.155
 SPILLWAY_CREST_LEVEL_MSL = 489.545    # Spillway_level
 SPILLWAY_WEIR_COEFFICIENT_C = 1.82
 SPILLWAY_WEIR_LENGTH_M = 30           # ความยาวสัน spillway (L) — จากสูตร Q(m3/s) = C * L * H^1.5
@@ -186,31 +188,32 @@ def _xlookup_floor(level: float, table: list[list[float]]) -> list[float]:
     return table[idx]
 
 
+def _load_spillway_friction_curve():
+    """ตาราง critical-flow + Manning friction (n=0.017): head (m) -> q ต่อความกว้าง 1 m (m2/s). เพิ่ม 2026-10 ตามนโยบายสูตรใหม่"""
+    global _spill_curve_cache
+    if _spill_curve_cache is None:
+        heads, qs = [], []
+        with open(SPILLWAY_FRICTION_CURVE_CSV, "r", encoding="utf-8") as f:
+            next(f)
+            for line in f:
+                h, q = line.strip().split(",")
+                heads.append(float(h)); qs.append(float(q))
+        _spill_curve_cache = (heads, qs)
+    return _spill_curve_cache
+
+
 def compute_spillway_overflow_m3(hourly_levels_msl: list[float]) -> float:
     """
-    คำนวณปริมาณน้ำล้นสปิลเวย์รายวัน (m3) จากระดับน้ำรายชั่วโมง (24 ค่า) — สูตร weir
-    ที่สกัดจากชีต "น้ำล้นสปิลเวย์" ของไฟล์ต้นฉบับ:
-
-        water_level_adj = water_level - 0.155
-        H = max(0, water_level_adj - 489.545)
-        Q (m3/s) = 1.82 * 30 * H^1.5
-        Q (m3/h) = Q(m3/s) * 3600
-
-    daily spill (m3) = sum(Q(m3/h) สำหรับ 24 ชั่วโมง)
-
-    ถ้ามีระดับน้ำแค่ 1 ค่า/วัน (เช่น อ่านจาก telemetry แค่ตอน 07:00 น. เหมือนชีต "บัญชีน้ำ"
-    หลัก) ให้เรียกฟังก์ชันนี้ด้วย list ที่มีค่าเดียวซ้ำ 24 ครั้ง (ประมาณว่าระดับคงที่ตลอดวัน —
-    เป็นการประมาณคร่าวๆ อาจคลาดเคลื่อนถ้าระดับน้ำเปลี่ยนเร็วในวันที่มีน้ำล้นจริง ควรใช้ระดับ
-    รายชั่วโมงจริงถ้า API โทรมาตรมีให้)
+    ปริมาณน้ำล้นสปิลเวย์รายวัน (m3) จากระดับน้ำรายชั่วโมง -- สูตรใหม่ (2026-10): critical-flow + Manning friction
+    (n=0.017) interpolate จาก spillway_friction_curve_n017.csv, offset ระดับน้ำ = 0 (ไม่หัก 0.155), L = 30 m,
+    crest 489.545 ; แต่ละค่าแทน 1 ชั่วโมง (rectangle) -- สอดคล้องกับ recompute_corrected_ledger.py
+    (สูตรเดิม weir C*L*H^1.5 + offset 0.155 ถูกแทนที่ที่นี่)
     """
-    total_m3 = 0.0
-    for level in hourly_levels_msl:
-        adj = level - SPILLWAY_LEVEL_ADJ_OFFSET_M
-        head = max(0.0, adj - SPILLWAY_CREST_LEVEL_MSL)
-        q_m3_s = SPILLWAY_WEIR_COEFFICIENT_C * SPILLWAY_WEIR_LENGTH_M * (head ** 1.5)
-        q_m3_h = q_m3_s * 3600
-        total_m3 += q_m3_h
-    return total_m3
+    import numpy as _np
+    heads, qs = _load_spillway_friction_curve()
+    head = _np.clip(_np.asarray(hourly_levels_msl, dtype=float) - SPILLWAY_CREST_LEVEL_MSL, 0.0, None)
+    q_m3_s = _np.interp(head, heads, qs) * SPILLWAY_WEIR_LENGTH_M
+    return float((q_m3_s * 3600.0).sum())
 
 
 def compute_daily_row(

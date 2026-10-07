@@ -1,0 +1,67 @@
+{
+  "worker_script": "era5t_worker.py",
+  "run_at": "2026-07-24T01:57:25.644174Z",
+  "mode": "weekly",
+  "requested_date": null,
+  "as_of_date": "2026-07-24",
+  "dataset": "reanalysis-era5-single-levels",
+  "time_utc_used": "12:00",
+  "grib_source": "cds_live_week:none + rolling:['D:\\\\maenaruea-water-web\\\\01_data\\\\scripts and code\\\\pipeline\\\\era5t_output\\\\era5t_week_202607_17-23.grib']",
+  "fetch_elapsed_sec": null,
+  "grib_size_bytes": null,
+  "variables": null,
+  "valid_time": null,
+  "latitude": null,
+  "longitude": null,
+  "n_grib_datasets": null,
+  "missing_variables": null,
+  "iso_year": 2026,
+  "iso_week": 30,
+  "candidate_days": [
+    "2026-07-20",
+    "2026-07-21",
+    "2026-07-22",
+    "2026-07-23"
+  ],
+  "n_days_in_week": 2,
+  "daily_breakdown": [
+    {
+      "ETo_mm_day": 0.2629323293186411,
+      "T_c": 25.481469726562523,
+      "RH_pct": 89.00159891895612,
+      "VPD_kPa": 0.3585225859180876,
+      "u2_ms": 1.101348519665694,
+      "Rn_MJ": -0.0388604,
+      "date": "2026-07-17"
+    },
+    {
+      "ETo_mm_day": 0.15540008933144672,
+      "T_c": 25.683801269531273,
+      "RH_pct": 89.44297503006524,
+      "VPD_kPa": 0.34828873978286,
+      "u2_ms": 0.697008782674373,
+      "Rn_MJ": -0.05886716,
+      "date": "2026-07-18"
+    }
+  ],
+  "ET0_mm_week": 0.4183,
+  "T_mean": 25.5826,
+  "RH_pct": 89.2223,
+  "VPD_kPa": 0.3534,
+  "u2_ms": 0.8992,
+  "Rn_MJ": -0.0489,
+  "is_rolling_estimate": true,
+  "rolling_window": {
+    "start": "2026-07-17",
+    "end": "2026-07-23"
+  },
+  "warnings": [
+    "ดึงข้อมูลวัน [datetime.date(2026, 7, 20), datetime.date(2026, 7, 21), datetime.date(2026, 7, 22), datetime.date(2026, 7, 23)] ไม่สำเร็จ (HTTPError: 400 Client Error: Bad Request for url: https://cds.climate.copernicus.eu/api/retrieve/v1/processes/reanalysis-era5-single-levels/execution\ninvalid request\nNone of the data you have requested is available yet, please revise the period requested. The latest date available for this dataset is: 2026-07-19 01:00) — ตัดวันล่าสุด (2026-07-23) ออกแล้วลองใหม่ (อาจเป็นเพราะ ERA5T ยังไม่ปล่อยข้อมูล ของวันนั้นจริงๆ)",
+    "ดึงข้อมูลวัน [datetime.date(2026, 7, 20), datetime.date(2026, 7, 21), datetime.date(2026, 7, 22)] ไม่สำเร็จ (HTTPError: 400 Client Error: Bad Request for url: https://cds.climate.copernicus.eu/api/retrieve/v1/processes/reanalysis-era5-single-levels/execution\ninvalid request\nNone of the data you have requested is available yet, please revise the period requested. The latest date available for this dataset is: 2026-07-19 01:00) — ตัดวันล่าสุด (2026-07-22) ออกแล้วลองใหม่ (อาจเป็นเพราะ ERA5T ยังไม่ปล่อยข้อมูล ของวันนั้นจริงๆ)",
+    "ดึงข้อมูลวัน [datetime.date(2026, 7, 20), datetime.date(2026, 7, 21)] ไม่สำเร็จ (HTTPError: 400 Client Error: Bad Request for url: https://cds.climate.copernicus.eu/api/retrieve/v1/processes/reanalysis-era5-single-levels/execution\ninvalid request\nNone of the data you have requested is available yet, please revise the period requested. The latest date available for this dataset is: 2026-07-19 01:00) — ตัดวันล่าสุด (2026-07-21) ออกแล้วลองใหม่ (อาจเป็นเพราะ ERA5T ยังไม่ปล่อยข้อมูล ของวันนั้นจริงๆ)",
+    "ดึงข้อมูลวัน [datetime.date(2026, 7, 20)] ไม่สำเร็จ (HTTPError: 400 Client Error: Bad Request for url: https://cds.climate.copernicus.eu/api/retrieve/v1/processes/reanalysis-era5-single-levels/execution\ninvalid request\nNone of the data you have requested is available yet, please revise the period requested. The latest date available for this dataset is: 2026-07-19 01:00) — ตัดวันล่าสุด (2026-07-20) ออกแล้วลองใหม่ (อาจเป็นเพราะ ERA5T ยังไม่ปล่อยข้อมูล ของวันนั้นจริงๆ)",
+    "ไม่สามารถดึงข้อมูลของกลุ่มวัน [datetime.date(2026, 7, 20), datetime.date(2026, 7, 21), datetime.date(2026, 7, 22), datetime.date(2026, 7, 23)] ได้เลยแม้แต่วันเดียว",
+    "สัปดาห์ปฏิทิน ISO (2026-W30) ไม่มีข้อมูล จริงเลยสักวัน — ใช้ rolling 7-day window แทน (2026-07-17 ถึง 2026-07-23, 2 วันที่มีข้อมูลจริงในช่วงนั้น) เป็นค่าประมาณการ (is_rolling_estimate=true — ไม่ใช่ผลรวมของสัปดาห์ปฏิทินจริง ห้ามป้อนเข้าโมเดลตรงๆ)"
+  ],
+  "fetch_error": null
+}

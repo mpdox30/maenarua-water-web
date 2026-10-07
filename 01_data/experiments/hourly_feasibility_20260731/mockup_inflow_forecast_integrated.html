@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>[MOCKUP] พยากรณ์น้ำไหลลงอ่าง | ตำบลแม่นาเรือ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  /* ===== CSS ก็อปมาจาก 03_website/inflow-forecast.html ตรงตัว (ของจริง ไม่แก้) ===== */
+  :root {
+    --bg-950: #06161c; --bg-900: #081e26; --bg-800: #0d2a34; --bg-700: #123643;
+    --surface: rgba(255,255,255,0.045); --surface-hover: rgba(255,255,255,0.075);
+    --border: rgba(157,201,201,0.16); --border-strong: rgba(157,201,201,0.32);
+    --teal-300: #7fe0d1; --teal-400: #45c2ad; --teal-500: #2a9d8f; --teal-glow: rgba(69,194,173,0.35);
+    --amber-400: #e0a94f; --amber-300: #f0c47c;
+    --text-100: #eef6f4; --text-300: #c4d6d3; --text-500: #8aa3a0; --text-600: #66807d;
+    --radius-lg: 18px; --radius-md: 12px; --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: radial-gradient(ellipse 1200px 700px at 15% -10%, #103743 0%, transparent 60%),
+                radial-gradient(ellipse 900px 600px at 100% 10%, #0e2f2a 0%, transparent 55%),
+                var(--bg-950);
+    color: var(--text-300); font-family: "IBM Plex Sans Thai", "Sarabun", sans-serif; line-height: 1.65; -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 { font-family: "Noto Serif Thai", "Space Grotesk", serif; color: var(--text-100); font-weight: 600; letter-spacing: 0.01em; margin: 0; }
+  a { color: inherit; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: "Space Grotesk", "IBM Plex Sans Thai", sans-serif; font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--teal-300); font-weight: 600; }
+  .eyebrow::before { content: ""; width: 16px; height: 1px; background: var(--teal-400); display: inline-block; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 40px; }
+
+  header.site-header { position: sticky; top: 0; z-index: 40; background: rgba(6,22,28,0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+  .header-inner { max-width: 1240px; margin: 0 auto; padding: 16px 40px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; flex: 1 1 auto; min-width: 0; }
+  .brand-mark { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 35% 30%, rgba(127,224,209,0.35), transparent 70%); flex: none; }
+  .brand-mark svg { width: 18px; height: 18px; }
+  .brand-text-th { font-family: "Noto Serif Thai", serif; font-size: 14px; color: var(--text-100); font-weight: 600; line-height: 1.35; max-width: 320px; }
+  .brand-text-en { font-family: "Space Grotesk", sans-serif; font-size: 10px; letter-spacing: 0.06em; color: var(--text-500); margin-top: 2px; }
+  nav.main-nav { flex: none; display: flex; gap: 28px; align-items: center; }
+  nav.main-nav a { text-decoration: none; font-size: 13.5px; color: var(--text-500); font-weight: 500; padding: 6px 2px; border-bottom: 1px solid transparent; }
+  nav.main-nav a.current { color: var(--text-100); border-color: var(--amber-400); }
+  @media (max-width: 980px){ nav.main-nav{ display:none; } }
+
+  .status-bar { border-bottom: 1px solid var(--border); background: linear-gradient(90deg, rgba(224,169,79,0.08), transparent 60%); }
+  .status-bar-inner { max-width: 1240px; margin: 0 auto; padding: 10px 40px; display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--amber-300); flex-wrap: wrap; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber-400); box-shadow: 0 0 0 4px rgba(224,169,79,0.18); flex: none; }
+
+  .page-hero { padding: 56px 0 40px; }
+  .page-hero h1 { font-size: 32px; line-height: 1.3; margin: 14px 0 16px; max-width: 720px; }
+  .page-hero p.lead { color: var(--text-500); font-size: 14.5px; max-width: 680px; margin: 0 0 22px; }
+  .hero-tags { display: flex; gap: 10px; flex-wrap: wrap; }
+  .tag { display: inline-flex; align-items: center; gap: 7px; background: var(--surface); border: 1px solid var(--border); color: var(--text-300); font-size: 12px; padding: 7px 14px; border-radius: 999px; font-weight: 500; }
+  .tag .dot { width: 7px; height: 7px; border-radius: 50%; }
+
+  section.section { padding: 48px 0; border-top: 1px solid var(--border); }
+  .section-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 32px; flex-wrap: wrap; }
+  .section-head h2 { font-size: 23px; margin-top: 8px; }
+  .section-head p { color: var(--text-500); font-size: 13.5px; max-width: 480px; margin: 8px 0 0; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px 20px; position: relative; overflow: hidden; }
+  .kpi-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(69,194,173,0.12); border: 1px solid rgba(69,194,173,0.28); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 16px; }
+  .kpi-card.accent-amber .kpi-icon { background: rgba(224,169,79,0.12); border-color: rgba(224,169,79,0.32); }
+  .kpi-label { font-size: 12px; color: var(--text-500); margin-bottom: 8px; font-weight: 500; }
+  .kpi-value { font-family: "Space Grotesk", sans-serif; font-size: 27px; font-weight: 600; color: var(--text-100); }
+  .kpi-unit { font-size: 12px; color: var(--text-500); margin-left: 5px; font-weight: 400; }
+  .kpi-note { font-size: 11.5px; color: var(--text-600); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; }
+  .chart-legend { display: flex; gap: 18px; margin-top: 16px; font-size: 12px; color: var(--text-500); flex-wrap: wrap; }
+  .legend-dot { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 7px; vertical-align: middle; }
+  .chart-wrap { position: relative; height: 300px; }
+
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.data-table th, table.data-table td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+  table.data-table th { color: var(--text-500); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.04em; }
+  table.data-table td { color: var(--text-300); }
+  table.data-table td.hl { color: var(--teal-300); font-weight: 600; }
+  .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 8px 20px; overflow-x: auto; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
+  .badge-ok { background: rgba(69,194,173,0.14); color: var(--teal-300); border: 1px solid rgba(69,194,173,0.35); }
+  .badge-low { background: rgba(224,169,79,0.16); color: var(--amber-300); border: 1px solid rgba(224,169,79,0.42); }
+
+  .disclaimer-box { margin-top: 22px; padding: 18px 22px; border-radius: var(--radius-md); background: rgba(224,169,79,0.06); border: 1px solid rgba(224,169,79,0.26); }
+  .disclaimer-box h4 { font-size: 13px; color: var(--amber-300); margin-bottom: 10px; font-weight: 600; }
+  .disclaimer-box ul { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--text-500); }
+  .disclaimer-box li { margin-bottom: 6px; }
+
+  .method-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .method-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; }
+  .method-card .step { font-family: "Space Grotesk", sans-serif; font-size: 11px; color: var(--teal-300); font-weight: 600; letter-spacing: 0.08em; margin-bottom: 10px; }
+  .method-card h5 { font-size: 14.5px; color: var(--text-100); font-weight: 600; margin-bottom: 8px; }
+  .method-card p { font-size: 12.5px; color: var(--text-500); margin: 0; }
+
+  .cross-check-note { margin-top: 14px; padding: 12px 16px; border-radius: var(--radius-sm); background: rgba(69,194,173,0.07); border: 1px solid rgba(69,194,173,0.24); font-size: 12px; color: var(--text-300); }
+
+  .access-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .access-card { border-radius: var(--radius-md); padding: 20px; border: 1px solid var(--border); background: var(--surface); border-top: 3px solid var(--teal-400); }
+  .access-card.restricted { border-top-color: var(--amber-400); }
+  .access-card h5 { margin: 0 0 10px; font-size: 13.5px; color: var(--text-100); font-weight: 600; }
+  .access-card p { margin: 0; font-size: 12.3px; color: var(--text-500); }
+
+  footer.site-footer { border-top: 1px solid var(--border); padding: 32px 0 40px; }
+  .footer-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+  .footer-inner p { margin: 0; font-size: 12px; color: var(--text-600); }
+
+  @media (max-width: 980px) {
+    .wrap, .header-inner, .status-bar-inner { padding-left: 24px; padding-right: 24px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .method-grid, .access-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .page-hero h1 { font-size: 25px; }
+    .kpi-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ===== ส่วนที่เพิ่มใหม่: การ์ด "น้ำไหลเข้าอ่างสุทธิ" ที่ปรับปรุงตามข้อ 1-4 ===== */
+  .primary-inflow-panel{
+    background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-lg);
+    padding: 26px 28px 22px; margin-bottom: 20px;
+  }
+  .pip-head{ display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap; justify-content:space-between; }
+  .pip-left{ display:flex; gap:14px; align-items:flex-start; }
+  .pip-label-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .pip-label{ font-size:12.5px; color: var(--text-500); }
+  .info-dot{
+    width:16px;height:16px;border-radius:50%; background: rgba(69,194,173,0.16); color:var(--teal-300);
+    border:1px solid rgba(69,194,173,0.4); font-size:10.5px; font-weight:700; display:inline-flex;
+    align-items:center; justify-content:center; cursor:help; position:relative; flex:0 0 auto;
+  }
+  .info-dot .tip{
+    display:none; position:absolute; top:22px; left:0; width:300px; z-index:6;
+    background:#0f2f38; border:1px solid var(--border-strong); border-radius: var(--radius-sm);
+    padding:12px 14px; font-size:12px; line-height:1.7; color: var(--text-300);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+  }
+  .info-dot:hover .tip{ display:block; }
+  .pip-value{ font-family:"Space Grotesk",sans-serif; font-size:34px; font-weight:600; color: var(--text-100); margin-top:6px;}
+
+  .context-row{ display:flex; gap:10px; flex-wrap:wrap; margin:18px 0; }
+  .chip{
+    display:flex; align-items:center; gap:7px; font-size:12px; color: var(--text-300);
+    background: rgba(255,255,255,0.04); border:1px solid var(--border); border-radius: 999px; padding:7px 13px;
+  }
+  .chip b{ color: var(--text-100); font-family:"Space Grotesk",sans-serif; font-weight:600; }
+  .chip.amber{ border-color: rgba(224,169,79,0.35); background: rgba(224,169,79,0.08); }
+  .chip.amber b{ color: var(--amber-300); }
+
+  .pip-body{ display:grid; grid-template-columns: 1.3fr 1fr; gap:18px; }
+  @media (max-width: 900px){ .pip-body{ grid-template-columns:1fr; } }
+
+  .spark-wrap{ background: rgba(255,255,255,0.03); border:1px solid var(--border); border-radius: var(--radius-md); padding:16px 16px 10px; }
+  .spark-title{ font-size:11.5px; color: var(--text-500); margin-bottom:10px; display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;}
+  svg.spark{ width:100%; height:100px; display:block; overflow:visible; }
+  .spark-caption{ font-size:11px; color: var(--text-600); margin-top:8px; }
+
+  .est-box{ background: rgba(224,169,79,0.08); border:1px solid rgba(224,169,79,0.28); border-radius: var(--radius-md); padding:14px 16px; display:flex; flex-direction:column; justify-content:space-between; }
+  .est-box .dtitle{ font-size:12px; color: var(--amber-300); font-weight:600; margin-bottom:4px;}
+  .est-box .dvalue{ font-family:"Space Grotesk",sans-serif; font-size:24px; color: var(--text-100); font-weight:600;}
+  .est-box .dnote{ font-size:11px; color: var(--text-600); margin-top:10px; line-height:1.6;}
+
+  .signal-badge{
+    display:inline-flex; align-items:center; gap:6px; font-size:11.5px; color: var(--teal-300);
+    background: rgba(69,194,173,0.10); border:1px solid rgba(69,194,173,0.3); border-radius:999px;
+    padding:5px 12px; margin-top:16px;
+  }
+
+  .mockup-ribbon{
+    position:sticky; top:0; z-index:50; background:#7a4a00; color:#fff2d9; text-align:center;
+    font-size:12.5px; padding:7px 12px; font-family:"IBM Plex Sans Thai",sans-serif; letter-spacing:.02em;
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup-ribbon">🧪 นี่คือไฟล์ mockup สำหรับพิจารณาเท่านั้น — ไม่ใช่หน้าเว็บจริง ไม่ได้แก้ไข inflow-forecast.html บน production</div>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="#">
+      <span class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 5 11 5 15.5C5 19.09 8.13 22 12 22C15.87 22 19 19.09 19 15.5C19 11 12 2 12 2Z" stroke="#7fe0d1" stroke-width="1.4"/></svg>
+      </span>
+      <span>
+        <div class="brand-text-th">ข้อมูลประกอบการตัดสินใจเพื่อการบริหารจัดการน้ำ ตำบลแม่นาเรือ</div>
+        <div class="brand-text-en">Decision support data for water management<br>Mae Na Rua Subdistrict</div>
+      </span>
+    </a>
+    <nav class="main-nav">
+      <a href="#">หน้าแรก</a>
+      <a href="#">สถานการณ์น้ำ</a>
+      <a href="#" class="current">คาดการณ์น้ำไหลลงอ่าง</a>
+      <a href="#">คาดการณ์ความต้องการใช้น้ำ</a>
+      <a href="#">คาดการณ์น้ำท่วม</a>
+      <a href="#">ดาวน์โหลดเอกสาร</a>
+    </nav>
+  </div>
+</header>
+
+<div class="status-bar">
+  <div class="status-bar-inner">
+    <span class="status-dot"></span>
+    <strong>สถานะข้อมูล:</strong>
+    <span>โหลดข้อมูลพยากรณ์สำเร็จ — ข้อมูล ณ วันที่ 2026-07-31</span>
+  </div>
+</div>
+
+<main>
+  <section class="page-hero">
+    <div class="wrap">
+      <div class="eyebrow">Direct Regression (CatBoost) · ผลพยากรณ์ล่าสุดจาก Pipeline</div>
+      <h1>พยากรณ์ปริมาณน้ำไหลลงอ่างเก็บน้ำแม่นาเรือ</h1>
+      <p class="lead">
+        พยากรณ์ปริมาณน้ำไหลลงอ่าง (Q_in) ล่วงหน้า 1–7 วัน ด้วยโมเดล CatBoost ถดถอยค่าโดยตรง
+        (direct delta regression) — อัปเดตทุกครั้งที่ pipeline รัน
+      </p>
+      <div class="hero-tags">
+        <span class="tag"><span class="dot" style="background:var(--teal-400)"></span>ข้อมูล ณ วันที่ 2026-07-31</span>
+        <span class="tag"><span class="dot" style="background:var(--amber-400)"></span>อ่างเก็บน้ำ: อ่างเก็บน้ำแม่นาเรือ (Mae Na Rua Reservoir)</span>
+        <span class="tag"><span class="dot" style="background:#6fcf97"></span>ที่มาข้อมูล: ข้อมูลสด จากไฟล์บัญชีน้ำรายเดือนของอ่างเก็บน้ำ</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">ผลลัพธ์ที่ Horizon = 1 วัน</div>
+          <h2>ตัวชี้วัดของโมเดลที่ดีที่สุด (CatBoost)</h2>
+        </div>
+        <p>ความแม่นยำสูงสุดที่การพยากรณ์ล่วงหน้า 1 วัน และลดลงตามระยะเวลาพยากรณ์ที่เพิ่มขึ้น</p>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- ส่วนที่เปลี่ยน: การ์ด "น้ำไหลเข้ารวม (Q_in) ปัจจุบัน" เดิม (1 ใน 4 การ์ดเล็ก) -->
+      <!-- ย้ายมาเป็นพาแนลเต็มความกว้าง อยู่บนสุด เพราะเป็นเลขที่คนเข้าใจผิดบ่อยที่สุด        -->
+      <!-- การ์ดอีก 3 ใบ (พยากรณ์ H1 / อ่าง-ที่มาข้อมูล / horizon ความเชื่อมั่นต่ำ) เหมือนเดิม  -->
+      <!-- แค่ย้ายไปอยู่แถวข้างล่าง (3 คอลัมน์ แทน 4)                                          -->
+      <!-- ===================================================================== -->
+
+      <div class="primary-inflow-panel">
+        <div class="pip-head">
+          <div class="pip-left">
+            <div class="kpi-icon">💧</div>
+            <div>
+              <div class="pip-label-row">
+                <span class="pip-label">น้ำไหลเข้าอ่างสุทธิ (07:00 เมื่อวาน → 07:00 วันนี้)</span>
+                <span class="info-dot">i
+                  <span class="tip">
+                    คำนวณจากการเปลี่ยนแปลงระดับน้ำสุทธิระหว่างรอบ 07:00 ถึง 07:00 ถัดไป — ถ้าน้ำที่ไหลเข้า
+                    ระหว่างวันถูกระบายออกไปหมดก่อนถึงรอบคำนวณ ตัวเลขนี้จะแสดงใกล้ 0 ได้ แม้จะมีฝนตกและ
+                    ระดับน้ำขึ้นจริงในช่วงเวลานั้น (ดูรายละเอียดในกราฟระดับน้ำด้านล่าง)
+                  </span>
+                </span>
+              </div>
+              <div class="pip-value">0.00<span class="kpi-unit">ม³/วัน</span></div>
+            </div>
+          </div>
+          <span class="badge badge-ok" style="margin-top:4px;">🔵 มีสัญญาณน้ำไหลเข้าระหว่างวัน</span>
+        </div>
+
+        <!-- ITEM 2: breakdown chips -->
+        <div class="context-row">
+          <div class="chip amber">🌧️ ฝนสะสม <b>52.2 มม.</b> (29–30 ก.ค., ก่อนหน้ารอบนี้)</div>
+          <div class="chip">📈 ระดับน้ำขึ้นสูงสุดระหว่างวัน <b>+4.9 ซม.</b> (13:00–14:00)</div>
+          <div class="chip">↩️ ลดกลับใกล้ระดับเดิมก่อนรอบคำนวณถัดไป</div>
+        </div>
+
+        <div class="pip-body">
+          <!-- ITEM 3: sparkline -->
+          <div class="spark-wrap">
+            <div class="spark-title"><span>ระดับน้ำรายชั่วโมง — 30 ก.ค. 07:00 ถึง 31 ก.ค. 08:00</span><span>ข้อมูลจริง (telemetry)</span></div>
+            <svg class="spark" viewBox="0 0 640 100" preserveAspectRatio="none">
+              <line x1="8" y1="45" x2="632" y2="45" stroke="rgba(157,201,201,0.25)" stroke-width="1" stroke-dasharray="4,4"/>
+              <polyline points="8.0,45.0 33.0,40.7 57.9,40.7 82.9,32.2 107.8,37.1 132.8,36.5 157.8,15.0 182.7,10.9 207.7,36.5 232.6,50.3 257.6,50.3 282.6,58.6 307.5,62.7 332.5,66.8 357.4,66.8 382.4,71.7 407.4,76.6 432.3,71.7 457.3,75.9 482.2,76.6 507.2,80.8 532.2,80.8 557.1,85.6 582.1,89.1 607.0,85.6 632.0,76.6"
+                fill="none" stroke="#45c2ad" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+              <circle cx="182.7" cy="10.9" r="4.5" fill="#e0a94f" stroke="#0d2a34" stroke-width="1.5"/>
+              <text x="182.7" y="4" font-size="10" fill="#f0c47c" text-anchor="middle" font-family="IBM Plex Sans Thai, sans-serif">จุดสูงสุด 14:00</text>
+              <circle cx="8.0" cy="45.0" r="3.5" fill="#45c2ad"/>
+              <circle cx="632.0" cy="76.6" r="3.5" fill="#7fe0d1"/>
+              <text x="8" y="96" font-size="9.5" fill="#66807d" font-family="IBM Plex Sans Thai, sans-serif">07:00 (30 ก.ค.)</text>
+              <text x="632" y="96" font-size="9.5" fill="#66807d" text-anchor="end" font-family="IBM Plex Sans Thai, sans-serif">08:00 (31 ก.ค.)</text>
+            </svg>
+            <div class="spark-caption">น้ำขึ้นจริงตอนกลางวัน (488.20→488.25 ม.) ก่อนไหลกลับลงมาใกล้จุดเริ่มต้น</div>
+          </div>
+
+          <!-- ITEM 4: display-only finer-resolution estimate -->
+          <div class="est-box">
+            <div>
+              <div class="dtitle">⏱️ ประมาณการน้ำไหลเข้าสูงสุดในช่วง 6 ชม.</div>
+              <div class="dvalue">14,052<span class="kpi-unit">ลบ.ม.</span></div>
+            </div>
+            <div class="dnote">
+              *คำนวณเสริมเพื่อการแสดงผล จาก water-balance เดิมที่ resolution ละเอียดขึ้น —
+              <b style="color:var(--text-300)">ไม่ใช่ตัวเลขที่โมเดลพยากรณ์ใช้จริง</b>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- การ์ดเดิมอีก 3 ใบ (ไม่เปลี่ยน แค่ปรับเหลือ 3 คอลัมน์) -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon">🔮</div>
+          <div class="kpi-label">พยากรณ์น้ำไหลเข้ารวม (ล่วงหน้า 1 วัน)</div>
+          <div class="kpi-value">3,938.05<span class="kpi-unit">ม³/วัน</span></div>
+          <div class="kpi-note">CatBoost · NSE (walk-forward CV) 0.422</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">🏞️</div>
+          <div class="kpi-label">อ่างเก็บน้ำ / ที่มาข้อมูล</div>
+          <div class="kpi-value" style="font-size:16px;">อ่างเก็บน้ำแม่นาเรือ</div>
+          <div class="kpi-note">ข้อมูลสด จากไฟล์บัญชีน้ำรายเดือนของอ่างเก็บน้ำ</div>
+        </div>
+        <div class="kpi-card accent-amber">
+          <div class="kpi-icon">⚠️</div>
+          <div class="kpi-label">Horizon ความเชื่อมั่นต่ำ</div>
+          <div class="kpi-value">5 / 7</div>
+          <div class="kpi-note">NSE ติดลบบนชุดทดสอบ — ดูคำเตือนใต้กราฟก่อนใช้งานจริง</div>
+        </div>
+      </div>
+
+      <div class="cross-check-note">
+        ℹ️ <strong>Q_in</strong> คำนวณจากสมการสมดุลมวลน้ำของอ่าง (ΔStorage บวกกลับด้วยปริมาณที่ปล่อย/ล้น/ระเหย/ซึม แล้วหักน้ำฝนที่ตกลงอ่างตรง) —
+        เป็นค่าสุทธิของรอบ 07:00–07:00 ดูรายละเอียดวันนี้ได้ในพาแนลด้านบน หรือดูน้ำท่าประมาณการจากแบบจำลองฝน-น้ำท่า WMB
+        (อิสระจากค่านี้) ในหัวข้อ "ภาพรวมน้ำท่าไหลลงอ่างเก็บน้ำ" ด้านล่าง
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">ผลพยากรณ์ล่าสุด</div>
+          <h2>ปริมาณน้ำไหลลงอ่าง ล่วงหน้า 1–7 วัน</h2>
+        </div>
+        <p>เส้นทึบสีเขียว = ความเชื่อมั่นปกติ · เส้นประสีเหลืองอำพัน/จุดสี่เหลี่ยม = horizon ที่ NSE ติดลบบนชุดทดสอบ (ความเชื่อมั่นต่ำ)</p>
+      </div>
+      <div class="chart-card">
+        <div class="chart-wrap"><canvas id="inflowChart"></canvas></div>
+        <div class="chart-legend">
+          <span><span class="legend-dot" style="background:#45c2ad"></span>ความเชื่อมั่นปกติ</span>
+          <span><span class="legend-dot" style="background:#e0a94f"></span>ความเชื่อมั่นต่ำ (เส้นประ)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">รายละเอียดต่อ Horizon</div>
+          <h2>ค่าพยากรณ์และความเชื่อมั่นรายวัน</h2>
+        </div>
+      </div>
+      <div class="table-card">
+        <table class="data-table">
+          <thead><tr><th>Horizon</th><th>พยากรณ์ (ม³/วัน)</th><th>โมเดล</th><th>NSE (walk-forward CV)</th><th>ความเชื่อมั่น</th></tr></thead>
+          <tbody id="horizonTableBody"></tbody>
+        </table>
+      </div>
+      <div class="disclaimer-box">
+        <h4>⚠ ข้อจำกัดของโมเดล</h4>
+        <ul>
+          <li>Test set มีแค่ 57 แถว (single chronological split) — test_nse ต่อ horizon จึงมี noise สูง</li>
+          <li>walkforward_cv_nse ยังติดลบที่ H3-H7 — ควรระวังเป็นพิเศษที่ H5-H7</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">WMB Model · น้ำท่า 5 อ่าง</div>
+          <h2>ภาพรวมน้ำท่าไหลลงอ่างเก็บน้ำ ตำบลแม่นาเรือและบ้านตุ่น</h2>
+        </div>
+        <p>ประมาณการน้ำท่าจากแบบจำลองฝน-น้ำท่า WMB รายวัน — คนละแหล่งข้อมูล/วิธีคำนวณกับ Q_in ด้านบน ใช้เป็นข้อมูลอ้างอิงไขว้ (cross-check) ได้
+          (*ข้อมูลตัวอย่างในกราฟนี้เป็นค่าจำลองสำหรับ mockup เท่านั้น)</p>
+      </div>
+      <div class="chart-card">
+        <div class="chart-wrap"><canvas id="resOverviewChart"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div><div class="eyebrow">ระเบียบวิธี</div><h2>แนวทางการพยากรณ์</h2></div>
+      </div>
+      <div class="method-grid">
+        <div class="method-card">
+          <div class="step">MULTI-MODEL</div>
+          <h5>เปรียบเทียบ 3 โมเดล</h5>
+          <p>CatBoost, LightGBM, XGBoost เทรนแยกทุก horizon (1–7 วัน) ด้วย chronological split และปรับ hyperparameter ผ่าน cross-validation</p>
+        </div>
+        <div class="method-card">
+          <div class="step">LAG + ROLLING-RAIN FEATURES</div>
+          <h5>Direct regression</h5>
+          <p>เพิ่มฟีเจอร์ Q_in ย้อนหลัง 1-2 วัน และฝนสะสมย้อนหลัง 3/5/7 วัน</p>
+        </div>
+        <div class="method-card">
+          <div class="step">SHAP ANALYSIS</div>
+          <h5>ปัจจัยที่มีอิทธิพลสูงสุด</h5>
+          <p>ระดับน้ำปัจจุบัน (Water_Level_t) และ %ความจุอ่าง (%Full_t) เป็นปัจจัยสำคัญที่สุด</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head"><div><div class="eyebrow">การเข้าถึงข้อมูล</div><h2>ข้อมูลเพิ่มเติมสำหรับนักวิจัย</h2></div></div>
+      <div class="access-grid">
+        <div class="access-card"><h5>🟢 สาธารณะ (หน้านี้)</h5><p>สรุปตัวชี้วัดความแม่นยำ ตารางเปรียบเทียบโมเดล และปัจจัยสำคัญจาก SHAP โดยสรุป</p></div>
+        <div class="access-card restricted"><h5>🟡 จำกัดสิทธิ์ (นักวิจัย/หน่วยงาน)</h5><p>Training values แบบเต็ม, tuned hyperparameters, cv stability diagnostics</p></div>
+        <div class="access-card"><h5>⚪ เฉพาะทีมโครงการ</h5><p>Diagnostics แบบละเอียด และบันทึกการทดลองที่ยังไม่สรุปผล</p></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div>
+      <div class="brand-text-th">ข้อมูลประกอบการตัดสินใจเพื่อการบริหารจัดการน้ำ ตำบลแม่นาเรือ</div>
+      <p style="margin-top:4px;">School of ICT มหาวิทยาลัยพะเยา ร่วมกับ Hydro-Informatics Institute (HII)</p>
+    </div>
+    <p>อัปเดตล่าสุดเมื่อ 31 กรกฎาคม 2569, 07:35 น. <em style="color:var(--text-600)">(ตัวอย่างสำหรับ mockup)</em></p>
+  </div>
+</footer>
+
+<script>
+// ===== ข้อมูลสถิตย์ตัวอย่างสำหรับ mockup (ไม่ fetch จาก latest.json จริง) =====
+const horizonData = [
+  {h:1, pred:3938.05, model:'CatBoost', nse:0.4216, low:false},
+  {h:2, pred:2140.70, model:'CatBoost', nse:0.2559, low:false},
+  {h:3, pred:1580.20, model:'CatBoost', nse:-0.0649, low:true},
+  {h:4, pred:1120.40, model:'CatBoost', nse:-0.2526, low:true},
+  {h:5, pred:905.10, model:'CatBoost', nse:-0.2920, low:true},
+  {h:6, pred:770.60, model:'CatBoost', nse:-0.3724, low:true},
+  {h:7, pred:640.30, model:'CatBoost', nse:-0.5808, low:true},
+];
+
+document.getElementById('horizonTableBody').innerHTML = horizonData.map(h => `
+  <tr>
+    <td>ล่วงหน้า ${h.h} วัน</td>
+    <td class="hl">${h.pred.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+    <td>${h.model}</td>
+    <td>${h.nse.toFixed(3)}</td>
+    <td>${h.low ? '<span class="badge badge-low">⚠ ความเชื่อมั่นต่ำ</span>' : '<span class="badge badge-ok">ปกติ</span>'}</td>
+  </tr>`).join('');
+
+new Chart(document.getElementById('inflowChart').getContext('2d'), {
+  type: 'line',
+  data: {
+    labels: horizonData.map(h => 'ล่วงหน้า ' + h.h + ' วัน'),
+    datasets: [{
+      label: 'พยากรณ์ Q_in (ม³/วัน)',
+      data: horizonData.map(h => h.pred),
+      borderColor: '#45c2ad', backgroundColor: '#45c2ad', borderWidth: 2, tension: 0.25,
+      pointRadius: horizonData.map(h => h.low ? 6 : 4),
+      pointStyle: horizonData.map(h => h.low ? 'rectRot' : 'circle'),
+      pointBackgroundColor: horizonData.map(h => h.low ? 'rgba(224,169,79,0.9)' : '#45c2ad'),
+      pointBorderColor: horizonData.map(h => h.low ? '#e0a94f' : '#2a9d8f'),
+      segment: {
+        borderDash: ctx => (horizonData[ctx.p0DataIndex].low || horizonData[ctx.p1DataIndex].low) ? [6,4] : undefined,
+        borderColor: ctx => (horizonData[ctx.p0DataIndex].low || horizonData[ctx.p1DataIndex].low) ? 'rgba(224,169,79,0.7)' : '#45c2ad',
+      },
+    }],
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: '#8aa3a0', font: { size: 10 } }, grid: { color: 'rgba(157,201,201,0.08)' } },
+      y: { ticks: { color: '#8aa3a0', font: { size: 10 } }, grid: { color: 'rgba(157,201,201,0.08)' } },
+    },
+  },
+});
+
+// WMB overview -- ข้อมูลจำลองสำหรับ mockup เท่านั้น (14 วันล่าสุด)
+const wmbLabels = Array.from({length:14}, (_,i)=>{
+  const d = new Date(2026,6,18+i); return (d.getMonth()+1)+'/'+d.getDate();
+});
+const wmbSeries = {
+  'แม่นาเรือ': [0.02,0.01,0.03,0.15,0.42,0.38,0.20,0.10,0.05,0.03,0.02,0.01,0.14,0.09],
+  'ห้วยธรรม': [0.01,0.01,0.02,0.10,0.28,0.25,0.14,0.07,0.03,0.02,0.01,0.01,0.09,0.06],
+  'ส้อ': [0.00,0.01,0.01,0.06,0.18,0.16,0.09,0.04,0.02,0.01,0.01,0.01,0.05,0.04],
+  'แคท': [0.00,0.00,0.01,0.04,0.12,0.11,0.06,0.03,0.01,0.01,0.00,0.00,0.03,0.02],
+  'ชำทำ': [0.00,0.00,0.01,0.03,0.09,0.08,0.04,0.02,0.01,0.00,0.00,0.00,0.02,0.02],
+};
+new Chart(document.getElementById('resOverviewChart').getContext('2d'), {
+  type: 'line',
+  data: {
+    labels: wmbLabels,
+    datasets: Object.entries(wmbSeries).map(([name, data], i) => ({
+      label: name, data, borderWidth: 1.3, pointRadius: 0, tension: 0.2,
+      borderColor: ['#45c2ad','#e0a94f','#7fa8e0','#c98be0','#e0839c'][i],
+    })),
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: { legend: { display: true, position:'bottom', labels:{ color:'#8aa3a0', font:{size:11} } } },
+    scales: {
+      x: { ticks: { color: '#8aa3a0', font: { size: 10 }, maxTicksLimit: 10 }, grid: { color: 'rgba(157,201,201,0.06)' } },
+      y: { ticks: { color: '#8aa3a0', font: { size: 10 } }, grid: { color: 'rgba(157,201,201,0.08)' },
+           title: { display: true, text: 'MCM/วัน', color: '#8aa3a0', font: { size: 11 } } },
+    },
+  },
+});
+</script>
+
+</body>
+</html>

@@ -1,4 +1,4 @@
-"""
+r"""
 gee_auth.py
 ===========
 2026-07-14 เพิ่ม — helper เดียวสำหรับ ee.Initialize() ที่ทุกโมดูลที่ใช้ Google Earth Engine

@@ -508,5 +508,13 @@
         "7": 61.2
       }
     }
-  ]
+  ],
+  "retrain_newspill_2026-10": {
+    "dataset": "Training_Values_newspill_offset0_20261007.csv",
+    "candidate_dir": "01_data/experiments/daily_newspill_retrain_20261007",
+    "rain_forecast_horizons": [
+      6
+    ],
+    "bias_correction": "none"
+  }
 }

@@ -1,0 +1,67 @@
+{
+  "worker_script": "era5t_worker.py",
+  "run_at": "2026-09-07T15:40:29.234851Z",
+  "mode": "weekly",
+  "requested_date": null,
+  "as_of_date": "2026-09-07",
+  "dataset": "reanalysis-era5-single-levels",
+  "time_utc_used": "12:00",
+  "grib_source": "cds_live_week:none + rolling:['D:\\\\maenaruea-water-web\\\\01_data\\\\scripts and code\\\\pipeline\\\\era5t_output\\\\era5t_week_202608_31-31.grib', 'D:\\\\maenaruea-water-web\\\\01_data\\\\scripts and code\\\\pipeline\\\\era5t_output\\\\era5t_week_202609_01-06.grib']",
+  "fetch_elapsed_sec": null,
+  "grib_size_bytes": null,
+  "variables": null,
+  "valid_time": null,
+  "latitude": null,
+  "longitude": null,
+  "n_grib_datasets": null,
+  "missing_variables": null,
+  "iso_year": 2026,
+  "iso_week": 37,
+  "candidate_days": [],
+  "n_days_in_week": 3,
+  "daily_breakdown": [
+    {
+      "ETo_mm_day": 0.2881347425822598,
+      "T_c": 26.140039062500023,
+      "RH_pct": 88.29607570814748,
+      "VPD_kPa": 0.3966889694691038,
+      "u2_ms": 1.1943615728241292,
+      "Rn_MJ": -0.10647583999999999,
+      "date": "2026-08-31"
+    },
+    {
+      "ETo_mm_day": 0.5469303088144477,
+      "T_c": 27.946038818359398,
+      "RH_pct": 82.061622179585,
+      "VPD_kPa": 0.6759306873715487,
+      "u2_ms": 1.3834814824447885,
+      "Rn_MJ": -0.10658756000000001,
+      "date": "2026-09-01"
+    },
+    {
+      "ETo_mm_day": 0.30417077236029527,
+      "T_c": 26.183160400390648,
+      "RH_pct": 83.63681161322134,
+      "VPD_kPa": 0.5560223351955682,
+      "u2_ms": 0.8407422554229684,
+      "Rn_MJ": -0.061245839999999996,
+      "date": "2026-09-02"
+    }
+  ],
+  "ET0_mm_week": 1.1392,
+  "T_mean": 26.7564,
+  "RH_pct": 84.6648,
+  "VPD_kPa": 0.5429,
+  "u2_ms": 1.1395,
+  "Rn_MJ": -0.0914,
+  "is_rolling_estimate": true,
+  "rolling_window": {
+    "start": "2026-08-31",
+    "end": "2026-09-06"
+  },
+  "warnings": [
+    "as_of_date=2026-09-07 เป็นวันจันทร์ของสัปดาห์นี้เอง (หรือก่อนหน้านั้น) — ยังไม่มีวันไหนของสัปดาห์นี้ที่ผ่านไปแล้วเลย ข้ามการยิง CDS รอบนี้",
+    "สัปดาห์ปฏิทิน ISO (2026-W37) ไม่มีข้อมูล จริงเลยสักวัน — ใช้ rolling 7-day window แทน (2026-08-31 ถึง 2026-09-06, 3 วันที่มีข้อมูลจริงในช่วงนั้น) เป็นค่าประมาณการ (is_rolling_estimate=true — ไม่ใช่ผลรวมของสัปดาห์ปฏิทินจริง ห้ามป้อนเข้าโมเดลตรงๆ)"
+  ],
+  "fetch_error": null
+}

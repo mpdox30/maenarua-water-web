@@ -1,0 +1,162 @@
+{
+  "horizons": {
+    "1": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)",
+        "max_level_24h",
+        "range_24h"
+      ],
+      "tree_count": 17,
+      "uses_rain_forecast_binary": false,
+      "rain_forecast_threshold_mm": null,
+      "n_train_rows": 377
+    },
+    "2": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)",
+        "max_level_24h",
+        "range_24h"
+      ],
+      "tree_count": 15,
+      "uses_rain_forecast_binary": false,
+      "rain_forecast_threshold_mm": null,
+      "n_train_rows": 376
+    },
+    "3": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)",
+        "Rain_fcst_binary_h3",
+        "max_level_24h",
+        "range_24h"
+      ],
+      "tree_count": 25,
+      "uses_rain_forecast_binary": true,
+      "rain_forecast_threshold_mm": 27.3,
+      "n_train_rows": 375
+    },
+    "4": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)",
+        "max_level_24h",
+        "range_24h"
+      ],
+      "tree_count": 65,
+      "uses_rain_forecast_binary": false,
+      "rain_forecast_threshold_mm": null,
+      "n_train_rows": 374
+    },
+    "5": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)",
+        "max_level_24h",
+        "range_24h"
+      ],
+      "tree_count": 61,
+      "uses_rain_forecast_binary": false,
+      "rain_forecast_threshold_mm": null,
+      "n_train_rows": 373
+    },
+    "6": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)",
+        "Rain_fcst_binary_h6",
+        "max_level_24h",
+        "range_24h"
+      ],
+      "tree_count": 96,
+      "uses_rain_forecast_binary": true,
+      "rain_forecast_threshold_mm": 3.1,
+      "n_train_rows": 372
+    },
+    "7": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)",
+        "Rain_fcst_binary_h7",
+        "max_level_24h",
+        "range_24h"
+      ],
+      "tree_count": 279,
+      "uses_rain_forecast_binary": true,
+      "rain_forecast_threshold_mm": 61.0,
+      "n_train_rows": 371
+    }
+  },
+  "note": "CANDIDATE ONLY -- production feature set + max_level_24h/range_24h. Not deployed."
+}

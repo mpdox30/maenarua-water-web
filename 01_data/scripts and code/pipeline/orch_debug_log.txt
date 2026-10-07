@@ -1,0 +1,75 @@
+============================================================
+  Mae Na Rua Reservoir Daily Orchestration - run_reservoir_daily_orchestration.bat
+  Fri 10/02/2026 19:14:08.42
+============================================================
+[INFO] Using Python: D:\maenaruea-water-web\01_data\scripts and code\pipeline\..\..\..\.venv\Scripts\python.exe
+[INFO] Running reservoir_daily_orchestration.py (target date = เน€เธกเธทเนเธญเธงเธฒเธ, เน€เธเธตเธขเธเธ—เธฑเนเธ shadow CSV + เนเธเธฅเนเธ—เธฒเธเธเธฒเธฃ) ...
+
+2026-10-02 19:14:08,540 [WARNING] ไม่ได้ระบุ source และไม่ได้ตั้ง env var RESERVOIR_TELEMETRY_SHEET_CSV_URL -- ใช้ DEFAULT_SHEET_CSV_URL แทน (แนะนำให้ตั้ง env var บนเครื่องที่รัน scheduled task จริงแทนการพึ่งค่า default นี้)
+2026-10-02 19:14:14,400 [WARNING] ไม่มีเหตุการณ์ปล่อยน้ำใน release_events.csv ที่ครอบคลุมวันที่ 2026-10-01 -- ใช้ O=0 (ตรวจสอบว่านี่คือความจริงหรือแค่ยังไม่ได้บันทึกเหตุการณ์)
+2026-10-02 19:14:14,421 [INFO] เขียนผลวันที่ 2026-10-01 ลง D:\maenaruea-water-web\01_data\Reservoirs\inflow_auto\RES002_daily_computed.csv สำเร็จ: Inflow=0.00 m3, data_complete=True
+2026-10-02 19:14:14,421 [WARNING] ไม่ได้ระบุ source และไม่ได้ตั้ง env var RESERVOIR_TELEMETRY_SHEET_CSV_URL -- ใช้ DEFAULT_SHEET_CSV_URL แทน (แนะนำให้ตั้ง env var บนเครื่องที่รัน scheduled task จริงแทนการพึ่งค่า default นี้)
+2026-10-02 19:14:19,379 [WARNING] ไม่มีเหตุการณ์ปล่อยน้ำใน release_events.csv ที่ครอบคลุมวันที่ 2026-10-01 -- ใช้ O=0 (ตรวจสอบว่านี่คือความจริงหรือแค่ยังไม่ได้บันทึกเหตุการณ์)
+2026-10-02 19:14:19,383 [INFO] backup ไฟล์เดิมไว้ที่ D:\maenaruea-water-web\01_data\Reservoirs\inflow\2026\2026_October_MNR.xlsx.bak_before_live_write_20261002_191419
+2026-10-02 19:14:20,068 [INFO] เขียนแถว 6 (2026-10-01): level=489.566 storage=1631482.4 inflow=0.0 data_complete=True
+2026-10-02 19:14:20,418 [INFO] บันทึกไฟล์ D:\maenaruea-water-web\01_data\Reservoirs\inflow\2026\2026_October_MNR.xlsx เรียบร้อย (1 วัน)
+{'date': '2026-10-01', 'level_msl': 489.566, 'storage_m3': 1631482.3951735, 'prev_storage_m3': 1643538.2164867, 'delta_s_m3': -12055.821313200053, 'rain_24h_mm': 0.0, 'release_o_m3': 0.0, 'spill_m3': 0.0, 'evap_m3': 763.0570916236705, 'infiltration_m3': 305.26409130291, 'inflow_m3': 0.0, 'hours_covered': 24, 'data_complete': True, 'release_source_note': 'ไม่มีเหตุการณ์ปล่อยน้ำครอบคลุมวันนี้ (O=0)', 'computed_at': '2026-10-02T19:14:14', 'official_file_row': 6}
+
+[INFO] reservoir_daily_orchestration.py exited with code 0
+  (0 = เธชเธณเน€เธฃเนเธ, non-zero = error -- เน€เธเนเธ log เธ”เนเธฒเธเธเธ เนเธ”เธขเน€เธเธเธฒเธฐเธ–เนเธฒเน€เธเธตเธขเธเนเธเธฅเนเธ—เธฒเธเธเธฒเธฃเธฅเนเธกเน€เธซเธฅเธง
+   shadow CSV เธเธฐเธขเธฑเธเน€เธเธตเธขเธเธชเธณเน€เธฃเนเธเนเธขเธเธ•เนเธฒเธเธซเธฒเธเน€เธชเธกเธญเธ–เนเธฒเธเธณเธเธงเธ“เนเธ”เน เนเธกเนเธเธถเนเธเธเธฑเธเนเธเธฅเนเธ—เธฒเธเธเธฒเธฃ)
+
+[INFO] Rebuilding D:\WMB_Phayao\01_raw_data\Reservoirs\เธเธฑเธเธเธตเธเนเธณ\ (เธชเธนเธ•เธฃเธชเธเธดเธฅเน€เธงเธขเนเนเธเนเนเธ) ...
+2025_June_MNR.xlsx: 4 วัน (0 คำนวณใหม่, 4 ใช้ค่าเดิม)
+2025_July_MNR.xlsx: 31 วัน (31 คำนวณใหม่, 0 ใช้ค่าเดิม)
+2025_August_MNR.xlsx: 31 วัน (31 คำนวณใหม่, 0 ใช้ค่าเดิม)
+2025_September_MNR.xlsx: 30 วัน (30 คำนวณใหม่, 0 ใช้ค่าเดิม)
+2025_October_MNR.xlsx: 31 วัน (31 คำนวณใหม่, 0 ใช้ค่าเดิม)
+2025_November_MNR.xlsx: 30 วัน (30 คำนวณใหม่, 0 ใช้ค่าเดิม)
+2025_December_MNR.xlsx: 31 วัน (31 คำนวณใหม่, 0 ใช้ค่าเดิม)
+2026_January_MNR.xlsx: 31 วัน (31 คำนวณใหม่, 0 ใช้ค่าเดิม)
+2026_February_MNR.xlsx: 28 วัน (28 คำนวณใหม่, 0 ใช้ค่าเดิม)
+2026_March_MNR.xlsx: 31 วัน (31 คำนวณใหม่, 0 ใช้ค่าเดิม)
+2026_April_MNR.xlsx: 30 วัน (30 คำนวณใหม่, 0 ใช้ค่าเดิม)
+2026_May_MNR.xlsx: 31 วัน (31 คำนวณใหม่, 0 ใช้ค่าเดิม)
+2026_June_MNR.xlsx: 30 วัน (30 คำนวณใหม่, 0 ใช้ค่าเดิม)
+2026_July_MNR.xlsx: 31 วัน (31 คำนวณใหม่, 0 ใช้ค่าเดิม)
+2026_August_MNR.xlsx: 31 วัน (31 คำนวณใหม่, 0 ใช้ค่าเดิม)
+2026_September_MNR.xlsx: 30 วัน (30 คำนวณใหม่, 0 ใช้ค่าเดิม)
+2026_October_MNR.xlsx: 1 วัน (1 คำนวณใหม่, 0 ใช้ค่าเดิม)
+
+รวม: 458 วันคำนวณด้วยสูตรใหม่, 4 วันใช้ค่าเดิม (fallback)
+เขียนไฟล์ลง D:\WMB_Phayao\01_raw_data\Reservoirs\บัญชีน้ำ
+[OK] เธเธเธฑเธเธชเธนเธ•เธฃเธชเธเธดเธฅเน€เธงเธขเนเนเธเนเนเธเธญเธฑเธเน€เธ”เธ•เนเธฅเนเธง
+
+[INFO] Rebuilding assets/data/water_ledger.json เธเธฒเธเนเธเธฅเนเธเธฑเธเธเธตเธเนเธณเธฅเนเธฒเธชเธธเธ” ...
+2025_August_MNR.xlsx: 31 day-rows
+2025_December_MNR.xlsx: 31 day-rows
+2025_July_MNR.xlsx: 31 day-rows
+2025_June_MNR.xlsx: 4 day-rows
+2025_November_MNR.xlsx: 30 day-rows
+2025_October_MNR.xlsx: 31 day-rows
+2025_September_MNR.xlsx: 30 day-rows
+2026_April_MNR.xlsx: 30 day-rows
+2026_August_MNR.xlsx: 31 day-rows
+2026_December_MNR.xlsx: 0 day-rows
+2026_February_MNR.xlsx: 28 day-rows
+2026_January_MNR.xlsx: 31 day-rows
+2026_July_MNR.xlsx: 31 day-rows
+2026_June_MNR.xlsx: 30 day-rows
+2026_March_MNR.xlsx: 31 day-rows
+2026_May_MNR.xlsx: 31 day-rows
+2026_November_MNR.xlsx: 0 day-rows
+2026_October_MNR.xlsx: 1 day-rows
+2026_September_MNR.xlsx: 30 day-rows
+
+Saved 462 rows across 17 months -> D:\maenaruea-water-web\03_website\assets\data\water_ledger.json
+[OK] water_ledger.json เธญเธฑเธเน€เธ”เธ•เนเธฅเนเธง
+
+[INFO] sync เธเธฑเธ remote เธเนเธญเธ push เนเธเธฅเนเธ—เธฒเธเธเธฒเธฃ + shadow CSV ...
+From https://github.com/mpdox30/maenarua-water-web
+ * branch              master     -> FETCH_HEAD
+Already up to date.
+To https://github.com/mpdox30/maenarua-water-web.git
+   a7c3abbd..bc1ce732  master -> master
+[OK] push เนเธเธฅเนเธ—เธฒเธเธเธฒเธฃ/shadow CSV/water_ledger.json เธชเธณเน€เธฃเนเธ

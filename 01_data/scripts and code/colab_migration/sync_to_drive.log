@@ -1,0 +1,1132 @@
+===== sync_to_drive.bat เน€เธฃเธดเนเธกเธฃเธฑเธ Wed 10/07/2026  9:17:56.88 ===== 
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : Wednesday, October 7, 2026 9:17:56 AM
+   Source : D:\maenaruea-water-web\
+     Dest = G:\My Drive\Colab Notebooks\Mae_Na_Rua\maenaruea-water-web\
+
+    Files : *.*
+	    
+ Exc Dirs : .git
+	    .venv
+	    __pycache__
+	    
+  Options : *.* /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /NP /R:2 /W:5 
+
+------------------------------------------------------------------------------
+
+	                  10	D:\maenaruea-water-web\
+	                   0	D:\maenaruea-water-web\.github\
+	                   6	D:\maenaruea-water-web\.github\workflows\
+	                   0	D:\maenaruea-water-web\01_data\
+	                   0	D:\maenaruea-water-web\01_data\experiments\
+	                  13	D:\maenaruea-water-web\01_data\experiments\direct_ml_no_stage1_20260726\
+	                   4	D:\maenaruea-water-web\01_data\experiments\direct_ml_no_stage1_20260726\catboost_info\
+	                   1	D:\maenaruea-water-web\01_data\experiments\direct_ml_no_stage1_20260726\catboost_info\learn\
+	                   1	D:\maenaruea-water-web\01_data\experiments\direct_ml_no_stage1_20260726\catboost_info\test\
+	                   4	D:\maenaruea-water-web\01_data\experiments\direct_ml_no_stage1_20260726\catboost_info\tmp\
+	                   2	D:\maenaruea-water-web\01_data\experiments\direct_ml_no_stage1_20260726\exported_20260726_152030\
+	                   2	D:\maenaruea-water-web\01_data\experiments\direct_ml_no_stage1_20260726\exported_20260726_161708\
+	                   3	D:\maenaruea-water-web\01_data\experiments\direct_ml_no_stage1_20260726\outputs\
+	                   3	D:\maenaruea-water-web\01_data\experiments\direct_ml_no_stage1_20260726\outputs_local_full\
+	                   3	D:\maenaruea-water-web\01_data\experiments\direct_ml_no_stage1_20260726\outputs_local_lagfeat\
+	                   3	D:\maenaruea-water-web\01_data\experiments\direct_ml_no_stage1_20260726\outputs_local_lagfeat2\
+	                  15	D:\maenaruea-water-web\01_data\experiments\feature_experiments_20260731\
+	                   3	D:\maenaruea-water-web\01_data\experiments\feature_experiments_20260731\catboost_info\
+	                   1	D:\maenaruea-water-web\01_data\experiments\feature_experiments_20260731\catboost_info\learn\
+	                   1	D:\maenaruea-water-web\01_data\experiments\feature_experiments_20260731\catboost_info\tmp\
+	                   4	D:\maenaruea-water-web\01_data\experiments\feature_experiments_20260731\outputs\
+	                  16	D:\maenaruea-water-web\01_data\experiments\hourly_feasibility_20260731\
+	                   4	D:\maenaruea-water-web\01_data\experiments\hourly_feasibility_20260731\catboost_info\
+	                   1	D:\maenaruea-water-web\01_data\experiments\hourly_feasibility_20260731\catboost_info\learn\
+	                   1	D:\maenaruea-water-web\01_data\experiments\hourly_feasibility_20260731\catboost_info\test\
+	                   0	D:\maenaruea-water-web\01_data\experiments\hourly_feasibility_20260731\catboost_info\tmp\
+	                   9	D:\maenaruea-water-web\01_data\experiments\hourly_feasibility_20260731\outputs_6hourly_catboost\
+	                   3	D:\maenaruea-water-web\01_data\experiments\hourly_feasibility_20260731\outputs_6hourly_catboost_v2\
+	                  24	D:\maenaruea-water-web\01_data\experiments\inflow_h1h3_features_20260907\
+	                   4	D:\maenaruea-water-web\01_data\experiments\inflow_h1h3_features_20260907\catboost_info\
+	                   1	D:\maenaruea-water-web\01_data\experiments\inflow_h1h3_features_20260907\catboost_info\learn\
+	                   1	D:\maenaruea-water-web\01_data\experiments\inflow_h1h3_features_20260907\catboost_info\test\
+	                   0	D:\maenaruea-water-web\01_data\experiments\inflow_h1h3_features_20260907\catboost_info\tmp\
+	                  26	D:\maenaruea-water-web\01_data\experiments\inflow_h5_bias_fix_20260907\
+	                   4	D:\maenaruea-water-web\01_data\experiments\inflow_h5_bias_fix_20260907\catboost_info\
+	                   1	D:\maenaruea-water-web\01_data\experiments\inflow_h5_bias_fix_20260907\catboost_info\learn\
+	                   1	D:\maenaruea-water-web\01_data\experiments\inflow_h5_bias_fix_20260907\catboost_info\test\
+	                   0	D:\maenaruea-water-web\01_data\experiments\inflow_h5_bias_fix_20260907\catboost_info\tmp\
+	                  12	D:\maenaruea-water-web\01_data\experiments\inflow_logtransform_20260907\
+	                   4	D:\maenaruea-water-web\01_data\experiments\inflow_logtransform_20260907\catboost_info\
+	                   1	D:\maenaruea-water-web\01_data\experiments\inflow_logtransform_20260907\catboost_info\learn\
+	                   1	D:\maenaruea-water-web\01_data\experiments\inflow_logtransform_20260907\catboost_info\test\
+	                   0	D:\maenaruea-water-web\01_data\experiments\inflow_logtransform_20260907\catboost_info\tmp\
+	                  24	D:\maenaruea-water-web\01_data\experiments\inflow_rain_forecast_feature_20260907\
+	                   4	D:\maenaruea-water-web\01_data\experiments\inflow_rain_forecast_feature_20260907\catboost_info\
+	                   1	D:\maenaruea-water-web\01_data\experiments\inflow_rain_forecast_feature_20260907\catboost_info\learn\
+	                   1	D:\maenaruea-water-web\01_data\experiments\inflow_rain_forecast_feature_20260907\catboost_info\test\
+	                   2	D:\maenaruea-water-web\01_data\experiments\inflow_rain_forecast_feature_20260907\catboost_info\tmp\
+	                  11	D:\maenaruea-water-web\01_data\experiments\inflow_regularized_final_20260907\
+	                   4	D:\maenaruea-water-web\01_data\experiments\inflow_regularized_final_20260907\catboost_info\
+	                   1	D:\maenaruea-water-web\01_data\experiments\inflow_regularized_final_20260907\catboost_info\learn\
+	                   1	D:\maenaruea-water-web\01_data\experiments\inflow_regularized_final_20260907\catboost_info\test\
+	                   0	D:\maenaruea-water-web\01_data\experiments\inflow_regularized_final_20260907\catboost_info\tmp\
+	                   5	D:\maenaruea-water-web\01_data\experiments\inflow_telemetry_feasibility_20260907\
+	                   5	D:\maenaruea-water-web\01_data\experiments\inflow_tweedie_20260907\
+	                   4	D:\maenaruea-water-web\01_data\experiments\inflow_tweedie_20260907\catboost_info\
+	                   1	D:\maenaruea-water-web\01_data\experiments\inflow_tweedie_20260907\catboost_info\learn\
+	                   1	D:\maenaruea-water-web\01_data\experiments\inflow_tweedie_20260907\catboost_info\test\
+	                   0	D:\maenaruea-water-web\01_data\experiments\inflow_tweedie_20260907\catboost_info\tmp\
+	                   1	D:\maenaruea-water-web\01_data\experiments\inflow_zero_response_check_20260731\
+	                   9	D:\maenaruea-water-web\01_data\experiments\retrain_refresh_20260918\
+	                  42	D:\maenaruea-water-web\01_data\experiments\sixhourly_refresh_20260918\
+	    Newer     		   24636	FINDINGS.md
+	    Newer     		  19.6 m	shadow_gdrive_raw_store.csv
+	    Newer     		   30944	shadow_predict.py
+	    Newer     		   39401	shadow_predictions_log.csv
+	    New File  		   29790	shadow_predict_PRE_DESPIKE_20261006.py
+	    Newer     		     509	shadow_scoring_report.csv
+	    New File  		    5724	spike_filter.py
+	                   4	D:\maenaruea-water-web\01_data\experiments\sixhourly_refresh_20260918\catboost_info\
+	                   1	D:\maenaruea-water-web\01_data\experiments\sixhourly_refresh_20260918\catboost_info\learn\
+	                   1	D:\maenaruea-water-web\01_data\experiments\sixhourly_refresh_20260918\catboost_info\test\
+	                   2	D:\maenaruea-water-web\01_data\experiments\sixhourly_refresh_20260918\catboost_info\tmp\
+	                   3	D:\maenaruea-water-web\01_data\experiments\sixhourly_refresh_20260918\original_pre_release_fix_results\
+	                  18	D:\maenaruea-water-web\01_data\experiments\sixhourly_refresh_20260918\shadow_models\
+	                  16	D:\maenaruea-water-web\01_data\experiments\sixhourly_refresh_20260918\shadow_models_ORIGINAL_pre_release_fix\
+	                  16	D:\maenaruea-water-web\01_data\experiments\sixhourly_refresh_20260918\shadow_models_PRE_SPILLWAY_FIX_20260925\
+	  New Dir         15	D:\maenaruea-water-web\01_data\experiments\sixhourly_stormfix_20261006\
+	    New File  		    2211	artifact_check.py
+	    New File  		   42522	artifact_flags.csv
+	    New File  		    5249	build_v2_dataset.py
+	    New File  		    8792	cv_results.csv
+	    New File  		    8329	cv_results_clean.csv
+	    New File  		   10371	FINDINGS.md
+	    New File  		    4929	foresight_results.csv
+	    New File  		    4773	foresight_results_clean.csv
+	    New File  		    3141	hourly_series.py
+	    New File  		    4239	replay_storm.py
+	    New File  		    6559	run_compare.py
+	    New File  		    1911	run_compare_clean.py
+	    New File  		    5498	run_foresight.py
+	    New File  		    1305	storm_replay.csv
+	    New File  		   1.0 m	Training_v2_6h.csv
+	  New Dir         18	D:\maenaruea-water-web\01_data\experiments\weathernext_hindcast_20261006\
+	    New File  		    3387	compare_storm.py
+	    New File  		    2895	FINDINGS.md
+	    New File  		   15211	pull_weathernext_hindcast.py
+	    New File  		     928	storm_compare_wn3.csv
+	    New File  		   33505	wn2_storm_test.csv
+	    New File  		  20.2 m	wn3h_hindcast_2026.csv
+	    New File  		  230774	wn3h_storm_test.csv
+	    New File  		    1300	wn3_cv_results.csv
+	    New File  		    1299	wn3_cv_results_h7_bx.csv
+	    New File  		    1298	wn3_cv_results_h7_bxmax.csv
+	    New File  		    1300	wn3_cv_results_h7_pt.csv
+	    New File  		    6721	wn3_eval.py
+	    New File  		  16.9 m	wn3_hindcast_2026.csv
+	    New File  		  195346	wn3_storm_test.csv
+	    New File  		    1169	wn3_vs_gauge.csv
+	    New File  		    1171	wn3_vs_gauge_h7_bx.csv
+	    New File  		    1152	wn3_vs_gauge_h7_bxmax.csv
+	    New File  		    1135	wn3_vs_gauge_h7_pt.csv
+	                   1	D:\maenaruea-water-web\01_data\forecasting_results\
+	    Newer     		   30739	latest.json
+	                   9	D:\maenaruea-water-web\01_data\forecasting_results\Reservoir_inflow\
+	    Newer     		   79282	forecast_accuracy_log.csv
+	                   4	D:\maenaruea-water-web\01_data\forecasting_results\Water_demand\
+	                  36	D:\maenaruea-water-web\01_data\gis\
+	                   5	D:\maenaruea-water-web\01_data\gis\sar_output\
+	                   2	D:\maenaruea-water-web\01_data\gis\sar_rasters\
+	                   5	D:\maenaruea-water-web\01_data\Reservoirs\
+	                   8	D:\maenaruea-water-web\01_data\Reservoirs\inflow\
+	                   7	D:\maenaruea-water-web\01_data\Reservoirs\inflow\2025\
+	                 174	D:\maenaruea-water-web\01_data\Reservoirs\inflow\2026\
+	    Newer     		  328019	2026_October_MNR.xlsx
+	    New File  		  327760	2026_October_MNR.xlsx.bak_before_live_write_20261006_100824
+	    New File  		  327779	2026_October_MNR.xlsx.bak_before_live_write_20261006_100829
+	    New File  		  327791	2026_October_MNR.xlsx.bak_before_live_write_20261006_100834
+	    New File  		  327803	2026_October_MNR.xlsx.bak_before_live_write_20261006_100838
+	    New File  		  327811	2026_October_MNR.xlsx.bak_before_live_write_20261006_100913
+	    New File  		  327812	2026_October_MNR.xlsx.bak_before_live_write_20261007_085104
+	    New File  		  327918	2026_October_MNR.xlsx.bak_before_live_write_20261007_085112
+	    Newer     		  329808	2026_September_MNR.xlsx
+	    New File  		  329769	2026_September_MNR.xlsx.bak_before_live_write_20261006_100702
+	    New File  		  329774	2026_September_MNR.xlsx.bak_before_live_write_20261006_100709
+	    New File  		  329774	2026_September_MNR.xlsx.bak_before_live_write_20261006_100715
+	    New File  		  329774	2026_September_MNR.xlsx.bak_before_live_write_20261006_100719
+	    New File  		  329773	2026_September_MNR.xlsx.bak_before_live_write_20261006_100723
+	    New File  		  329774	2026_September_MNR.xlsx.bak_before_live_write_20261006_100729
+	    New File  		  329774	2026_September_MNR.xlsx.bak_before_live_write_20261006_100734
+	    New File  		  329773	2026_September_MNR.xlsx.bak_before_live_write_20261006_100739
+	    New File  		  329777	2026_September_MNR.xlsx.bak_before_live_write_20261006_100745
+	    New File  		  329775	2026_September_MNR.xlsx.bak_before_live_write_20261006_100750
+	    New File  		  329776	2026_September_MNR.xlsx.bak_before_live_write_20261006_100754
+	    New File  		  329774	2026_September_MNR.xlsx.bak_before_live_write_20261006_100759
+	    New File  		  329772	2026_September_MNR.xlsx.bak_before_live_write_20261006_100805
+	    New File  		  329770	2026_September_MNR.xlsx.bak_before_live_write_20261006_100811
+	    New File  		  329783	2026_September_MNR.xlsx.bak_before_live_write_20261006_100814
+	    New File  		  329797	2026_September_MNR.xlsx.bak_before_live_write_20261006_100819
+	                   2	D:\maenaruea-water-web\01_data\Reservoirs\inflow_auto\
+	    Newer     		   22335	RES002_daily_computed.csv
+	    New File  		  115636	telemetry_backfill_20260910_20261005.csv
+	                   6	D:\maenaruea-water-web\01_data\Reservoirs\inflow_backup_post_round2_pre_recalc\
+	                   0	D:\maenaruea-water-web\01_data\Reservoirs\inflow_backup_pre_fix\
+	                   5	D:\maenaruea-water-web\01_data\Reservoirs\inflow_backup_pre_fix\2026\
+	                  10	D:\maenaruea-water-web\01_data\Reservoirs\reference\
+	                   0	D:\maenaruea-water-web\01_data\Reservoirs\reference\hii_rainfall_archive\
+	                   0	D:\maenaruea-water-web\01_data\Reservoirs\reference\hii_rainfall_archive\2026\
+	                   4	D:\maenaruea-water-web\01_data\Reservoirs\reference\hii_rainfall_archive\2026\05\
+	                   4	D:\maenaruea-water-web\01_data\Reservoirs\reference\hii_rainfall_archive\2026\06\
+	                   4	D:\maenaruea-water-web\01_data\Reservoirs\reference\hii_rainfall_archive\2026\07\
+	                   1	D:\maenaruea-water-web\01_data\Reservoirs\release_log\
+	    Newer     		    5182	release_events.csv
+	                   0	D:\maenaruea-water-web\01_data\scripts and code\
+	                   1	D:\maenaruea-water-web\01_data\scripts and code\apps_script\
+	                  11	D:\maenaruea-water-web\01_data\scripts and code\colab_migration\
+	    Newer     		      84	sync_to_drive.log
+	                   1	D:\maenaruea-water-web\01_data\scripts and code\colab_migration\test_output\
+	                  50	D:\maenaruea-water-web\01_data\scripts and code\pipeline\
+	    New File  		    2330	backfill_release_o_20260915_20261004.bat
+	    Newer     		  274940	ml_features_live.csv
+	    Newer     		   42310	reservoir_daily_orchestration.py
+	    Newer     		   15631	run_reservoir_daily_orchestration.bat
+	                   4	D:\maenaruea-water-web\01_data\scripts and code\pipeline\chirps_v3_test_20260722\
+	                  44	D:\maenaruea-water-web\01_data\scripts and code\pipeline\chirps_v3_test_20260722\ftp_cache\
+	                   1	D:\maenaruea-water-web\01_data\scripts and code\pipeline\chirps_v3_test_20260722\logs\
+	                 423	D:\maenaruea-water-web\01_data\scripts and code\pipeline\era5t_output\
+	    New File  		    3816	era5t_week_2026-10-07.json
+	    New File  		     784	era5t_week_202609_30-30.grib
+	    New File  		    1882	era5t_week_202609_30-30.grib.5b7b6.idx
+	    New File  		     784	era5t_week_202610_01-06.grib
+	    New File  		    1882	era5t_week_202610_01-06.grib.5b7b6.idx
+	                   2	D:\maenaruea-water-web\01_data\scripts and code\pipeline\era5_test_output\
+	                 121	D:\maenaruea-water-web\01_data\scripts and code\pipeline\ftp_cache\
+	                   1	D:\maenaruea-water-web\01_data\scripts and code\pipeline\logs\
+	    Newer     		   4.8 m	pipeline_log.txt
+	                   0	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\
+	                  27	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\active\
+	                   2	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\active\Retrain\
+	                   4	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\active\Retrain\catboost_info\
+	                   1	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\active\Retrain\catboost_info\learn\
+	                   1	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\active\Retrain\catboost_info\test\
+	                   7	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\active\Retrain\exported_models\
+	                  11	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\active\Retrain\manuscript_figures_final\
+	                   8	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\active\Retrain\outputs_stratified\
+	                   0	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\archive\
+	                  10	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\archive\pre_correction_20260707\
+	                   2	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\archive\pre_correction_20260707\Retrain\
+	                   4	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\archive\pre_correction_20260707\Retrain\catboost_info\
+	                   1	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\archive\pre_correction_20260707\Retrain\catboost_info\learn\
+	                   1	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\archive\pre_correction_20260707\Retrain\catboost_info\test\
+	                   7	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\archive\pre_correction_20260707\Retrain\exported_models\
+	                  11	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\archive\pre_correction_20260707\Retrain\manuscript_figures_final\
+	                   8	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\archive\pre_correction_20260707\Retrain\outputs_stratified\
+	                   4	D:\maenaruea-water-web\01_data\scripts and code\Water_demand\
+	                  57	D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active\
+	                   3	D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active\catboost_info\
+	                   1	D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active\catboost_info\learn\
+	                   0	D:\maenaruea-water-web\01_data\scripts and code\Water_demand\active\catboost_info\tmp\
+	                  12	D:\maenaruea-water-web\01_data\scripts and code\Water_demand\archive\
+	                  11	D:\maenaruea-water-web\03_website\
+	    Newer     		   88114	inflow-forecast.html
+	                   0	D:\maenaruea-water-web\03_website\assets\
+	                  37	D:\maenaruea-water-web\03_website\assets\data\
+	    Newer     		  176989	flood_depth_forecast.png
+	    Newer     		    8306	flood_latest.json
+	    Newer     		   79282	forecast_accuracy_log.csv
+	    Newer     		   30652	inflow_6h_display.json
+	    Newer     		   30739	latest.json
+	    Newer     		  431489	monitoring.json
+	    Newer     		  151616	reservoir_inflow.json
+	    Newer     		  219996	water_ledger.json
+	    Newer     		   63406	wmb_daily_model.json
+	                   0	D:\maenaruea-water-web\03_website\assets\data\terrain\
+	                   0	D:\maenaruea-water-web\03_website\assets\data\terrain\10\
+	                   2	D:\maenaruea-water-web\03_website\assets\data\terrain\10\795\
+	                   2	D:\maenaruea-water-web\03_website\assets\data\terrain\10\796\
+	                   0	D:\maenaruea-water-web\03_website\assets\data\terrain\11\
+	                   3	D:\maenaruea-water-web\03_website\assets\data\terrain\11\1591\
+	                   3	D:\maenaruea-water-web\03_website\assets\data\terrain\11\1592\
+	                   0	D:\maenaruea-water-web\03_website\assets\data\terrain\12\
+	                   5	D:\maenaruea-water-web\03_website\assets\data\terrain\12\3182\
+	                   5	D:\maenaruea-water-web\03_website\assets\data\terrain\12\3183\
+	                   5	D:\maenaruea-water-web\03_website\assets\data\terrain\12\3184\
+	                   5	D:\maenaruea-water-web\03_website\assets\data\terrain\12\3185\
+	                   0	D:\maenaruea-water-web\03_website\assets\data\terrain\13\
+	                   8	D:\maenaruea-water-web\03_website\assets\data\terrain\13\6364\
+	                   8	D:\maenaruea-water-web\03_website\assets\data\terrain\13\6365\
+	                   8	D:\maenaruea-water-web\03_website\assets\data\terrain\13\6366\
+	                   8	D:\maenaruea-water-web\03_website\assets\data\terrain\13\6367\
+	                   8	D:\maenaruea-water-web\03_website\assets\data\terrain\13\6368\
+	                   8	D:\maenaruea-water-web\03_website\assets\data\terrain\13\6369\
+	                   8	D:\maenaruea-water-web\03_website\assets\data\terrain\13\6370\
+	                   8	D:\maenaruea-water-web\03_website\assets\data\terrain\13\6371\
+	                   0	D:\maenaruea-water-web\03_website\assets\data\terrain\14\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain\14\12728\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain\14\12729\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain\14\12730\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain\14\12731\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain\14\12732\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain\14\12733\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain\14\12734\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain\14\12735\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain\14\12736\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain\14\12737\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain\14\12738\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain\14\12739\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain\14\12740\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain\14\12741\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain\14\12742\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain\14\12743\
+	                   0	D:\maenaruea-water-web\03_website\assets\data\terrain\15\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25457\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25458\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25459\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25460\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25461\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25462\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25463\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25464\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25465\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25466\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25467\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25468\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25469\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25470\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25471\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25472\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25473\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25474\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25475\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25476\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25477\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25478\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25479\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25480\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25481\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25482\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25483\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25484\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25485\
+	                  29	D:\maenaruea-water-web\03_website\assets\data\terrain\15\25486\
+	                   0	D:\maenaruea-water-web\03_website\assets\data\terrain\9\
+	                   1	D:\maenaruea-water-web\03_website\assets\data\terrain\9\397\
+	                   1	D:\maenaruea-water-web\03_website\assets\data\terrain\9\398\
+	                   0	D:\maenaruea-water-web\03_website\assets\data\terrain_color\
+	                   0	D:\maenaruea-water-web\03_website\assets\data\terrain_color\10\
+	                   1	D:\maenaruea-water-web\03_website\assets\data\terrain_color\10\795\
+	                   1	D:\maenaruea-water-web\03_website\assets\data\terrain_color\10\796\
+	                   0	D:\maenaruea-water-web\03_website\assets\data\terrain_color\11\
+	                   2	D:\maenaruea-water-web\03_website\assets\data\terrain_color\11\1591\
+	                   2	D:\maenaruea-water-web\03_website\assets\data\terrain_color\11\1592\
+	                   0	D:\maenaruea-water-web\03_website\assets\data\terrain_color\12\
+	                   3	D:\maenaruea-water-web\03_website\assets\data\terrain_color\12\3183\
+	                   3	D:\maenaruea-water-web\03_website\assets\data\terrain_color\12\3184\
+	                   0	D:\maenaruea-water-web\03_website\assets\data\terrain_color\13\
+	                   4	D:\maenaruea-water-web\03_website\assets\data\terrain_color\13\6366\
+	                   5	D:\maenaruea-water-web\03_website\assets\data\terrain_color\13\6367\
+	                   5	D:\maenaruea-water-web\03_website\assets\data\terrain_color\13\6368\
+	                   5	D:\maenaruea-water-web\03_website\assets\data\terrain_color\13\6369\
+	                   0	D:\maenaruea-water-web\03_website\assets\data\terrain_color\14\
+	                   6	D:\maenaruea-water-web\03_website\assets\data\terrain_color\14\12732\
+	                   6	D:\maenaruea-water-web\03_website\assets\data\terrain_color\14\12733\
+	                   6	D:\maenaruea-water-web\03_website\assets\data\terrain_color\14\12734\
+	                   8	D:\maenaruea-water-web\03_website\assets\data\terrain_color\14\12735\
+	                   8	D:\maenaruea-water-web\03_website\assets\data\terrain_color\14\12736\
+	                   8	D:\maenaruea-water-web\03_website\assets\data\terrain_color\14\12737\
+	                   8	D:\maenaruea-water-web\03_website\assets\data\terrain_color\14\12738\
+	                   8	D:\maenaruea-water-web\03_website\assets\data\terrain_color\14\12739\
+	                   0	D:\maenaruea-water-web\03_website\assets\data\terrain_color\15\
+	                   9	D:\maenaruea-water-web\03_website\assets\data\terrain_color\15\25464\
+	                  11	D:\maenaruea-water-web\03_website\assets\data\terrain_color\15\25465\
+	                  11	D:\maenaruea-water-web\03_website\assets\data\terrain_color\15\25466\
+	                  11	D:\maenaruea-water-web\03_website\assets\data\terrain_color\15\25467\
+	                  11	D:\maenaruea-water-web\03_website\assets\data\terrain_color\15\25468\
+	                  12	D:\maenaruea-water-web\03_website\assets\data\terrain_color\15\25469\
+	                  14	D:\maenaruea-water-web\03_website\assets\data\terrain_color\15\25470\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain_color\15\25471\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain_color\15\25472\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain_color\15\25473\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain_color\15\25474\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain_color\15\25475\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain_color\15\25476\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain_color\15\25477\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain_color\15\25478\
+	                  15	D:\maenaruea-water-web\03_website\assets\data\terrain_color\15\25479\
+	                   1	D:\maenaruea-water-web\03_website\assets\embeds\
+	                   2	D:\maenaruea-water-web\03_website\assets\img\
+	                   1	D:\maenaruea-water-web\03_website\assets\js\
+	                   1	D:\maenaruea-water-web\03_website\_backup_before_calibnote_fix_20260921\
+	                  19	D:\maenaruea-water-web\_inflow_model_improve_wip\
+	                   3	D:\maenaruea-water-web\_inflow_model_improve_wip\catboost_info\
+	                   1	D:\maenaruea-water-web\_inflow_model_improve_wip\catboost_info\learn\
+	                   3	D:\maenaruea-water-web\_inflow_model_improve_wip\catboost_info\tmp\
+	                   6	D:\maenaruea-water-web\_inflow_model_improve_wip\deployment_staging\
+	                  13	D:\maenaruea-water-web\_inflow_model_improve_wip\outputs_improve\
+	                   7	D:\maenaruea-water-web\_inflow_model_improve_wip\outputs_improve\optuna_studies\
+	                   7	D:\maenaruea-water-web\_inflow_model_improve_wip\outputs_improve\optuna_studies_extended\
+	                   0	D:\maenaruea-water-web\_website_refactor_wip\
+	                   9	D:\maenaruea-water-web\_website_refactor_wip\03_website_src\
+	                   0	D:\maenaruea-water-web\_website_refactor_wip\03_website_src\assets\
+	                   1	D:\maenaruea-water-web\_website_refactor_wip\03_website_src\assets\css\
+	                  19	D:\maenaruea-water-web\_website_refactor_wip\03_website_src\assets\data\
+	                   1	D:\maenaruea-water-web\_website_refactor_wip\03_website_src\assets\embeds\
+	                   2	D:\maenaruea-water-web\_website_refactor_wip\03_website_src\assets\img\
+	                   2	D:\maenaruea-water-web\_website_refactor_wip\03_website_src\assets\js\
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :       272         2       270         0         0         0
+   Files :      3187        91      3096         0         0         0
+   Bytes :   3.023 g   73.08 m   2.952 g         0         0         0
+   Times :   0:00:01   0:00:01                       0:00:00   0:00:00
+
+
+   Speed :           50,085,856 Bytes/sec.
+   Speed :            2,865.936 MegaBytes/min.
+   Ended : Wednesday, October 7, 2026 9:17:58 AM
+
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : Wednesday, October 7, 2026 9:17:58 AM
+   Source : D:\WMB_Phayao\
+     Dest = G:\My Drive\Colab Notebooks\Mae_Na_Rua\WMB_Phayao\
+
+    Files : *.*
+	    
+ Exc Dirs : .git
+	    .venv
+	    __pycache__
+	    
+  Options : *.* /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /NP /R:2 /W:5 
+
+------------------------------------------------------------------------------
+
+	                   2	D:\WMB_Phayao\
+	                   7	D:\WMB_Phayao\00_project_docs\
+	                   1	D:\WMB_Phayao\01_raw_data\
+	                   1	D:\WMB_Phayao\01_raw_data\buildings\
+	                  96	D:\WMB_Phayao\01_raw_data\Check dam\
+	                   1	D:\WMB_Phayao\01_raw_data\cross_section\
+	                  24	D:\WMB_Phayao\01_raw_data\cross_section\1.MaenaruaMain1\
+	                  19	D:\WMB_Phayao\01_raw_data\cross_section\2.MaenaruaMain2\
+	                  18	D:\WMB_Phayao\01_raw_data\cross_section\3.CrossSection_KU_main3\
+	                  18	D:\WMB_Phayao\01_raw_data\cross_section\3.CrossSection_KU_main3\CrossSection_KU_main3\
+	                  13	D:\WMB_Phayao\01_raw_data\cross_section\4.CrossSection_HuaiTham4\
+	                   0	D:\WMB_Phayao\01_raw_data\cross_section\5.Main_HuaiCho\
+	                  28	D:\WMB_Phayao\01_raw_data\cross_section\5.Main_HuaiCho\Main\
+	                  29	D:\WMB_Phayao\01_raw_data\cross_section\5.Main_HuaiCho\Main_Autocat\
+	                   6	D:\WMB_Phayao\01_raw_data\cross_section\5_1\
+	                   6	D:\WMB_Phayao\01_raw_data\cross_section\5_1\2_JamTom_AutoCat\
+	                   4	D:\WMB_Phayao\01_raw_data\cross_section\5_1\Autocat\
+	                   3	D:\WMB_Phayao\01_raw_data\cross_section\5_2\
+	                   4	D:\WMB_Phayao\01_raw_data\cross_section\5_3\
+	                   4	D:\WMB_Phayao\01_raw_data\cross_section\5_3\AutoCat\
+	                   0	D:\WMB_Phayao\01_raw_data\cross_section\shp_kml\
+	                   6	D:\WMB_Phayao\01_raw_data\cross_section\shp_kml\1.MaenaruaMain1\
+	                   0	D:\WMB_Phayao\01_raw_data\cross_section\shp_kml\1.MaenaruaMain1\Files\
+	                   6	D:\WMB_Phayao\01_raw_data\cross_section\shp_kml\2.MaenaruaMain2\
+	                   0	D:\WMB_Phayao\01_raw_data\cross_section\shp_kml\2.MaenaruaMain2\Files\
+	                   6	D:\WMB_Phayao\01_raw_data\cross_section\shp_kml\3.CrossSection_KU_main3\
+	                   0	D:\WMB_Phayao\01_raw_data\cross_section\shp_kml\3.CrossSection_KU_main3\Files\
+	                   6	D:\WMB_Phayao\01_raw_data\cross_section\shp_kml\4.CrossSection_HuaiTham4\
+	                   0	D:\WMB_Phayao\01_raw_data\cross_section\shp_kml\4.CrossSection_HuaiTham4\Files\
+	                   6	D:\WMB_Phayao\01_raw_data\cross_section\shp_kml\5.CrossSection_HuaiCho_Main\
+	                   0	D:\WMB_Phayao\01_raw_data\cross_section\shp_kml\5.CrossSection_HuaiCho_Main\Files\
+	                   6	D:\WMB_Phayao\01_raw_data\cross_section\shp_kml\5_1.JamTom\
+	                   0	D:\WMB_Phayao\01_raw_data\cross_section\shp_kml\5_1.JamTom\Files\
+	                   6	D:\WMB_Phayao\01_raw_data\cross_section\shp_kml\5_2\
+	                   0	D:\WMB_Phayao\01_raw_data\cross_section\shp_kml\5_2\Files\
+	                   6	D:\WMB_Phayao\01_raw_data\cross_section\shp_kml\5_3\
+	                   0	D:\WMB_Phayao\01_raw_data\cross_section\shp_kml\5_3\Files\
+	                   1	D:\WMB_Phayao\01_raw_data\DEM\
+	                   2	D:\WMB_Phayao\01_raw_data\flood_history\
+	                  23	D:\WMB_Phayao\01_raw_data\flow_network\
+	                  12	D:\WMB_Phayao\01_raw_data\Irrigation system\
+	                   7	D:\WMB_Phayao\01_raw_data\kwaan_level\
+	                   2	D:\WMB_Phayao\01_raw_data\kwaan_level\derived_lakes\
+	                   8	D:\WMB_Phayao\01_raw_data\kwaan_level\พื้นที่รับน้ำ_กว๊านพะเยา\
+	                   4	D:\WMB_Phayao\01_raw_data\kwaan_level\อ่างเก็บน้ำกว๊านพะเยา\
+	                   1	D:\WMB_Phayao\01_raw_data\lulc\
+	  New Dir          1	D:\WMB_Phayao\01_raw_data\lulc\กรมส่งเสริม\
+	    New File  		  45.4 m	shp_phayao_67_68.zip
+	  New Dir         73	D:\WMB_Phayao\01_raw_data\lulc\กรมส่งเสริม\shp\
+	    New File  		   10966	0_Datadict-ข้อมูลการปลูกพืชพะเยา ปี67-68.xlsx
+	    New File  		       5	casava_phayao67.cpg
+	    New File  		   2.0 m	casava_phayao67.dbf
+	    New File  		     145	casava_phayao67.prj
+	    New File  		  348356	casava_phayao67.shp
+	    New File  		   13116	casava_phayao67.shx
+	    New File  		       5	casava_phayao68.cpg
+	    New File  		  190871	casava_phayao68.dbf
+	    New File  		     145	casava_phayao68.prj
+	    New File  		   87328	casava_phayao68.shp
+	    New File  		    3420	casava_phayao68.shx
+	    New File  		       5	longgan_phayao67.cpg
+	    New File  		  19.0 m	longgan_phayao67.dbf
+	    New File  		     145	longgan_phayao67.prj
+	    New File  		   2.5 m	longgan_phayao67.shp
+	    New File  		  118940	longgan_phayao67.shx
+	    New File  		       5	longgan_phayao68.cpg
+	    New File  		   6.5 m	longgan_phayao68.dbf
+	    New File  		     145	longgan_phayao68.prj
+	    New File  		   2.5 m	longgan_phayao68.shp
+	    New File  		  120284	longgan_phayao68.shx
+	    New File  		       5	maize_phayao67.cpg
+	    New File  		  23.8 m	maize_phayao67.dbf
+	    New File  		     145	maize_phayao67.prj
+	    New File  		   3.4 m	maize_phayao67.shp
+	    New File  		  148764	maize_phayao67.shx
+	    New File  		       5	maize_phayao68.cpg
+	    New File  		   4.6 m	maize_phayao68.dbf
+	    New File  		     145	maize_phayao68.prj
+	    New File  		   1.9 m	maize_phayao68.shp
+	    New File  		   84396	maize_phayao68.shx
+	    New File  		       5	palm_phayao67.cpg
+	    New File  		  438856	palm_phayao67.dbf
+	    New File  		     145	palm_phayao67.prj
+	    New File  		   58644	palm_phayao67.shp
+	    New File  		    2708	palm_phayao67.shx
+	    New File  		       5	palm_phayao68.cpg
+	    New File  		   67712	palm_phayao68.dbf
+	    New File  		     145	palm_phayao68.prj
+	    New File  		   26704	palm_phayao68.shp
+	    New File  		    1276	palm_phayao68.shx
+	    New File  		       5	rice_master1_phayao67.cpg
+	    New File  		  20.8 m	rice_master1_phayao67.dbf
+	    New File  		     145	rice_master1_phayao67.prj
+	    New File  		   2.9 m	rice_master1_phayao67.shp
+	    New File  		  130388	rice_master1_phayao67.shx
+	    New File  		       5	rice_master1_phayao68.cpg
+	    New File  		   7.6 m	rice_master1_phayao68.dbf
+	    New File  		     145	rice_master1_phayao68.prj
+	    New File  		    1624	rice_master1_phayao68.qmd
+	    New File  		   3.0 m	rice_master1_phayao68.shp
+	    New File  		  139556	rice_master1_phayao68.shx
+	    New File  		       5	rice_master_phayao67.cpg
+	    New File  		 164.7 m	rice_master_phayao67.dbf
+	    New File  		     145	rice_master_phayao67.prj
+	    New File  		  23.6 m	rice_master_phayao67.shp
+	    New File  		 1027612	rice_master_phayao67.shx
+	    New File  		       5	rice_master_phayao68.cpg
+	    New File  		  57.9 m	rice_master_phayao68.dbf
+	    New File  		     145	rice_master_phayao68.prj
+	    New File  		    1624	rice_master_phayao68.qmd
+	    New File  		  24.3 m	rice_master_phayao68.shp
+	    New File  		   1.0 m	rice_master_phayao68.shx
+	    New File  		       5	rubber_phayao67.cpg
+	    New File  		  15.2 m	rubber_phayao67.dbf
+	    New File  		     145	rubber_phayao67.prj
+	    New File  		   1.8 m	rubber_phayao67.shp
+	    New File  		   80836	rubber_phayao67.shx
+	    New File  		       5	rubber_phayao68.cpg
+	    New File  		   4.5 m	rubber_phayao68.dbf
+	    New File  		     145	rubber_phayao68.prj
+	    New File  		   1.9 m	rubber_phayao68.shp
+	    New File  		   83004	rubber_phayao68.shx
+	                   9	D:\WMB_Phayao\01_raw_data\rainfall\
+	    Newer     		  103651	imerg_north_basin_daily.csv
+	    New File  		     850	weathernext_forecast_daily.csv
+	                   4	D:\WMB_Phayao\01_raw_data\rainfall\Mae_Sai_Station\
+	  New Dir          2	D:\WMB_Phayao\01_raw_data\rainfall\weathernext_archive\
+	    New File  		     849	forecast_20261005_18Z.csv
+	    New File  		     850	forecast_20261006_18Z.csv
+	                   7	D:\WMB_Phayao\01_raw_data\rainfall\เหนือกว๊าน\
+	                   9	D:\WMB_Phayao\01_raw_data\rainfall\เหนือกว๊าน\New download\
+	                  22	D:\WMB_Phayao\01_raw_data\Reservoirs\
+	                  17	D:\WMB_Phayao\01_raw_data\Reservoirs\2025\
+	                   4	D:\WMB_Phayao\01_raw_data\Reservoirs\RES002_New\
+	                  20	D:\WMB_Phayao\01_raw_data\Reservoirs\บัญชีน้ำ\
+	    Newer     		    9038	2025_August_MNR.xlsx
+	    Newer     		    8097	2025_December_MNR.xlsx
+	    Newer     		    8859	2025_July_MNR.xlsx
+	    Newer     		    5989	2025_June_MNR.xlsx
+	    Newer     		    8612	2025_November_MNR.xlsx
+	    Newer     		    8811	2025_October_MNR.xlsx
+	    Newer     		    8826	2025_September_MNR.xlsx
+	    Newer     		    8002	2026_April_MNR.xlsx
+	    Newer     		    8713	2026_August_MNR.xlsx
+	    Newer     		    7319	2026_February_MNR.xlsx
+	    Newer     		    8055	2026_January_MNR.xlsx
+	    Newer     		    8679	2026_July_MNR.xlsx
+	    Newer     		    8352	2026_June_MNR.xlsx
+	    Newer     		    8078	2026_March_MNR.xlsx
+	    Newer     		    8751	2026_May_MNR.xlsx
+	    Newer     		    6433	2026_October_MNR.xlsx
+	    Newer     		    8947	2026_September_MNR.xlsx
+	                   8	D:\WMB_Phayao\01_raw_data\soil_ldd\
+	                   8	D:\WMB_Phayao\01_raw_data\subwatershed\
+	                   0	D:\WMB_Phayao\02_processed\
+	                   4	D:\WMB_Phayao\02_processed\cn_map\
+	                   4	D:\WMB_Phayao\02_processed\dtm\
+	                   3	D:\WMB_Phayao\02_processed\flow_direction\
+	                   7	D:\WMB_Phayao\02_processed\sub_catchment\
+	                   0	D:\WMB_Phayao\03_model\
+	                   4	D:\WMB_Phayao\03_model\network\
+	                  11	D:\WMB_Phayao\03_model\parameters\
+	                   5	D:\WMB_Phayao\03_model\simulation\
+	                  22	D:\WMB_Phayao\04_validation\
+	                  14	D:\WMB_Phayao\05_outputs\
+	                   7	D:\WMB_Phayao\05_outputs\2568\
+	                   3	D:\WMB_Phayao\05_outputs\2568\figures\
+	                   3	D:\WMB_Phayao\05_outputs\2568\maps\
+	                   1	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\
+	                  15	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\data\
+	                   5	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\data\gis_reference\
+	                   3	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\data\ref_validation\
+	                  17	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\data\Reservoirs_2025\
+	                  13	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\figures\
+	                  11	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\model_maenarua_fix\
+	                   4	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\model_maenarua_fix\original_reference\
+	                   1	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\model_maenarua_fix\qa\
+	                  21	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\model_maenarua_fix\results\
+	                  26	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\model_maenarua_fix\results\alpha_sweep\
+	                   3	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\
+	    Older     		       0	01_raw_data
+2026/10/07 09:18:00 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\01_raw_data
+The file cannot be accessed by the system.
+Waiting 5 seconds... Retrying...
+	    Older     		       0	01_raw_data
+2026/10/07 09:18:05 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\01_raw_data
+The file cannot be accessed by the system.
+Waiting 5 seconds... Retrying...
+	    Older     		       0	01_raw_data
+2026/10/07 09:18:10 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\01_raw_data
+The file cannot be accessed by the system.
+
+ERROR: RETRY LIMIT EXCEEDED.
+
+	    Older     		       0	02_processed
+2026/10/07 09:18:10 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\02_processed
+The file cannot be accessed by the system.
+Waiting 5 seconds... Retrying...
+	    Older     		       0	02_processed
+2026/10/07 09:18:15 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\02_processed
+The file cannot be accessed by the system.
+Waiting 5 seconds... Retrying...
+	    Older     		       0	02_processed
+2026/10/07 09:18:20 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\02_processed
+The file cannot be accessed by the system.
+
+ERROR: RETRY LIMIT EXCEEDED.
+
+	    Older     		       0	04_validation
+2026/10/07 09:18:20 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\04_validation
+The file cannot be accessed by the system.
+Waiting 5 seconds... Retrying...
+	    Older     		       0	04_validation
+2026/10/07 09:18:25 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\04_validation
+The file cannot be accessed by the system.
+Waiting 5 seconds... Retrying...
+	    Older     		       0	04_validation
+2026/10/07 09:18:30 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\04_validation
+The file cannot be accessed by the system.
+
+ERROR: RETRY LIMIT EXCEEDED.
+
+	                   0	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\
+	                   2	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\network\
+	    Older     		       0	dag_links.json
+2026/10/07 09:18:30 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\network\dag_links.json
+The file cannot be accessed by the system.
+Waiting 5 seconds... Retrying...
+	    Older     		       0	dag_links.json
+2026/10/07 09:18:35 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\network\dag_links.json
+The file cannot be accessed by the system.
+Waiting 5 seconds... Retrying...
+	    Older     		       0	dag_links.json
+2026/10/07 09:18:40 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\network\dag_links.json
+The file cannot be accessed by the system.
+
+ERROR: RETRY LIMIT EXCEEDED.
+
+	    Older     		       0	dag_nodes.json
+2026/10/07 09:18:40 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\network\dag_nodes.json
+The file cannot be accessed by the system.
+Waiting 5 seconds... Retrying...
+	    Older     		       0	dag_nodes.json
+2026/10/07 09:18:45 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\network\dag_nodes.json
+The file cannot be accessed by the system.
+Waiting 5 seconds... Retrying...
+	    Older     		       0	dag_nodes.json
+2026/10/07 09:18:50 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\network\dag_nodes.json
+The file cannot be accessed by the system.
+
+ERROR: RETRY LIMIT EXCEEDED.
+
+	                   3	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\parameters\
+	    Older     		       0	bias_factors_v2.json
+2026/10/07 09:18:50 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\parameters\bias_factors_v2.json
+The file cannot be accessed by the system.
+Waiting 5 seconds... Retrying...
+	    Older     		       0	bias_factors_v2.json
+2026/10/07 09:18:55 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\parameters\bias_factors_v2.json
+The file cannot be accessed by the system.
+Waiting 5 seconds... Retrying...
+	    Older     		       0	bias_factors_v2.json
+2026/10/07 09:19:00 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\parameters\bias_factors_v2.json
+The file cannot be accessed by the system.
+
+ERROR: RETRY LIMIT EXCEEDED.
+
+	    Older     		       0	mountain_fraction.json
+2026/10/07 09:19:00 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\parameters\mountain_fraction.json
+The file cannot be accessed by the system.
+Waiting 5 seconds... Retrying...
+	    Older     		       0	mountain_fraction.json
+2026/10/07 09:19:05 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\parameters\mountain_fraction.json
+The file cannot be accessed by the system.
+Waiting 5 seconds... Retrying...
+	    Older     		       0	mountain_fraction.json
+2026/10/07 09:19:10 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\parameters\mountain_fraction.json
+The file cannot be accessed by the system.
+
+ERROR: RETRY LIMIT EXCEEDED.
+
+	                   3	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\simulation\
+	                   2	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\05_outputs\
+	                   3	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\05_outputs\figures\
+	                   5	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\05_outputs\maps\
+	                   7	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\05_outputs\tables\
+	                  24	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\tmp_work\
+	                  19	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\
+	                   1	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\
+	                   1	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\.bin\
+	                   0	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\@types\
+	                  52	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\@types\node\
+	                   1	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\@types\node\assert\
+	                   4	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\@types\node\compatibility\
+	                   1	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\@types\node\dns\
+	                   1	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\@types\node\fs\
+	                   1	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\@types\node\readline\
+	                   3	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\@types\node\stream\
+	                   1	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\@types\node\timers\
+	                   3	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\@types\node\ts5.6\
+	                   7	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\@types\node\web-globals\
+	                   3	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\core-util-is\
+	                   1	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\core-util-is\lib\
+	                   1	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\https\
+	                   3	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\image-size\
+	                   1	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\image-size\bin\
+	                   4	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\image-size\dist\
+	                  46	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\image-size\dist\types\
+	                   2	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\image-size\dist\utils\
+	                   3	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\immediate\
+	                   2	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\immediate\dist\
+	                   2	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\immediate\lib\
+	                   5	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\inherits\
+	                   8	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\isarray\
+	                  14	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\jszip\
+	                   0	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\jszip\.github\
+	                   1	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\jszip\.github\workflows\
+	                   2	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\jszip\dist\
+	                  20	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\jszip\lib\
+	                   2	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\jszip\lib\generate\
+	                   2	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\jszip\lib\nodejs\
+	                   6	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\jszip\lib\reader\
+	                   6	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\jszip\lib\stream\
+	                   1	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\jszip\vendor\
+	                   5	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\lie\
+	                   4	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\lie\dist\
+	                   2	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\lie\lib\
+	                   5	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\pako\
+	                   6	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\pako\dist\
+	                   2	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\pako\lib\
+	                   2	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\pako\lib\utils\
+	                  12	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\pako\lib\zlib\
+	                   3	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\pptxgenjs\
+	                   6	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\pptxgenjs\dist\
+	                   1	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\pptxgenjs\types\
+	                   4	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\process-nextick-args\
+	                   5	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\queue\
+	                  14	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\readable-stream\
+	                   0	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\readable-stream\doc\
+	                   1	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\readable-stream\doc\wg-meetings\
+	                   5	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\readable-stream\lib\
+	                   0	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\readable-stream\lib\internal\
+	                   4	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\readable-stream\lib\internal\streams\
+	                   5	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\safe-buffer\
+	                   3	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\setimmediate\
+	                   4	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\string_decoder\
+	                   1	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\string_decoder\lib\
+	                  41	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\undici-types\
+	                   6	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\presentation\node_modules\util-deprecate\
+	                  24	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\scripts\
+	                  12	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\scripts\phase5_outputs_copy\
+	                  25	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\tables\
+	                  22	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\tables\gap_followup\
+	                   7	D:\WMB_Phayao\05_outputs\2568\scripts\
+	                   1	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\
+	                   1	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\.bin\
+	                   0	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\@types\
+	                  52	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\@types\node\
+	                   1	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\@types\node\assert\
+	                   4	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\@types\node\compatibility\
+	                   1	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\@types\node\dns\
+	                   1	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\@types\node\fs\
+	                   1	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\@types\node\readline\
+	                   3	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\@types\node\stream\
+	                   1	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\@types\node\timers\
+	                   3	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\@types\node\ts5.6\
+	                   7	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\@types\node\web-globals\
+	                   3	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\core-util-is\
+	                   1	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\core-util-is\lib\
+	                   1	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\https\
+	                   3	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\image-size\
+	                   1	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\image-size\bin\
+	                   4	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\image-size\dist\
+	                  46	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\image-size\dist\types\
+	                   2	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\image-size\dist\utils\
+	                   3	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\immediate\
+	                   2	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\immediate\dist\
+	                   2	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\immediate\lib\
+	                   5	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\inherits\
+	                   8	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\isarray\
+	                  14	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\jszip\
+	                   0	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\jszip\.github\
+	                   1	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\jszip\.github\workflows\
+	                   2	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\jszip\dist\
+	                  20	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\jszip\lib\
+	                   2	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\jszip\lib\generate\
+	                   2	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\jszip\lib\nodejs\
+	                   6	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\jszip\lib\reader\
+	                   6	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\jszip\lib\stream\
+	                   1	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\jszip\vendor\
+	                   5	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\lie\
+	                   4	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\lie\dist\
+	                   2	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\lie\lib\
+	                   5	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\pako\
+	                   6	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\pako\dist\
+	                   2	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\pako\lib\
+	                   2	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\pako\lib\utils\
+	                  12	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\pako\lib\zlib\
+	                   3	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\pptxgenjs\
+	                   6	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\pptxgenjs\dist\
+	                   1	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\pptxgenjs\types\
+	                   4	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\process-nextick-args\
+	                   5	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\queue\
+	                  14	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\readable-stream\
+	                   0	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\readable-stream\doc\
+	                   1	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\readable-stream\doc\wg-meetings\
+	                   5	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\readable-stream\lib\
+	                   0	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\readable-stream\lib\internal\
+	                   4	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\readable-stream\lib\internal\streams\
+	                   5	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\safe-buffer\
+	                   3	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\setimmediate\
+	                   4	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\string_decoder\
+	                   1	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\string_decoder\lib\
+	                  41	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\undici-types\
+	                   6	D:\WMB_Phayao\05_outputs\2568\scripts\node_modules\util-deprecate\
+	                   4	D:\WMB_Phayao\05_outputs\2568\tables\
+	                   5	D:\WMB_Phayao\05_outputs\figures\
+	                  10	D:\WMB_Phayao\05_outputs\maps\
+	                   1	D:\WMB_Phayao\05_outputs\report\
+	                   7	D:\WMB_Phayao\05_outputs\tables\
+	    Newer     		   40645	reservoir_inflow_daily.csv
+	    Newer     		    1551	reservoir_inflow_monthly.csv
+	    Newer     		    6269	reservoir_inflow_weekly.csv
+	                   0	D:\WMB_Phayao\06_scripts\
+	                   6	D:\WMB_Phayao\06_scripts\phase1_terrain\
+	                   3	D:\WMB_Phayao\06_scripts\phase2_cn\
+	                   3	D:\WMB_Phayao\06_scripts\phase3_network\
+	                  15	D:\WMB_Phayao\06_scripts\phase4_simulation\
+	                  16	D:\WMB_Phayao\06_scripts\phase5_outputs\
+	                  19	D:\WMB_Phayao\07_supplementary\
+	                   7	D:\WMB_Phayao\07_supplementary\WaterShed_Phayao_merge\
+	                   1	D:\WMB_Phayao\08_Kwan_prediction\
+	                   2	D:\WMB_Phayao\08_Kwan_prediction\data\
+	                   0	D:\WMB_Phayao\08_Kwan_prediction\exp_north_rain\
+	                   3	D:\WMB_Phayao\08_Kwan_prediction\exp_north_rain\data\
+	                   7	D:\WMB_Phayao\08_Kwan_prediction\exp_north_rain\results\
+	                   4	D:\WMB_Phayao\08_Kwan_prediction\exp_north_rain\scripts\
+	                  11	D:\WMB_Phayao\08_Kwan_prediction\results\
+	                   6	D:\WMB_Phayao\08_Kwan_prediction\scripts\
+	                   8	D:\WMB_Phayao\09_live\
+	    Newer     		   46075	daily_update.py
+	    New File  		    6713	fetch_weathernext_rain.py
+	    New File  		    5053	fetch_weathernext_rain_zarr.py
+	    New File  		     572	run_fetch_weathernext.bat
+	    New File  		     228	run_fetch_weathernext_zarr.bat
+	                   1	D:\WMB_Phayao\09_live\chart_refresh_20260720\
+	                   1	D:\WMB_Phayao\09_live\chart_refresh_20260720\01_raw_data\
+	                   1	D:\WMB_Phayao\09_live\chart_refresh_20260720\01_raw_data\kwaan_level\
+	                   4	D:\WMB_Phayao\09_live\chart_refresh_20260720\01_raw_data\rainfall\
+	                   1	D:\WMB_Phayao\09_live\chart_refresh_20260720\01_raw_data\rainfall\Mae_Sai_Station\
+	                   0	D:\WMB_Phayao\09_live\chart_refresh_20260720\02_processed\
+	                   1	D:\WMB_Phayao\09_live\chart_refresh_20260720\02_processed\sub_catchment\
+	                   0	D:\WMB_Phayao\09_live\chart_refresh_20260720\03_model\
+	                   2	D:\WMB_Phayao\09_live\chart_refresh_20260720\03_model\network\
+	                  11	D:\WMB_Phayao\09_live\chart_refresh_20260720\03_model\parameters\
+	                   4	D:\WMB_Phayao\09_live\chart_refresh_20260720\03_model\simulation\
+	                   8	D:\WMB_Phayao\09_live\chart_refresh_20260720\06_scripts\
+	                   3	D:\WMB_Phayao\09_live\daily_wmb_refresh\
+	    Newer     		   63406	wmb_daily_model_latest.json
+	                   0	D:\WMB_Phayao\09_live\daily_wmb_refresh\01_raw_data\
+	                   1	D:\WMB_Phayao\09_live\daily_wmb_refresh\01_raw_data\kwaan_level\
+	    Newer     		   39556	kwaan_level_daily.csv
+	                   3	D:\WMB_Phayao\09_live\daily_wmb_refresh\01_raw_data\rainfall\
+	    Newer     		  146192	imerg_daily_per_catchment.csv
+	    Newer     		    7330	tele_rain_daily.csv
+	    Newer     		   82363	wbyn_rain_daily.csv
+	                   1	D:\WMB_Phayao\09_live\daily_wmb_refresh\01_raw_data\rainfall\Mae_Sai_Station\
+	    Newer     		  278678	WBYN.csv
+	                   1	D:\WMB_Phayao\09_live\daily_wmb_refresh\01_raw_data\Reservoirs\
+	    Newer     		   35629	res_maenarua_observed_daily.csv
+	                   0	D:\WMB_Phayao\09_live\daily_wmb_refresh\02_processed\
+	                   1	D:\WMB_Phayao\09_live\daily_wmb_refresh\02_processed\sub_catchment\
+	                   0	D:\WMB_Phayao\09_live\daily_wmb_refresh\03_model\
+	                   2	D:\WMB_Phayao\09_live\daily_wmb_refresh\03_model\network\
+	                  11	D:\WMB_Phayao\09_live\daily_wmb_refresh\03_model\parameters\
+	    Newer     		    1227	bias_factors_v2.json
+	                   4	D:\WMB_Phayao\09_live\daily_wmb_refresh\03_model\simulation\
+	    Newer     		  106986	Diversion_loss.csv
+	    Newer     		   1.0 m	Flood_output.csv
+	    Newer     		   36148	mass_balance.csv
+	    Newer     		   59305	rain_daily_corrected.csv
+	                   8	D:\WMB_Phayao\09_live\daily_wmb_refresh\06_scripts\
+	                   7	D:\WMB_Phayao\09_live\daily_wmb_refresh\_backup_before_candidateD_20260724\
+	                   5	D:\WMB_Phayao\09_live\daily_wmb_refresh\_backup_before_candidateD_20260724\toplevel_03_model_simulation\
+	                   3	D:\WMB_Phayao\09_live\data\
+	    Newer     		  19.6 m	api_snapshots.csv
+	    Newer     		  12.9 m	gdrive_log.xlsx
+	    Newer     		    7122	reservoir_levels_daily.csv
+	                   2	D:\WMB_Phayao\09_live\logs\
+	    Newer     		  445820	daily.log
+	                 112	D:\WMB_Phayao\09_live\output\
+	    Newer     		    9647	flood_latest.json
+	    Newer     		    8804	Flood_output_forecast_latest.csv
+	    Newer     		     664	forecast_2026-10-06.csv
+	    New File  		     670	forecast_2026-10-07.csv
+	                   0	D:\WMB_Phayao\09_live\telemetry_append_20260917\
+	                   1	D:\WMB_Phayao\09_live\telemetry_append_20260917\06_scripts\
+	                   1	D:\WMB_Phayao\09_live\_backup_before_calibnote_fix_20260921\
+	                   1	D:\WMB_Phayao\09_live\_backup_before_forecastmap_fix_20260921\
+	                   6	D:\WMB_Phayao\09_live\_backup_before_gaugesat_deploy_20260922\
+	                   0	D:\WMB_Phayao\09_live\_backup_before_mechE_deploy_20260921\
+	                   0	D:\WMB_Phayao\09_live\_backup_before_mechE_deploy_20260921\live_03_model\
+	                   1	D:\WMB_Phayao\09_live\_backup_before_mechE_deploy_20260921\live_03_model\network\
+	                   1	D:\WMB_Phayao\09_live\_backup_before_mechE_deploy_20260921\live_03_model\parameters\
+	                   1	D:\WMB_Phayao\09_live\_backup_before_mechE_deploy_20260921\live_06_scripts\
+	                   0	D:\WMB_Phayao\09_live\_backup_before_mechE_deploy_20260921\main_03_model\
+	                   1	D:\WMB_Phayao\09_live\_backup_before_mechE_deploy_20260921\main_03_model\network\
+	                   1	D:\WMB_Phayao\09_live\_backup_before_mechE_deploy_20260921\main_03_model\parameters\
+	                   0	D:\WMB_Phayao\10_manuscript\
+	                  16	D:\WMB_Phayao\10_manuscript\WSE\
+	                   0	D:\WMB_Phayao\10_manuscript\WSE\figures\
+	                   2	D:\WMB_Phayao\10_manuscript\WSE\figures\kwaan_prediction\
+	                  10	D:\WMB_Phayao\10_manuscript\WSE\figures\main_model\
+	                   6	D:\WMB_Phayao\10_manuscript\WSE\figures\main_model_candidateD_rerun\
+	                  13	D:\WMB_Phayao\10_manuscript\WSE\figures\reservoir\
+	                   0	D:\WMB_Phayao\10_manuscript\WSE\raw_reference\
+	                   0	D:\WMB_Phayao\10_manuscript\WSE\tables\
+	                  12	D:\WMB_Phayao\10_manuscript\WSE\tables\candidateD\
+	                   8	D:\WMB_Phayao\10_manuscript\WSE\tables\network_data\
+	                  11	D:\WMB_Phayao\10_manuscript\WSE\tables\parameters\
+	                   7	D:\WMB_Phayao\10_manuscript\WSE\tables\project_outputs\
+	                   4	D:\WMB_Phayao\10_manuscript\WSE\tables\project_outputs\2568\
+	                  25	D:\WMB_Phayao\10_manuscript\WSE\tables\reservoir\
+	                  23	D:\WMB_Phayao\10_manuscript\WSE\tables\validation\
+	                   1	D:\WMB_Phayao\10_manuscript\WSE\template\
+	                   3	D:\WMB_Phayao\colab_migration\
+	                  20	D:\WMB_Phayao\GIS\
+	                  27	D:\WMB_Phayao\NSE_Invest\
+	                   3	D:\WMB_Phayao\NSE_Invest\evidence_from_Recheck\
+	                   6	D:\WMB_Phayao\NSE_Invest\evidence_from_Recheck\results\
+	                   4	D:\WMB_Phayao\NSE_Invest\evidence_from_Recheck\scripts\
+	                   0	D:\WMB_Phayao\NSE_Invest\mechanism_test_A_maenarua_as_linear\
+	                   5	D:\WMB_Phayao\NSE_Invest\mechanism_test_A_maenarua_as_linear\data\
+	                   2	D:\WMB_Phayao\NSE_Invest\mechanism_test_A_maenarua_as_linear\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\NSE_Invest\mechanism_test_A_maenarua_as_linear\data\ref_validation\
+	                  11	D:\WMB_Phayao\NSE_Invest\mechanism_test_A_maenarua_as_linear\results\
+	                   5	D:\WMB_Phayao\NSE_Invest\mechanism_test_A_maenarua_as_linear\scripts\
+	                   0	D:\WMB_Phayao\NSE_Invest\mechanism_test_B2_others_as_weir_L10\
+	                   5	D:\WMB_Phayao\NSE_Invest\mechanism_test_B2_others_as_weir_L10\data\
+	                   2	D:\WMB_Phayao\NSE_Invest\mechanism_test_B2_others_as_weir_L10\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\NSE_Invest\mechanism_test_B2_others_as_weir_L10\data\ref_validation\
+	                   5	D:\WMB_Phayao\NSE_Invest\mechanism_test_B2_others_as_weir_L10\results\
+	                   2	D:\WMB_Phayao\NSE_Invest\mechanism_test_B2_others_as_weir_L10\scripts\
+	                   0	D:\WMB_Phayao\NSE_Invest\mechanism_test_B_others_as_weir\
+	                   5	D:\WMB_Phayao\NSE_Invest\mechanism_test_B_others_as_weir\data\
+	                   2	D:\WMB_Phayao\NSE_Invest\mechanism_test_B_others_as_weir\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\NSE_Invest\mechanism_test_B_others_as_weir\data\ref_validation\
+	                   5	D:\WMB_Phayao\NSE_Invest\mechanism_test_B_others_as_weir\results\
+	                   2	D:\WMB_Phayao\NSE_Invest\mechanism_test_B_others_as_weir\scripts\
+	                   0	D:\WMB_Phayao\NSE_Invest\mechanism_test_B_recal\
+	                   6	D:\WMB_Phayao\NSE_Invest\mechanism_test_B_recal\data\
+	                   2	D:\WMB_Phayao\NSE_Invest\mechanism_test_B_recal\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\NSE_Invest\mechanism_test_B_recal\data\ref_validation\
+	                   3	D:\WMB_Phayao\NSE_Invest\mechanism_test_B_recal\results\
+	                   5	D:\WMB_Phayao\NSE_Invest\mechanism_test_B_recal\scripts\
+	                   0	D:\WMB_Phayao\NSE_Invest\mechanism_test_B_recal_rebuiltnodes\
+	                   5	D:\WMB_Phayao\NSE_Invest\mechanism_test_B_recal_rebuiltnodes\data\
+	                   2	D:\WMB_Phayao\NSE_Invest\mechanism_test_B_recal_rebuiltnodes\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\NSE_Invest\mechanism_test_B_recal_rebuiltnodes\data\ref_validation\
+	                   3	D:\WMB_Phayao\NSE_Invest\mechanism_test_B_recal_rebuiltnodes\results\
+	                   4	D:\WMB_Phayao\NSE_Invest\mechanism_test_B_recal_rebuiltnodes\scripts\
+	                   0	D:\WMB_Phayao\NSE_Invest\mechanism_test_C_branch1_capacity\
+	                   6	D:\WMB_Phayao\NSE_Invest\mechanism_test_C_branch1_capacity\data\
+	                   2	D:\WMB_Phayao\NSE_Invest\mechanism_test_C_branch1_capacity\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\NSE_Invest\mechanism_test_C_branch1_capacity\data\ref_validation\
+	                   4	D:\WMB_Phayao\NSE_Invest\mechanism_test_C_branch1_capacity\results\
+	                   6	D:\WMB_Phayao\NSE_Invest\mechanism_test_C_branch1_capacity\scripts\
+	                   0	D:\WMB_Phayao\NSE_Invest\mechanism_test_D_pond_group\
+	                   6	D:\WMB_Phayao\NSE_Invest\mechanism_test_D_pond_group\data\
+	                   2	D:\WMB_Phayao\NSE_Invest\mechanism_test_D_pond_group\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\NSE_Invest\mechanism_test_D_pond_group\data\ref_validation\
+	                   3	D:\WMB_Phayao\NSE_Invest\mechanism_test_D_pond_group\results\
+	                   4	D:\WMB_Phayao\NSE_Invest\mechanism_test_D_pond_group\scripts\
+	                   0	D:\WMB_Phayao\NSE_Invest\mechanism_test_E_sar_filtered\
+	                   7	D:\WMB_Phayao\NSE_Invest\mechanism_test_E_sar_filtered\data\
+	                   2	D:\WMB_Phayao\NSE_Invest\mechanism_test_E_sar_filtered\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\NSE_Invest\mechanism_test_E_sar_filtered\data\ref_validation\
+	                   4	D:\WMB_Phayao\NSE_Invest\mechanism_test_E_sar_filtered\results\
+	                   5	D:\WMB_Phayao\NSE_Invest\mechanism_test_E_sar_filtered\scripts\
+	                   0	D:\WMB_Phayao\NSE_Invest\mechanism_test_F_sar_filtered_all\
+	                   7	D:\WMB_Phayao\NSE_Invest\mechanism_test_F_sar_filtered_all\data\
+	                   2	D:\WMB_Phayao\NSE_Invest\mechanism_test_F_sar_filtered_all\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\NSE_Invest\mechanism_test_F_sar_filtered_all\data\ref_validation\
+	                   3	D:\WMB_Phayao\NSE_Invest\mechanism_test_F_sar_filtered_all\results\
+	                   5	D:\WMB_Phayao\NSE_Invest\mechanism_test_F_sar_filtered_all\scripts\
+	                   0	D:\WMB_Phayao\NSE_Invest\mechanism_test_G_sar_refined\
+	                   7	D:\WMB_Phayao\NSE_Invest\mechanism_test_G_sar_refined\data\
+	                   2	D:\WMB_Phayao\NSE_Invest\mechanism_test_G_sar_refined\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\NSE_Invest\mechanism_test_G_sar_refined\data\ref_validation\
+	                   3	D:\WMB_Phayao\NSE_Invest\mechanism_test_G_sar_refined\results\
+	                   5	D:\WMB_Phayao\NSE_Invest\mechanism_test_G_sar_refined\scripts\
+	                   0	D:\WMB_Phayao\NSE_Invest\mechanism_test_H_real_reservoir_forcing\
+	                   8	D:\WMB_Phayao\NSE_Invest\mechanism_test_H_real_reservoir_forcing\data\
+	                   2	D:\WMB_Phayao\NSE_Invest\mechanism_test_H_real_reservoir_forcing\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\NSE_Invest\mechanism_test_H_real_reservoir_forcing\data\ref_validation\
+	                   3	D:\WMB_Phayao\NSE_Invest\mechanism_test_H_real_reservoir_forcing\results\
+	                   4	D:\WMB_Phayao\NSE_Invest\mechanism_test_H_real_reservoir_forcing\scripts\
+	                   0	D:\WMB_Phayao\NSE_Invest\mechanism_test_I_wetland_node\
+	                   7	D:\WMB_Phayao\NSE_Invest\mechanism_test_I_wetland_node\data\
+	                   2	D:\WMB_Phayao\NSE_Invest\mechanism_test_I_wetland_node\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\NSE_Invest\mechanism_test_I_wetland_node\data\ref_validation\
+	                   3	D:\WMB_Phayao\NSE_Invest\mechanism_test_I_wetland_node\results\
+	                   4	D:\WMB_Phayao\NSE_Invest\mechanism_test_I_wetland_node\scripts\
+	                   0	D:\WMB_Phayao\NSE_Invest\mechanism_test_J1_realforcing_baseline\
+	                   6	D:\WMB_Phayao\NSE_Invest\mechanism_test_J1_realforcing_baseline\data\
+	                   2	D:\WMB_Phayao\NSE_Invest\mechanism_test_J1_realforcing_baseline\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\NSE_Invest\mechanism_test_J1_realforcing_baseline\data\ref_validation\
+	                   3	D:\WMB_Phayao\NSE_Invest\mechanism_test_J1_realforcing_baseline\results\
+	                   4	D:\WMB_Phayao\NSE_Invest\mechanism_test_J1_realforcing_baseline\scripts\
+	                   0	D:\WMB_Phayao\NSE_Invest\mechanism_test_K_mechE_on_real_topology\
+	                   5	D:\WMB_Phayao\NSE_Invest\mechanism_test_K_mechE_on_real_topology\data\
+	                   2	D:\WMB_Phayao\NSE_Invest\mechanism_test_K_mechE_on_real_topology\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\NSE_Invest\mechanism_test_K_mechE_on_real_topology\data\ref_validation\
+	                   0	D:\WMB_Phayao\NSE_Invest\mechanism_test_K_mechE_on_real_topology\results\
+	                   2	D:\WMB_Phayao\NSE_Invest\mechanism_test_K_mechE_on_real_topology\scripts\
+	                  11	D:\WMB_Phayao\NSE_Invest\SAR_slope_filtered\
+	                   0	D:\WMB_Phayao\NSE_Invest\weir_only_scenario\
+	                   6	D:\WMB_Phayao\NSE_Invest\weir_only_scenario\data\
+	                   2	D:\WMB_Phayao\NSE_Invest\weir_only_scenario\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\NSE_Invest\weir_only_scenario\data\ref_validation\
+	                   5	D:\WMB_Phayao\NSE_Invest\weir_only_scenario\results\
+	                   2	D:\WMB_Phayao\NSE_Invest\weir_only_scenario\scripts\
+	                   0	D:\WMB_Phayao\NSE_Invest\weir_only_scenario_rebuiltnodes\
+	                   6	D:\WMB_Phayao\NSE_Invest\weir_only_scenario_rebuiltnodes\data\
+	                   2	D:\WMB_Phayao\NSE_Invest\weir_only_scenario_rebuiltnodes\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\NSE_Invest\weir_only_scenario_rebuiltnodes\data\ref_validation\
+	                   5	D:\WMB_Phayao\NSE_Invest\weir_only_scenario_rebuiltnodes\results\
+	                   2	D:\WMB_Phayao\NSE_Invest\weir_only_scenario_rebuiltnodes\scripts\
+	                   7	D:\WMB_Phayao\Recheck\
+	                  26	D:\WMB_Phayao\Recheck\data\
+	                   2	D:\WMB_Phayao\Recheck\data\gap_followup\
+	                   2	D:\WMB_Phayao\Recheck\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\Recheck\data\ref_validation\
+	                  16	D:\WMB_Phayao\Recheck\geo_inputs\
+	                  20	D:\WMB_Phayao\Recheck\geo_inputs\GIS_reference\
+	                   6	D:\WMB_Phayao\Recheck\optuna_db\
+	                  10	D:\WMB_Phayao\Recheck\results\
+	                   0	D:\WMB_Phayao\Recheck\results\area_corrected_sensitivity\
+	                   5	D:\WMB_Phayao\Recheck\results\manuscript_requests\
+	                   5	D:\WMB_Phayao\Recheck\results\optuna_nse_kge\
+	                   3	D:\WMB_Phayao\Recheck\results\optuna_nse_kge_v2_persystem\
+	                   3	D:\WMB_Phayao\Recheck\results\optuna_nse_kge_v3_maesaicat_fixed\
+	                   2	D:\WMB_Phayao\Recheck\results\optuna_nse_kge_v4_single_objective\
+	                   2	D:\WMB_Phayao\Recheck\results\optuna_nse_kge_v5_global_alpha\
+	                   2	D:\WMB_Phayao\Recheck\results\optuna_nse_kge_v6_tau_fixed\
+	                  11	D:\WMB_Phayao\Recheck\results\phase3\
+	                  18	D:\WMB_Phayao\Recheck\results\rebuild\
+	                   5	D:\WMB_Phayao\Recheck\results\rebuild\baseline_run\
+	                   2	D:\WMB_Phayao\Recheck\results\sar_track_investigation\
+	                   6	D:\WMB_Phayao\Recheck\results\trial1150_v2_persystem\
+	                   6	D:\WMB_Phayao\Recheck\results\trial126\
+	                   6	D:\WMB_Phayao\Recheck\results\trial269_balanced\
+	                   6	D:\WMB_Phayao\Recheck\results\trial3292_v3_maesaicat_fixed\
+	                   6	D:\WMB_Phayao\Recheck\results\trial407_v2_persystem\
+	                   6	D:\WMB_Phayao\Recheck\results\trial702_v3_maesaicat_fixed\
+	                   6	D:\WMB_Phayao\Recheck\results\trial97\
+	                  40	D:\WMB_Phayao\Recheck\scripts\
+	                   7	D:\WMB_Phayao\Recheck\scripts\_reference_production\
+	                   1	D:\WMB_Phayao\Spillway_check\
+	                   3	D:\WMB_Phayao\Spillway_check\00_survey_evidence\
+	                   4	D:\WMB_Phayao\Spillway_check\00_survey_evidence\RES002_New\
+	                  20	D:\WMB_Phayao\Spillway_check\00_survey_evidence\Spillway อ่างแม่นาเรือ\
+	                   2	D:\WMB_Phayao\Spillway_check\01_production_reference\
+	                   4	D:\WMB_Phayao\Spillway_check\01_production_reference\pipeline_code\
+	                   6	D:\WMB_Phayao\Spillway_check\01_production_reference\weir_reference_data\
+	                   1	D:\WMB_Phayao\Spillway_check\02_wmb_test_harness\
+	                  10	D:\WMB_Phayao\Spillway_check\02_wmb_test_harness\data\
+	                   2	D:\WMB_Phayao\Spillway_check\02_wmb_test_harness\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\Spillway_check\02_wmb_test_harness\data\ref_validation\
+	                   0	D:\WMB_Phayao\Spillway_check\02_wmb_test_harness\results\
+	                   7	D:\WMB_Phayao\Spillway_check\02_wmb_test_harness\scripts\
+	                  13	D:\WMB_Phayao\Spillway_check\03_experiment\
+	                   2	D:\WMB_Phayao\Spillway_check\04_mechI_new_spillway\
+	                  12	D:\WMB_Phayao\Spillway_check\04_mechI_new_spillway\data\
+	                   2	D:\WMB_Phayao\Spillway_check\04_mechI_new_spillway\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\Spillway_check\04_mechI_new_spillway\data\ref_validation\
+	                   2	D:\WMB_Phayao\Spillway_check\04_mechI_new_spillway\results\
+	                   8	D:\WMB_Phayao\Spillway_check\04_mechI_new_spillway\scripts\
+	                   4	D:\WMB_Phayao\Spillway_check\04_ri_model_backtest\
+	                   3	D:\WMB_Phayao\Spillway_check\04_ri_model_backtest\catboost_info\
+	                   1	D:\WMB_Phayao\Spillway_check\04_ri_model_backtest\catboost_info\learn\
+	                  20	D:\WMB_Phayao\Spillway_check\04_ri_model_backtest\catboost_info\tmp\
+	                   3	D:\WMB_Phayao\Spillway_check\05_mechJ_hbank_adjust\
+	                  12	D:\WMB_Phayao\Spillway_check\05_mechJ_hbank_adjust\data\
+	                   2	D:\WMB_Phayao\Spillway_check\05_mechJ_hbank_adjust\data\rain_bias_source\
+	                   1	D:\WMB_Phayao\Spillway_check\05_mechJ_hbank_adjust\data\ref_validation\
+	                   4	D:\WMB_Phayao\Spillway_check\05_mechJ_hbank_adjust\results\
+	                   8	D:\WMB_Phayao\Spillway_check\05_mechJ_hbank_adjust\scripts\
+	                   7	D:\WMB_Phayao\Spillway_check\05_ri_full_retrain\
+	                   4	D:\WMB_Phayao\Spillway_check\05_ri_full_retrain\catboost_info\
+	                   1	D:\WMB_Phayao\Spillway_check\05_ri_full_retrain\catboost_info\learn\
+	                   1	D:\WMB_Phayao\Spillway_check\05_ri_full_retrain\catboost_info\test\
+	                 340	D:\WMB_Phayao\Spillway_check\05_ri_full_retrain\catboost_info\tmp\
+	                   1	D:\WMB_Phayao\Spillway_check\05_ri_full_retrain\exported_CORRECTED\
+	                   1	D:\WMB_Phayao\Spillway_check\05_ri_full_retrain\exported_ORIGINAL\
+	                   0	D:\WMB_Phayao\Spillway_check\05_ri_full_retrain\exported_smoketest\
+	                   0	D:\WMB_Phayao\Spillway_check\05_ri_full_retrain\exported_timing_test\
+	                   7	D:\WMB_Phayao\Spillway_check\05_ri_full_retrain\outputs_CORRECTED\
+	                   7	D:\WMB_Phayao\Spillway_check\05_ri_full_retrain\outputs_ORIGINAL\
+	                   1	D:\WMB_Phayao\Spillway_check\05_ri_full_retrain\outputs_smoketest\
+	                   2	D:\WMB_Phayao\Spillway_check\05_ri_full_retrain\outputs_timing_test\
+	                  23	D:\WMB_Phayao\Spillway_check\06_ri_6h_experiment\
+	                   4	D:\WMB_Phayao\Spillway_check\06_ri_6h_experiment\catboost_info\
+	                   1	D:\WMB_Phayao\Spillway_check\06_ri_6h_experiment\catboost_info\learn\
+	                   1	D:\WMB_Phayao\Spillway_check\06_ri_6h_experiment\catboost_info\test\
+	                 292	D:\WMB_Phayao\Spillway_check\06_ri_6h_experiment\catboost_info\tmp\
+	                  18	D:\WMB_Phayao\Spillway_check\06_ri_6h_experiment\shadow_models_candidate_corrected\
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :       519         3       516         0         0         0
+   Files :      3584       123      3454         0         7         0
+   Bytes :   8.587 g  480.32 m   8.118 g         0         0         0
+   Times :   0:01:13   0:00:03                       0:01:10   0:00:00
+
+
+   Speed :           156,270,092 Bytes/sec.
+   Speed :             8,941.847 MegaBytes/min.
+   Ended : Wednesday, October 7, 2026 9:19:12 AM
+
+===== sync_to_drive.bat เธเธ Wed 10/07/2026  9:19:12.61 (RC_WEB=1 RC_WMB=9) ===== 

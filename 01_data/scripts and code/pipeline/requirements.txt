@@ -62,4 +62,10 @@ rasterio>=1.3             # sar_classification.py: _download_ee_image_geotiff()/
                           # หมายเหตุ: >= ไม่ใช่ == เพราะยังไม่ได้ตรวจสอบเวอร์ชันที่ "ติดตั้งจริง" ใน
                           # D:\maenaruea-water-web\.venv (ต่างจาก package อื่นด้านบนที่ล็อกด้วย == หลัง
                           # เปิด .dist-info/METADATA ตรวจสอบแล้ว) — ควรรัน pip install แล้วเช็คเวอร์ชันจริง
+                          # 2026-09-20: _classify_raster_local() import pyproj.Transformer และ
+                          # shapely.geometry.box ตรงๆ แล้ว (ใช้ reproject ขอบเขต tile ที่ดาวน์โหลดไม่
+                          # สำเร็จ) -- ไม่ได้เพิ่มบรรทัดแยกที่นี่เพราะทั้งคู่เป็น transitive dependency
+                          # ของ geopandas>=0.14 อยู่แล้ว (ยืนยันว่ามีจริงใน .venv นี้ เพราะ
+                          # load_zone_boundaries() ใช้ geopandas รันสำเร็จมาหลายรอบแล้ว) ถ้าวันไหน
+                          # geopandas เปลี่ยนไปไม่ดึง pyproj/shapely มาด้วยอัตโนมัติ ต้องเพิ่มบรรทัดแยก
                           # ก่อน pin เป็น == ตาม convention เดียวกับ package อื่นในไฟล์นี้

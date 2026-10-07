@@ -1,0 +1,242 @@
+{
+  "created_at_utc": "2026-09-18T09:02:04.358160+00:00",
+  "data_source": "Training_6hourly_full_extended_20260918.csv",
+  "feats": [
+    "Q_in_t (m3/6h)",
+    "Water_Level_t (m)",
+    "Storage_S_t (m3)",
+    "DeltaS_t (m3/6h)",
+    "%Full_t",
+    "Rain_obs_t (mm)",
+    "API_t (mm)",
+    "Qin_lag1 (m3/6h)",
+    "Qin_lag2 (m3/6h)",
+    "Rain_lag1 (mm)",
+    "Rain_lag2 (mm)",
+    "Rain_roll3 (mm)",
+    "Rain_roll5 (mm)",
+    "Rain_roll7 (mm)"
+  ],
+  "qin_col": "Q_in_t (m3/6h)",
+  "horizons": {
+    "1": {
+      "family": "CatBoost_hurdle",
+      "best_params": {
+        "learning_rate": 0.04703026275515195,
+        "depth": 3,
+        "l2_leaf_reg": 1.43376041642741,
+        "min_data_in_leaf": 29,
+        "subsample": 0.6640914962437607,
+        "rsm": 0.5610191174223894,
+        "random_strength": 3.475884550556351
+      },
+      "inner_cv_nse": 0.15667214224596834,
+      "n_train_rows": 1751,
+      "train_data_through": "2026-09-18 01:00:00",
+      "model_files": [
+        "h1_clf.joblib",
+        "h1_reg.joblib"
+      ]
+    },
+    "2": {
+      "family": "CatBoost_hurdle",
+      "best_params": {
+        "learning_rate": 0.073546326674458,
+        "depth": 5,
+        "l2_leaf_reg": 35.74840053953737,
+        "min_data_in_leaf": 5,
+        "subsample": 0.7775637139179313,
+        "rsm": 0.9538323976412588,
+        "random_strength": 1.0779739982922805
+      },
+      "inner_cv_nse": 0.1808700266426882,
+      "n_train_rows": 1748,
+      "train_data_through": "2026-09-17 19:00:00",
+      "model_files": [
+        "h2_clf.joblib",
+        "h2_reg.joblib"
+      ]
+    },
+    "3": {
+      "family": "LightGBM",
+      "best_params": {
+        "learning_rate": 0.008699037355645861,
+        "num_leaves": 47,
+        "min_child_samples": 24,
+        "reg_alpha": 5.727904470799623,
+        "reg_lambda": 3.7958531426706403,
+        "subsample": 0.7989499894055425,
+        "colsample_bytree": 0.9609371175115584
+      },
+      "inner_cv_nse": -0.05674811823981951,
+      "n_train_rows": 1745,
+      "train_data_through": "2026-09-17 13:00:00",
+      "model_files": [
+        "h3_model.joblib"
+      ]
+    },
+    "4": {
+      "family": "XGBoost",
+      "best_params": {
+        "learning_rate": 0.005542561258655853,
+        "max_depth": 7,
+        "min_child_weight": 2.171103454376614,
+        "reg_alpha": 0.4467752817973907,
+        "reg_lambda": 0.017654048052495083,
+        "subsample": 0.7600340105889054,
+        "colsample_bytree": 0.7733551396716398
+      },
+      "inner_cv_nse": -0.08596051785296384,
+      "n_train_rows": 1742,
+      "train_data_through": "2026-09-17 07:00:00",
+      "model_files": [
+        "h4_model.joblib"
+      ]
+    },
+    "5": {
+      "family": "XGBoost",
+      "best_params": {
+        "learning_rate": 0.032428091740637904,
+        "max_depth": 5,
+        "min_child_weight": 19.85466887206081,
+        "reg_alpha": 9.553549071124577,
+        "reg_lambda": 0.4761538466486082,
+        "subsample": 0.787259441123297,
+        "colsample_bytree": 0.646119232750993
+      },
+      "inner_cv_nse": -1.0739150258900585,
+      "n_train_rows": 1739,
+      "train_data_through": "2026-09-17 01:00:00",
+      "model_files": [
+        "h5_model.joblib"
+      ]
+    },
+    "6": {
+      "family": "CatBoost_hurdle",
+      "best_params": {
+        "learning_rate": 0.014124115025060347,
+        "depth": 7,
+        "l2_leaf_reg": 14.883264778321262,
+        "min_data_in_leaf": 26,
+        "subsample": 0.4936111842654619,
+        "rsm": 0.5779972601681014,
+        "random_strength": 1.2904180608409974
+      },
+      "inner_cv_nse": -0.02257777331709976,
+      "n_train_rows": 1736,
+      "train_data_through": "2026-09-16 19:00:00",
+      "model_files": [
+        "h6_clf.joblib",
+        "h6_reg.joblib"
+      ]
+    },
+    "7": {
+      "family": "XGBoost",
+      "best_params": {
+        "learning_rate": 0.008699037355645861,
+        "max_depth": 7,
+        "min_child_weight": 10.196967939171484,
+        "reg_alpha": 5.727904470799623,
+        "reg_lambda": 3.7958531426706403,
+        "subsample": 0.7989499894055425,
+        "colsample_bytree": 0.9609371175115584
+      },
+      "inner_cv_nse": -1.825805327296914,
+      "n_train_rows": 1733,
+      "train_data_through": "2026-09-16 13:00:00",
+      "model_files": [
+        "h7_model.joblib"
+      ]
+    },
+    "8": {
+      "family": "XGBoost",
+      "best_params": {
+        "learning_rate": 0.014491492017690845,
+        "max_depth": 5,
+        "min_child_weight": 4.842973130729263,
+        "reg_alpha": 8.3760773844185,
+        "reg_lambda": 6.070701514183076,
+        "subsample": 0.7612012523872874,
+        "colsample_bytree": 0.9972472386518432
+      },
+      "inner_cv_nse": -0.9511074539486568,
+      "n_train_rows": 1730,
+      "train_data_through": "2026-09-16 07:00:00",
+      "model_files": [
+        "h8_model.joblib"
+      ]
+    },
+    "9": {
+      "family": "XGBoost",
+      "best_params": {
+        "learning_rate": 0.06697167353375243,
+        "max_depth": 5,
+        "min_child_weight": 8.341106432362084,
+        "reg_alpha": 0.0012087541473056963,
+        "reg_lambda": 7.579479953348009,
+        "subsample": 0.9162213204002109,
+        "colsample_bytree": 0.6061695553391381
+      },
+      "inner_cv_nse": -1.2523121282125622,
+      "n_train_rows": 1727,
+      "train_data_through": "2026-09-16 01:00:00",
+      "model_files": [
+        "h9_model.joblib"
+      ]
+    },
+    "10": {
+      "family": "XGBoost",
+      "best_params": {
+        "learning_rate": 0.06697167353375243,
+        "max_depth": 5,
+        "min_child_weight": 8.341106432362084,
+        "reg_alpha": 0.0012087541473056963,
+        "reg_lambda": 7.579479953348009,
+        "subsample": 0.9162213204002109,
+        "colsample_bytree": 0.6061695553391381
+      },
+      "inner_cv_nse": -1.1160706141524463,
+      "n_train_rows": 1724,
+      "train_data_through": "2026-09-15 19:00:00",
+      "model_files": [
+        "h10_model.joblib"
+      ]
+    },
+    "11": {
+      "family": "XGBoost",
+      "best_params": {
+        "learning_rate": 0.09085050599357836,
+        "max_depth": 5,
+        "min_child_weight": 14.992190923297677,
+        "reg_alpha": 9.040648941713044,
+        "reg_lambda": 6.78135890851156,
+        "subsample": 0.9215478423004682,
+        "colsample_bytree": 0.6285611653441157
+      },
+      "inner_cv_nse": -0.5554579530348486,
+      "n_train_rows": 1721,
+      "train_data_through": "2026-09-15 13:00:00",
+      "model_files": [
+        "h11_model.joblib"
+      ]
+    },
+    "12": {
+      "family": "LightGBM",
+      "best_params": {
+        "learning_rate": 0.008699037355645861,
+        "num_leaves": 47,
+        "min_child_samples": 24,
+        "reg_alpha": 5.727904470799623,
+        "reg_lambda": 3.7958531426706403,
+        "subsample": 0.7989499894055425,
+        "colsample_bytree": 0.9609371175115584
+      },
+      "inner_cv_nse": -0.5255759992885112,
+      "n_train_rows": 1718,
+      "train_data_through": "2026-09-15 07:00:00",
+      "model_files": [
+        "h12_model.joblib"
+      ]
+    }
+  }
+}

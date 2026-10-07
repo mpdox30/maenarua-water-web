@@ -1,0 +1,21 @@
+{
+  "note": "FINAL CANDIDATE -- not yet deployed to production. Combines: (1) regularized/early-stopped CatBoost per horizon (all 7), (2) binary rain-forecast feature for h3/h6/h7 only, (3) post-hoc additive bias correction for h3-h7 only.",
+  "model_file": "candidate_regressors_regularized_final.pkl",
+  "prediction_formula": "raw_pred = max(current_qin + regressors[h].predict(X), 0); final_pred = max(raw_pred - bias_correction.get(h, 0), 0)",
+  "bias_correction_m3_per_day": {
+    "3": 610.9,
+    "4": 4241.9,
+    "5": 2605.5,
+    "6": 6583.5,
+    "7": 13153.2
+  },
+  "no_bias_correction_horizons": [1, 2],
+  "validated_improvement_vs_current_production": {
+    "methodology": "honest holdout: threshold/bias fit on chronological-first 65% of forecast_accuracy_log.csv rows per horizon, evaluated only on the later 35% never used for fitting",
+    "weighted_avg_mae_production": 12769,
+    "weighted_avg_mae_final_candidate": 6738,
+    "improvement_pct": 47.2,
+    "per_horizon_improvement_pct": {"1": 6.9, "2": 15.1, "3": 24.1, "4": 44.3, "5": 76.6, "6": 33.2, "7": 61.2}
+  },
+  "refit_recommendation": "Refit bias_correction periodically (monthly) as forecast_accuracy_log.csv grows -- current fit uses only 28-32 rows per horizon."
+}

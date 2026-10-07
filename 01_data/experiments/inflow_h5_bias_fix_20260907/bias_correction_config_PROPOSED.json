@@ -1,0 +1,17 @@
+{
+  "note": "PROPOSED ONLY -- NOT deployed to production. Fit on log rows before ~2026-08-20 (65% chronological), evaluated on genuine later holdout. See ../../forecasting_results/Reservoir_inflow/ or the experiment report for full methodology.",
+  "apply_bias_correction_to_horizons": [1, 3, 4, 6, 7],
+  "skip_horizons": {
+    "2": "bias already near-zero on fit set; correction did not improve (and slightly hurt) holdout MAE",
+    "5": "root-cause model bug fixed via h5_v2 retrain instead; h5_v2 predictions already have near-zero bias, additional correction not needed"
+  },
+  "additive_bias_m3_per_day": {
+    "1": 919.4,
+    "3": 8727.7,
+    "4": 11781.0,
+    "6": 7424.9,
+    "7": 23195.4
+  },
+  "formula": "corrected_prediction = max(raw_prediction - additive_bias_m3_per_day[horizon], 0.0)",
+  "refit_recommendation": "Refit this bias constant periodically (e.g. monthly) as forecast_accuracy_log.csv accumulates more rows -- current fit uses only 28-32 rows per horizon, holdout only 16-18 rows, so these constants are noisy and should not be treated as final."
+}

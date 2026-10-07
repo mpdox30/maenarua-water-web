@@ -1,0 +1,39 @@
+============================================================
+  Mae Na Rua Monitoring Data Builder - run_monitoring_data_builder.bat
+  Sat 08/29/2026  8:40:12.26
+============================================================
+[INFO] Using Python: D:\maenaruea-water-web\01_data\scripts and code\pipeline\..\..\..\.venv\Scripts\python.exe
+[INFO] Running monitoring_data_builder.py ...
+
+������к� source ���������� env var RESERVOIR_TELEMETRY_SHEET_CSV_URL -- �� DEFAULT_SHEET_CSV_URL ᷹ (�й������ env var ������ͧ����ѹ scheduled task ��ԧ᷹��þ�觤�� default ���)
+wrote D:\maenaruea-water-web\03_website\assets\data\monitoring.json � 4 stations, updated=2026-08-29T08:20:00, history_points=1345, rainfall_hourly_points=5795
+
+[INFO] monitoring_data_builder.py exited with code 0
+  (0 = สำเร็จ, non-zero = error -- เช็ค log ด้านบน เช่น เชื่อมต่อ Google Sheet ไม่ได้)
+
+[INFO] Running inflow_6h_display_estimate.py (Item 4, display-only) ...
+
+2026-08-29 08:40:16,266 [WARNING] ������к� source ���������� env var RESERVOIR_TELEMETRY_SHEET_CSV_URL -- �� DEFAULT_SHEET_CSV_URL ᷹ (�й������ env var ������ͧ����ѹ scheduled task ��ԧ᷹��þ�觤�� default ���)
+2026-08-29 08:40:19,785 [INFO] ��¹ D:\maenaruea-water-web\03_website\assets\data\inflow_6h_display.json (79 ˹�ҵ�ҧ���ӹǳ��, peak_q_in_6h=144943.1 m3)
+
+[INFO] inflow_6h_display_estimate.py exited with code 0
+  (รันอิสระจาก monitoring_data_builder.py ด้านบน -- ตัวหนึ่งพังไม่บล็อกอีกตัว เพราะเขียนคนละไฟล์
+   output กันคนละไฟล์ ไม่พึ่งพากัน)
+
+[INFO] Running forecast_accuracy_logger.py (log predicted vs actual, display/tuning only) ...
+
+[INFO] ��������������ͧ�ѹ�֡/����ͺ���
+
+[INFO] forecast_accuracy_logger.py exited with code 0
+  (อ่าน latest.json + RES002_daily_computed.csv อย่างเดียว เขียนแค่ forecast_accuracy_log.csv --
+   ไม่แตะ/ไม่พึ่งพา 2 สคริปต์ด้านบน)
+
+[INFO] sync กับ remote ก่อน push (merge จริง ไม่ใช่ ff-only -- ปลอดภัยคนละแบบกับ rebase) ...
+From https://github.com/mpdox30/maenarua-water-web
+ * branch            master     -> FETCH_HEAD
+Already up to date.
+
+[INFO] กำลัง add ไฟล์ที่อัปเดตสำเร็จขึ้น git (monitoring.json / inflow_6h_display.json / forecast_accuracy_log.csv แล้วแต่ตัวไหนสำเร็จ) ...
+To https://github.com/mpdox30/maenarua-water-web.git
+   bfebabb..bba762a  master -> master
+[OK] push สำเร็จ

@@ -1,0 +1,5 @@
+smoothing,dry_n,dry_stdev_m,dry_absmean_m,dry_max_m,rain_mean_diff_m,rain_max_diff_m,signal_to_noise (rain_mean/dry_stdev)
+raw (no smoothing),1897,0.01124,0.00638,0.092,0.00875,0.02,0.78
+MA 3h,1897,0.00494,0.00312,0.04167,0.00758,0.015,1.53
+MA 6h,1897,0.00301,0.00201,0.02133,0.00515,0.01183,1.71
+MA 12h,1897,0.00182,0.00129,0.01008,-0.00014,0.00483,-0.07

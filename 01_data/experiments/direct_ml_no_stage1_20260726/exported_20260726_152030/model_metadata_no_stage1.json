@@ -1,0 +1,155 @@
+{
+  "exported_at": "2026-07-26T15:20:32.019964",
+  "architecture": "direct delta-regression per horizon, NO stage1 hurdle classifier (different from current production which uses stage1 classifier + stage2 regressor)",
+  "training_data_source": "Training_Values_Nofct_7day_Extended.csv",
+  "feature_cols": [
+    "Q_in_t (m3/day)",
+    "Water_Level_t (m)",
+    "Storage_S_t (m3)",
+    "DeltaS_t (m3/day)",
+    "%Full_t",
+    "Rain_obs_t (mm)",
+    "API_t (mm)"
+  ],
+  "qin_col": "Q_in_t (m3/day)",
+  "targets": [
+    "y1=Q_in_t+1 (m3/day)",
+    "y2=Q_in_t+2 (m3/day)",
+    "y3=Q_in_t+3 (m3/day)",
+    "y4=Q_in_t+4 (m3/day)",
+    "y5=Q_in_t+5 (m3/day)",
+    "y6=Q_in_t+6 (m3/day)",
+    "y7=Q_in_t+7 (m3/day)"
+  ],
+  "split_method": "chronological 70/15/15 within 3 season segments (wet_before/dry/wet_after), dry window 2026-02-03 to 2026-05-17",
+  "prediction_note": "predict delta from current Q_in_t, then q_pred = clip(Q_in_t + delta_pred, 0, None)",
+  "deployment_model_per_horizon": {
+    "1": {
+      "model_name": "CatBoost",
+      "target_column": "y1=Q_in_t+1 (m3/day)",
+      "walkforward_cv_nse": 0.4744633541869246,
+      "test_nse": 0.603353689988307,
+      "val_nse": 0.9922120762339424,
+      "best_iter": 66,
+      "tuned_params": {
+        "iterations": 1500,
+        "learning_rate": 0.013034960863931,
+        "depth": 4,
+        "l2_leaf_reg": 4.4829290346175,
+        "min_data_in_leaf": 20,
+        "subsample": 0.6577647874188833,
+        "rsm": 0.9664700391815622,
+        "random_strength": 1.822355488043144
+      }
+    },
+    "2": {
+      "model_name": "CatBoost",
+      "target_column": "y2=Q_in_t+2 (m3/day)",
+      "walkforward_cv_nse": 0.11895382327524469,
+      "test_nse": 0.2518485141309547,
+      "val_nse": 0.98877355504067,
+      "best_iter": 51,
+      "tuned_params": {
+        "iterations": 1450,
+        "learning_rate": 0.0152185786655113,
+        "depth": 4,
+        "l2_leaf_reg": 2.9932336375349404,
+        "min_data_in_leaf": 23,
+        "subsample": 0.8945450871711578,
+        "rsm": 0.9660375990485812,
+        "random_strength": 2.4722929517301933
+      }
+    },
+    "3": {
+      "model_name": "CatBoost",
+      "target_column": "y3=Q_in_t+3 (m3/day)",
+      "walkforward_cv_nse": -0.3718755115739318,
+      "test_nse": -0.4250240119851491,
+      "val_nse": 0.9818232241751592,
+      "best_iter": 85,
+      "tuned_params": {
+        "iterations": 300,
+        "learning_rate": 0.014139574761519,
+        "depth": 5,
+        "l2_leaf_reg": 34.406967510967846,
+        "min_data_in_leaf": 24,
+        "subsample": 0.7873013963178493,
+        "rsm": 0.649552300765907,
+        "random_strength": 0.6155902937077142
+      }
+    },
+    "4": {
+      "model_name": "CatBoost",
+      "target_column": "y4=Q_in_t+4 (m3/day)",
+      "walkforward_cv_nse": -0.22725627062565884,
+      "test_nse": -0.3776801554398044,
+      "val_nse": 0.9797836666601942,
+      "best_iter": 113,
+      "tuned_params": {
+        "iterations": 350,
+        "learning_rate": 0.0116798266095034,
+        "depth": 2,
+        "l2_leaf_reg": 11.276506844452037,
+        "min_data_in_leaf": 9,
+        "subsample": 0.9847455544905064,
+        "rsm": 0.6949808607762895,
+        "random_strength": 2.690149481735584
+      }
+    },
+    "5": {
+      "model_name": "CatBoost",
+      "target_column": "y5=Q_in_t+5 (m3/day)",
+      "walkforward_cv_nse": -0.37120736280959826,
+      "test_nse": -0.3481281510754073,
+      "val_nse": 0.968481832911809,
+      "best_iter": 196,
+      "tuned_params": {
+        "iterations": 350,
+        "learning_rate": 0.0110791649246304,
+        "depth": 2,
+        "l2_leaf_reg": 22.94830499921652,
+        "min_data_in_leaf": 33,
+        "subsample": 0.496899724349262,
+        "rsm": 0.5812175308550932,
+        "random_strength": 1.43547896330627
+      }
+    },
+    "6": {
+      "model_name": "CatBoost",
+      "target_column": "y6=Q_in_t+6 (m3/day)",
+      "walkforward_cv_nse": -0.4532650018318575,
+      "test_nse": -0.1898017302727281,
+      "val_nse": 0.966668794732752,
+      "best_iter": 234,
+      "tuned_params": {
+        "iterations": 300,
+        "learning_rate": 0.0119044676871217,
+        "depth": 2,
+        "l2_leaf_reg": 37.80875642349045,
+        "min_data_in_leaf": 6,
+        "subsample": 0.9286887891619452,
+        "rsm": 0.5407286579890026,
+        "random_strength": 2.921613431436683
+      }
+    },
+    "7": {
+      "model_name": "CatBoost",
+      "target_column": "y7=Q_in_t+7 (m3/day)",
+      "walkforward_cv_nse": -0.6580892885995528,
+      "test_nse": -0.0446037517581059,
+      "val_nse": 0.9323546021263166,
+      "best_iter": 281,
+      "tuned_params": {
+        "iterations": 300,
+        "learning_rate": 0.0100803973073233,
+        "depth": 2,
+        "l2_leaf_reg": 40.52326222611647,
+        "min_data_in_leaf": 34,
+        "subsample": 0.7125951224397861,
+        "rsm": 0.6599183617310376,
+        "random_strength": 0.4109109958669841
+      }
+    }
+  },
+  "known_limitations": "H3-H5 walk-forward CV NSE still below current production's H1 only; test set is small (57 rows) so Test_NSE per-horizon is noisy; see chat discussion 2026-07-26 for diagnostics on train/test magnitude mismatch"
+}

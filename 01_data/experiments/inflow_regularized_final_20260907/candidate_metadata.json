@@ -1,0 +1,148 @@
+{
+  "horizons": {
+    "1": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)"
+      ],
+      "tree_count": 45,
+      "uses_rain_forecast_binary": false,
+      "rain_forecast_threshold_mm": null,
+      "n_train_rows": 390
+    },
+    "2": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)"
+      ],
+      "tree_count": 30,
+      "uses_rain_forecast_binary": false,
+      "rain_forecast_threshold_mm": null,
+      "n_train_rows": 389
+    },
+    "3": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)",
+        "Rain_fcst_binary_h3"
+      ],
+      "tree_count": 11,
+      "uses_rain_forecast_binary": true,
+      "rain_forecast_threshold_mm": 27.3,
+      "n_train_rows": 388
+    },
+    "4": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)"
+      ],
+      "tree_count": 88,
+      "uses_rain_forecast_binary": false,
+      "rain_forecast_threshold_mm": null,
+      "n_train_rows": 387
+    },
+    "5": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)"
+      ],
+      "tree_count": 64,
+      "uses_rain_forecast_binary": false,
+      "rain_forecast_threshold_mm": null,
+      "n_train_rows": 386
+    },
+    "6": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)",
+        "Rain_fcst_binary_h6"
+      ],
+      "tree_count": 142,
+      "uses_rain_forecast_binary": true,
+      "rain_forecast_threshold_mm": 3.1,
+      "n_train_rows": 385
+    },
+    "7": {
+      "features": [
+        "Q_in_t (m3/day)",
+        "Water_Level_t (m)",
+        "Storage_S_t (m3)",
+        "DeltaS_t (m3/day)",
+        "%Full_t",
+        "Rain_obs_t (mm)",
+        "API_t (mm)",
+        "Qin_lag1 (m3/day)",
+        "Qin_lag2 (m3/day)",
+        "Rain_roll3 (mm)",
+        "Rain_roll5 (mm)",
+        "Rain_roll7 (mm)",
+        "Rain_fcst_binary_h7"
+      ],
+      "tree_count": 152,
+      "uses_rain_forecast_binary": true,
+      "rain_forecast_threshold_mm": 61.0,
+      "n_train_rows": 384
+    }
+  },
+  "note": "CANDIDATE ONLY -- not deployed to production. h1,h2,h4,h5 use the original 12 base features with early-stopped (regularized) training. h3,h6,h7 additionally get a binary rain-forecast feature (Open-Meteo Historical Forecast API archive, cumulative forecast precip lead1..h > threshold_mm). See 01_data/experiments/inflow_h5_bias_fix_20260907 and inflow_rain_forecast_feature_20260907 for full methodology/validation."
+}
