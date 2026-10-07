@@ -129,6 +129,10 @@ FILES_TO_PUSH = [
     "03_website/assets/data/flood_latest.json",
     "03_website/assets/data/reservoir_inflow.json",
     "03_website/assets/data/flood_depth_forecast.png",
+    # 2026-10-07 เพิ่ม: meta + ชุดรายวัน d1..d7 (เดิมไม่ถูก push ทำให้สไลเดอร์ค้างที่ 22 ก.ย.)
+    "03_website/assets/data/flood_depth_forecast_meta.json",
+    "03_website/assets/data/flood_depth_forecast_series_meta.json",
+    # + "03_website/assets/data/flood_depth_forecast_d1.png" ... "_d7.png" (ดู Cell 12 ในโน้ตบุ๊ก)
 ]
 # ... (add เฉพาะไฟล์ที่มีอยู่จริง, commit+push พร้อม retry เมื่อ non-fast-forward สูงสุด 3 ครั้ง —
 # เนื้อหาเต็มดู Cell 12 ใน maenaruea_pipeline_colab_CLEANED.ipynb โดยตรง)
