@@ -1,7 +1,7 @@
 {
   "meta": {
     "source": "สถานีโทรมาตร สสน. (API) ผ่าน Google Sheet wide_log (poll ทุก 10 นาที) + HII open data (tiservice.hii.or.th, รายชั่วโมงผ่าน QC, เดือนที่ปิดแล้ว) + 01_data/Reservoirs/reference (rating curve ต่ออ่าง)",
-    "updated": "2026-10-07T13:50:00",
+    "updated": "2026-10-07T14:10:00",
     "data_connected": true
   },
   "stations": [
@@ -12,20 +12,16 @@
       "spillway_msl": 489.54,
       "water_level": 489.965,
       "rainfall_1h": 0.0,
-      "temperature": 37.71,
-      "humidity": 52.41,
-      "pressure": 961.05,
-      "solar": 114.5,
-      "measure_datetime": "2026-10-07T13:50:00",
+      "temperature": 35.72,
+      "humidity": 58.55,
+      "pressure": 960.89,
+      "solar": 419.4,
+      "measure_datetime": "2026-10-07T14:10:00",
       "storage_m3": 1755127.6,
       "storage_max_m3": 1625463.8,
       "capacity_pct": 108.0,
       "distance_to_spillway_m": 0.425,
       "history": [
-        {
-          "t": "2026-09-23T14:00:00",
-          "level": 489.808
-        },
         {
           "t": "2026-09-23T15:00:00",
           "level": 489.814
@@ -1337,6 +1333,10 @@
         {
           "t": "2026-10-07T13:00:00",
           "level": 489.965
+        },
+        {
+          "t": "2026-10-07T14:00:00",
+          "level": 489.964
         }
       ],
       "rainfall_hourly": [
@@ -5015,6 +5015,10 @@
         {
           "t": "2026-10-07T13:00:00",
           "rain_mm": 0.0
+        },
+        {
+          "t": "2026-10-07T14:00:00",
+          "rain_mm": 0.0
         }
       ]
     },
@@ -5025,20 +5029,16 @@
       "spillway_msl": 457.07,
       "water_level": 456.483,
       "rainfall_1h": 0.0,
-      "temperature": 37.02,
-      "humidity": 51.24,
-      "pressure": 964.47,
-      "solar": 804.7,
-      "measure_datetime": "2026-10-07T13:50:00",
+      "temperature": 36.44,
+      "humidity": 55.44,
+      "pressure": 964.26,
+      "solar": 789.7,
+      "measure_datetime": "2026-10-07T14:10:00",
       "storage_m3": 315448.3,
       "storage_max_m3": 347778.7,
       "capacity_pct": 90.7,
       "distance_to_spillway_m": -0.587,
       "history": [
-        {
-          "t": "2026-09-23T14:00:00",
-          "level": 456.418
-        },
         {
           "t": "2026-09-23T15:00:00",
           "level": 456.419
@@ -6349,6 +6349,10 @@
         },
         {
           "t": "2026-10-07T13:00:00",
+          "level": 456.483
+        },
+        {
+          "t": "2026-10-07T14:00:00",
           "level": 456.483
         }
       ],
@@ -9880,6 +9884,10 @@
         {
           "t": "2026-10-07T13:00:00",
           "rain_mm": 0.0
+        },
+        {
+          "t": "2026-10-07T14:00:00",
+          "rain_mm": 0.0
         }
       ]
     },
@@ -9890,11 +9898,11 @@
       "spillway_msl": 478.1,
       "water_level": 478.73,
       "rainfall_1h": 0.0,
-      "temperature": 37.6,
-      "humidity": 74.0,
+      "temperature": 37.4,
+      "humidity": 71.1,
       "pressure": 963.4,
-      "solar": 858.6,
-      "measure_datetime": "2026-10-07T13:30:00",
+      "solar": 756.4,
+      "measure_datetime": "2026-10-07T14:00:00",
       "storage_m3": 553223.6,
       "storage_max_m3": 495467.8,
       "capacity_pct": 111.7,
@@ -11158,6 +11166,10 @@
         },
         {
           "t": "2026-10-07T13:00:00",
+          "level": 478.73
+        },
+        {
+          "t": "2026-10-07T14:00:00",
           "level": 478.73
         }
       ],
@@ -14537,6 +14549,10 @@
         {
           "t": "2026-10-07T13:00:00",
           "rain_mm": 0.0
+        },
+        {
+          "t": "2026-10-07T14:00:00",
+          "rain_mm": 0.0
         }
       ]
     },
@@ -14547,20 +14563,16 @@
       "spillway_msl": 508.1,
       "water_level": 508.247,
       "rainfall_1h": 0.0,
-      "temperature": 31.62,
-      "humidity": 72.42,
-      "pressure": 958.92,
-      "solar": 787.3,
-      "measure_datetime": "2026-10-07T13:50:00",
+      "temperature": 31.44,
+      "humidity": 74.36,
+      "pressure": 958.7,
+      "solar": 741.5,
+      "measure_datetime": "2026-10-07T14:10:00",
       "storage_m3": 127532.1,
       "storage_max_m3": 122441.9,
       "capacity_pct": 104.2,
       "distance_to_spillway_m": 0.147,
       "history": [
-        {
-          "t": "2026-09-23T14:00:00",
-          "level": 508.731
-        },
         {
           "t": "2026-09-23T15:00:00",
           "level": 508.731
@@ -15872,6 +15884,10 @@
         {
           "t": "2026-10-07T13:00:00",
           "level": 508.253
+        },
+        {
+          "t": "2026-10-07T14:00:00",
+          "level": 508.241
         }
       ],
       "rainfall_hourly": [
@@ -19401,6 +19417,10 @@
         },
         {
           "t": "2026-10-07T13:00:00",
+          "rain_mm": 0.0
+        },
+        {
+          "t": "2026-10-07T14:00:00",
           "rain_mm": 0.0
         }
       ]
