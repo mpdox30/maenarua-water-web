@@ -125,10 +125,10 @@ RAIN_FORECAST_API_URL = "https://api.open-meteo.com/v1/forecast"  # regular (liv
 # threshold คือ mm สะสมของฝนพยากรณ์ล่วงหน้า (lead1..h วัน) ที่ tune จาก honest holdout split บน
 # forecast_accuracy_log.csv (fit 65% แรกตามเวลา, วัดผลบน 35% หลัง) -- ดู
 # inflow_rain_forecast_feature_20260907/09_binary_threshold_honest_split.py
-RAIN_FORECAST_BINARY_HORIZONS = {3: 27.3, 6: 3.1, 7: 61.0}
+RAIN_FORECAST_BINARY_HORIZONS = {6: 3.1}   # 2026-10 retrain สูตร spill ใหม่ -- ใช้เฉพาะ H6 (ต้องตรงกับ data_pipeline.py และ pkl)
 # ค่า post-hoc bias correction แบบบวกลบ (predicted - actual เฉลี่ยจาก log, fit ชุดเดียวกับข้างบน)
 # ลบออกจากค่าทำนายก่อนแสดงผล -- h1/h2 ไม่ใส่เพราะ correction ทำให้แย่ลงตอนทดสอบ honest holdout
-RESERVOIR_INFLOW_BIAS_CORRECTION_M3 = {3: 610.9, 4: 4241.9, 5: 2605.5, 6: 6583.5, 7: 13153.2}
+RESERVOIR_INFLOW_BIAS_CORRECTION_M3 = {}   # 2026-10 retrain สูตร spill ใหม่ -- ยกเลิก (ต้องตรงกับ data_pipeline.py)
 
 RESERVOIR_PLAUSIBLE_PERCENT_FULL_MAX = 120.0
 # (แก้ไข 2026-07-07: เดิม %Full_t คำนวณเป็นสัดส่วน 0-1.05 ผิดสเกลจาก training data ที่เป็นเปอร์เซ็นต์
