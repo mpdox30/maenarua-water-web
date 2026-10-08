@@ -59,7 +59,7 @@ import pandas as pd
 import requests
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-MODELS_DIR = os.path.join(HERE, "shadow_models")
+MODELS_DIR = os.environ.get("SHADOW_MODELS_DIR", os.path.join(HERE, "shadow_models"))
 LOG_PATH = os.path.join(HERE, "shadow_predictions_log.csv")
 
 # Same public Sheet as 09_live/config.json -> gdrive_log.file_id (sheet "raw_log", 10-min
@@ -71,7 +71,11 @@ GDRIVE_EXPORT_URL = f"https://docs.google.com/spreadsheets/d/{GDRIVE_FILE_ID}/ex
 RAW_STORE_PATH = os.path.join(HERE, "shadow_gdrive_raw_store.csv")
 
 # ---------------- exact same water-balance constants as build_6hourly_extended.py ----------------
-SPILLWAY_LEVEL_ADJ_OFFSET_M = 0.155
+SPILLWAY_LEVEL_ADJ_OFFSET_M = 0.0   # datum offset 0 (ต้องตรงกับ build_6hourly_extended_delta.py ที่ใช้ทำ label)
+# rating ชั่วคราว (ต้องตรงกับ reservoir_water_balance.py และชุดเทรน): ยกสันประสิทธิผล DELTA ม. สำหรับ mark ตั้งแต่ DELTA_FROM
+SPILL_DELTA_M = float(os.environ.get("SPILL_DELTA_M", "0.17"))
+SPILL_DELTA_FROM = datetime(2026, 9, 11, 7, 0)
+
 SPILLWAY_CREST_LEVEL_MSL = 489.545
 SPILLWAY_WEIR_LENGTH_M = 30
 # [2026-09-25] C=1.82 คงที่เดิมไม่ใช้คำนวณ Q_in แล้ว (เก็บไว้อ้างอิง/debug เทียบเท่านั้น) --
@@ -193,7 +197,7 @@ BEST_FAMILY = {
 # of the training set for at least some horizons, so "predicting" them would be in-sample,
 # not a real shadow test (this bit us once already: an early full-history backfill run had
 # to be discarded for exactly this reason).
-DEPLOY_START_MARK = datetime(2026, 9, 18, 7, 0)
+DEPLOY_START_MARK = datetime(2026, 10, 7, 7, 0)   # 2026-10-07: โมเดลชุด offset 0 เทรนด้วยข้อมูลถึงต้น ต.ค. -- mark ตั้งแต่นี้ไปถือเป็น out-of-sample
 
 
 def release_rate_m3_per_day(t):
@@ -242,7 +246,7 @@ def terrain_area_from_level(level):
     return xlookup_floor(level, area_terrain)[2]
 
 
-def spillway_overflow_m3(hourly_levels):
+def spillway_overflow_m3(hourly_levels, t=None):
     """[2026-09-25 แก้] critical-flow+friction model (Manning n=0.017, b=10m) แทน constant-Cd
     เดิม (C=1.82) -- interp จาก lookup table ที่ precompute ไว้ (ดูคอมเมนต์บนสุดของไฟล์). สูตร
     เดียวกับที่ใช้สร้าง label เทรนโมเดลชุดนี้ (Training_6hourly_full_extended_CORRECTED.csv ->
@@ -250,7 +254,7 @@ def spillway_overflow_m3(hourly_levels):
     train/inference skew"""
     total = 0.0
     for level in hourly_levels:
-        adj = level - SPILLWAY_LEVEL_ADJ_OFFSET_M
+        adj = level - SPILLWAY_LEVEL_ADJ_OFFSET_M - (SPILL_DELTA_M if (t is not None and t >= SPILL_DELTA_FROM) else 0.0)
         head = max(0.0, adj - SPILLWAY_CREST_LEVEL_MSL)
         q_m3_s = np.interp(head, _FRICTION_HEAD_GRID, _FRICTION_Q_GRID,
                             left=0.0, right=_FRICTION_Q_GRID[-1]) * SPILLWAY_WEIR_LENGTH_M
@@ -462,7 +466,7 @@ def build_6hourly_rows():
         evap_6h = surface_area * ((MONTHLY_EVAP_CONST_MM[t.month] / days_in_month / 4) * EVAP_PAN_COEFFICIENT) / 1000.0
         infiltration_6h = terrain_area * ((INFILTRATION_RATE_MM_PER_DAY / 4) / 1000.0)
         release_6h = release_rate_m3_per_day(t) / 4
-        spill_6h = spillway_overflow_m3(raw_levels)
+        spill_6h = spillway_overflow_m3(raw_levels, t)
 
         q_in_raw = delta_s - r_runoff + release_6h + spill_6h + evap_6h + infiltration_6h
         q_in_6h = max(0.0, q_in_raw)

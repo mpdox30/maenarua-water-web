@@ -220,7 +220,7 @@ if errorlevel 1 (
 
 echo.
 echo [INFO] sync กับ remote ก่อน push (merge จริง ไม่ใช่ ff-only -- ปลอดภัยคนละแบบกับ rebase) ...
-git pull --no-rebase --no-edit origin master
+git pull --no-rebase --no-edit -X ours origin master
 if errorlevel 1 (
     echo [WARN] git pull --no-rebase ไม่สำเร็จ ^(merge conflict จริง หรือเน็ตหลุด^) -- ข้ามขั้นตอน push รอบนี้ ^(ไม่ force/resolve เอง^) commit ของรอบนี้ ^(ถ้ามี^) ยังอยู่ใน local รอ push รอบถัดไปหลังแก้ conflict ถ้าเจอ .git/MERGE_HEAD ค้าง guard ด้านบนจะจับได้เองรอบถัดไป
     goto :GIT_DONE
