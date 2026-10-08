@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-07T05:01:56.675197+00:00",
+ "generated_at": "2026-10-08T01:52:17.627919+00:00",
  "unit_note": "Water Level = MSL (m); Volume/Inflow/O/Spill/Runoff/Evap/Infiltration/DeltaS = m3 (ยกเว้น rain_24h_mm = mm)",
  "source_note": "ดึงจาก D:\\WMB_Phayao\\01_raw_data\\Reservoirs\\บัญชีน้ำ\\<year>_<Month>_MNR.xlsx ('ฉบับสูตรสปิลเวย์แก้ไข' -- เขียนโดย recompute_corrected_ledger.py, ไม่ใช่ไฟล์ทางการ production) ด้วย build_water_ledger_json.py",
  "formula_note": "Spill คำนวณด้วย critical-flow + Manning friction model (n=0.017) แทนสูตร Q=1.82*L*H^1.5 เดิม -- ใช้เฉพาะหน้า water-balance.html เท่านั้น ไม่กระทบไฟล์ทางการ/โมเดล ML ใน production ดูคอลัมน์ note ต่อแถวว่าวันนั้นคำนวณด้วยสูตรใหม่จริง หรือ fallback ใช้ค่าเดิม",
@@ -7978,6 +7978,23 @@
    "year": 2026,
    "month": 10,
    "date": "2026-10-07"
+  },
+  {
+   "day": 8,
+   "water_level_m": 489.953,
+   "water_volume_m3": 1750489.8990714,
+   "inflow_m3": 486387.0597843493,
+   "outlet_release_m3": 15019.2,
+   "spill_m3": 482646.3177101383,
+   "rain_24h_mm": 0,
+   "runoff_m3": 0,
+   "evap_m3": 783.2290191053446,
+   "infiltration_m3": 313.57290000556,
+   "delta_s_m3": -12375.25984489988,
+   "note": "critical-flow + Manning friction (n=0.017) | ⚠ rating ชั่วคราว (สันประสิทธิผล +0.17 ม.) ยังไม่ผ่านการยืนยัน: Spill/Inflow อาจคลาดเคลื่อน",
+   "year": 2026,
+   "month": 10,
+   "date": "2026-10-08"
   }
  ]
 }
