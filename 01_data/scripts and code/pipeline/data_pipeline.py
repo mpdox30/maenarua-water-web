@@ -766,6 +766,26 @@ def _wd_compute_zone_b_reservoir_gir_ratio(
         per_reservoir_m3[reservoir_name] = nir_gir["total_m3"] if nir_gir is not None else 0.0
 
     grand_total = sum(per_reservoir_m3.values())
+    basis_used = "sar_live"
+    note_used = "สัดส่วนคำนวณจาก FAO-56 GIR ต่ออ่าง (พื้นที่ SAR classification ล่าสุด x climate สัปดาห์นี้)"
+    if grand_total <= 0:
+        # 2026-10-08: ไม่มี deficit ตาม FAO-56 (P_eff >= ETc) แต่โมเดลพยากรณ์ final_m3 > 0 ได้ (ขัดกันใน UI
+        # "ไม่มีความต้องการใช้น้ำ" vs ตัวเลขโมเดล) -> ใช้สัดส่วน "ความต้องการรวม" (ETc ไม่หักฝน, p_eff=0)
+        # ต่ออ่างแทน เพื่อจัดสรรตัวเลขโมเดลได้ (สัดส่วนยังสะท้อนพื้นที่ x ชนิดพืชต่ออ่าง)
+        gross_m3: dict = {}
+        for reservoir_name, area_ha_by_crop in reservoir_areas.items():
+            g = _wd_compute_live_nir_gir(
+                zone="zone_B", iso_week=iso_week, et0_mm_week=et0_mm_week, p_eff_mm=0.0,
+                area_ha_by_crop=area_ha_by_crop,
+            )
+            gross_m3[reservoir_name] = g["total_m3"] if g is not None else 0.0
+        if sum(gross_m3.values()) > 0:
+            logger.info("zone_B: ไม่มี deficit FAO-56 สัปดาห์นี้ -- แบ่งตามอ่างด้วยสัดส่วนความต้องการรวม (ไม่หักฝน)")
+            per_reservoir_m3 = gross_m3
+            grand_total = sum(gross_m3.values())
+            basis_used = "sar_live_gross_etc_no_deficit"
+            note_used = ("สัปดาห์นี้ฝนมีผล (FAO-56 ไม่มี deficit) จึงแบ่งตัวเลขโมเดลตามสัดส่วนความต้องการน้ำรวมของพืชต่ออ่าง "
+                         "(พื้นที่ SAR x ชนิดพืช, ไม่หักฝน) แทน")
     if grand_total <= 0:
         logger.warning(
             "คำนวณสัดส่วน GIR_B ต่ออ่างไม่ได้สัปดาห์นี้ (ผลรวม FAO-56 ทุกอ่าง = %.2f -- อาจเป็นสัปดาห์ที่ "
@@ -781,8 +801,8 @@ def _wd_compute_zone_b_reservoir_gir_ratio(
     return {
         "reservoirs": breakdown,
         "fao56_total_m3": round(grand_total, 2),
-        "basis": "sar_live",
-        "note": "สัดส่วนคำนวณจาก FAO-56 GIR ต่ออ่าง (พื้นที่ SAR classification ล่าสุด x climate สัปดาห์นี้)",
+        "basis": basis_used,
+        "note": note_used,
         "reason": "ok",
     }
 
@@ -2189,6 +2209,7 @@ def _wd_allocate_zone_b_reservoir_breakdown(
         "reservoirs": breakdown,
         "total_m3": round(final_m3, 2),
         "basis": "model_final_m3_allocated_by_fao56_ratio",
+        "share_basis": gir_b_reservoir_ratio.get("basis"),
         "note": (
             "จัดสรรตัวเลขพยากรณ์จริงจากโมเดล (final_m3, h=1) ตามสัดส่วนความต้องการใช้น้ำ FAO-56 ต่ออ่าง "
             "(พื้นที่/ชนิดพืชจาก SAR classification ล่าสุด x climate สัปดาห์นี้) -- ผลรวมทุกอ่าง = "
