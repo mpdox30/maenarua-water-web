@@ -604,7 +604,14 @@ def _run_weekly_mode(args, out_json_path: Path, result: dict) -> tuple:
     result["warnings"] = warnings
 
     if n_days > 0:
-        result["ET0_mm_week"] = round(sum(r["ETo_mm_day"] for r in daily_results), 4)
+        et0_sum = sum(r["ETo_mm_day"] for r in daily_results)
+        # 2026-10-09: สัปดาห์ที่มีข้อมูลไม่ครบ 7 วัน (รวม rolling estimate ที่ได้แค่ 1-2 วันจากความหน่วง ERA5T)
+        # เดิมรายงาน "ผลรวมเฉพาะวันที่มี" -> ต่ำกว่าจริงหลายเท่า (เช่น 2 วัน ~8 มม. vs ~24 มม./สัปดาห์)
+        # ตอนนี้ขยายเป็นเทียบเท่า 7 วัน (เฉลี่ยรายวัน x 7) และเก็บผลรวมจริงไว้ที่ ET0_mm_sum_available
+        # สัปดาห์ครบ 7 วันไม่เปลี่ยน (ใช้ผลรวมเดิม) แถว n_days<7 ถูก gate ไม่ให้ป้อนโมเดลอยู่แล้ว
+        result["ET0_mm_sum_available"] = round(et0_sum, 4)
+        result["et0_scaled_to_7d"] = bool(n_days < 7)
+        result["ET0_mm_week"] = round(et0_sum * 7.0 / n_days if n_days < 7 else et0_sum, 4)
         result["T_mean"] = round(sum(r["T_c"] for r in daily_results) / n_days, 4)
         result["RH_pct"] = round(sum(r["RH_pct"] for r in daily_results) / n_days, 4)
         result["VPD_kPa"] = round(sum(r["VPD_kPa"] for r in daily_results) / n_days, 4)
