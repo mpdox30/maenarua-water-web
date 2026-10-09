@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="assets/js/chart.umd.min.js"></script>
 <style>
   :root {
     --bg-950: #06161c;
@@ -144,6 +145,33 @@
     .page-hero h1 { font-size: 25px; }
     .kpi-grid { grid-template-columns: 1fr; }
   }
+
+  /* ---- กราฟเปรียบเทียบข้อมูล (รูปแบบเดียวกับ thaiwater.net/water/dam/large) ---- */
+  .cmp-card { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 22px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px; }
+  .cmp-chart-wrap { min-width: 0; }
+  .cmp-title { text-align: center; font-size: 16px; color: var(--text-100); font-family: "Noto Serif Thai", serif; margin: 0 0 4px; }
+  .cmp-sub { text-align: center; font-size: 12px; color: var(--text-500); margin: 0 0 12px; min-height: 18px; }
+  .cmp-canvas-box { position: relative; height: 380px; }
+  .cmp-controls { display: flex; flex-direction: column; gap: 14px; }
+  .cmp-controls .field label { display: block; font-size: 12px; color: var(--teal-300); font-weight: 600; margin-bottom: 5px; }
+  .cmp-controls select { width: 100%; font-family: inherit; font-size: 13.5px; color: var(--text-100); background: var(--bg-800); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 8px 10px; }
+  .cmp-controls select:hover:not(:disabled) { border-color: var(--teal-400); }
+  .cmp-controls select:disabled { opacity: .75; cursor: default; }
+  .cmp-controls select[multiple] { min-height: 92px; padding: 4px; }
+  .cmp-controls select[multiple] option { padding: 3px 8px; border-radius: 4px; }
+  .cmp-controls select[multiple] option:checked { background: var(--teal-500); color: #fff; }
+  .cmp-btn { font-family: inherit; font-size: 14px; font-weight: 600; color: var(--bg-950); background: var(--teal-300); border: 0; border-radius: var(--radius-sm); padding: 10px 14px; cursor: pointer; transition: background .2s; }
+  .cmp-btn:hover { background: var(--teal-400); }
+  .cmp-btn.ghost { background: transparent; color: var(--text-300); border: 1px solid var(--border-strong); font-weight: 500; font-size: 12.5px; padding: 7px 12px; }
+  .cmp-btn.ghost:hover { border-color: var(--teal-400); color: var(--teal-300); }
+  .cmp-tabs { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 999px; overflow: hidden; margin: 0 auto 12px; }
+  .cmp-tabs button { font-family: inherit; font-size: 12.5px; color: var(--text-500); background: transparent; border: 0; padding: 6px 16px; cursor: pointer; }
+  .cmp-tabs button.on { background: rgba(69,194,173,0.18); color: var(--teal-300); font-weight: 600; }
+  .cmp-tabs-row { display: flex; justify-content: center; }
+  .cmp-notes { margin-top: 14px; font-size: 12px; color: var(--text-500); line-height: 1.6; }
+  .cmp-notes p { margin: 3px 0; }
+  .cmp-hint { font-size: 11.5px; color: var(--text-600); }
+  @media (max-width: 880px) { .cmp-card { grid-template-columns: 1fr; } .cmp-canvas-box { height: 320px; } }
 </style>
 </head>
 <body>
@@ -292,6 +320,65 @@
       </div>
     </div>
   </section>
+
+  <section class="section" id="compareSection">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">กราฟเปรียบเทียบข้อมูล</div>
+          <h2>เปรียบเทียบวันเดียวกันข้ามปี</h2>
+        </div>
+        <p>เลือกประเภทข้อมูล วัน เดือน และปีที่ต้องการ แล้วกด "แสดง" — ข้อมูลมาจากตารางบัญชีน้ำด้านบน (เริ่ม 27 มิ.ย. 2568)</p>
+      </div>
+      <div class="cmp-card">
+        <div class="cmp-chart-wrap">
+          <div class="cmp-tabs-row">
+            <div class="cmp-tabs" role="tablist">
+              <button type="button" id="cmpTabBar" class="on">แท่ง: วันเดียวกันข้ามปี</button>
+              <button type="button" id="cmpTabLine">เส้น: ซ้อนปีตลอดทั้งปี</button>
+            </div>
+          </div>
+          <h3 class="cmp-title" id="cmpTitle">กำลังโหลด…</h3>
+          <p class="cmp-sub" id="cmpSub"></p>
+          <div class="cmp-canvas-box"><canvas id="cmpCanvas"></canvas></div>
+          <div class="cmp-notes" id="cmpNotes"></div>
+        </div>
+        <div class="cmp-controls">
+          <div class="field">
+            <label for="cmpType">ประเภทข้อมูล</label>
+            <select id="cmpType">
+              <option value="storage">ปริมาณน้ำเก็บกัก</option>
+              <option value="usable">ปริมาณน้ำใช้การ</option>
+              <option value="inflow">ปริมาณน้ำไหลลง</option>
+              <option value="released">ปริมาณน้ำระบาย</option>
+              <option value="inflow_acc">ปริมาณน้ำไหลเข้าสะสม</option>
+              <option value="released_acc">ปริมาณน้ำระบายสะสม</option>
+              <option value="level">ระดับน้ำกักเก็บ</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="cmpDam">อ่างเก็บน้ำ</label>
+            <select id="cmpDam" disabled><option>อ่างเก็บน้ำแม่นาเรือ</option></select>
+          </div>
+          <div class="field" id="cmpDayField">
+            <label for="cmpDay">วันที่</label>
+            <select id="cmpDay"></select>
+          </div>
+          <div class="field" id="cmpMonthField">
+            <label for="cmpMonth">เดือน</label>
+            <select id="cmpMonth"></select>
+          </div>
+          <div class="field">
+            <label for="cmpYears">ปี (เลือกได้หลายปี)</label>
+            <select id="cmpYears" multiple size="3"></select>
+            <div class="cmp-hint">กด Ctrl ค้างเพื่อเลือกหลายปี</div>
+          </div>
+          <button type="button" class="cmp-btn" id="cmpShow">แสดง</button>
+          <button type="button" class="cmp-btn ghost" id="cmpPng">บันทึกภาพ PNG</button>
+        </div>
+      </div>
+    </div>
+  </section>
 </main>
 
 <footer class="site-footer">
@@ -390,6 +477,167 @@ function renderKPIs() {
   }
 }
 
+
+// ======================= กราฟเปรียบเทียบข้อมูล =======================
+// รูปแบบการใช้งานเหมือนกราฟเปรียบเทียบของ thaiwater.net/water/dam/large: เลือกประเภทข้อมูล/วัน/เดือน/ปี แล้วกด "แสดง"
+// ข้อมูลใช้ ledger ตัวเดียวกับตารางด้านบน (ไม่เรียก API ภายนอก)
+const CMP_CAPACITY_M3 = 1625000;          // ความจุที่ระดับกักเก็บปกติ (สันสปิลเวย์ 489.54 ม.รทก. ≈ 1.625 ล้าน ลบ.ม.)
+const CMP_DEAD_FRAC = 0.20;               // ปริมาตรต่ำสุดที่ใช้การได้ = 20% ของความจุที่ระดับกักเก็บ (ผู้ใช้กำหนด 2026-10-09)
+const CMP_TYPES = {
+  storage:      { label: 'ปริมาณน้ำเก็บกัก',       unit: 'ลบ.ม.',   dec: 0 },
+  usable:       { label: 'ปริมาณน้ำใช้การ',         unit: 'ลบ.ม.',   dec: 0 },
+  inflow:       { label: 'ปริมาณน้ำไหลลง',          unit: 'ลบ.ม./วัน', dec: 0 },
+  released:     { label: 'ปริมาณน้ำระบาย (ท่อ O + ล้นสปิลเวย์)', unit: 'ลบ.ม./วัน', dec: 0 },
+  inflow_acc:   { label: 'ปริมาณน้ำไหลเข้าสะสม',    unit: 'ลบ.ม.',   dec: 0, acc: true },
+  released_acc: { label: 'ปริมาณน้ำระบายสะสม',      unit: 'ลบ.ม.',   dec: 0, acc: true },
+  level:        { label: 'ระดับน้ำกักเก็บ',         unit: 'ม.รทก.',  dec: 3 },
+};
+const CMP_COLORS = ['#7fe0d1', '#e0a94f', '#7aa7ff', '#ff8f8a', '#c28bff', '#9be36b', '#f2d56b'];
+let cmpChart = null, cmpMode = 'bar', cmpIndex = null;
+
+function cmpBuildIndex() {
+  // cmpIndex[year][MM-DD] = { date, storage, usable, inflow, released, level, inflow_acc, released_acc }
+  const idx = {};
+  const yearStart = {};
+  ledger.rows.forEach(r => { if (!(r.year in yearStart) || r.date < yearStart[r.year]) yearStart[r.year] = r.date; });
+  const accIn = {}, accOut = {};
+  const dead = CMP_CAPACITY_M3 * CMP_DEAD_FRAC;
+  ledger.rows.forEach(r => {
+    const y = r.year, md = r.date.slice(5);
+    accIn[y] = (accIn[y] || 0) + (r.inflow_m3 || 0);
+    accOut[y] = (accOut[y] || 0) + (r.outlet_release_m3 || 0) + (r.spill_m3 || 0);
+    // ค่าสะสมตั้งแต่ 1 ม.ค. ใช้ได้เฉพาะปีที่ข้อมูลเริ่มตั้งแต่ 1 ม.ค. (ปี 2568 เริ่ม 27 มิ.ย. จึงไม่มีค่าสะสม)
+    const accOk = yearStart[y].slice(5) === '01-01';
+    (idx[y] = idx[y] || {})[md] = {
+      date: r.date,
+      storage: r.water_volume_m3,
+      usable: r.water_volume_m3 == null ? null : Math.max(0, r.water_volume_m3 - dead),
+      inflow: r.inflow_m3,
+      released: (r.outlet_release_m3 || 0) + (r.spill_m3 || 0),
+      level: r.water_level_m,
+      inflow_acc: accOk ? accIn[y] : null,
+      released_acc: accOk ? accOut[y] : null,
+    };
+  });
+  return idx;
+}
+
+const cmpValueLabels = {
+  id: 'cmpValueLabels',
+  afterDatasetsDraw(chart) {
+    if (cmpMode !== 'bar') return;
+    const { ctx } = chart; const t = CMP_TYPES[document.getElementById('cmpType').value];
+    ctx.save(); ctx.fillStyle = '#eef6f4'; ctx.font = '600 12px "IBM Plex Sans Thai", sans-serif'; ctx.textAlign = 'center';
+    chart.data.datasets.forEach((ds, i) => {
+      chart.getDatasetMeta(i).data.forEach((bar, j) => {
+        const v = ds.data[j]; if (v == null) return;
+        ctx.fillText(fmtNum(v, t.dec), bar.x, bar.y - 6);
+      });
+    });
+    ctx.restore();
+  }
+};
+
+function cmpPopulate() {
+  cmpIndex = cmpBuildIndex();
+  const years = Object.keys(cmpIndex).map(Number).sort((a, b) => b - a);
+  const ysel = document.getElementById('cmpYears');
+  ysel.innerHTML = years.map(y => `<option value="${y}" selected>${y + 543}</option>`).join('');
+  const msel = document.getElementById('cmpMonth');
+  msel.innerHTML = THAI_MONTH.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
+  const latest = ledger.rows[ledger.rows.length - 1];
+  const [, lm, ld] = latest.date.split('-').map(Number);
+  msel.value = String(lm);
+  cmpFillDays(ld);
+  msel.addEventListener('change', () => cmpFillDays(Number(document.getElementById('cmpDay').value)));
+  document.getElementById('cmpShow').addEventListener('click', cmpRender);
+  document.getElementById('cmpType').addEventListener('change', cmpRender);
+  document.getElementById('cmpTabBar').addEventListener('click', () => cmpSetMode('bar'));
+  document.getElementById('cmpTabLine').addEventListener('click', () => cmpSetMode('line'));
+  document.getElementById('cmpPng').addEventListener('click', () => {
+    if (!cmpChart) return;
+    const a = document.createElement('a'); a.href = cmpChart.toBase64Image('image/png', 1); a.download = 'water_compare_maenarua.png'; a.click();
+  });
+  cmpRender();
+}
+
+function cmpFillDays(selected) {
+  const m = Number(document.getElementById('cmpMonth').value);
+  const n = new Date(2024, m, 0).getDate();             // ปีอธิกสุรทินเพื่อรองรับ 29 ก.พ.
+  const dsel = document.getElementById('cmpDay');
+  dsel.innerHTML = Array.from({ length: n }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('');
+  dsel.value = String(Math.min(selected || 1, n));
+}
+
+function cmpSetMode(m) {
+  cmpMode = m;
+  document.getElementById('cmpTabBar').classList.toggle('on', m === 'bar');
+  document.getElementById('cmpTabLine').classList.toggle('on', m === 'line');
+  document.getElementById('cmpDayField').style.display = m === 'bar' ? '' : 'none';
+  document.getElementById('cmpMonthField').style.display = m === 'bar' ? '' : 'none';
+  cmpRender();
+}
+
+function cmpRender() {
+  if (!cmpIndex) return;
+  const typeKey = document.getElementById('cmpType').value, T = CMP_TYPES[typeKey];
+  const years = [...document.getElementById('cmpYears').selectedOptions].map(o => Number(o.value)).sort((a, b) => a - b);
+  const titleEl = document.getElementById('cmpTitle'), subEl = document.getElementById('cmpSub'), notesEl = document.getElementById('cmpNotes');
+  if (!years.length) { titleEl.textContent = 'กรุณาเลือกปีอย่างน้อย 1 ปี'; return; }
+  const notes = [];
+  if (cmpChart) cmpChart.destroy();
+  const ctx = document.getElementById('cmpCanvas').getContext('2d');
+  const baseOpts = {
+    responsive: true, maintainAspectRatio: false, animation: { duration: 350 },
+    plugins: { legend: { labels: { color: '#c4d6d3' } } },
+  };
+  const yTitle = { display: true, text: T.unit, color: '#8aa3a0' };
+  const grid = { color: 'rgba(157,201,201,0.12)' }, tick = { color: '#8aa3a0' };
+
+  if (cmpMode === 'bar') {
+    const m = Number(document.getElementById('cmpMonth').value), d = Number(document.getElementById('cmpDay').value);
+    const md = `${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    titleEl.textContent = `อ่างเก็บน้ำแม่นาเรือ — ${T.label} (เปรียบเทียบวันที่ ${d} ${THAI_MONTH[m - 1]})`;
+    subEl.textContent = `หน่วย: ${T.unit}`;
+    const vals = years.map(y => (cmpIndex[y] && cmpIndex[y][md]) ? cmpIndex[y][md][typeKey] : null);
+    cmpChart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: years.map(y => String(y + 543)), datasets: [{ label: T.label, data: vals, backgroundColor: '#7ab8ec', borderColor: '#7ab8ec', borderWidth: 1, maxBarThickness: 80 }] },
+      options: { ...baseOpts,
+        layout: { padding: { top: 22 } },
+        plugins: { ...baseOpts.plugins, legend: { display: false },
+          tooltip: { callbacks: { label: c => `${T.label}: ${fmtNum(c.parsed.y, T.dec)} ${T.unit}` } } },
+        scales: { x: { grid: { display: false }, ticks: tick }, y: { beginAtZero: typeKey !== 'level', title: yTitle, grid, ticks: tick } } },
+      plugins: [cmpValueLabels],
+    });
+    years.forEach((y, i) => {
+      if (vals[i] != null) return;
+      const hasDay = !!(cmpIndex[y] && cmpIndex[y][md]);
+      notes.push(`ปี ${y + 543}: ` + (hasDay && T.acc ? 'ไม่มีค่าสะสมตั้งแต่ 1 ม.ค. (ข้อมูลของปีนั้นเริ่มกลางปี)' : 'ไม่มีข้อมูลของวันนี้'));
+    });
+  } else {
+    titleEl.textContent = `อ่างเก็บน้ำแม่นาเรือ — ${T.label} (ซ้อนปีตลอดทั้งปี)`;
+    subEl.textContent = `หน่วย: ${T.unit}`;
+    const labels = []; const days = [];
+    for (let m = 1; m <= 12; m++) { const n = new Date(2024, m, 0).getDate(); for (let d = 1; d <= n; d++) { days.push(`${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`); labels.push(`${d} ${THAI_MONTH[m - 1].slice(0, 3)}.`); } }
+    const datasets = years.map((y, i) => ({
+      label: String(y + 543), borderColor: CMP_COLORS[i % CMP_COLORS.length], backgroundColor: CMP_COLORS[i % CMP_COLORS.length],
+      borderWidth: 2, pointRadius: 0, pointHitRadius: 6, spanGaps: false, tension: 0.15,
+      data: days.map(md => (cmpIndex[y] && cmpIndex[y][md]) ? cmpIndex[y][md][typeKey] : null),
+    }));
+    cmpChart = new Chart(ctx, {
+      type: 'line', data: { labels, datasets },
+      options: { ...baseOpts, interaction: { mode: 'index', intersect: false },
+        plugins: { ...baseOpts.plugins, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${fmtNum(c.parsed.y, T.dec)} ${T.unit}` } } },
+        scales: { x: { grid: { display: false }, ticks: { ...tick, maxTicksLimit: 12, autoSkip: true } }, y: { beginAtZero: typeKey !== 'level', title: yTitle, grid, ticks: tick } } },
+    });
+    if (T.acc) notes.push('ค่าสะสมนับตั้งแต่ 1 ม.ค. — ปี 2568 ไม่มีเพราะข้อมูลเริ่ม 27 มิ.ย. 2568');
+  }
+  if (typeKey === 'usable') notes.push(`ปริมาณน้ำใช้การ = ปริมาณน้ำเก็บกัก − ปริมาตรต่ำสุดที่ใช้การได้ (กำหนดที่ ${CMP_DEAD_FRAC * 100}% ของความจุที่ระดับกักเก็บ ${fmtInt(CMP_CAPACITY_M3)} ลบ.ม. = ${fmtInt(CMP_CAPACITY_M3 * CMP_DEAD_FRAC)} ลบ.ม.)`);
+  notes.push('ข้อมูลมีตั้งแต่ 27 มิ.ย. 2568 จึงเปรียบเทียบได้ปีละ 1 ค่าเฉพาะปี 2568 และ 2569 (ปีถัดไปจะเพิ่มเองอัตโนมัติ)');
+  notesEl.innerHTML = notes.map(n => `<p>• ${n}</p>`).join('');
+}
+
 fetch(DATA_ENDPOINT)
   .then(res => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
   .then(json => {
@@ -408,6 +656,7 @@ fetch(DATA_ENDPOINT)
     renderKPIs();
     populateMonthSelect();
     renderMonthTable(ledger.months_available[ledger.months_available.length - 1]);
+    try { cmpPopulate(); } catch (e) { console.error('compare chart', e); }
   })
   .catch(err => {
     document.getElementById('statusText').textContent = 'โหลดข้อมูลไม่สำเร็จ: ' + err.message;
