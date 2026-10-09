@@ -789,7 +789,11 @@ def _fetch_era5t_via_subprocess(
     (as_of_date/worker_output/fetch_error ฯลฯ) เพื่อไม่ต้องแก้ caller
     (_fetch_climate_features_step()/_backfill_incomplete_climate_weeks()) เลย
     """
+    import importlib
     import era5t_worker_colab as ew
+    # 2026-10-09: บังคับโหลดโค้ดล่าสุดทุกรอบ — Colab runtime ที่ไม่ได้ restart จะค้าง module เก่าใน sys.modules
+    # (พบจริง: หลังแก้ ET0 แล้วรันซ้ำ ยังได้ค่า Rn เก่า -0.16 ทั้งที่ clone โค้ดใหม่แล้ว)
+    ew = importlib.reload(ew)
 
     as_of = as_of_date or datetime.now(timezone.utc).date()
     ERA5T_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
