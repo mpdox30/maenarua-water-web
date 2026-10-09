@@ -354,6 +354,8 @@
               <option value="inflow_acc">ปริมาณน้ำไหลเข้าสะสม</option>
               <option value="released_acc">ปริมาณน้ำระบายสะสม</option>
               <option value="level">ระดับน้ำกักเก็บ</option>
+              <option value="rain">ปริมาณฝน</option>
+              <option value="rain_acc">ปริมาณฝนสะสม</option>
             </select>
           </div>
           <div class="field">
@@ -491,6 +493,8 @@ const CMP_TYPES = {
   inflow_acc:   { label: 'ปริมาณน้ำไหลเข้าสะสม',    unit: 'ลบ.ม.',   dec: 0, acc: true },
   released_acc: { label: 'ปริมาณน้ำระบายสะสม',      unit: 'ลบ.ม.',   dec: 0, acc: true },
   level:        { label: 'ระดับน้ำกักเก็บ',         unit: 'ม.รทก.',  dec: 3 },
+  rain:         { label: 'ปริมาณฝน (สะสม 24 ชม.)',   unit: 'มม.',     dec: 1 },
+  rain_acc:     { label: 'ปริมาณฝนสะสม (ตั้งแต่ 1 ม.ค.)', unit: 'มม.', dec: 1, acc: true },
 };
 const CMP_COLORS = ['#7fe0d1', '#e0a94f', '#7aa7ff', '#ff8f8a', '#c28bff', '#9be36b', '#f2d56b'];
 let cmpChart = null, cmpMode = 'bar', cmpIndex = null;
@@ -500,12 +504,13 @@ function cmpBuildIndex() {
   const idx = {};
   const yearStart = {};
   ledger.rows.forEach(r => { if (!(r.year in yearStart) || r.date < yearStart[r.year]) yearStart[r.year] = r.date; });
-  const accIn = {}, accOut = {};
+  const accIn = {}, accOut = {}, accRain = {};
   const dead = CMP_CAPACITY_M3 * CMP_DEAD_FRAC;
   ledger.rows.forEach(r => {
     const y = r.year, md = r.date.slice(5);
     accIn[y] = (accIn[y] || 0) + (r.inflow_m3 || 0);
     accOut[y] = (accOut[y] || 0) + (r.outlet_release_m3 || 0) + (r.spill_m3 || 0);
+    accRain[y] = (accRain[y] || 0) + (r.rain_24h_mm || 0);
     // ค่าสะสมตั้งแต่ 1 ม.ค. ใช้ได้เฉพาะปีที่ข้อมูลเริ่มตั้งแต่ 1 ม.ค. (ปี 2568 เริ่ม 27 มิ.ย. จึงไม่มีค่าสะสม)
     const accOk = yearStart[y].slice(5) === '01-01';
     (idx[y] = idx[y] || {})[md] = {
@@ -515,8 +520,10 @@ function cmpBuildIndex() {
       inflow: r.inflow_m3,
       released: (r.outlet_release_m3 || 0) + (r.spill_m3 || 0),
       level: r.water_level_m,
+      rain: r.rain_24h_mm,
       inflow_acc: accOk ? accIn[y] : null,
       released_acc: accOk ? accOut[y] : null,
+      rain_acc: accOk ? accRain[y] : null,
     };
   });
   return idx;
