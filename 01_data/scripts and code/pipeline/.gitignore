@@ -1,0 +1,6 @@
+
+# ET0 recompute (2026-10-08): ไม่ต้อง commit ไฟล์ grib
+era5t_output_fixed/*.grib
+era5t_output_fixed/*.idx
+ml_features_live.bak_before_et0fix_*.csv
+*.bak_before_*

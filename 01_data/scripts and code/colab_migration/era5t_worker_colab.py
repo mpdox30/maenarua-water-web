@@ -225,7 +225,7 @@ def _fetch_grib_from_cds_days(year: int, month: int, day_nums: list, time_utc: s
         "year": [f"{year:04d}"],
         "month": [f"{month:02d}"],
         "day": [f"{d:02d}" for d in day_nums],
-        "time": [time_utc],
+        "time": _weekly_request_times(time_utc),
         "data_format": "grib",
         "download_format": "unarchived",
         "area": list(area),
@@ -300,6 +300,41 @@ def _fetch_week_with_retry(days: list, time_utc: str, area, grib_dir: Path, warn
     return [], None
 
 
+# แก้ไข 2026-10-08 (ET0 ต่ำกว่าจริง ~10 เท่า): ข้อมูลเทรนมาจาก ERA5-Land ที่ time=12:00 ซึ่ง ssr/str
+# เป็นค่า "สะสมตั้งแต่ 00 UTC ถึง 12 UTC" (~12 ชม. กลางวัน → Rn ~7-10 MJ) แต่ ERA5 single-levels
+# (dataset ที่ live ใช้) accumulate แค่ "1 ชม. ก่อน valid time" → ที่ 12:00 UTC (19:00 น. เวลาไทย
+# พระอาทิตย์ตกแล้ว) ได้ Rn ≈ 0 ทำให้ ET0 ต่ำ ~10 เท่า (พบจาก era5t_week_*.json: Rn_MJ ≈ -0.1..-0.3)
+# แก้: ขอชั่วโมง 01..12 UTC แล้ว sum ssr/str (ตรงกับ ERA5-Land accumulation 00->12) ส่วน
+# t2m/d2m/u10/v10 ใช้ค่า instant ที่ 12:00 UTC เหมือนตอนเทรน
+WEEKLY_HOURS_UTC = [f"{h:02d}:00" for h in range(1, 13)]
+ACCUM_VARS = ("ssr", "str", "tp")
+
+
+def _weekly_request_times(time_utc: str) -> list:
+    """โหมดรายสัปดาห์ที่ time_utc=12:00 -> ขอ 01:00..12:00 ทั้งหมด; ค่าอื่น (ทดสอบ) ขอแค่เวลานั้น"""
+    return list(WEEKLY_HOURS_UTC) if time_utc == DEFAULT_WEEKLY_TIME_UTC else [time_utc]
+
+
+def _aggregate_hourly_records(records: list) -> dict:
+    """
+    records: [(date_str, hour_utc:int, var, value)] -> {date_str: {var: value}}
+    instant vars = ค่าที่ชั่วโมง 12; accumulated (ssr/str/tp) = sum ชั่วโมง 1..12 และต้องครบ 12 ชั่วโมง
+    (ถ้าไม่ครบ ไม่ใส่ตัวแปรนั้น -> วันนั้นถูกข้ามพร้อม warning แทนที่จะได้ Rn ผิด)
+    """
+    inst, acc = {}, {}
+    for d, h, v, x in records:
+        if v in ACCUM_VARS:
+            if 1 <= h <= 12:
+                acc.setdefault((d, v), {})[h] = x
+        elif h == 12:
+            inst.setdefault(d, {})[v] = x
+    per_day = {d: dict(vs) for d, vs in inst.items()}
+    for (d, v), hs in acc.items():
+        if len(hs) == 12:
+            per_day.setdefault(d, {})[v] = float(sum(hs.values()))
+    return per_day
+
+
 def _as_flat_list(values) -> list:
     try:
         return values.reshape(-1).tolist()
@@ -348,47 +383,47 @@ def _decode_grib(grib_path: Path) -> dict:
 
 def _decode_grib_multiday(grib_path: Path) -> dict:
     """
-    เหมือน _decode_grib() แต่รองรับ grib ที่มีหลาย time step (หลายวัน) ในไฟล์เดียว — คืนค่า
-    spatial-mean ของแต่ละตัวแปร "แยกตามวัน" (ไม่ flatten รวมทุกวันเป็นก้อนเดียวเหมือน _decode_grib())
-    เพื่อให้คำนวณ ETo_mm_day ทีละวันได้ก่อนค่อย sum เป็น ET0_mm_week
-
-    คืนค่า: {date_str: {var_short_name: spatial_mean_value, ...}, ...}
+    decode grib หลายวัน/หลายชั่วโมง -> {date_str: {var: value}} (spatial-mean)
+    2026-10-08: เก็บค่าตาม valid_time ระดับชั่วโมง แล้วรวมด้วย _aggregate_hourly_records()
+    (ssr/str = sum ชั่วโมง 01..12 UTC, ตัวแปร instant = ชั่วโมง 12) — ดูคำอธิบายที่ WEEKLY_HOURS_UTC
+    ไฟล์ที่มีแค่ time เดียว (โหมดทดสอบเดิม, ไม่ใช่ชั่วโมง 12 ครบชุด) ใช้ path เดิม (ค่าตรงๆ ต่อวัน)
     """
     import numpy as np
     import cfgrib
 
     datasets = cfgrib.open_datasets(str(grib_path))
-    per_day: dict = {}
+    records: list = []
+    legacy: dict = {}
 
     for ds in datasets:
-        time_coord = ds["valid_time"] if "valid_time" in ds.coords else ds.get("time")
-        if time_coord is None:
-            continue
-
-        # แปลง valid_time -> "YYYY-MM-DD" ด้วย np.datetime_as_string() ตรงๆ แทนการพึ่ง
-        # str(x.tolist()) — เพราะ numpy datetime64 ที่ precision ระดับ nanosecond (datetime64[ns],
-        # ซึ่งเป็น dtype ที่ cfgrib/xarray มักคืนมาจริง) จะทำให้ .tolist()/.item() คืนค่าเป็น int
-        # (nanosecond timestamp) แทนที่จะเป็น datetime object เพราะ python datetime ไม่รองรับ
-        # ความละเอียดระดับ ns — ถ้าใช้ str(t)[:10] แบบเดิมจะได้ตัวเลขมั่วๆ แทนวันที่จริง
-        # (พบบั๊กนี้จาก fixture test ที่ mock cfgrib ด้วย datetime64[ns] array ก่อนใช้งานจริง)
-        raw_times = np.asarray(time_coord.values).reshape(-1)
-        if np.issubdtype(raw_times.dtype, np.datetime64):
-            date_strs = np.datetime_as_string(raw_times, unit="D").tolist()
-        else:
-            date_strs = [str(t)[:10] for t in raw_times]
-
         for v in ds.data_vars:
             da = ds[v]
             spatial_dims = [d for d in da.dims if d in ("latitude", "longitude")]
             reduced = da.mean(dim=spatial_dims) if spatial_dims else da
+            if "valid_time" in reduced.coords:
+                vt = reduced["valid_time"].values
+            elif "valid_time" in ds.coords:
+                vt = ds["valid_time"].values
+            else:
+                vt = ds["time"].values
+            vt = np.asarray(vt).reshape(-1)
             values = _as_flat_list(reduced.values)
-            if len(date_strs) != len(values):
-                # ไม่ควรเกิดขึ้น (มิติเวลาไม่ตรงกับค่าที่ reduce แล้ว) — กันเหนียวไว้ ข้ามตัวแปรนี้
+            if len(vt) != len(values):
                 continue
-            for date_str, val in zip(date_strs, values):
-                per_day.setdefault(date_str, {})[v] = float(val)
+            if np.issubdtype(vt.dtype, np.datetime64):
+                dstr = np.datetime_as_string(vt, unit="D").tolist()
+                hrs = ((vt - vt.astype("datetime64[D]")) / np.timedelta64(1, "h")).astype(int).tolist()
+            else:
+                dstr = [str(t)[:10] for t in vt]
+                hrs = [12] * len(dstr)
+            for d, h, x in zip(dstr, hrs, values):
+                records.append((d, int(h), v, float(x)))
+                legacy.setdefault(d, {})[v] = float(x)
 
-    return per_day
+    hours_present = {h for _, h, _, _ in records}
+    if len(hours_present) <= 1:
+        return legacy  # ไฟล์ single-time เดิม
+    return _aggregate_hourly_records(records)
 
 
 def _run_single_day_mode(args, out_json_path: Path, result: dict) -> tuple:

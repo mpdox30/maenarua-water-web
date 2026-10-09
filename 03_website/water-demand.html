@@ -487,7 +487,10 @@ function renderKPI(json) {
           '</div>';
       }).join('');
       if (reservoirBreakdownNoteEl) reservoirBreakdownNoteEl.textContent =
-        'จัดสรรจากค่าพยากรณ์ Zone B (' + fmtInt(reservoirBreakdown.total_m3) + ' ลบ.ม./สัปดาห์) ตามสัดส่วน FAO-56 ต่ออ่าง';
+        'จัดสรรจากค่าพยากรณ์ Zone B (' + fmtInt(reservoirBreakdown.total_m3) + ' ลบ.ม./สัปดาห์) ' +
+        (reservoirBreakdown.share_basis === 'sar_live_gross_etc_no_deficit'
+          ? 'ตามสัดส่วนความต้องการน้ำรวมของพืชต่ออ่าง (สัปดาห์นี้ฝนมีผล จึงไม่หักฝน)'
+          : 'ตามสัดส่วน FAO-56 ต่ออ่าง');
     } else if (reservoirBreakdownReason === 'zero_deficit') {
       reservoirBreakdownEl.innerHTML = '<span style="font-size:13px; color:var(--text-600); font-weight:400;">ไม่มีความต้องการใช้น้ำสัปดาห์นี้</span>';
       if (reservoirBreakdownNoteEl) reservoirBreakdownNoteEl.textContent =
