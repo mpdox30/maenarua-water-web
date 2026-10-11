@@ -20,5 +20,6 @@ if defined CAND_SYNC_DIR (
 set "E1=%ERRORLEVEL%"
 "%PY%" shadow_candidate.py
 set "E2=%ERRORLEVEL%"
-if not exist "%HB%" echo run_at,machine,fetch_exit,shadow_exit>"%HB%"
-echo %DATE% %TIME%,%COMPUTERNAME%,%E1%,%E2%>>"%HB%"
+if not exist "%HB%" >"%HB%" echo run_at,machine,fetch_exit,shadow_exit
+REM heartbeat: เขียนตัวชี้ไฟล์ไว้หน้าคำสั่ง echo (กันเลข exit code ตัวเดียวถูกตีความเป็นหมายเลข handle)
+>>"%HB%" echo %DATE% %TIME%,%COMPUTERNAME%,%E1%,%E2%
