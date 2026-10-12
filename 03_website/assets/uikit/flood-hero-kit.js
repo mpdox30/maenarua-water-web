@@ -14,7 +14,9 @@
     '.fh-rip i{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(var(--t5-rgb),.38);animation:fh-rip 5.4s cubic-bezier(.2,.6,.3,1) infinite}',
     '.fh-rip i:nth-child(2){animation-delay:1.8s}.fh-rip i:nth-child(3){animation-delay:3.6s}',
     '@keyframes fh-rip{0%{transform:scale(.12);opacity:.9}100%{transform:scale(1);opacity:0}}',
-    '.page-hero h1{background:linear-gradient(95deg,var(--text-100) 35%,var(--teal-500,#2a9d8f) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-size:34px}',
+    '.page-hero h1{background:linear-gradient(95deg,var(--text-100) 35%,var(--teal-500,#2a9d8f) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-size:34px;line-height:1.45;padding:.2em 0 .1em;margin:0 0 6px}',
+    '.page-hero .wrap>.eyebrow{display:none}',
+    '.fh-pill.fh-tag{background:linear-gradient(135deg,var(--teal-500),var(--teal-400));color:var(--accent-ink,#fff);border-color:transparent;font-weight:600;letter-spacing:.03em}',
     '.fh-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}',
     '.fh-pill{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--text-300);padding:5px 12px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.72);backdrop-filter:blur(6px)}',
     'html:not([data-uk-mode="light"]) .fh-pill,html:not([data-uk-mode="light"]) .fh-msgs .ch span{background:rgba(255,255,255,.07)}',
@@ -116,7 +118,7 @@
   function heroMeta(d) {
     var wrap = document.querySelector('.page-hero .wrap'), lead = wrap && wrap.querySelector('.lead'); if (!lead || wrap.querySelector('.fh-meta')) return;
     var m = document.createElement('div'); m.className = 'fh-meta';
-    m.innerHTML = '<span class="fh-pill"><i></i>อัปเดต <b>' + esc(d.generated_at) + '</b></span><span class="fh-pill">วันฐานพยากรณ์ <b>' + esc(d.base_date) + '</b></span><span class="fh-pill">พยากรณ์ล่วงหน้า <b>7</b> วัน</span><span class="fh-pill">ตรวจพิสูจน์ด้วย <b>3</b> ชุดข้อมูลอิสระ</span>';
+    m.innerHTML = '<span class="fh-pill fh-tag">Flood Forecast · WMB Model</span><span class="fh-pill"><i></i>อัปเดต <b>' + esc(d.generated_at) + '</b></span><span class="fh-pill">วันฐานพยากรณ์ <b>' + esc(d.base_date) + '</b></span><span class="fh-pill">พยากรณ์ล่วงหน้า <b>7</b> วัน</span><span class="fh-pill">ตรวจพิสูจน์ด้วย <b>3</b> ชุดข้อมูลอิสระ</span>';
     lead.parentNode.insertBefore(m, lead.nextSibling);
   }
 
