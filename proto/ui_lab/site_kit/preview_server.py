@@ -29,7 +29,7 @@ def conv(css):
     return ''.join(p if i % 2 else _conv(p) for i, p in enumerate(ROOTRE.split(css)))
 
 # รายการ kit ที่ฝังตามลำดับ (ลำดับสำคัญ) — เพิ่ม kit ใหม่ที่นี่ แล้วรัน deploy_to_production.py
-KITS = ['theme-kit.js', 'page-kit.js', 'kwan-kit.js', 'hero-bg.js', 'inflow-kit.js', 'map-kit.js', 'flood-map-kit.js', 'flood-flow-kit.js', 'flood-3d-kit.js', 'flood-bathtub-kit.js', 'reliability-kit.js', 'flood-hero-kit.js', 'freshness-kit.js', 'table-kit.js', 'plain-kit.js', 'csv-kit.js', 'pwa-kit.js', 'report-kit.js', 'i18n-kit.js', 'ukm.js']
+KITS = ['theme-kit.js', 'page-kit.js', 'kwan-kit.js', 'hero-bg.js', 'inflow-kit.js', 'map-kit.js', 'flood-map-kit.js', 'flood-flow-kit.js', 'flood-3d-kit.js', 'flood-bathtub-kit.js', 'reliability-kit.js', 'flood-hero-kit.js', 'freshness-kit.js', 'table-kit.js', 'plain-kit.js', 'csv-kit.js', 'pwa-kit.js', 'report-kit.js', 'diagram-kit.js', 'i18n-kit.js', 'ukm.js']
 
 def ensure_kits(html, tag):
     """เติม <script> ของ kit ใหม่ที่ยังไม่มีในหน้า (หน้าที่ฝังไว้แล้ว) — แทรกก่อน ukm.js (ถ้ามี) ไม่งั้นก่อน </body>"""
