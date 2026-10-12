@@ -7165,6 +7165,15 @@
    "CAT": 0.00042,
    "ChamTum": 0.0,
    "total": 0.32012
+  },
+  {
+   "date": "2026-10-12",
+   "MaeNaRua": 0.3292,
+   "HuayTham": 0.0,
+   "So": 0.0,
+   "CAT": 0.0,
+   "ChamTum": 0.0,
+   "total": 0.3292
   }
  ],
  "weekly": [
@@ -8238,6 +8247,15 @@
    "CAT": 0.1003,
    "ChamTum": 0.1123,
    "total": 2.8147
+  },
+  {
+   "date": "2026-10-18",
+   "MaeNaRua": 0.3292,
+   "HuayTham": 0.0,
+   "So": 0.0,
+   "CAT": 0.0,
+   "ChamTum": 0.0,
+   "total": 0.3292
   }
  ],
  "monthly": [
@@ -8486,12 +8504,12 @@
   },
   {
    "date": "2026-10",
-   "MaeNaRua": 2.142,
+   "MaeNaRua": 2.471,
    "HuayTham": 0.302,
    "So": 0.189,
    "CAT": 0.1,
    "ChamTum": 0.114,
-   "total": 2.847
+   "total": 3.176
   }
  ]
 }
