@@ -4,10 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>พยากรณ์น้ำไหลลงอ่าง | ข้อมูลประกอบการตัดสินใจเพื่อการบริหารจัดการน้ำ ตำบลแม่นาเรือ</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="assets/js/chart.umd.min.js"></script>
+<link href="assets/vendor/fonts/fonts.css" rel="stylesheet">
+<script src="assets/js/chart.umd.min.js"></script><script src="assets/uikit/chart-kit.js?v=202610121725"></script>
 <style>
   :root {
     --bg-950: #06161c; --bg-900: #081e26; --bg-800: #0d2a34; --bg-700: #123643;
@@ -22,8 +20,8 @@
   html { scroll-behavior: smooth; }
   body {
     margin: 0;
-    background: radial-gradient(ellipse 1200px 700px at 15% -10%, #103743 0%, transparent 60%),
-                radial-gradient(ellipse 900px 600px at 100% 10%, #0e2f2a 0%, transparent 55%),
+    background: radial-gradient(ellipse 1200px 700px at 15% -10%, var(--bg-glow-1) 0%, transparent 60%),
+                radial-gradient(ellipse 900px 600px at 100% 10%, var(--bg-glow-2) 0%, transparent 55%),
                 var(--bg-950);
     color: var(--text-300); font-family: "IBM Plex Sans Thai", "Sarabun", sans-serif; line-height: 1.65; -webkit-font-smoothing: antialiased;
   }
@@ -33,10 +31,10 @@
   .eyebrow::before { content: ""; width: 16px; height: 1px; background: var(--teal-400); display: inline-block; }
   .wrap { max-width: 1240px; margin: 0 auto; padding: 0 40px; }
 
-  header.site-header { position: sticky; top: 0; z-index: 40; background: rgba(6,22,28,0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+  header.site-header { position: sticky; top: 0; z-index: 40; background: rgba(var(--bg950-rgb),0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
   .header-inner { max-width: 1240px; margin: 0 auto; padding: 16px 40px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
   .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; flex: 1 1 auto; min-width: 0; }
-  .brand-mark { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 35% 30%, rgba(127,224,209,0.35), transparent 70%); flex: none; }
+  .brand-mark { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 35% 30%, rgba(var(--t3-rgb),0.35), transparent 70%); flex: none; }
   .brand-mark svg { width: 18px; height: 18px; }
   .brand-text-th { font-family: "Noto Serif Thai", serif; font-size: 14px; color: var(--text-100); font-weight: 600; line-height: 1.35; max-width: 320px; }
   .brand-text-en { font-family: "Space Grotesk", sans-serif; font-size: 10px; letter-spacing: 0.06em; color: var(--text-500); margin-top: 2px; }
@@ -48,15 +46,15 @@
   .nav-toggle { display: none; flex: none; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border-strong); background: var(--surface); align-items: center; justify-content: center; cursor: pointer; padding: 0; }
   .nav-toggle span { display: block; width: 18px; height: 2px; background: var(--text-100); border-radius: 2px; }
   .nav-toggle span + span { margin-top: 4px; }
-  .mobile-nav { display: none; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: rgba(6,22,28,0.98); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); padding: 8px 24px 16px; }
+  .mobile-nav { display: none; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: rgba(var(--bg950-rgb),0.98); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); padding: 8px 24px 16px; }
   .mobile-nav a { display: block; padding: 12px 4px; font-size: 14px; color: var(--text-300); text-decoration: none; border-bottom: 1px solid var(--border); }
   .mobile-nav a:last-child { border-bottom: none; }
   .mobile-nav a.current { color: var(--teal-300); font-weight: 600; }
   .mobile-nav.open { display: flex; }
 
-  .status-bar { border-bottom: 1px solid var(--border); background: linear-gradient(90deg, rgba(224,169,79,0.08), transparent 60%); }
+  .status-bar { border-bottom: 1px solid var(--border); background: linear-gradient(90deg, rgba(var(--a4-rgb),0.08), transparent 60%); }
   .status-bar-inner { max-width: 1240px; margin: 0 auto; padding: 10px 40px; display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--amber-300); flex-wrap: wrap; }
-  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber-400); box-shadow: 0 0 0 4px rgba(224,169,79,0.18); flex: none; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber-400); box-shadow: 0 0 0 4px rgba(var(--a4-rgb),0.18); flex: none; }
   .status-bar-inner strong { color: var(--amber-300); font-weight: 600; }
   .status-bar-inner span.dim { color: var(--text-500); }
 
@@ -75,8 +73,8 @@
   .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
   .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px 20px; position: relative; overflow: hidden; transition: transform .22s ease, border-color .22s ease, background .22s ease; }
   .kpi-card:hover { transform: translateY(-4px); border-color: var(--border-strong); background: var(--surface-hover); }
-  .kpi-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(69,194,173,0.12); border: 1px solid rgba(69,194,173,0.28); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 16px; }
-  .kpi-card.accent-amber .kpi-icon { background: rgba(224,169,79,0.12); border-color: rgba(224,169,79,0.32); }
+  .kpi-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(var(--t4-rgb),0.12); border: 1px solid rgba(var(--t4-rgb),0.28); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 16px; }
+  .kpi-card.accent-amber .kpi-icon { background: rgba(var(--a4-rgb),0.12); border-color: rgba(var(--a4-rgb),0.32); }
   .kpi-label { font-size: 12px; color: var(--text-500); margin-bottom: 8px; font-weight: 500; }
   .kpi-value { font-family: "Space Grotesk", sans-serif; font-size: 27px; font-weight: 600; color: var(--text-100); }
   .kpi-unit { font-size: 12px; color: var(--text-500); margin-left: 5px; font-weight: 400; }
@@ -99,10 +97,10 @@
   .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 8px 20px; overflow-x: auto; }
 
   .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
-  .badge-ok { background: rgba(69,194,173,0.14); color: var(--teal-300); border: 1px solid rgba(69,194,173,0.35); }
-  .badge-low { background: rgba(224,169,79,0.16); color: var(--amber-300); border: 1px solid rgba(224,169,79,0.42); }
-  .badge-blocked { background: rgba(226,102,90,0.16); color: #f3a89f; border: 1px solid rgba(226,102,90,0.42); }
-  .nse-sub { font-size: 10px; color: var(--muted, #8aa3a0); margin-left: 4px; cursor: help; }
+  .badge-ok { background: rgba(var(--t4-rgb),0.14); color: var(--teal-300); border: 1px solid rgba(var(--t4-rgb),0.35); }
+  .badge-low { background: rgba(var(--a4-rgb),0.16); color: var(--amber-300); border: 1px solid rgba(var(--a4-rgb),0.42); }
+  .badge-blocked { background: rgba(226,102,90,0.16); color: var(--red-txt); border: 1px solid rgba(226,102,90,0.42); }
+  .nse-sub { font-size: 10px; color: var(--muted, var(--text-500)); margin-left: 4px; cursor: help; }
 
   /* staleness banner (เพิ่ม 2026-07-05) — เตือนเมื่อข้อมูล Reservoir Inflow เก่ากว่าเกณฑ์ที่ตั้งไว้
      เพราะยังไม่มีการอัปโหลดไฟล์ "บัญชีน้ำ" ของเดือนใหม่ (ดู ARCHITECTURE.md > Manual Dependencies
@@ -110,10 +108,10 @@
   .stale-banner { display: none; margin-top: 16px; padding: 14px 20px; border-radius: var(--radius-md); font-size: 13px; line-height: 1.55; align-items: flex-start; gap: 10px; }
   .stale-banner.show { display: flex; }
   .stale-banner .icon { flex: none; font-size: 16px; line-height: 1.4; }
-  .stale-banner-warning { background: rgba(224,169,79,0.09); border: 1px solid rgba(224,169,79,0.32); color: var(--amber-300); }
-  .stale-banner-blocked { background: rgba(226,102,90,0.12); border: 1px solid rgba(226,102,90,0.4); color: #f3a89f; }
+  .stale-banner-warning { background: rgba(var(--a4-rgb),0.09); border: 1px solid rgba(var(--a4-rgb),0.32); color: var(--amber-300); }
+  .stale-banner-blocked { background: rgba(226,102,90,0.12); border: 1px solid rgba(226,102,90,0.4); color: var(--red-txt); }
 
-  .disclaimer-box { margin-top: 22px; padding: 18px 22px; border-radius: var(--radius-md); background: rgba(224,169,79,0.06); border: 1px solid rgba(224,169,79,0.26); }
+  .disclaimer-box { margin-top: 22px; padding: 18px 22px; border-radius: var(--radius-md); background: rgba(var(--a4-rgb),0.06); border: 1px solid rgba(var(--a4-rgb),0.26); }
   .disclaimer-box h4 { font-size: 13px; color: var(--amber-300); margin-bottom: 10px; font-family: "IBM Plex Sans Thai", sans-serif; font-weight: 600; }
   .disclaimer-box ul { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--text-500); }
   .disclaimer-box li { margin-bottom: 6px; }
@@ -131,9 +129,9 @@
   .res-controls select { background: var(--bg-800); color: var(--text-100); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 7px 10px; font-size: 13px; font-family: inherit; }
   .seg-toggle { display: inline-flex; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 3px; gap: 2px; }
   .seg-toggle button { border: none; background: transparent; color: var(--text-500); font-size: 12px; font-family: inherit; padding: 6px 14px; border-radius: 999px; cursor: pointer; transition: background .15s, color .15s; }
-  .seg-toggle button.active { background: var(--teal-400); color: #06161c; font-weight: 600; }
+  .seg-toggle button.active { background: var(--teal-400); color: var(--bg-950); font-weight: 600; }
   .res-detail-note { font-size: 11.5px; color: var(--text-600); margin: 12px 0 0; }
-  .cross-check-note { margin-top: 14px; padding: 12px 16px; border-radius: var(--radius-sm); background: rgba(69,194,173,0.07); border: 1px solid rgba(69,194,173,0.24); font-size: 12px; color: var(--text-300); }
+  .cross-check-note { margin-top: 14px; padding: 12px 16px; border-radius: var(--radius-sm); background: rgba(var(--t4-rgb),0.07); border: 1px solid rgba(var(--t4-rgb),0.24); font-size: 12px; color: var(--text-300); }
 
   /* น้ำไหลเข้าอ่างสุทธิ -- พาแนลเต็มความกว้าง (เพิ่ม 2026-07-31 ตามข้อเสนอ display layer เพื่อลดความ
      สับสนตอนค่า Q_in แสดง 0 ทั้งที่ระดับน้ำ/ฝนจริงบอกว่ามีสัญญาณน้ำไหลเข้าระหว่างวัน -- ดู
@@ -143,16 +141,16 @@
   .pip-left { display: flex; gap: 14px; align-items: flex-start; }
   .pip-label-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .pip-label { font-size: 12.5px; color: var(--text-500); }
-  .info-dot { width: 16px; height: 16px; border-radius: 50%; background: rgba(69,194,173,0.16); color: var(--teal-300); border: 1px solid rgba(69,194,173,0.4); font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; cursor: help; position: relative; flex: 0 0 auto; }
-  .info-dot .tip { display: none; position: absolute; top: 22px; left: 0; width: 300px; z-index: 6; background: #0f2f38; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 12px; line-height: 1.7; color: var(--text-300); box-shadow: 0 12px 30px rgba(0,0,0,0.45); }
+  .info-dot { width: 16px; height: 16px; border-radius: 50%; background: rgba(var(--t4-rgb),0.16); color: var(--teal-300); border: 1px solid rgba(var(--t4-rgb),0.4); font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; cursor: help; position: relative; flex: 0 0 auto; }
+  .info-dot .tip { display: none; position: absolute; top: 22px; left: 0; width: 300px; z-index: 6; background: var(--bg-800); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 12px; line-height: 1.7; color: var(--text-300); box-shadow: 0 12px 30px rgba(0,0,0,0.45); }
   .info-dot:hover .tip { display: block; }
   .pip-value { font-family: "Space Grotesk", sans-serif; font-size: 34px; font-weight: 600; color: var(--text-100); margin-top: 6px; }
   .context-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 18px 0; }
-  .chip { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-300); background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 999px; padding: 7px 13px; }
+  .chip { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-300); background: rgba(var(--w-rgb),0.04); border: 1px solid var(--border); border-radius: 999px; padding: 7px 13px; }
   .chip b { color: var(--text-100); font-family: "Space Grotesk", sans-serif; font-weight: 600; }
-  .chip.amber { border-color: rgba(224,169,79,0.35); background: rgba(224,169,79,0.08); }
+  .chip.amber { border-color: rgba(var(--a4-rgb),0.35); background: rgba(var(--a4-rgb),0.08); }
   .chip.amber b { color: var(--amber-300); }
-  .spark-wrap { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 16px 10px; }
+  .spark-wrap { background: rgba(var(--w-rgb),0.03); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 16px 10px; }
   .spark-title { font-size: 11.5px; color: var(--text-500); margin-bottom: 10px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
   svg.spark { width: 100%; height: 100px; display: block; overflow: visible; }
   /* .spark-canvas: กรอบ position:relative ให้ .spark-peak-label วางทับ SVG แบบ HTML overlay แทนการฝัง
@@ -163,7 +161,7 @@
   .spark-canvas { position: relative; }
   .spark-peak-label {
     position: absolute; transform: translate(-50%, -100%); margin-top: -6px;
-    font-size: 11px; color: #f0c47c; font-family: "IBM Plex Sans Thai", sans-serif;
+    font-size: 11px; color: var(--amber-300); font-family: "IBM Plex Sans Thai", sans-serif;
     white-space: nowrap; pointer-events: none;
   }
   .spark-caption { font-size: 11px; color: var(--text-600); margin-top: 8px; }
@@ -173,7 +171,7 @@
      assets/data/inflow_6h_display.json ที่เขียนโดย inflow_6h_display_estimate.py (สูตร water-balance
      เดิม แค่ resolution ละเอียดขึ้น) ไม่ใช่ตัวเลขที่โมเดลพยากรณ์ CatBoost ใช้ -- ดู mockup_inflow_display.html
      ใน 01_data/experiments/hourly_feasibility_20260731/ สำหรับที่มาของ layout นี้ */
-  .pip-estimate-box { margin-top: 16px; padding: 14px 16px; border-radius: var(--radius-md); background: rgba(224,169,79,0.08); border: 1px solid rgba(224,169,79,0.28); }
+  .pip-estimate-box { margin-top: 16px; padding: 14px 16px; border-radius: var(--radius-md); background: rgba(var(--a4-rgb),0.08); border: 1px solid rgba(var(--a4-rgb),0.28); }
   .pip-estimate-title { font-size: 12.5px; color: var(--amber-300); font-weight: 600; margin-bottom: 4px; }
   .pip-estimate-value { font-family: "Space Grotesk", sans-serif; font-size: 22px; color: var(--text-100); font-weight: 600; }
   .pip-estimate-note { font-size: 11.5px; color: var(--text-600); margin-top: 8px; line-height: 1.6; }
@@ -181,8 +179,8 @@
   /* 2026-10-06: กล่อง "รอบปัจจุบันยังไม่ปิดบัญชี" -- แสดงสิ่งที่เกิดขึ้นหลัง 07:00 ของ as_of_date จนถึงตอนนี้ (บัญชีรายวันยังไม่คำนวณ) */
   .pip-live-box { margin-top: 16px; padding: 14px 16px; border-radius: var(--radius-md); background: rgba(80,160,255,0.08); border: 1px solid rgba(80,160,255,0.35); }
   .pip-live-box.alert { background: rgba(255,110,90,0.10); border-color: rgba(255,110,90,0.5); }
-  .pip-live-title { font-size: 12.5px; color: #8fc4ff; font-weight: 600; margin-bottom: 6px; }
-  .pip-live-box.alert .pip-live-title { color: #ff9d8e; }
+  .pip-live-title { font-size: 12.5px; color: var(--blue-txt); font-weight: 600; margin-bottom: 6px; }
+  .pip-live-box.alert .pip-live-title { color: var(--red-txt); }
   .pip-live-grid { display: flex; flex-wrap: wrap; gap: 8px 28px; }
   .pip-live-item .l { font-size: 11.5px; color: var(--text-500); }
   .pip-live-item .v { font-family: "Space Grotesk", sans-serif; font-size: 20px; color: var(--text-100); font-weight: 600; }
@@ -393,8 +391,8 @@
       <div class="chart-card">
         <div class="chart-wrap"><canvas id="inflowChart"></canvas></div>
         <div class="chart-legend">
-          <span><span class="legend-dot" style="background:#45c2ad"></span>ความเชื่อมั่นปกติ</span>
-          <span><span class="legend-dot" style="background:#e0a94f"></span>ความเชื่อมั่นต่ำ (เส้นประ)</span>
+          <span><span class="legend-dot" style="background:var(--teal-400)"></span>ความเชื่อมั่นปกติ</span>
+          <span><span class="legend-dot" style="background:var(--amber-400)"></span>ความเชื่อมั่นต่ำ (เส้นประ)</span>
         </div>
       </div>
     </div>
@@ -655,7 +653,7 @@ function renderInflow(json) {
   document.getElementById('heroTags').innerHTML = `
     <span class="tag"><span class="dot" style="background:var(--teal-400)"></span>ข้อมูล ณ วันที่ ${f.as_of_date}</span>
     <span class="tag"><span class="dot" style="background:var(--amber-400)"></span>อ่างเก็บน้ำ: ${f.target_reservoir || '—'}</span>
-    <span class="tag"><span class="dot" style="background:#6fcf97"></span>ที่มาข้อมูล: ${DATA_SOURCE_LABELS[f.data_source] || f.data_source}</span>
+    <span class="tag"><span class="dot" style="background:var(--ok-400)"></span>ที่มาข้อมูล: ${DATA_SOURCE_LABELS[f.data_source] || f.data_source}</span>
     ${f.staleness_status === 'stale_data_warning' ? '<span class="badge badge-low">⚠ ข้อมูลเก่า ' + (f.gap_days ?? '?') + ' วัน</span>' : ''}
     ${f.staleness_status === 'stale_data_blocked' ? '<span class="badge badge-blocked">⛔ ถูก block — ข้อมูลเก่า ' + (f.gap_days ?? '?') + ' วัน</span>' : ''}
   `;
@@ -1213,5 +1211,5 @@ setInterval(() => {
 }, AUTO_REFRESH_INTERVAL_MS);
 </script>
 
-</body>
+<link rel="stylesheet" href="assets/uikit/theme-kit.css?v=202610121725"><script src="assets/uikit/theme-kit.js?v=202610121725"></script><script src="assets/uikit/page-kit.js?v=202610121725"></script><script src="assets/uikit/kwan-kit.js?v=202610121725"></script><script src="assets/uikit/hero-bg.js?v=202610121725"></script><script src="assets/uikit/inflow-kit.js?v=202610121725"></script><script src="assets/uikit/map-kit.js?v=202610121725"></script><script src="assets/uikit/flood-map-kit.js?v=202610121725"></script><script src="assets/uikit/flood-flow-kit.js?v=202610121725"></script><script src="assets/uikit/flood-3d-kit.js?v=202610121725"></script><script src="assets/uikit/flood-bathtub-kit.js?v=202610121725"></script><script src="assets/uikit/reliability-kit.js?v=202610121725"></script><script src="assets/uikit/flood-hero-kit.js?v=202610121725"></script><script src="assets/uikit/freshness-kit.js?v=202610121725"></script><script src="assets/uikit/i18n-kit.js?v=202610121725"></script><script src="assets/uikit/table-kit.js?v=202610121725"></script><script src="assets/uikit/plain-kit.js?v=202610121725"></script><script src="assets/uikit/csv-kit.js?v=202610121725"></script><script src="assets/uikit/pwa-kit.js?v=202610121725"></script><script src="assets/uikit/report-kit.js?v=202610121725"></script><script src="assets/uikit/diagram-kit.js?v=202610121725"></script><script src="assets/uikit/ukm.js?v=202610121725"></script></body>
 </html>

@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="th" data-mode="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UI Lab (ต้นแบบ) | อ่างเก็บน้ำแม่นาเรือ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ===== Mae Na Rua UI Lab — prototype (ไม่ใช่ production) ===== */
+:root{
+  --font:"IBM Plex Sans Thai","Sarabun","Noto Sans Thai",system-ui,sans-serif;
+  --ease:cubic-bezier(.32,.72,0,1); --ease-out:cubic-bezier(.16,1,.3,1);
+  --r-shell:28px; --r-core:22px; --r-sm:14px;
+  /* palette (ตั้งจาก JS: --accent, --accent-2) */
+  --accent:#1f6f99; --accent-2:#e0a94f;
+  --ok:#2a9d7f; --warn:#e0a94f; --crit:#d6453d; --rain:#4c5fd5; --up:#d9604f; --down:#2a9d7f; --flat:#6fa8c4;
+  /* surfaces (โหมดสว่าง) */
+  --bg:color-mix(in srgb,var(--accent) 7%,#f6f9fa); --bg-2:color-mix(in srgb,var(--accent) 12%,#eef3f5);
+  --core:#fbfdfe; --shell:rgba(18,52,70,.045); --line:rgba(18,52,70,.1); --line-2:rgba(18,52,70,.18);
+  --glass:rgba(251,253,254,.74); --text:#20394a; --strong:#0b1c27; --muted:#5a7384; --faint:#8ba1ad;
+  --sky-1:color-mix(in srgb,var(--accent) 30%,#fff); --sky-2:color-mix(in srgb,var(--accent) 7%,#fff);
+  --water-1:color-mix(in srgb,var(--accent) 65%,#fff); --water-2:color-mix(in srgb,var(--accent) 100%,#000 18%);
+  --hill-far:color-mix(in srgb,var(--accent) 16%,var(--sky-2)); --hill-near:color-mix(in srgb,var(--accent) 30%,var(--sky-2));
+  --land:color-mix(in srgb,var(--accent) 28%,#7a8a6a); --land-2:color-mix(in srgb,var(--accent) 22%,#5f6f55);
+  --orb:#ffe29a; --orb-glow:rgba(255,214,130,.55); --shadow:rgba(22,66,88,.22);
+  color-scheme:light;
+}
+[data-mode="dark"]{
+  --bg:color-mix(in srgb,var(--accent) 12%,#06121a); --bg-2:color-mix(in srgb,var(--accent) 18%,#0a1b26);
+  --core:color-mix(in srgb,var(--accent) 10%,#0d1e29); --shell:rgba(255,255,255,.04); --line:rgba(180,220,230,.12); --line-2:rgba(180,220,230,.24);
+  --glass:rgba(10,24,33,.72); --text:#c9dde2; --strong:#eef8fa; --muted:#8fa9b3; --faint:#62808c;
+  --sky-1:color-mix(in srgb,var(--accent) 38%,#050d14); --sky-2:color-mix(in srgb,var(--accent) 14%,#0a1a26);
+  --water-1:color-mix(in srgb,var(--accent) 80%,#fff 0%); --water-2:color-mix(in srgb,var(--accent) 100%,#000 45%);
+  --hill-far:color-mix(in srgb,var(--accent) 22%,#07131b); --hill-near:color-mix(in srgb,var(--accent) 30%,#06111a);
+  --land:color-mix(in srgb,var(--accent) 22%,#1c261f); --land-2:color-mix(in srgb,var(--accent) 18%,#141c17);
+  --orb:#dfe9ff; --orb-glow:rgba(190,210,255,.35); --shadow:rgba(0,0,0,.5); color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(1100px 600px at 12% -8%,color-mix(in srgb,var(--accent) 22%,transparent),transparent 60%),var(--bg);
+  color:var(--text);font-family:var(--font);line-height:1.6;-webkit-font-smoothing:antialiased;transition:background .5s,color .3s}
+h1,h2,h3{margin:0;color:var(--strong);font-weight:700;letter-spacing:.005em}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* nav (glass pill) */
+.nav{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:6px;padding:8px 10px 8px 14px;border-radius:999px;
+  background:var(--glass);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);border:1px solid var(--line);box-shadow:0 10px 30px -12px var(--shadow);max-width:calc(100vw - 20px)}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--strong);font-size:14px;white-space:nowrap;margin-right:6px}
+.brand i{width:26px;height:26px;border-radius:9px;background:linear-gradient(160deg,var(--water-1),var(--water-2));display:inline-block;position:relative;overflow:hidden}
+.brand i::after{content:"";position:absolute;left:-30%;right:-30%;bottom:28%;height:10px;border-radius:50%;background:rgba(255,255,255,.55)}
+.nav a.lnk{font-size:13.5px;color:var(--muted);text-decoration:none;padding:5px 11px;border-radius:999px;white-space:nowrap;transition:background .2s,color .2s}
+.nav a.lnk:hover,.nav a.lnk.on{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
+.nav .scroller{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.btn-ico{width:34px;height:34px;border-radius:50%;border:1px solid var(--line-2);background:transparent;color:var(--text);cursor:pointer;display:grid;place-items:center;flex:none;transition:background .2s,transform .2s}
+.btn-ico:hover{background:color-mix(in srgb,var(--accent) 14%,transparent);transform:rotate(18deg)}
+.btn-ico svg{width:18px;height:18px}
+
+/* theme popover */
+.theme-pop{position:fixed;top:68px;right:max(14px,calc(50% - 560px));z-index:60;width:292px;padding:16px;border-radius:20px;background:var(--core);border:1px solid var(--line-2);
+  box-shadow:0 24px 60px -18px var(--shadow);opacity:0;transform:translateY(-8px) scale(.97);pointer-events:none;transition:opacity .25s,transform .35s var(--ease-out)}
+.theme-pop.open{opacity:1;transform:none;pointer-events:auto}
+.theme-pop h4{margin:0 0 10px;font-size:13px;color:var(--strong)}
+.swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.sw{border:2px solid transparent;border-radius:14px;padding:8px 6px;background:var(--shell);cursor:pointer;font:inherit;font-size:12px;color:var(--text);display:flex;flex-direction:column;align-items:center;gap:6px;transition:transform .2s,border-color .2s}
+.sw:hover{transform:translateY(-2px)} .sw.on{border-color:var(--accent)}
+.sw b{width:34px;height:34px;border-radius:50%;display:block;box-shadow:inset 0 -8px 12px rgba(0,0,0,.14),0 3px 8px -3px rgba(0,0,0,.4)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:12.5px;color:var(--muted)}
+.seg{position:relative;display:inline-flex;padding:3px;border-radius:999px;background:var(--shell);border:1px solid var(--line)}
+.seg button{position:relative;z-index:1;border:0;background:transparent;font:inherit;font-size:12.5px;color:var(--muted);padding:5px 13px;border-radius:999px;cursor:pointer;transition:color .25s}
+.seg button.on{color:var(--accent-ink,#fff)}
+.seg .ind{position:absolute;z-index:0;top:3px;bottom:3px;left:0;width:var(--w,40px);transform:translateX(var(--x,3px));border-radius:999px;background:var(--accent);transition:transform .45s var(--ease),width .45s var(--ease)}
+input[type=color]{width:46px;height:30px;border:1px solid var(--line-2);border-radius:8px;background:transparent;padding:2px;cursor:pointer}
+
+/* hero */
+.hero{position:relative;padding:92px 0 28px;overflow:hidden}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:stretch}
+.hero-copy{grid-column:1/-1}
+.live{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;padding:5px 12px;border-radius:999px;background:var(--glass);border:1px solid var(--line);color:var(--text)}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 var(--ok);animation:ping 2s infinite}
+.live.warn i{background:var(--warn);animation:none} .live.stale i{background:var(--crit);animation:none}
+@keyframes ping{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ok) 60%,transparent)}70%,100%{box-shadow:0 0 0 9px transparent}}
+.hero h1{font-size:clamp(30px,5vw,54px);line-height:1.12;margin:14px 0 8px}
+.hero h1 em{font-style:normal;color:var(--accent);position:relative;white-space:nowrap}
+.hero h1 em::after{content:"";position:absolute;left:0;right:0;bottom:-.08em;height:.16em;background:currentColor;opacity:.28;border-radius:99px;
+  -webkit-mask:radial-gradient(circle at 4px .08em,transparent 2.4px,#000 2.6px) 0 0/10px 100%;mask:radial-gradient(circle at 4px .08em,transparent 2.4px,#000 2.6px) 0 0/10px 100%}
+.hero p.sub{color:var(--muted);max-width:640px;margin:0 0 16px;font-size:15px}
+.scene{position:relative;border-radius:var(--r-shell);overflow:hidden;border:1px solid var(--line);background:var(--shell);box-shadow:0 30px 60px -34px var(--shadow);min-height:380px}
+.scene svg{display:block;width:100%;height:100%;min-height:380px}
+.scene .lbl{font-family:var(--font);font-size:15px;font-weight:600;fill:var(--strong);paint-order:stroke;stroke:var(--core);stroke-width:4px;stroke-linejoin:round}
+.scene .lbl.s{font-size:12px;font-weight:500}
+.readout{display:flex;flex-direction:column;gap:6px;border-radius:var(--r-shell);background:var(--core);border:1px solid var(--line);padding:22px 22px 18px;box-shadow:0 18px 40px -30px var(--shadow)}
+.readout small{color:var(--muted);font-size:13px}
+.readout .big{font-size:clamp(46px,7vw,72px);font-weight:800;line-height:1;color:var(--strong);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.readout .big span{font-size:16px;font-weight:500;color:var(--muted);margin-left:6px;letter-spacing:0}
+.readout .delta{font-size:19px;font-weight:700}
+.readout .delta.ok{color:var(--ok)} .readout .delta.warn{color:var(--warn)} .readout .delta.crit{color:var(--crit)}
+.readout .note{margin-top:8px;border-radius:14px;padding:12px 14px;background:color-mix(in srgb,var(--accent) 9%,transparent);font-size:13px;color:var(--text)}
+.readout .note b{color:var(--strong)}
+@media(max-width:900px){.hero-grid{grid-template-columns:1fr}.scene,.scene svg{min-height:300px}}
+
+/* scene animations */
+.wave-a{animation:waveX 9s linear infinite}.wave-b{animation:waveX 14s linear infinite reverse}
+@keyframes waveX{to{transform:translateX(-200px)}}
+.water-g{transition:transform 1.1s var(--ease)}
+.boat{animation:bob 3.6s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes bob{50%{transform:translateY(-4px) rotate(2.2deg)}}
+.cloud{animation:drift 70s linear infinite}.cloud.c2{animation-duration:110s;animation-delay:-40s}
+@keyframes drift{from{transform:translateX(-160px)}to{transform:translateX(1320px)}}
+.drop{stroke:var(--rain);stroke-width:2;stroke-linecap:round;opacity:0}
+.raining .drop{opacity:.7;animation:fall .9s linear infinite}
+@keyframes fall{from{transform:translateY(-50px)}to{transform:translateY(300px)}}
+.star{fill:#fff;opacity:0}[data-mode="dark"] .star{animation:twinkle 3s ease-in-out infinite}
+@keyframes twinkle{50%{opacity:.9}}
+.foam{stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-dasharray:14 12;opacity:0}
+.spilling .foam{opacity:.9;animation:flow .9s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-26}}
+.sonar{transform-box:fill-box;transform-origin:center;animation:sonar 2s ease-out infinite}
+@keyframes sonar{from{transform:scale(.3);opacity:.9}to{transform:scale(2.4);opacity:0}}
+.sun-glow{animation:glow 6s ease-in-out infinite}@keyframes glow{50%{opacity:.7}}
+
+/* sections */
+section.sec{padding:46px 0}
+.sec-head{margin-bottom:18px}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700;display:flex;align-items:center;gap:8px}
+.eyebrow::before{content:"";width:18px;height:2px;background:var(--accent);border-radius:2px}
+.sec-head h2{font-size:clamp(24px,3.4vw,34px);margin:4px 0}
+.sec-head p{margin:0;color:var(--muted);font-size:14px;max-width:640px}
+.card{background:var(--core);border:1px solid var(--line);border-radius:var(--r-shell);padding:22px;position:relative;overflow:hidden;box-shadow:0 18px 40px -32px var(--shadow)}
+.card h3{font-size:15px;color:var(--muted);font-weight:500;margin-bottom:6px}
+
+/* reveal + skeleton */
+.js .rv{opacity:0;transform:translateY(28px);filter:blur(6px);transition:opacity .9s var(--ease-out),transform .9s var(--ease-out),filter .9s var(--ease-out);transition-delay:var(--d,0s)}
+.js .rv.in{opacity:1;transform:none;filter:none}
+.is-loading [data-sk]{color:transparent!important;border-radius:10px;background:linear-gradient(90deg,var(--shell),color-mix(in srgb,var(--accent) 16%,transparent),var(--shell));background-size:200% 100%;animation:sk 1.2s linear infinite}
+@keyframes sk{to{background-position:-200% 0}}
+
+/* bento */
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.b{grid-column:span 2}.b.w{grid-column:span 4}
+.b .num{font-size:clamp(34px,4.6vw,54px);font-weight:800;color:var(--strong);line-height:1.05;font-variant-numeric:tabular-nums}
+.b .num small{font-size:14px;font-weight:500;color:var(--muted);margin-left:6px}
+.b .cap{font-size:13px;color:var(--muted)}
+.trio{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-end;margin:14px 0 12px}
+.trio .num.up{color:var(--up)}.trio .num.down{color:var(--down)}.trio .num.flat{color:var(--muted)}
+.ratio{display:flex;gap:6px;height:12px;margin:6px 0 10px}
+.ratio i{display:block;border-radius:99px;flex:var(--g,1) 1 0;min-width:10px;transition:flex .9s var(--ease)}
+.ratio .r-up{background:var(--up)}.ratio .r-down{background:var(--down)}.ratio .r-flat{background:var(--faint);opacity:.55}
+.waves-bg{position:absolute;inset:auto 0 0 0;height:60%;opacity:.5;pointer-events:none}
+.waves-bg path{fill:none;stroke:var(--up);stroke-width:2;opacity:.3;animation:waveX 18s linear infinite}
+.waves-bg path:nth-child(2){animation-duration:26s;animation-direction:reverse}
+.ring{width:120px;height:120px;flex:none}
+.ring .bg{stroke:var(--line-2);fill:none;stroke-width:12}
+.ring .fg{stroke:var(--accent);fill:none;stroke-width:12;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%;stroke-dasharray:var(--c) 999;stroke-dashoffset:0;transition:stroke-dasharray 1.4s var(--ease-out)}
+.ring .ov{stroke:var(--crit)}
+.flexrow{display:flex;gap:16px;align-items:center}
+.alive-dot{position:absolute;top:22px;right:22px;width:14px;height:14px;border-radius:50%;background:var(--shell)}
+.alive .alive-dot{background:var(--crit)}
+.alive .alive-dot::after{content:"";position:absolute;inset:-1px;border-radius:50%;border:2px solid var(--crit);animation:sonar 2s ease-out infinite}
+.balance{display:flex;height:14px;border-radius:99px;overflow:hidden;background:var(--shell);margin:8px 0}
+.balance i{display:block;height:100%;transition:width 1.1s var(--ease)}
+.balance .in{background:var(--accent)}.balance .out{background:var(--accent-2)}
+@media(max-width:820px){.bento{grid-template-columns:repeat(2,1fr)}.b,.b.w{grid-column:span 2}}
+
+/* charts */
+.chart-box{position:relative;width:100%}
+.chart-box svg{display:block;width:100%;height:auto;overflow:visible}
+.ax text{font-family:var(--font);font-size:12px;fill:var(--faint)}
+.grid line{stroke:var(--line)}
+.tt{position:absolute;pointer-events:none;background:var(--core);color:var(--text);border:1px solid var(--line-2);border-radius:12px;padding:8px 12px;font-size:12.5px;box-shadow:0 12px 30px -12px var(--shadow);opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s;z-index:5;white-space:nowrap}
+.tt.on{opacity:1;transform:none}
+.tt b{color:var(--strong)}
+.bar{transform-box:fill-box;transform-origin:50% 100%;transform:scaleY(0);transition:transform .9s var(--ease-out);transition-delay:var(--d,0s)}
+.in .bar,.bars-in .bar{transform:scaleY(1)}
+.bar-lbl{font-family:var(--font);font-size:12px;fill:var(--strong);font-weight:700;text-anchor:middle}
+.bar-delta{font-family:var(--font);font-size:11.5px;font-weight:700;text-anchor:middle}
+.draw{stroke-dasharray:var(--len,2000);stroke-dashoffset:var(--len,2000);transition:stroke-dashoffset 2s var(--ease-out)}
+.drawn .draw{stroke-dashoffset:0}
+.fadein{opacity:0;transition:opacity .8s .9s}.drawn .fadein{opacity:1}
+.mascot{animation:bob 3s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* table */
+table.st{width:100%;border-collapse:collapse;font-size:14px}
+table.st th{font-size:12px;color:var(--faint);font-weight:600;text-align:right;padding:8px 10px;border-bottom:1px solid var(--line)}
+table.st td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+table.st th:first-child,table.st td:first-child{text-align:left}
+table.st tr:hover td{background:color-mix(in srgb,var(--accent) 6%,transparent)}
+table.st tr:last-child td{border-bottom:0}
+.badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:600}
+.badge.ok{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.badge.warn{background:color-mix(in srgb,var(--warn) 22%,transparent);color:color-mix(in srgb,var(--warn) 70%,var(--strong))}
+.badge.crit{background:color-mix(in srgb,var(--crit) 16%,transparent);color:var(--crit)}
+.spark{width:88px;height:26px;vertical-align:middle}
+.spark path{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tbl-wrap{overflow-x:auto}
+
+/* dock */
+.dock{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:45;width:min(640px,calc(100vw - 20px));display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:999px;
+  background:var(--glass);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);border:1px solid var(--line);box-shadow:0 14px 40px -14px var(--shadow)}
+.dock .lbl{min-width:104px;line-height:1.2}.dock .lbl small{display:block;font-size:11px;color:var(--muted)}.dock .lbl b{font-size:14px;color:var(--strong)}
+.dock input[type=range]{flex:1;min-width:0;accent-color:var(--accent);height:24px;cursor:pointer}
+.play{width:40px;height:40px;border-radius:50%;border:0;background:var(--accent);color:#fff;cursor:pointer;display:grid;place-items:center;flex:none;transition:transform .2s}
+.play:hover{transform:scale(1.08)}.play svg{width:18px;height:18px}
+.live-btn{border:0;background:transparent;color:var(--accent);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;padding:6px 8px}
+
+footer{padding:40px 0 110px;color:var(--faint);font-size:12.5px}
+footer b{color:var(--muted)}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
+  .js .rv{opacity:1;transform:none;filter:none}.bar{transform:none}.draw{stroke-dashoffset:0}.fadein{opacity:1}
+}
+
+/* ---- additions ---- */
+:root{--bank:#8d5f3d}[data-mode="dark"]{--bank:#c9945f}
+.pdot .core{transform-box:fill-box;transform-origin:center;transform:scale(0);transition:transform .6s var(--ease-out);transition-delay:var(--d,0s)}
+.drawn .pdot .core{transform:scale(1)}
+.pdot text{font-family:var(--font)}
+.tick-lbl{font-family:var(--font);font-size:12px;fill:var(--faint)}
+.lvl-tag{transition:transform 1.1s var(--ease)}
+.pt-hit{cursor:pointer}
+html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-motion="reduce"] *::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
+html[data-motion="reduce"] .js .rv{opacity:1;transform:none;filter:none}
+html[data-motion="reduce"] .draw{stroke-dashoffset:0}html[data-motion="reduce"] .fadein{opacity:1}html[data-motion="reduce"] .pdot .core{transform:none}
+.nav a.lnk.on{font-weight:600}
+@media(max-width:640px){.nav .scroller{display:none}.hero{padding-top:80px}.dock .lbl{min-width:84px}}
+
+.mascot{animation:hop 1.1s ease-in-out infinite!important}
+@keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+/* ---- station / month modules ---- */
+.stbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 14px;justify-content:space-between}
+.sub-h{margin:26px 0 4px;font-size:15px;color:var(--muted);font-weight:600}
+.tele{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:12px 0 18px}
+.tile{background:var(--core);border:1px solid var(--line);border-radius:var(--r-core);padding:16px 16px 13px;position:relative;overflow:hidden;transition:transform .35s var(--ease-out),box-shadow .35s}
+.tile:hover{transform:translateY(-3px);box-shadow:0 16px 32px -22px var(--shadow)}
+.tile .t-top{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:13px}
+.tile .t-ic{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);flex:none}
+.tile .t-ic svg{width:16px;height:16px}
+.tile .t-num{font-size:28px;font-weight:800;color:var(--strong);line-height:1.15;margin-top:8px;font-variant-numeric:tabular-nums}
+.tile .t-num small{font-size:12.5px;font-weight:500;color:var(--muted);margin-left:5px}
+.tile .t-bar{height:6px;border-radius:99px;background:var(--shell);margin:10px 0 7px;overflow:hidden}
+.tile .t-bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width 1.3s var(--ease-out)}
+.tile .t-bar.over i{background:linear-gradient(90deg,var(--accent),var(--crit))}
+.tile .t-sub{font-size:12px;color:var(--faint);line-height:1.45}
+@media(max-width:900px){.tele{grid-template-columns:repeat(2,1fr)}}
+.ratio .r-sp{background:var(--crit)}.ratio .r-rn{background:var(--rain)}
+.spark-big{width:100%;height:56px;margin:8px 0 2px;overflow:visible}.spark-big path{fill:none;stroke:var(--accent);stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
+.bento .num.sm{font-size:clamp(26px,3vw,34px)}
+.ring .ov{stroke:var(--crit)}
+
+/* ---- capacity highlight + mini tiles + reservoir table ---- */
+.capb{margin:10px 0 2px}
+.capn{font-size:clamp(40px,5vw,52px);font-weight:800;line-height:1;font-variant-numeric:tabular-nums;color:var(--accent);letter-spacing:-.02em}
+.capn.warn{color:var(--warn)}.capn.crit{color:var(--crit)}
+.capn small{font-size:14px;font-weight:600;color:var(--muted);margin-left:6px;letter-spacing:0}
+.captrack{position:relative;height:14px;border-radius:99px;background:var(--shell);margin-top:9px}
+.captrack i{position:absolute;top:0;bottom:0;border-radius:99px;transition:width 1.3s var(--ease-out),left 1.3s var(--ease-out)}
+.captrack .f{left:0;width:0;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+.captrack .o{width:0;background:var(--crit);border-radius:0 99px 99px 0}
+.captrack .m{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--strong);opacity:.55;border-radius:2px}
+.caplbl{font-size:11.5px;color:var(--faint);margin-top:6px}
+.tele.mini{grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 0}
+.tele.mini .tile{padding:9px 11px 8px;border-radius:14px}
+.tele.mini .t-top{font-size:11.5px;gap:7px}.tele.mini .t-ic{width:22px;height:22px;border-radius:7px}.tele.mini .t-ic svg{width:13px;height:13px}
+.tele.mini .t-num{font-size:19px;margin-top:4px}.tele.mini .t-num small{font-size:11px;margin-left:3px}
+.tele.mini .t-bar{height:4px;margin:6px 0 0}.tele.mini .t-sub{display:none}
+.pctb{font-size:20px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}.pctb.warn{color:var(--warn)}.pctb.crit{color:var(--crit)}
+.mtrack{height:5px;border-radius:99px;background:var(--shell);margin:5px 0 0 auto;width:90px;overflow:hidden}.mtrack i{display:block;height:100%;border-radius:99px;background:var(--accent)}
+table.st .rn{color:var(--strong);font-weight:700}table.st td small{color:var(--faint)}table.st .nodata{color:var(--faint);text-align:center!important}
+
+/* ---- layout: ฉากเต็มความกว้าง + กล่องข้อมูลอยู่ใต้ฉาก ---- */
+.hero-grid.stack{grid-template-columns:1fr;gap:14px}
+.stack .scene{min-height:0;aspect-ratio:900/420}
+.stack .scene svg{min-height:0;height:100%}
+.readout.wide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:8px 32px;align-items:start}
+.readout.wide .rcol{display:flex;flex-direction:column;gap:6px;min-width:0}
+.readout.wide .tele.mini{grid-template-columns:repeat(3,1fr);margin-top:10px}
+@media(max-width:900px){.readout.wide{grid-template-columns:1fr}.readout.wide .tele.mini{grid-template-columns:repeat(2,1fr)}.stack .scene{aspect-ratio:auto;min-height:280px}.stack .scene svg{min-height:280px}}
+
+/* ---- day / dusk / night ฉากตามเวลา ---- */
+.orb-g{transition:transform 1.4s var(--ease)}
+.scene.day{--sky-1:color-mix(in srgb,var(--accent) 30%,#fff);--sky-2:color-mix(in srgb,var(--accent) 7%,#fff);--water-1:color-mix(in srgb,var(--accent) 65%,#fff);--water-2:color-mix(in srgb,var(--accent) 100%,#000 18%);
+ --hill-far:color-mix(in srgb,var(--accent) 16%,var(--sky-2));--hill-near:color-mix(in srgb,var(--accent) 30%,var(--sky-2));--land:color-mix(in srgb,var(--accent) 28%,#7a8a6a);--land-2:color-mix(in srgb,var(--accent) 22%,#5f6f55);
+ --orb:#ffe29a;--orb-glow:rgba(255,214,130,.55);--core:#fbfdfe;--strong:#0b1c27;--muted:#5a7384;--faint:#6f8696}
+.scene.night{--sky-1:color-mix(in srgb,var(--accent) 36%,#040b12);--sky-2:color-mix(in srgb,var(--accent) 13%,#0a1a26);--water-1:var(--accent);--water-2:color-mix(in srgb,var(--accent) 100%,#000 50%);
+ --hill-far:color-mix(in srgb,var(--accent) 20%,#07131b);--hill-near:color-mix(in srgb,var(--accent) 28%,#06111a);--land:color-mix(in srgb,var(--accent) 22%,#1c261f);--land-2:color-mix(in srgb,var(--accent) 18%,#141c17);
+ --orb:#e6eeff;--orb-glow:rgba(190,210,255,.4);--core:#0d1e29;--strong:#eef8fa;--muted:#a9c0c8;--faint:#9fb5bd}
+.scene.dusk{--sky-1:color-mix(in srgb,#ff8f5e 55%,#3a4a7a);--sky-2:color-mix(in srgb,#ffd7a1 82%,var(--accent));--water-1:color-mix(in srgb,var(--accent) 62%,#ffb98a);--water-2:color-mix(in srgb,var(--accent) 100%,#1a1030 35%);
+ --hill-far:color-mix(in srgb,#a45a6a 38%,var(--sky-2));--hill-near:color-mix(in srgb,#5a4a6a 55%,var(--sky-2));--land:color-mix(in srgb,var(--accent) 20%,#3b3a3a);--land-2:color-mix(in srgb,var(--accent) 16%,#2c2b2e);
+ --orb:#ffc98a;--orb-glow:rgba(255,160,90,.6);--core:#fbf3ea;--strong:#2a1a24;--muted:#6a5a60;--faint:#7a6a70}
+.scene.night .star{animation:twinkle 3s ease-in-out infinite}.scene.dusk .star{opacity:.35}
+.scene{transition:background .6s}
+.capb{transition:opacity .3s}.capb.dim{opacity:.4}
+/* dock: แถบฝน + กลางวัน/คืน */
+.dock{width:min(780px,calc(100vw - 20px));border-radius:30px}
+.dock .lbl{min-width:150px}.dock .lbl small{white-space:nowrap;max-width:230px;overflow:hidden;text-overflow:ellipsis}
+.dtrack{position:relative;flex:1;min-width:0;height:34px;border-radius:10px;overflow:hidden;background:var(--shell)}
+.dtrack svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.dtrack input[type=range]{position:absolute;inset:0;width:100%;height:100%;margin:0;background:transparent;-webkit-appearance:none;appearance:none;cursor:pointer}
+.dtrack input[type=range]::-webkit-slider-runnable-track{height:34px;background:transparent}
+.dtrack input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:6px;height:34px;border-radius:3px;background:var(--strong);box-shadow:0 0 0 2px var(--core)}
+.dtrack input[type=range]::-moz-range-track{height:34px;background:transparent}
+.dtrack input[type=range]::-moz-range-thumb{width:6px;height:34px;border:0;border-radius:3px;background:var(--strong);box-shadow:0 0 0 2px var(--core)}
+
+.capb.dim{opacity:1}
+
+</style>
+</head>
+<body class="is-loading">
+<script>document.documentElement.classList.add('js')</script>
+
+<nav class="nav" id="nav">
+  <span class="brand"><i></i>แม่นาเรือ <span style="color:var(--accent)">UI Lab</span></span>
+  <div class="scroller">
+    <a class="lnk" href="#top">ภาพรวม</a><a class="lnk" href="#kpi">ตัวชี้วัด</a><a class="lnk" href="#levels">ระดับน้ำ</a>
+    <a class="lnk" href="#daily">รายวัน</a><a class="lnk" href="#forecast">พยากรณ์</a><a class="lnk" href="#stations">สถานี</a>
+  </div>
+  <button class="btn-ico" id="themeBtn" aria-label="เปลี่ยนธีมสี" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-.8 2-1.7 0-.9-.6-1.3-.6-2.2 0-1 .8-1.6 1.8-1.6H17a4 4 0 0 0 4-4c0-4.4-4-8.5-9-8.5Z"/><circle cx="7.5" cy="11" r="1" fill="currentColor"/><circle cx="10.5" cy="7" r="1" fill="currentColor"/><circle cx="15" cy="7.5" r="1" fill="currentColor"/></svg>
+  </button>
+</nav>
+
+<div class="theme-pop" id="themePop" role="dialog" aria-label="ตั้งค่าธีม">
+  <h4>เลือกสีธีม</h4>
+  <div class="swatches" id="swatches"></div>
+  <div class="row"><span>สีที่เลือกเอง</span><input type="color" id="customColor" value="#1f6f99" aria-label="เลือกสีเอง"></div>
+  <div class="row"><span>โหมดการแสดงผล</span>
+    <div class="seg" id="modeSeg"><i class="ind"></i><button data-m="light">สว่าง</button><button data-m="dark">มืด</button><button data-m="auto">อัตโนมัติ</button></div>
+  </div>
+  <div class="row"><span>ลดการเคลื่อนไหว</span><div class="seg" id="motionSeg"><i class="ind"></i><button data-v="0">ปกติ</button><button data-v="1">ลด</button></div></div>
+</div>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="hero-copy">
+      <span class="live" id="live"><i></i><span id="liveText" data-sk>กำลังโหลดข้อมูล…</span></span>
+      <h1>อ่างแม่นาเรือตอนนี้ <em id="heroState" data-sk>…</em></h1>
+      <p class="sub" id="heroSub" data-sk>กำลังรวบรวมค่าจากสถานีโทรมาตรและบัญชีน้ำ</p>
+    </div>
+    <div class="hero-grid" style="margin-top:6px">
+      <div class="scene" id="scene" role="img" aria-label="ภาพจำลองระดับน้ำในอ่างเก็บน้ำแม่นาเรือเทียบกับสันสปิลเวย์"></div>
+      <aside class="readout" id="readout">
+        <small id="roName" data-sk>อ่างเก็บน้ำแม่นาเรือ · RES002</small>
+        <div class="big"><span id="roLevel" data-sk>489.000</span><span>ม.รทก.</span></div>
+        <div class="delta" id="roDelta" data-sk>—</div>
+        <small id="roTrend" data-sk>—</small>
+        <div class="capb"><div class="capn" id="roCapNW"><span id="roCapN">0</span><small>% ของความจุ</small></div><div class="captrack"><i class="f" id="roCapF"></i><i class="o" id="roCapO"></i><b class="m" id="roCapM"></b></div><div class="caplbl" id="roCapL">เส้นขีด = 100% (ระดับสันสปิลเวย์)</div></div>
+        <div class="note" id="roNote" data-sk>—</div>
+      </aside>
+    </div>
+  </div>
+</header>
+
+<main>
+<section class="sec" id="kpi"><div class="wrap">
+  <div class="sec-head rv"><div class="eyebrow">ตัวชี้วัดหลัก</div><h2>สรุปสถานการณ์ในหน้าเดียว</h2><p>ตัวเลขนับขึ้นเมื่อเลื่อนมาถึง แถบสัดส่วนและวงแหวนเคลื่อนไหวตามค่า</p></div>
+  <div class="bento">
+    <div class="card b w rv" id="bDir" style="--d:.05s">
+      <svg class="waves-bg" viewBox="0 0 800 120" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40 q50 -30 100 0 t100 0 t100 0 t100 0 t100 0 t100 0 t100 0 t100 0 t100 0 t100 0"/><path d="M0 80 q60 30 120 0 t120 0 t120 0 t120 0 t120 0 t120 0 t120 0"/></svg>
+      <h3 id="dirTitle">ทิศทางของน้ำ เทียบ 6 ชั่วโมงก่อน</h3>
+      <div class="trio"><div><div class="num up" data-num="up">0</div><div class="cap">กำลังขึ้น</div></div><div><div class="num down" data-num="down">0</div><div class="cap">กำลังลด</div></div><div><div class="num flat" data-num="flat">0</div><div class="cap">ทรงตัว</div></div></div>
+      <div class="ratio" id="ratio"><i class="r-up"></i><i class="r-down"></i><i class="r-flat"></i></div>
+      <div class="cap" id="dirAvg">—</div>
+    </div>
+    <div class="card b rv" id="bCap" style="--d:.12s">
+      <h3>ความจุอ่างแม่นาเรือ</h3>
+      <div class="flexrow"><svg class="ring" viewBox="0 0 120 120" aria-hidden="true"><circle class="bg" cx="60" cy="60" r="48"/><circle class="fg" id="ringFg" cx="60" cy="60" r="48" style="--c:0"/></svg>
+        <div><div class="num"><span data-num="cap" data-dec="1">0</span><small>%</small></div><div class="cap" id="capNote">—</div></div></div>
+    </div>
+    <div class="card b rv" id="bSpill" style="--d:.05s">
+      <span class="alive-dot"></span>
+      <h3>น้ำล้นสปิลเวย์ (บัญชีน้ำวันล่าสุด)</h3>
+      <div class="num"><span data-num="spill">0</span><small>ลบ.ม.</small></div><div class="cap" id="spillNote">—</div>
+    </div>
+    <div class="card b rv" id="bRain" style="--d:.12s">
+      <h3>ฝนสะสม 24 ชั่วโมง (สันอ่าง)</h3>
+      <div class="num"><span data-num="rain" data-dec="1">0</span><small>มม.</small></div><div class="cap" id="rainNote">—</div>
+    </div>
+    <div class="card b w rv" id="bBal" style="--d:.19s">
+      <h3>น้ำเข้า เทียบ น้ำออก (บัญชีน้ำวันล่าสุด)</h3>
+      <div class="trio" style="margin-top:6px"><div><div class="num" style="color:var(--accent)" data-num="in">0</div><div class="cap">ไหลเข้า (ลบ.ม.)</div></div><div><div class="num" style="color:var(--accent-2)" data-num="out">0</div><div class="cap">ระบายรวม ท่อ+ล้น (ลบ.ม.)</div></div></div>
+      <div class="balance"><i class="in" style="width:50%"></i><i class="out" style="width:50%"></i></div>
+      <div class="cap" id="balNote">—</div>
+    </div>
+  </div>
+</div></section>
+
+<section class="sec" id="levels"><div class="wrap">
+  <div class="sec-head rv"><div class="eyebrow">ระดับน้ำย้อนหลัง</div><h2>ระดับน้ำอ่างแม่นาเรือเทียบสันสปิลเวย์</h2><p>เส้นสีน้ำตาล = สันสปิลเวย์ · เส้นจุดไข่ปลา = ระดับน้ำรายชั่วโมง · แรเงาแดง = ส่วนที่สูงกว่าสัน · เลื่อนเมาส์เพื่อดูค่ารายชั่วโมง</p></div>
+  <div class="card rv"><div class="chart-box" id="lvBox"></div><div class="legend"><span><i style="background:var(--ok)"></i>ต่ำกว่าสัน</span><span><i style="background:var(--warn)"></i>ใกล้สัน (&lt; 0.10 ม.)</span><span><i style="background:var(--crit)"></i>สูงกว่าสัน</span></div></div>
+</div></section>
+
+<section class="sec" id="daily"><div class="wrap">
+  <div class="sec-head rv"><div class="eyebrow">เปรียบเทียบรายวัน</div><h2>14 วันที่ผ่านมา</h2><p>ตัวเลขเหนือแท่ง = ค่าของวัน · ตัวเลขสีเหนือค่า = เปลี่ยนจากวันก่อน (ส้มแดง = เพิ่ม, เขียว = ลด, ฟ้า = เท่าเดิม)</p></div>
+  <div class="card rv">
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:8px">
+      <div><div class="cap" id="dailyTitle" style="color:var(--muted);font-size:13px">—</div><div style="font-size:30px;font-weight:800;color:var(--strong)" id="dailyBig">—</div></div>
+      <div class="seg" id="dailySeg"><i class="ind"></i><button data-k="inflow" class="on">น้ำไหลเข้า</button><button data-k="release">น้ำระบาย</button><button data-k="rain">ฝน</button><button data-k="volume">ปริมาตร</button></div>
+    </div>
+    <div class="chart-box" id="dailyBox"></div>
+  </div>
+</div></section>
+
+<section class="sec" id="forecast"><div class="wrap">
+  <div class="sec-head rv"><div class="eyebrow">พยากรณ์น้ำไหลเข้าอ่าง</div><h2>1–7 วันข้างหน้า</h2><p>เส้นโค้งเรียบระหว่างจุดพยากรณ์ (เป็นค่าประมาณระหว่างจุด) · เส้นประ "ตอนนี้" คือค่าล่าสุดจากบัญชีน้ำ</p></div>
+  <div class="card rv"><div class="chart-box" id="fcBox"></div><div class="cap" id="fcNote" style="font-size:12.5px;color:var(--faint);margin-top:6px"></div></div>
+</div></section>
+
+<section class="sec" id="stations"><div class="wrap">
+  <div class="sec-head rv"><div class="eyebrow">ทุกสถานี</div><h2>สถานีและอ่างเก็บน้ำในพื้นที่</h2><p>เส้นจิ๋วแสดงระดับน้ำ ~48 ชั่วโมงล่าสุด สีตามแนวโน้ม</p></div>
+  <div class="card rv tbl-wrap"><table class="st"><thead><tr><th>สถานี</th><th>ระดับน้ำ (ม.)</th><th>เส้นแนวโน้ม</th><th>6 ชม.</th><th>ฝน 24 ชม.</th><th>ความจุ</th><th>สถานะ</th></tr></thead><tbody id="stBody"></tbody></table></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><b>ต้นแบบ UI Lab (ยังไม่ใช่ production)</b> · ข้อมูลเป็น snapshot จริงเมื่อ <span id="snap">—</span> · สร้างจาก <code>build_data.py</code> · แนวคิดการแสดงผลศึกษาจาก flood.pop.in.th (เขียนใหม่ ไม่ได้คัดลอกโค้ด/ภาพ)</div></footer>
+
+<div class="dock" id="dock" aria-label="ย้อนดูข้อมูล">
+  <button class="play" id="play" aria-label="เล่น/หยุด"><svg viewBox="0 0 24 24" fill="currentColor"><path id="playIc" d="M8 5v14l11-7z"/></svg></button>
+  <div class="lbl"><small id="dockSub">ย้อนดูข้อมูล</small><b id="dockLbl">ปัจจุบัน</b></div>
+  <div class="dtrack"><svg id="dockStrip" viewBox="0 0 100 34" preserveAspectRatio="none" aria-hidden="true"></svg><input type="range" id="slider" min="0" max="0" value="0" aria-label="เลื่อนย้อนเวลา"></div>
+  <button class="live-btn" id="toLive">ล่าสุด</button>
+</div>
+
+<script>
+window.PROTO_DATA = {"snapshot": "2026-10-11T16:23:21", "monitoring_updated": "2026-10-11T16:10:00", "capacity_m3": 1625000, "crest": 489.545, "max_level_seen": 490.024, "stations": [{"station_code": "RES002", "name_th": "อ่างเก็บน้ำแม่นาเรือ", "spillway_msl": 489.54, "water_level": 489.924, "rainfall_1h": 0.0, "measure_datetime": "2026-10-11T16:10:00", "storage_m3": 1742460.6, "storage_max_m3": 1625463.8, "capacity_pct": 107.2, "history": [{"t": "2026-10-06T17:10:00", "level": 489.992}, {"t": "2026-10-06T18:00:00", "level": 489.992}, {"t": "2026-10-06T19:00:00", "level": 489.986}, {"t": "2026-10-06T20:00:00", "level": 489.986}, {"t": "2026-10-06T21:00:00", "level": 489.986}, {"t": "2026-10-06T22:00:00", "level": 489.986}, {"t": "2026-10-06T23:00:00", "level": 489.986}, {"t": "2026-10-07T00:00:00", "level": 489.992}, {"t": "2026-10-07T01:00:00", "level": 489.992}, {"t": "2026-10-07T02:00:00", "level": 489.992}, {"t": "2026-10-07T03:00:00", "level": 489.999}, {"t": "2026-10-07T04:00:00", "level": 489.992}, {"t": "2026-10-07T05:00:00", "level": 489.992}, {"t": "2026-10-07T06:00:00", "level": 489.992}, {"t": "2026-10-07T07:00:00", "level": 489.992}, {"t": "2026-10-07T08:00:00", "level": 489.992}, {"t": "2026-10-07T09:00:00", "level": 489.985}, {"t": "2026-10-07T10:00:00", "level": 489.985}, {"t": "2026-10-07T11:00:00", "level": 489.978}, {"t": "2026-10-07T12:00:00", "level": 489.971}, {"t": "2026-10-07T13:00:00", "level": 489.965}, {"t": "2026-10-07T14:00:00", "level": 489.964}, {"t": "2026-10-07T15:00:00", "level": 489.965}, {"t": "2026-10-07T16:00:00", "level": 489.958}, {"t": "2026-10-07T17:00:00", "level": 489.971}, {"t": "2026-10-07T18:00:00", "level": 489.965}, {"t": "2026-10-07T19:00:00", "level": 489.96}, {"t": "2026-10-07T20:00:00", "level": 489.973}, {"t": "2026-10-07T21:00:00", "level": 489.96}, {"t": "2026-10-07T22:00:00", "level": 489.96}, {"t": "2026-10-07T23:00:00", "level": 489.966}, {"t": "2026-10-08T00:00:00", "level": 489.966}, {"t": "2026-10-08T01:00:00", "level": 489.973}, {"t": "2026-10-08T02:00:00", "level": 489.973}, {"t": "2026-10-08T03:00:00", "level": 489.953}, {"t": "2026-10-08T04:00:00", "level": 489.96}, {"t": "2026-10-08T05:00:00", "level": 489.96}, {"t": "2026-10-08T06:00:00", "level": 489.96}, {"t": "2026-10-08T07:00:00", "level": 489.953}, {"t": "2026-10-08T08:00:00", "level": 489.952}, {"t": "2026-10-08T09:00:00", "level": 489.945}, {"t": "2026-10-08T10:00:00", "level": 489.945}, {"t": "2026-10-08T11:00:00", "level": 489.937}, {"t": "2026-10-08T12:00:00", "level": 489.942}, {"t": "2026-10-08T13:00:00", "level": 489.937}, {"t": "2026-10-08T14:00:00", "level": 489.937}, {"t": "2026-10-08T15:00:00", "level": 489.937}, {"t": "2026-10-08T16:00:00", "level": 489.931}, {"t": "2026-10-08T17:00:00", "level": 489.924}, {"t": "2026-10-08T18:00:00", "level": 489.932}, {"t": "2026-10-08T19:00:00", "level": 489.932}, {"t": "2026-10-08T20:00:00", "level": 489.926}, {"t": "2026-10-08T21:00:00", "level": 489.926}, {"t": "2026-10-08T22:00:00", "level": 489.933}, {"t": "2026-10-08T23:00:00", "level": 489.939}, {"t": "2026-10-09T00:00:00", "level": 489.926}, {"t": "2026-10-09T01:00:00", "level": 489.926}, {"t": "2026-10-09T02:00:00", "level": 489.933}, {"t": "2026-10-09T03:00:00", "level": 489.92}, {"t": "2026-10-09T04:00:00", "level": 489.914}, {"t": "2026-10-09T05:00:00", "level": 489.92}, {"t": "2026-10-09T06:00:00", "level": 489.914}, {"t": "2026-10-09T07:00:00", "level": 489.901}, {"t": "2026-10-09T08:00:00", "level": 489.906}, {"t": "2026-10-09T09:00:00", "level": 489.906}, {"t": "2026-10-09T10:00:00", "level": 489.899}, {"t": "2026-10-09T11:00:00", "level": 489.911}, {"t": "2026-10-09T12:00:00", "level": 489.905}, {"t": "2026-10-09T13:00:00", "level": 489.899}, {"t": "2026-10-09T14:00:00", "level": 489.937}, {"t": "2026-10-09T15:00:00", "level": 489.912}, {"t": "2026-10-09T16:00:00", "level": 489.905}, {"t": "2026-10-09T17:00:00", "level": 489.919}, {"t": "2026-10-09T18:00:00", "level": 489.912}, {"t": "2026-10-09T19:00:00", "level": 489.919}, {"t": "2026-10-09T20:00:00", "level": 489.913}, {"t": "2026-10-09T21:00:00", "level": 489.907}, {"t": "2026-10-09T22:00:00", "level": 489.894}, {"t": "2026-10-09T23:00:00", "level": 489.901}, {"t": "2026-10-10T00:00:00", "level": 489.894}, {"t": "2026-10-10T01:00:00", "level": 489.888}, {"t": "2026-10-10T02:00:00", "level": 489.882}, {"t": "2026-10-10T03:00:00", "level": 489.882}, {"t": "2026-10-10T04:00:00", "level": 489.882}, {"t": "2026-10-10T05:00:00", "level": 489.869}, {"t": "2026-10-10T06:00:00", "level": 489.869}, {"t": "2026-10-10T07:00:00", "level": 489.863}, {"t": "2026-10-10T08:00:00", "level": 489.856}, {"t": "2026-10-10T09:00:00", "level": 489.855}, {"t": "2026-10-10T10:00:00", "level": 489.847}, {"t": "2026-10-10T11:00:00", "level": 489.855}, {"t": "2026-10-10T12:00:00", "level": 489.847}, {"t": "2026-10-10T13:00:00", "level": 489.848}, {"t": "2026-10-10T14:00:00", "level": 489.834}, {"t": "2026-10-10T15:00:00", "level": 489.828}, {"t": "2026-10-10T16:00:00", "level": 489.828}, {"t": "2026-10-10T17:00:00", "level": 489.822}, {"t": "2026-10-10T18:00:00", "level": 489.828}, {"t": "2026-10-10T19:00:00", "level": 489.901}, {"t": "2026-10-10T20:00:00", "level": 489.933}, {"t": "2026-10-10T21:00:00", "level": 489.946}, {"t": "2026-10-10T22:00:00", "level": 489.946}, {"t": "2026-10-10T23:00:00", "level": 489.946}, {"t": "2026-10-11T00:00:00", "level": 489.96}, {"t": "2026-10-11T01:00:00", "level": 489.96}, {"t": "2026-10-11T02:00:00", "level": 489.946}, {"t": "2026-10-11T02:50:00", "level": 489.953}, {"t": "2026-10-11T04:00:00", "level": 489.939}, {"t": "2026-10-11T05:00:00", "level": 489.946}, {"t": "2026-10-11T06:00:00", "level": 489.946}, {"t": "2026-10-11T07:00:00", "level": 489.933}, {"t": "2026-10-11T08:00:00", "level": 489.933}, {"t": "2026-10-11T09:00:00", "level": 489.907}, {"t": "2026-10-11T10:00:00", "level": 489.906}, {"t": "2026-10-11T11:00:00", "level": 489.905}, {"t": "2026-10-11T12:00:00", "level": 489.899}, {"t": "2026-10-11T13:00:00", "level": 489.931}, {"t": "2026-10-11T14:00:00", "level": 489.931}, {"t": "2026-10-11T15:00:00", "level": 489.931}, {"t": "2026-10-11T16:00:00", "level": 489.931}], "rain": [{"t": "2026-10-08T17:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T18:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T19:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T20:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T21:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T22:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T23:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T00:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T01:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T02:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T03:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T04:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T05:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T06:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T07:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T08:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T09:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T10:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T11:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T12:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T13:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T14:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T15:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T16:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T17:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T18:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T19:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T20:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T21:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T22:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T23:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T00:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T01:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T02:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T03:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T04:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T05:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T06:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T07:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T08:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T09:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T10:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T11:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T12:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T13:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T14:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T15:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T16:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T17:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T18:00:00", "rain_mm": 18.2}, {"t": "2026-10-10T19:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T20:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T21:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T22:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T23:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T00:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T01:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T02:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T03:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T04:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T05:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T06:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T07:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T08:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T09:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T10:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T11:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T12:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T13:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T14:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T15:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T16:00:00", "rain_mm": 0.0}]}, {"station_code": "RES004", "name_th": "อ่างเก็บน้ำวิทยาลัยเกษตร", "spillway_msl": 457.07, "water_level": 456.528, "rainfall_1h": 0.0, "measure_datetime": "2026-10-11T16:10:00", "storage_m3": 317864.7, "storage_max_m3": 347778.7, "capacity_pct": 91.4, "history": [{"t": "2026-10-06T17:10:00", "level": 456.484}, {"t": "2026-10-06T18:00:00", "level": 456.484}, {"t": "2026-10-06T19:00:00", "level": 456.485}, {"t": "2026-10-06T20:00:00", "level": 456.485}, {"t": "2026-10-06T21:00:00", "level": 456.485}, {"t": "2026-10-06T22:00:00", "level": 456.485}, {"t": "2026-10-06T23:00:00", "level": 456.485}, {"t": "2026-10-07T00:00:00", "level": 456.485}, {"t": "2026-10-07T01:00:00", "level": 456.485}, {"t": "2026-10-07T02:00:00", "level": 456.485}, {"t": "2026-10-07T03:00:00", "level": 456.491}, {"t": "2026-10-07T04:00:00", "level": 456.485}, {"t": "2026-10-07T05:00:00", "level": 456.485}, {"t": "2026-10-07T06:00:00", "level": 456.485}, {"t": "2026-10-07T07:00:00", "level": 456.491}, {"t": "2026-10-07T08:00:00", "level": 456.485}, {"t": "2026-10-07T09:00:00", "level": 456.483}, {"t": "2026-10-07T10:00:00", "level": 456.483}, {"t": "2026-10-07T11:00:00", "level": 456.483}, {"t": "2026-10-07T12:00:00", "level": 456.483}, {"t": "2026-10-07T13:00:00", "level": 456.483}, {"t": "2026-10-07T14:00:00", "level": 456.483}, {"t": "2026-10-07T15:00:00", "level": 456.483}, {"t": "2026-10-07T16:00:00", "level": 456.483}, {"t": "2026-10-07T17:00:00", "level": 456.483}, {"t": "2026-10-07T18:00:00", "level": 456.484}, {"t": "2026-10-07T19:00:00", "level": 456.477}, {"t": "2026-10-07T20:00:00", "level": 456.485}, {"t": "2026-10-07T21:00:00", "level": 456.484}, {"t": "2026-10-07T22:00:00", "level": 456.478}, {"t": "2026-10-07T23:00:00", "level": 456.485}, {"t": "2026-10-08T00:00:00", "level": 456.478}, {"t": "2026-10-08T01:00:00", "level": 456.478}, {"t": "2026-10-08T02:00:00", "level": 456.478}, {"t": "2026-10-08T03:00:00", "level": 456.478}, {"t": "2026-10-08T04:00:00", "level": 456.478}, {"t": "2026-10-08T05:00:00", "level": 456.478}, {"t": "2026-10-08T06:00:00", "level": 456.478}, {"t": "2026-10-08T07:00:00", "level": 456.479}, {"t": "2026-10-08T08:00:00", "level": 456.478}, {"t": "2026-10-08T09:00:00", "level": 456.477}, {"t": "2026-10-08T10:00:00", "level": 456.477}, {"t": "2026-10-08T11:00:00", "level": 456.476}, {"t": "2026-10-08T12:00:00", "level": 456.476}, {"t": "2026-10-08T13:00:00", "level": 456.476}, {"t": "2026-10-08T14:00:00", "level": 456.476}, {"t": "2026-10-08T15:00:00", "level": 456.476}, {"t": "2026-10-08T16:00:00", "level": 456.476}, {"t": "2026-10-08T17:00:00", "level": 456.47}, {"t": "2026-10-08T18:00:00", "level": 456.477}, {"t": "2026-10-08T19:00:00", "level": 456.471}, {"t": "2026-10-08T20:00:00", "level": 456.471}, {"t": "2026-10-08T21:00:00", "level": 456.471}, {"t": "2026-10-08T22:00:00", "level": 456.478}, {"t": "2026-10-08T23:00:00", "level": 456.478}, {"t": "2026-10-09T00:00:00", "level": 456.471}, {"t": "2026-10-09T01:00:00", "level": 456.471}, {"t": "2026-10-09T02:00:00", "level": 456.471}, {"t": "2026-10-09T03:00:00", "level": 456.471}, {"t": "2026-10-09T04:00:00", "level": 456.471}, {"t": "2026-10-09T05:00:00", "level": 456.471}, {"t": "2026-10-09T06:00:00", "level": 456.471}, {"t": "2026-10-09T07:00:00", "level": 456.471}, {"t": "2026-10-09T08:00:00", "level": 456.471}, {"t": "2026-10-09T09:00:00", "level": 456.471}, {"t": "2026-10-09T10:00:00", "level": 456.47}, {"t": "2026-10-09T11:00:00", "level": 456.47}, {"t": "2026-10-09T12:00:00", "level": 456.47}, {"t": "2026-10-09T13:00:00", "level": 456.462}, {"t": "2026-10-09T14:00:00", "level": 456.47}, {"t": "2026-10-09T15:00:00", "level": 456.462}, {"t": "2026-10-09T16:00:00", "level": 456.463}, {"t": "2026-10-09T17:00:00", "level": 456.463}, {"t": "2026-10-09T18:00:00", "level": 456.463}, {"t": "2026-10-09T19:00:00", "level": 456.464}, {"t": "2026-10-09T20:00:00", "level": 456.464}, {"t": "2026-10-09T21:00:00", "level": 456.464}, {"t": "2026-10-09T22:00:00", "level": 456.465}, {"t": "2026-10-09T23:00:00", "level": 456.465}, {"t": "2026-10-10T00:00:00", "level": 456.465}, {"t": "2026-10-10T01:00:00", "level": 456.458}, {"t": "2026-10-10T02:00:00", "level": 456.465}, {"t": "2026-10-10T03:00:00", "level": 456.465}, {"t": "2026-10-10T04:00:00", "level": 456.465}, {"t": "2026-10-10T05:00:00", "level": 456.465}, {"t": "2026-10-10T06:00:00", "level": 456.465}, {"t": "2026-10-10T07:00:00", "level": 456.465}, {"t": "2026-10-10T08:00:00", "level": 456.458}, {"t": "2026-10-10T09:00:00", "level": 456.457}, {"t": "2026-10-10T10:00:00", "level": 456.457}, {"t": "2026-10-10T11:00:00", "level": 456.457}, {"t": "2026-10-10T12:00:00", "level": 456.457}, {"t": "2026-10-10T13:00:00", "level": 456.45}, {"t": "2026-10-10T14:00:00", "level": 456.457}, {"t": "2026-10-10T15:00:00", "level": 456.457}, {"t": "2026-10-10T16:00:00", "level": 456.457}, {"t": "2026-10-10T17:00:00", "level": 456.457}, {"t": "2026-10-10T18:00:00", "level": 456.464}, {"t": "2026-10-10T19:00:00", "level": 456.498}, {"t": "2026-10-10T20:00:00", "level": 456.511}, {"t": "2026-10-10T21:00:00", "level": 456.517}, {"t": "2026-10-10T22:00:00", "level": 456.517}, {"t": "2026-10-10T23:00:00", "level": 456.523}, {"t": "2026-10-11T00:00:00", "level": 456.523}, {"t": "2026-10-11T01:00:00", "level": 456.523}, {"t": "2026-10-11T02:00:00", "level": 456.53}, {"t": "2026-10-11T02:50:00", "level": 456.53}, {"t": "2026-10-11T04:00:00", "level": 456.523}, {"t": "2026-10-11T05:00:00", "level": 456.53}, {"t": "2026-10-11T06:00:00", "level": 456.53}, {"t": "2026-10-11T07:00:00", "level": 456.53}, {"t": "2026-10-11T08:00:00", "level": 456.53}, {"t": "2026-10-11T09:00:00", "level": 456.529}, {"t": "2026-10-11T10:00:00", "level": 456.529}, {"t": "2026-10-11T11:00:00", "level": 456.529}, {"t": "2026-10-11T12:00:00", "level": 456.528}, {"t": "2026-10-11T13:00:00", "level": 456.528}, {"t": "2026-10-11T14:00:00", "level": 456.528}, {"t": "2026-10-11T15:00:00", "level": 456.528}, {"t": "2026-10-11T16:00:00", "level": 456.528}], "rain": [{"t": "2026-10-08T17:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T18:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T19:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T20:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T21:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T22:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T23:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T00:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T01:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T02:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T03:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T04:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T05:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T06:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T07:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T08:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T09:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T10:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T11:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T12:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T13:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T14:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T15:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T16:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T17:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T18:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T19:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T20:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T21:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T22:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T23:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T00:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T01:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T02:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T03:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T04:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T05:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T06:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T07:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T08:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T09:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T10:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T11:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T12:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T13:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T14:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T15:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T16:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T17:00:00", "rain_mm": 0.2}, {"t": "2026-10-10T18:00:00", "rain_mm": 3.0}, {"t": "2026-10-10T19:00:00", "rain_mm": 0.2}, {"t": "2026-10-10T20:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T21:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T22:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T23:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T00:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T01:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T02:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T03:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T04:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T05:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T06:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T07:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T08:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T09:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T10:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T11:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T12:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T13:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T14:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T15:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T16:00:00", "rain_mm": 0.0}]}, {"station_code": "RES005", "name_th": "อ่างเก็บน้ำห้วยถ้ำ", "spillway_msl": 478.1, "water_level": 478.68, "rainfall_1h": 0.0, "measure_datetime": "2026-10-11T16:00:00", "storage_m3": 548466.3, "storage_max_m3": 495467.8, "capacity_pct": 110.7, "history": [{"t": "2026-10-05T21:00:00", "level": 478.81}, {"t": "2026-10-05T22:00:00", "level": 478.8}, {"t": "2026-10-05T23:00:00", "level": 478.8}, {"t": "2026-10-06T00:00:00", "level": 478.8}, {"t": "2026-10-06T01:00:00", "level": 478.8}, {"t": "2026-10-06T02:00:00", "level": 478.79}, {"t": "2026-10-06T03:00:00", "level": 478.79}, {"t": "2026-10-06T04:00:00", "level": 478.78}, {"t": "2026-10-06T05:00:00", "level": 478.78}, {"t": "2026-10-06T05:30:00", "level": 478.78}, {"t": "2026-10-06T07:00:00", "level": 478.78}, {"t": "2026-10-06T08:00:00", "level": 478.78}, {"t": "2026-10-06T09:00:00", "level": 478.77}, {"t": "2026-10-06T10:00:00", "level": 478.77}, {"t": "2026-10-06T11:00:00", "level": 478.77}, {"t": "2026-10-07T08:00:00", "level": 478.74}, {"t": "2026-10-07T09:00:00", "level": 478.74}, {"t": "2026-10-07T10:00:00", "level": 478.74}, {"t": "2026-10-07T11:00:00", "level": 478.73}, {"t": "2026-10-07T12:00:00", "level": 478.73}, {"t": "2026-10-07T13:00:00", "level": 478.73}, {"t": "2026-10-07T14:00:00", "level": 478.73}, {"t": "2026-10-07T15:00:00", "level": 478.73}, {"t": "2026-10-07T16:00:00", "level": 478.72}, {"t": "2026-10-07T17:00:00", "level": 478.72}, {"t": "2026-10-07T18:00:00", "level": 478.72}, {"t": "2026-10-07T19:00:00", "level": 478.72}, {"t": "2026-10-07T20:00:00", "level": 478.72}, {"t": "2026-10-07T21:00:00", "level": 478.72}, {"t": "2026-10-07T22:00:00", "level": 478.72}, {"t": "2026-10-07T23:00:00", "level": 478.72}, {"t": "2026-10-08T00:00:00", "level": 478.72}, {"t": "2026-10-08T01:00:00", "level": 478.72}, {"t": "2026-10-08T02:00:00", "level": 478.72}, {"t": "2026-10-08T03:00:00", "level": 478.72}, {"t": "2026-10-08T04:00:00", "level": 478.72}, {"t": "2026-10-08T05:00:00", "level": 478.72}, {"t": "2026-10-08T06:00:00", "level": 478.72}, {"t": "2026-10-08T07:00:00", "level": 478.71}, {"t": "2026-10-08T08:00:00", "level": 478.71}, {"t": "2026-10-08T09:00:00", "level": 478.71}, {"t": "2026-10-08T10:00:00", "level": 478.71}, {"t": "2026-10-08T11:00:00", "level": 478.71}, {"t": "2026-10-08T12:00:00", "level": 478.71}, {"t": "2026-10-08T13:00:00", "level": 478.71}, {"t": "2026-10-08T14:00:00", "level": 478.7}, {"t": "2026-10-08T15:00:00", "level": 478.7}, {"t": "2026-10-08T16:00:00", "level": 478.7}, {"t": "2026-10-08T17:00:00", "level": 478.7}, {"t": "2026-10-08T18:00:00", "level": 478.7}, {"t": "2026-10-08T19:00:00", "level": 478.71}, {"t": "2026-10-08T20:00:00", "level": 478.71}, {"t": "2026-10-08T21:00:00", "level": 478.71}, {"t": "2026-10-08T22:00:00", "level": 478.7}, {"t": "2026-10-08T23:00:00", "level": 478.71}, {"t": "2026-10-09T00:00:00", "level": 478.71}, {"t": "2026-10-09T01:00:00", "level": 478.7}, {"t": "2026-10-09T02:00:00", "level": 478.7}, {"t": "2026-10-09T03:00:00", "level": 478.7}, {"t": "2026-10-09T04:00:00", "level": 478.7}, {"t": "2026-10-09T05:00:00", "level": 478.7}, {"t": "2026-10-09T06:00:00", "level": 478.7}, {"t": "2026-10-09T07:00:00", "level": 478.7}, {"t": "2026-10-09T08:00:00", "level": 478.7}, {"t": "2026-10-09T09:00:00", "level": 478.7}, {"t": "2026-10-09T10:00:00", "level": 478.7}, {"t": "2026-10-09T11:00:00", "level": 478.7}, {"t": "2026-10-09T12:00:00", "level": 478.69}, {"t": "2026-10-09T13:00:00", "level": 478.69}, {"t": "2026-10-09T14:00:00", "level": 478.69}, {"t": "2026-10-09T15:00:00", "level": 478.69}, {"t": "2026-10-09T16:00:00", "level": 478.69}, {"t": "2026-10-09T17:00:00", "level": 478.69}, {"t": "2026-10-09T18:00:00", "level": 478.69}, {"t": "2026-10-09T19:00:00", "level": 478.69}, {"t": "2026-10-09T20:00:00", "level": 478.69}, {"t": "2026-10-09T21:00:00", "level": 478.69}, {"t": "2026-10-09T22:00:00", "level": 478.69}, {"t": "2026-10-09T23:00:00", "level": 478.69}, {"t": "2026-10-10T00:00:00", "level": 478.69}, {"t": "2026-10-10T01:00:00", "level": 478.69}, {"t": "2026-10-10T02:00:00", "level": 478.69}, {"t": "2026-10-10T03:00:00", "level": 478.69}, {"t": "2026-10-10T04:00:00", "level": 478.69}, {"t": "2026-10-10T05:00:00", "level": 478.69}, {"t": "2026-10-10T06:00:00", "level": 478.69}, {"t": "2026-10-10T07:00:00", "level": 478.69}, {"t": "2026-10-10T08:00:00", "level": 478.69}, {"t": "2026-10-10T09:00:00", "level": 478.69}, {"t": "2026-10-10T10:00:00", "level": 478.68}, {"t": "2026-10-10T11:00:00", "level": 478.68}, {"t": "2026-10-10T12:00:00", "level": 478.68}, {"t": "2026-10-10T13:00:00", "level": 478.68}, {"t": "2026-10-10T14:00:00", "level": 478.68}, {"t": "2026-10-10T15:00:00", "level": 478.68}, {"t": "2026-10-10T16:00:00", "level": 478.68}, {"t": "2026-10-10T17:00:00", "level": 478.68}, {"t": "2026-10-10T18:00:00", "level": 478.69}, {"t": "2026-10-10T19:00:00", "level": 478.69}, {"t": "2026-10-10T20:00:00", "level": 478.69}, {"t": "2026-10-10T21:00:00", "level": 478.69}, {"t": "2026-10-10T22:00:00", "level": 478.69}, {"t": "2026-10-10T23:00:00", "level": 478.69}, {"t": "2026-10-11T00:00:00", "level": 478.69}, {"t": "2026-10-11T01:00:00", "level": 478.69}, {"t": "2026-10-11T02:00:00", "level": 478.69}, {"t": "2026-10-11T02:30:00", "level": 478.69}, {"t": "2026-10-11T04:00:00", "level": 478.69}, {"t": "2026-10-11T05:00:00", "level": 478.69}, {"t": "2026-10-11T06:00:00", "level": 478.69}, {"t": "2026-10-11T07:00:00", "level": 478.69}, {"t": "2026-10-11T08:00:00", "level": 478.69}, {"t": "2026-10-11T09:00:00", "level": 478.69}, {"t": "2026-10-11T10:00:00", "level": 478.69}, {"t": "2026-10-11T11:00:00", "level": 478.69}, {"t": "2026-10-11T12:00:00", "level": 478.69}, {"t": "2026-10-11T13:00:00", "level": 478.68}, {"t": "2026-10-11T14:00:00", "level": 478.68}, {"t": "2026-10-11T15:00:00", "level": 478.68}, {"t": "2026-10-11T16:00:00", "level": 478.68}], "rain": [{"t": "2026-10-08T17:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T18:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T19:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T20:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T21:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T22:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T23:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T00:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T01:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T02:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T03:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T04:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T05:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T06:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T07:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T08:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T09:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T10:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T11:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T12:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T13:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T14:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T15:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T16:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T17:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T18:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T19:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T20:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T21:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T22:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T23:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T00:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T01:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T02:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T03:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T04:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T05:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T06:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T07:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T08:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T09:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T10:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T11:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T12:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T13:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T14:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T15:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T16:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T17:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T18:00:00", "rain_mm": 5.2}, {"t": "2026-10-10T19:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T20:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T21:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T22:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T23:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T00:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T01:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T02:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T03:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T04:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T05:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T06:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T07:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T08:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T09:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T10:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T11:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T12:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T13:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T14:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T15:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T16:00:00", "rain_mm": 0.0}]}, {"station_code": "RES006", "name_th": "อ่างเก็บน้ำห้วยโซ้", "spillway_msl": 508.1, "water_level": 508.042, "rainfall_1h": 0.0, "measure_datetime": "2026-10-11T16:10:00", "storage_m3": 120449.7, "storage_max_m3": 122441.9, "capacity_pct": 98.4, "history": [{"t": "2026-10-06T17:10:00", "level": 508.445}, {"t": "2026-10-06T18:00:00", "level": 508.432}, {"t": "2026-10-06T19:00:00", "level": 508.42}, {"t": "2026-10-06T20:00:00", "level": 508.408}, {"t": "2026-10-06T21:00:00", "level": 508.395}, {"t": "2026-10-06T22:00:00", "level": 508.389}, {"t": "2026-10-06T23:00:00", "level": 508.371}, {"t": "2026-10-07T00:00:00", "level": 508.364}, {"t": "2026-10-07T01:00:00", "level": 508.358}, {"t": "2026-10-07T02:00:00", "level": 508.345}, {"t": "2026-10-07T03:00:00", "level": 508.34}, {"t": "2026-10-07T04:00:00", "level": 508.326}, {"t": "2026-10-07T05:00:00", "level": 508.314}, {"t": "2026-10-07T06:00:00", "level": 508.301}, {"t": "2026-10-07T07:00:00", "level": 508.295}, {"t": "2026-10-07T08:00:00", "level": 508.282}, {"t": "2026-10-07T09:00:00", "level": 508.294}, {"t": "2026-10-07T10:00:00", "level": 508.274}, {"t": "2026-10-07T11:00:00", "level": 508.286}, {"t": "2026-10-07T12:00:00", "level": 508.247}, {"t": "2026-10-07T13:00:00", "level": 508.253}, {"t": "2026-10-07T14:00:00", "level": 508.241}, {"t": "2026-10-07T15:00:00", "level": 508.227}, {"t": "2026-10-07T16:00:00", "level": 508.196}, {"t": "2026-10-07T17:00:00", "level": 508.177}, {"t": "2026-10-07T18:00:00", "level": 508.165}, {"t": "2026-10-07T19:00:00", "level": 508.152}, {"t": "2026-10-07T20:00:00", "level": 508.14}, {"t": "2026-10-07T21:00:00", "level": 508.134}, {"t": "2026-10-07T22:00:00", "level": 508.121}, {"t": "2026-10-07T23:00:00", "level": 508.116}, {"t": "2026-10-08T00:00:00", "level": 508.102}, {"t": "2026-10-08T01:00:00", "level": 508.089}, {"t": "2026-10-08T02:00:00", "level": 508.084}, {"t": "2026-10-08T03:00:00", "level": 508.07}, {"t": "2026-10-08T04:00:00", "level": 508.064}, {"t": "2026-10-08T05:00:00", "level": 508.057}, {"t": "2026-10-08T06:00:00", "level": 508.051}, {"t": "2026-10-08T07:00:00", "level": 508.051}, {"t": "2026-10-08T08:00:00", "level": 508.051}, {"t": "2026-10-08T09:00:00", "level": 508.043}, {"t": "2026-10-08T10:00:00", "level": 508.043}, {"t": "2026-10-08T11:00:00", "level": 508.042}, {"t": "2026-10-08T12:00:00", "level": 508.041}, {"t": "2026-10-08T13:00:00", "level": 508.041}, {"t": "2026-10-08T14:00:00", "level": 508.041}, {"t": "2026-10-08T15:00:00", "level": 508.047}, {"t": "2026-10-08T16:00:00", "level": 508.061}, {"t": "2026-10-08T17:00:00", "level": 508.062}, {"t": "2026-10-08T18:00:00", "level": 508.057}, {"t": "2026-10-08T19:00:00", "level": 508.057}, {"t": "2026-10-08T20:00:00", "level": 508.05}, {"t": "2026-10-08T21:00:00", "level": 508.05}, {"t": "2026-10-08T22:00:00", "level": 508.057}, {"t": "2026-10-08T23:00:00", "level": 508.057}, {"t": "2026-10-09T00:00:00", "level": 508.051}, {"t": "2026-10-09T01:00:00", "level": 508.051}, {"t": "2026-10-09T02:00:00", "level": 508.051}, {"t": "2026-10-09T03:00:00", "level": 508.057}, {"t": "2026-10-09T04:00:00", "level": 508.051}, {"t": "2026-10-09T05:00:00", "level": 508.057}, {"t": "2026-10-09T06:00:00", "level": 508.051}, {"t": "2026-10-09T07:00:00", "level": 508.051}, {"t": "2026-10-09T08:00:00", "level": 508.051}, {"t": "2026-10-09T09:00:00", "level": 508.043}, {"t": "2026-10-09T10:00:00", "level": 508.048}, {"t": "2026-10-09T11:00:00", "level": 508.047}, {"t": "2026-10-09T12:00:00", "level": 508.054}, {"t": "2026-10-09T13:00:00", "level": 508.061}, {"t": "2026-10-09T14:00:00", "level": 508.054}, {"t": "2026-10-09T15:00:00", "level": 508.054}, {"t": "2026-10-09T16:00:00", "level": 508.061}, {"t": "2026-10-09T17:00:00", "level": 508.049}, {"t": "2026-10-09T18:00:00", "level": 508.05}, {"t": "2026-10-09T19:00:00", "level": 508.05}, {"t": "2026-10-09T20:00:00", "level": 508.05}, {"t": "2026-10-09T21:00:00", "level": 508.05}, {"t": "2026-10-09T22:00:00", "level": 508.05}, {"t": "2026-10-09T23:00:00", "level": 508.044}, {"t": "2026-10-10T00:00:00", "level": 508.044}, {"t": "2026-10-10T01:00:00", "level": 508.051}, {"t": "2026-10-10T02:00:00", "level": 508.044}, {"t": "2026-10-10T03:00:00", "level": 508.044}, {"t": "2026-10-10T04:00:00", "level": 508.044}, {"t": "2026-10-10T05:00:00", "level": 508.051}, {"t": "2026-10-10T06:00:00", "level": 508.051}, {"t": "2026-10-10T07:00:00", "level": 508.044}, {"t": "2026-10-10T08:00:00", "level": 508.044}, {"t": "2026-10-10T09:00:00", "level": 508.036}, {"t": "2026-10-10T10:00:00", "level": 508.042}, {"t": "2026-10-10T11:00:00", "level": 508.042}, {"t": "2026-10-10T12:00:00", "level": 508.042}, {"t": "2026-10-10T13:00:00", "level": 508.042}, {"t": "2026-10-10T14:00:00", "level": 508.042}, {"t": "2026-10-10T15:00:00", "level": 508.042}, {"t": "2026-10-10T16:00:00", "level": 508.048}, {"t": "2026-10-10T17:00:00", "level": 508.043}, {"t": "2026-10-10T18:00:00", "level": 508.05}, {"t": "2026-10-10T19:00:00", "level": 508.05}, {"t": "2026-10-10T20:00:00", "level": 508.043}, {"t": "2026-10-10T21:00:00", "level": 508.051}, {"t": "2026-10-10T22:00:00", "level": 508.051}, {"t": "2026-10-10T23:00:00", "level": 508.044}, {"t": "2026-10-11T00:00:00", "level": 508.044}, {"t": "2026-10-11T01:00:00", "level": 508.051}, {"t": "2026-10-11T02:00:00", "level": 508.044}, {"t": "2026-10-11T02:50:00", "level": 508.051}, {"t": "2026-10-11T04:00:00", "level": 508.051}, {"t": "2026-10-11T05:00:00", "level": 508.051}, {"t": "2026-10-11T06:00:00", "level": 508.044}, {"t": "2026-10-11T07:00:00", "level": 508.051}, {"t": "2026-10-11T08:00:00", "level": 508.044}, {"t": "2026-10-11T09:00:00", "level": 508.043}, {"t": "2026-10-11T10:00:00", "level": 508.043}, {"t": "2026-10-11T11:00:00", "level": 508.043}, {"t": "2026-10-11T12:00:00", "level": 508.062}, {"t": "2026-10-11T13:00:00", "level": 508.068}, {"t": "2026-10-11T14:00:00", "level": 508.055}, {"t": "2026-10-11T15:00:00", "level": 508.061}, {"t": "2026-10-11T16:00:00", "level": 508.042}], "rain": [{"t": "2026-10-08T17:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T18:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T19:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T20:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T21:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T22:00:00", "rain_mm": 0.0}, {"t": "2026-10-08T23:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T00:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T01:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T02:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T03:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T04:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T05:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T06:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T07:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T08:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T09:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T10:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T11:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T12:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T13:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T14:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T15:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T16:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T17:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T18:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T19:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T20:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T21:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T22:00:00", "rain_mm": 0.0}, {"t": "2026-10-09T23:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T00:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T01:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T02:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T03:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T04:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T05:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T06:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T07:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T08:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T09:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T10:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T11:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T12:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T13:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T14:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T15:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T16:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T17:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T18:00:00", "rain_mm": 6.0}, {"t": "2026-10-10T19:00:00", "rain_mm": 0.2}, {"t": "2026-10-10T20:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T21:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T22:00:00", "rain_mm": 0.0}, {"t": "2026-10-10T23:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T00:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T01:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T02:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T03:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T04:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T05:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T06:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T07:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T08:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T09:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T10:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T11:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T12:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T13:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T14:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T15:00:00", "rain_mm": 0.0}, {"t": "2026-10-11T16:00:00", "rain_mm": 0.0}]}], "ledger": [{"date": "2026-08-28", "level": 488.376, "volume": 1283661.8768048, "inflow": 0, "release": 0, "spill": 0, "rain": 0}, {"date": "2026-08-29", "level": 488.316, "volume": 1266458.5017737, "inflow": 0, "release": 0, "spill": 0, "rain": 0}, {"date": "2026-08-30", "level": 488.252, "volume": 1249281.492802, "inflow": 0, "release": 0, "spill": 0, "rain": 0.2}, {"date": "2026-08-31", "level": 488.17, "volume": 1226420.1259185, "inflow": 0, "release": 0, "spill": 0, "rain": 5.2}, {"date": "2026-09-01", "level": 488.084, "volume": 1200758.448846, "inflow": 0, "release": 0, "spill": 0, "rain": 0.8}, {"date": "2026-09-02", "level": 488.034, "volume": 1186528.7602684, "inflow": 0, "release": 0, "spill": 0, "rain": 5.600000000000001}, {"date": "2026-09-03", "level": 488.15, "volume": 1220712.271714, "inflow": 32019.66074438955, "release": 0, "spill": 0, "rain": 11.4}, {"date": "2026-09-04", "level": 488.105, "volume": 1206455.7766028, "inflow": 0, "release": 0, "spill": 0, "rain": 1.4}, {"date": "2026-09-05", "level": 488.239, "volume": 1243561.7561632, "inflow": 33965.56265109028, "release": 0, "spill": 0, "rain": 14.8}, {"date": "2026-09-06", "level": 488.234, "volume": 1243561.7561632, "inflow": 404.9532692895635, "release": 0, "spill": 0, "rain": 2.4}, {"date": "2026-09-07", "level": 488.44, "volume": 1303766.0916421, "inflow": 61301.56943310559, "release": 0, "spill": 0, "rain": 0}, {"date": "2026-09-08", "level": 488.465, "volume": 1309516.809464, "inflow": 4662.698137204881, "release": 0, "spill": 0, "rain": 7.6}, {"date": "2026-09-09", "level": 488.531, "volume": 1329667.5174676, "inflow": 17850.66908116049, "release": 0, "spill": 0, "rain": 11.8}, {"date": "2026-09-10", "level": 489.367, "volume": 1571636.9871561, "inflow": 233500.5717146205, "release": 0, "spill": 0, "rain": 32.4}, {"date": "2026-09-11", "level": 489.973, "volume": 1756674.0791536, "inflow": 341036.5829834493, "release": 166140.7815023421, "spill": 166140.7815023421, "rain": 36.60000000000001}, {"date": "2026-09-12", "level": 489.966, "volume": 1753581.1481606, "inflow": 516056.0107094145, "release": 518153.1174518356, "spill": 518153.1174518356, "rain": 0.6}, {"date": "2026-09-13", "level": 489.901, "volume": 1735058.5729155, "inflow": 344983.2125354027, "release": 362328.2945610328, "spill": 362328.2945610328, "rain": 0}, {"date": "2026-09-14", "level": 489.856, "volume": 1719668.7023854, "inflow": 210699.6615553191, "release": 224915.2082570158, "spill": 224915.2082570158, "rain": 0}, {"date": "2026-09-15", "level": 489.823, "volume": 1710454.4363393, "inflow": 156311.9666537712, "release": 164353.8210292666, "spill": 149334.6210292666, "rain": 0}, {"date": "2026-09-16", "level": 489.81, "volume": 1707386.3914463, "inflow": 122063.0500445654, "release": 124756.83686404809, "spill": 109737.6368640481, "rain": 2.6}, {"date": "2026-09-17", "level": 489.809, "volume": 1704320.2680112, "inflow": 108014.4636312168, "release": 112851.94345350476, "spill": 97832.74345350477, "rain": 9.6}, {"date": "2026-09-18", "level": 489.753, "volume": 1689066.0691295, "inflow": 58297.95918031958, "release": 72388.25223432959, "spill": 57369.05223432959, "rain": 0}, {"date": "2026-09-19", "level": 489.855, "volume": 1719668.7023854, "inflow": 188485.47196383, "release": 165438.474218821, "spill": 150419.274218821, "rain": 28.4}, {"date": "2026-09-20", "level": 489.828, "volume": 1710454.4363393, "inflow": 143663.595559905, "release": 155817.8829171165, "spill": 140798.6829171165, "rain": 13.4}, {"date": "2026-09-21", "level": 489.986, "volume": 1759768.7362509, "inflow": 460820.4198611522, "release": 417009.7251474883, "spill": 401990.5251474883, "rain": 21.6}, {"date": "2026-09-22", "level": 489.907, "volume": 1735058.5729155, "inflow": 427737.076297989, "release": 452749.1687758658, "spill": 437729.9687758658, "rain": 4.800000000000001}, {"date": "2026-09-23", "level": 489.856, "volume": 1719668.7023854, "inflow": 206869.4300359406, "release": 221330.89108522312, "spill": 206311.6910852231, "rain": 0.8}, {"date": "2026-09-24", "level": 489.785, "volume": 1698213.642694, "inflow": 79133.08756611675, "release": 99422.39827411706, "spill": 84403.19827411707, "rain": 0}, {"date": "2026-09-25", "level": 489.746, "volume": 1686020.0677445, "inflow": 24369.97176447379, "release": 36435.62401799563, "spill": 21416.42401799563, "rain": 3.4}, {"date": "2026-09-26", "level": 489.739, "volume": 1682975.6527669, "inflow": 11562.76917002362, "release": 17522.990647477607, "spill": 2503.790647477607, "rain": 13.4}, {"date": "2026-09-27", "level": 489.701, "volume": 1673851.7406958, "inflow": 7497.893716021814, "release": 15460.906591772224, "spill": 441.7065917722226, "rain": 0}, {"date": "2026-09-28", "level": 489.669, "volume": 1661708.0167959, "inflow": 3973.367944237808, "release": 15019.2, "spill": 0, "rain": 0.2}, {"date": "2026-09-29", "level": 489.63, "volume": 1652616.0060849, "inflow": 5388.082720571168, "release": 15019.2, "spill": 0, "rain": 5.600000000000001}, {"date": "2026-09-30", "level": 489.604, "volume": 1643538.2164867, "inflow": 5766.343201756344, "release": 15019.2, "spill": 0, "rain": 4.4}, {"date": "2026-10-01", "level": 489.566, "volume": 1631482.3951735, "inflow": 4031.699869726532, "release": 15019.2, "spill": 0, "rain": 0}, {"date": "2026-10-02", "level": 489.521, "volume": 1619451.3170382, "inflow": 4054.236787212539, "release": 15019.2, "spill": 0, "rain": 0}, {"date": "2026-10-03", "level": 489.508, "volume": 1613444.9319478, "inflow": 10077.8390981726, "release": 15019.2, "spill": 0, "rain": 0}, {"date": "2026-10-04", "level": 489.489, "volume": 1607444.5930314, "inflow": 10082.80244425347, "release": 15019.2, "spill": 0, "rain": 0}, {"date": "2026-10-05", "level": 489.424, "volume": 1589479.7778056, "inflow": 0, "release": 15019.2, "spill": 0, "rain": 0.8}, {"date": "2026-10-06", "level": 490.024, "volume": 1772187.5765013, "inflow": 645954.0975924233, "release": 477837.4861115604, "spill": 462818.2861115604, "rain": 50.40000000000001}, {"date": "2026-10-07", "level": 489.992, "volume": 1762865.1589163, "inflow": 584301.3618235723, "release": 594692.5977685709, "spill": 579673.3977685709, "rain": 7}, {"date": "2026-10-08", "level": 489.953, "volume": 1750489.8990714, "inflow": 486387.0597843493, "release": 497665.5177101383, "spill": 482646.3177101383, "rain": 0}, {"date": "2026-10-09", "level": 489.901, "volume": 1735058.5729155, "inflow": 371453.7256675144, "release": 385791.23427589773, "spill": 370772.0342758977, "rain": 0}, {"date": "2026-10-10", "level": 489.863, "volume": 1722743.3880805, "inflow": 288846.5297934904, "release": 300070.2563783929, "spill": 285051.0563783929, "rain": 0}, {"date": "2026-10-11", "level": 489.933, "volume": 1744312.3770924, "inflow": 318680.999945448, "release": 303240.2175833641, "spill": 288221.0175833641, "rain": 23.4}], "windows": [{"window_start": "2026-10-08T04:00:00", "window_end": "2026-10-08T10:00:00", "q_in_6h_m3": 106721.3, "water_level_start_m": 489.96, "water_level_end_m": 489.945, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 108873.3, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-08T05:00:00", "window_end": "2026-10-08T11:00:00", "q_in_6h_m3": 100751.2, "water_level_start_m": 489.96, "water_level_end_m": 489.937, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 105991.3, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-08T06:00:00", "window_end": "2026-10-08T12:00:00", "q_in_6h_m3": 101569.8, "water_level_start_m": 489.96, "water_level_end_m": 489.942, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 103721.8, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-08T07:00:00", "window_end": "2026-10-08T13:00:00", "q_in_6h_m3": 99585.6, "water_level_start_m": 489.953, "water_level_end_m": 489.937, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 101734.4, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-08T08:00:00", "window_end": "2026-10-08T14:00:00", "q_in_6h_m3": 97724.6, "water_level_start_m": 489.952, "water_level_end_m": 489.937, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 99873.4, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-08T09:00:00", "window_end": "2026-10-08T15:00:00", "q_in_6h_m3": 99830.6, "water_level_start_m": 489.945, "water_level_end_m": 489.937, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 98889.8, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-08T10:00:00", "window_end": "2026-10-08T16:00:00", "q_in_6h_m3": 98122.6, "water_level_start_m": 489.945, "water_level_end_m": 489.931, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 97181.8, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-08T11:00:00", "window_end": "2026-10-08T17:00:00", "q_in_6h_m3": 96569.8, "water_level_start_m": 489.937, "water_level_end_m": 489.924, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 95627.5, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-08T12:00:00", "window_end": "2026-10-08T18:00:00", "q_in_6h_m3": 95351.5, "water_level_start_m": 489.942, "water_level_end_m": 489.932, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 94410.8, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-08T13:00:00", "window_end": "2026-10-08T19:00:00", "q_in_6h_m3": 97835.2, "water_level_start_m": 489.937, "water_level_end_m": 489.932, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 93806.5, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-08T14:00:00", "window_end": "2026-10-08T20:00:00", "q_in_6h_m3": 93430.0, "water_level_start_m": 489.937, "water_level_end_m": 489.926, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 92487.8, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-08T15:00:00", "window_end": "2026-10-08T21:00:00", "q_in_6h_m3": 92111.3, "water_level_start_m": 489.937, "water_level_end_m": 489.926, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 91169.0, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-08T16:00:00", "window_end": "2026-10-08T22:00:00", "q_in_6h_m3": 95437.9, "water_level_start_m": 489.931, "water_level_end_m": 489.933, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 91409.2, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-08T17:00:00", "window_end": "2026-10-08T23:00:00", "q_in_6h_m3": 100322.5, "water_level_start_m": 489.924, "water_level_end_m": 489.939, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 93207.5, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-08T18:00:00", "window_end": "2026-10-09T00:00:00", "q_in_6h_m3": 93435.2, "water_level_start_m": 489.932, "water_level_end_m": 489.926, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 92492.9, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-08T19:00:00", "window_end": "2026-10-09T01:00:00", "q_in_6h_m3": 92720.6, "water_level_start_m": 489.932, "water_level_end_m": 489.926, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 91778.4, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-08T20:00:00", "window_end": "2026-10-09T02:00:00", "q_in_6h_m3": 99728.0, "water_level_start_m": 489.926, "water_level_end_m": 489.933, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 92613.0, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-08T21:00:00", "window_end": "2026-10-09T03:00:00", "q_in_6h_m3": 95938.9, "water_level_start_m": 489.926, "water_level_end_m": 489.92, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 91910.4, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-08T22:00:00", "window_end": "2026-10-09T04:00:00", "q_in_6h_m3": 87540.1, "water_level_start_m": 489.933, "water_level_end_m": 489.914, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 89682.6, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-08T23:00:00", "window_end": "2026-10-09T05:00:00", "q_in_6h_m3": 88359.4, "water_level_start_m": 489.939, "water_level_end_m": 489.92, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 87417.2, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T00:00:00", "window_end": "2026-10-09T06:00:00", "q_in_6h_m3": 86967.9, "water_level_start_m": 489.926, "water_level_end_m": 489.914, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 86024.0, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T01:00:00", "window_end": "2026-10-09T07:00:00", "q_in_6h_m3": 81037.7, "water_level_start_m": 489.926, "water_level_end_m": 489.901, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 83176.9, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T02:00:00", "window_end": "2026-10-09T08:00:00", "q_in_6h_m3": 74822.0, "water_level_start_m": 489.933, "water_level_end_m": 489.906, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 80047.6, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T03:00:00", "window_end": "2026-10-09T09:00:00", "q_in_6h_m3": 76316.2, "water_level_start_m": 489.92, "water_level_end_m": 489.906, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 78455.4, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T04:00:00", "window_end": "2026-10-09T10:00:00", "q_in_6h_m3": 74647.0, "water_level_start_m": 489.914, "water_level_end_m": 489.899, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 76783.2, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T05:00:00", "window_end": "2026-10-09T11:00:00", "q_in_6h_m3": 76695.7, "water_level_start_m": 489.92, "water_level_end_m": 489.911, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 75751.8, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T06:00:00", "window_end": "2026-10-09T12:00:00", "q_in_6h_m3": 75684.2, "water_level_start_m": 489.914, "water_level_end_m": 489.905, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 74738.9, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T07:00:00", "window_end": "2026-10-09T13:00:00", "q_in_6h_m3": 75467.3, "water_level_start_m": 489.901, "water_level_end_m": 489.899, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 74520.5, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T08:00:00", "window_end": "2026-10-09T14:00:00", "q_in_6h_m3": 91416.6, "water_level_start_m": 489.906, "water_level_end_m": 489.937, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 78134.1, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T09:00:00", "window_end": "2026-10-09T15:00:00", "q_in_6h_m3": 85919.5, "water_level_start_m": 489.906, "water_level_end_m": 489.912, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 78808.2, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T10:00:00", "window_end": "2026-10-09T16:00:00", "q_in_6h_m3": 86577.1, "water_level_start_m": 489.899, "water_level_end_m": 489.905, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 79467.5, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T11:00:00", "window_end": "2026-10-09T17:00:00", "q_in_6h_m3": 84411.2, "water_level_start_m": 489.911, "water_level_end_m": 489.919, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 80382.8, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T12:00:00", "window_end": "2026-10-09T18:00:00", "q_in_6h_m3": 88279.6, "water_level_start_m": 489.905, "water_level_end_m": 489.912, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 81168.2, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T13:00:00", "window_end": "2026-10-09T19:00:00", "q_in_6h_m3": 93607.6, "water_level_start_m": 489.899, "water_level_end_m": 489.919, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 83414.9, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T14:00:00", "window_end": "2026-10-09T20:00:00", "q_in_6h_m3": 78446.5, "water_level_start_m": 489.937, "water_level_end_m": 489.913, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 80588.9, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T15:00:00", "window_end": "2026-10-09T21:00:00", "q_in_6h_m3": 80971.4, "water_level_start_m": 489.912, "water_level_end_m": 489.907, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 80026.1, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T16:00:00", "window_end": "2026-10-09T22:00:00", "q_in_6h_m3": 79774.1, "water_level_start_m": 489.905, "water_level_end_m": 489.894, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 78827.3, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T17:00:00", "window_end": "2026-10-09T23:00:00", "q_in_6h_m3": 77744.3, "water_level_start_m": 489.919, "water_level_end_m": 489.901, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 76798.9, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T18:00:00", "window_end": "2026-10-10T00:00:00", "q_in_6h_m3": 72678.5, "water_level_start_m": 489.912, "water_level_end_m": 489.894, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 74814.7, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T19:00:00", "window_end": "2026-10-10T01:00:00", "q_in_6h_m3": 66177.0, "water_level_start_m": 489.919, "water_level_end_m": 489.888, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 71392.9, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T20:00:00", "window_end": "2026-10-10T02:00:00", "q_in_6h_m3": 62821.5, "water_level_start_m": 489.913, "water_level_end_m": 489.882, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 68037.4, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T21:00:00", "window_end": "2026-10-10T03:00:00", "q_in_6h_m3": 63225.1, "water_level_start_m": 489.907, "water_level_end_m": 489.882, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 65358.1, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T22:00:00", "window_end": "2026-10-10T04:00:00", "q_in_6h_m3": 65048.6, "water_level_start_m": 489.894, "water_level_end_m": 489.882, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 64100.3, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-09T23:00:00", "window_end": "2026-10-10T05:00:00", "q_in_6h_m3": 52495.8, "water_level_start_m": 489.901, "water_level_end_m": 489.869, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 60783.3, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T00:00:00", "window_end": "2026-10-10T06:00:00", "q_in_6h_m3": 53018.0, "water_level_start_m": 489.894, "water_level_end_m": 489.869, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 58224.2, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T01:00:00", "window_end": "2026-10-10T07:00:00", "q_in_6h_m3": 53596.1, "water_level_start_m": 489.888, "water_level_end_m": 489.863, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 55722.7, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T02:00:00", "window_end": "2026-10-10T08:00:00", "q_in_6h_m3": 47986.2, "water_level_start_m": 489.882, "water_level_end_m": 489.856, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 53187.6, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T03:00:00", "window_end": "2026-10-10T09:00:00", "q_in_6h_m3": 45358.9, "water_level_start_m": 489.882, "water_level_end_m": 489.855, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 50560.3, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T04:00:00", "window_end": "2026-10-10T10:00:00", "q_in_6h_m3": 38937.3, "water_level_start_m": 489.882, "water_level_end_m": 489.847, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 47211.9, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T05:00:00", "window_end": "2026-10-10T11:00:00", "q_in_6h_m3": 46838.7, "water_level_start_m": 489.869, "water_level_end_m": 489.855, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 45885.9, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T06:00:00", "window_end": "2026-10-10T12:00:00", "q_in_6h_m3": 41718.4, "water_level_start_m": 489.869, "water_level_end_m": 489.847, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 43838.8, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T07:00:00", "window_end": "2026-10-10T13:00:00", "q_in_6h_m3": 40338.2, "water_level_start_m": 489.863, "water_level_end_m": 489.848, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 42458.5, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T08:00:00", "window_end": "2026-10-10T14:00:00", "q_in_6h_m3": 38416.0, "water_level_start_m": 489.856, "water_level_end_m": 489.834, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 40533.3, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T09:00:00", "window_end": "2026-10-10T15:00:00", "q_in_6h_m3": 33025.7, "water_level_start_m": 489.855, "water_level_end_m": 489.828, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 38212.9, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T10:00:00", "window_end": "2026-10-10T16:00:00", "q_in_6h_m3": 34499.5, "water_level_start_m": 489.847, "water_level_end_m": 489.828, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 36613.7, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T11:00:00", "window_end": "2026-10-10T17:00:00", "q_in_6h_m3": 28635.9, "water_level_start_m": 489.855, "water_level_end_m": 489.822, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 33823.1, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T12:00:00", "window_end": "2026-10-10T18:00:00", "q_in_6h_m3": 28513.9, "water_level_start_m": 489.847, "water_level_end_m": 489.828, "rain_6h_mm": 5.2, "release_6h_m3": 3754.8, "spill_6h_m3": 32223.9, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T13:00:00", "window_end": "2026-10-10T19:00:00", "q_in_6h_m3": 52778.1, "water_level_start_m": 489.848, "water_level_end_m": 489.901, "rain_6h_mm": 23.4, "release_6h_m3": 3754.8, "spill_6h_m3": 37499.1, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T14:00:00", "window_end": "2026-10-10T20:00:00", "q_in_6h_m3": 75249.8, "water_level_start_m": 489.834, "water_level_end_m": 489.933, "rain_6h_mm": 23.4, "release_6h_m3": 3754.8, "spill_6h_m3": 47656.8, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T15:00:00", "window_end": "2026-10-10T21:00:00", "q_in_6h_m3": 93641.1, "water_level_start_m": 489.828, "water_level_end_m": 489.946, "rain_6h_mm": 23.4, "release_6h_m3": 3754.8, "spill_6h_m3": 59894.1, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T16:00:00", "window_end": "2026-10-10T22:00:00", "q_in_6h_m3": 105878.4, "water_level_start_m": 489.828, "water_level_end_m": 489.946, "rain_6h_mm": 23.4, "release_6h_m3": 3754.8, "spill_6h_m3": 72131.4, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T17:00:00", "window_end": "2026-10-10T23:00:00", "q_in_6h_m3": 118586.0, "water_level_start_m": 489.822, "water_level_end_m": 489.946, "rain_6h_mm": 23.4, "release_6h_m3": 3754.8, "spill_6h_m3": 84839.0, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T18:00:00", "window_end": "2026-10-11T00:00:00", "q_in_6h_m3": 140378.4, "water_level_start_m": 489.828, "water_level_end_m": 489.96, "rain_6h_mm": 18.2, "release_6h_m3": 3754.8, "spill_6h_m3": 98850.2, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T19:00:00", "window_end": "2026-10-11T01:00:00", "q_in_6h_m3": 128449.7, "water_level_start_m": 489.901, "water_level_end_m": 489.96, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 105898.0, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T20:00:00", "window_end": "2026-10-11T02:00:00", "q_in_6h_m3": 114607.1, "water_level_start_m": 489.933, "water_level_end_m": 489.946, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 107490.3, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T21:00:00", "window_end": "2026-10-11T03:00:00", "q_in_6h_m3": 115488.2, "water_level_start_m": 489.946, "water_level_end_m": 489.953, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 108369.6, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T22:00:00", "window_end": "2026-10-11T04:00:00", "q_in_6h_m3": 108446.2, "water_level_start_m": 489.946, "water_level_end_m": 489.939, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 107505.4, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-10T23:00:00", "window_end": "2026-10-11T05:00:00", "q_in_6h_m3": 111534.2, "water_level_start_m": 489.946, "water_level_end_m": 489.946, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 107505.4, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-11T00:00:00", "window_end": "2026-10-11T06:00:00", "q_in_6h_m3": 103579.5, "water_level_start_m": 489.96, "water_level_end_m": 489.946, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 105731.5, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-11T01:00:00", "window_end": "2026-10-11T07:00:00", "q_in_6h_m3": 97125.3, "water_level_start_m": 489.96, "water_level_end_m": 489.933, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 102365.4, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-11T02:00:00", "window_end": "2026-10-11T08:00:00", "q_in_6h_m3": 101713.8, "water_level_start_m": 489.946, "water_level_end_m": 489.933, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 100773.0, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-11T03:00:00", "window_end": "2026-10-11T09:00:00", "q_in_6h_m3": 83880.4, "water_level_start_m": 489.953, "water_level_end_m": 489.907, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 95283.4, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-11T04:00:00", "window_end": "2026-10-11T10:00:00", "q_in_6h_m3": 86200.4, "water_level_start_m": 489.939, "water_level_end_m": 489.906, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 91425.9, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-11T05:00:00", "window_end": "2026-10-11T11:00:00", "q_in_6h_m3": 78279.5, "water_level_start_m": 489.946, "water_level_end_m": 489.905, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 86592.9, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-11T06:00:00", "window_end": "2026-10-11T12:00:00", "q_in_6h_m3": 69705.6, "water_level_start_m": 489.946, "water_level_end_m": 489.899, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 81100.5, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-11T07:00:00", "window_end": "2026-10-11T13:00:00", "q_in_6h_m3": 84889.1, "water_level_start_m": 489.933, "water_level_end_m": 489.931, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 80860.4, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-11T08:00:00", "window_end": "2026-10-11T14:00:00", "q_in_6h_m3": 84649.0, "water_level_start_m": 489.933, "water_level_end_m": 489.931, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 80620.3, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-11T09:00:00", "window_end": "2026-10-11T15:00:00", "q_in_6h_m3": 96680.7, "water_level_start_m": 489.907, "water_level_end_m": 489.931, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 83398.2, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}, {"window_start": "2026-10-11T10:00:00", "window_end": "2026-10-11T16:00:00", "q_in_6h_m3": 99569.9, "water_level_start_m": 489.906, "water_level_end_m": 489.931, "rain_6h_mm": 0.0, "release_6h_m3": 3754.8, "spill_6h_m3": 86287.4, "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"}], "forecast": [{"date": "2026-10-11", "h": 0, "v": 318681.0}, {"date": "2026-10-12", "h": 1, "v": 315587.93, "low": true}, {"date": "2026-10-13", "h": 2, "v": 292741.51, "low": false}, {"date": "2026-10-14", "h": 3, "v": 251372.08, "low": true}, {"date": "2026-10-15", "h": 4, "v": 232520.61, "low": true}, {"date": "2026-10-16", "h": 5, "v": 239251.55, "low": true}, {"date": "2026-10-17", "h": 6, "v": 171907.71, "low": true}, {"date": "2026-10-18", "h": 7, "v": 71563.32, "low": true}], "kwan": {"level": 392.25, "change_3d": -0.025, "bank": 391.8, "bank_ronghai": 391.0, "flag": "critical", "generated_at": "2026-10-11 02:31"}};
+
+</script>
+<script>
+/* Mae Na Rua UI Lab — prototype (ไม่ใช่ production). ไม่มี dependency ภายนอก; กราฟเป็น SVG เขียนเอง */
+(function () {
+'use strict';
+const D = window.PROTO_DATA;
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const MON = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const fmt = (v, d = 0) => Number(v).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+const sgn = (v, d = 3) => (v > 0 ? '+' : v < 0 ? '−' : '±') + Math.abs(v).toFixed(d);
+const fmtK = v => { const a = Math.abs(v); return a >= 1e6 ? (v / 1e6).toFixed(3) + 'M' : a >= 1e3 ? (v / 1e3).toFixed(1) + 'k' : String(Math.round(v * 10) / 10); };
+const p2 = n => String(n).padStart(2, '0');
+const fmtDT = d => `${d.getDate()} ${MON[d.getMonth()]} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
+const fmtD = s => { const d = new Date(s + 'T00:00:00'); return `${d.getDate()} ${MON[d.getMonth()]}`; };
+const reduced = () => document.documentElement.dataset.motion === 'reduce' || matchMedia('(prefers-reduced-motion: reduce)').matches;
+const safeLS = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+
+function tween(from, to, dur, fn, ease) {
+  ease = ease || (e => 1 - Math.pow(1 - e, 4)); // easeOutQuart
+  if (reduced() || dur <= 0) { fn(to); return; }
+  const t0 = performance.now();
+  (function f(t) { const p = clamp((t - t0) / dur, 0, 1); fn(from + (to - from) * ease(p)); if (p < 1) requestAnimationFrame(f); })(t0);
+}
+
+/* =============== THEME =============== */
+const PAL = [
+  { id: 'blue', n: 'ฟ้าคราม', a: '#1f6f99', b: '#e0a94f' },
+  { id: 'emerald', n: 'เขียวมรกต', a: '#1b8a6b', b: '#f0a23b' },
+  { id: 'violet', n: 'ม่วงอเมทิสต์', a: '#6a4fc0', b: '#2fb8a3' },
+  { id: 'sun', n: 'ส้มพระอาทิตย์', a: '#d9692b', b: '#2b8fb8' },
+  { id: 'rose', n: 'ชมพูบานเย็น', a: '#cf3f7f', b: '#3aa0a8' },
+  { id: 'gold', n: 'ทองสุริยา', a: '#b88a16', b: '#2a7f9e' }
+];
+const hex2rgb = h => { h = h.replace('#', ''); return [0, 2, 4].map(i => parseInt(h.substr(i, 2), 16)); };
+function rgb2hsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), mn = Math.min(r, g, b); let h = 0, s = 0; const l = (mx + mn) / 2;
+  if (mx !== mn) { const d = mx - mn; s = l > .5 ? d / (2 - mx - mn) : d / (mx + mn);
+    h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60; }
+  return [h, s, l];
+}
+const hsl = (h, s, l) => `hsl(${Math.round((h % 360 + 360) % 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%)`;
+const lum = hex => { const [r, g, b] = hex2rgb(hex).map(v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }); return .2126 * r + .7152 * g + .0722 * b; };
+const T = { pal: 'blue', custom: '#1f6f99', mode: 'auto', motion: '0' };
+try { Object.assign(T, JSON.parse(safeLS.get('uilab_theme') || '{}')); } catch (e) {}
+function isDark() {
+  if (T.mode === 'dark') return true; if (T.mode === 'light') return false;
+  const h = new Date().getHours(); return h >= 18 || h < 6; // auto = ตามเวลา (กลางคืน 18:00–06:00)
+}
+function applyTheme(save) {
+  const root = document.documentElement;
+  let a, b;
+  if (T.pal === 'custom') {
+    a = T.custom; const [h, s, l] = rgb2hsl(...hex2rgb(a)); b = hsl(h + 165, clamp(s, .45, .8), .55);
+  } else { const p = PAL.find(x => x.id === T.pal) || PAL[0]; a = p.a; b = p.b; }
+  root.style.setProperty('--accent', a); root.style.setProperty('--accent-2', b);
+  root.style.setProperty('--accent-ink', lum(a) > .45 ? '#0b1c27' : '#ffffff');
+  root.dataset.mode = isDark() ? 'dark' : 'light';
+  root.dataset.motion = T.motion === '1' ? 'reduce' : 'normal';
+  $$('#swatches .sw').forEach(b2 => b2.classList.toggle('on', b2.dataset.id === T.pal));
+  $$('#modeSeg button').forEach(b2 => b2.classList.toggle('on', b2.dataset.m === T.mode));
+  $$('#motionSeg button').forEach(b2 => b2.classList.toggle('on', b2.dataset.v === T.motion));
+  $('#customColor').value = /^#[0-9a-f]{6}$/i.test(T.custom) ? T.custom : '#1f6f99';
+  $$('.seg').forEach(placeInd);
+  if (save) safeLS.set('uilab_theme', JSON.stringify(T));
+}
+function placeInd(seg) {
+  const on = $('button.on', seg), ind = $('.ind', seg); if (!on || !ind) return;
+  seg.style.setProperty('--x', on.offsetLeft + 'px'); seg.style.setProperty('--w', on.offsetWidth + 'px');
+}
+function initTheme() {
+  $('#swatches').innerHTML = PAL.map(p => `<button class="sw" data-id="${p.id}"><b style="background:linear-gradient(135deg,${p.a} 50%,${p.b} 50%)"></b>${p.n}</button>`).join('');
+  $('#swatches').addEventListener('click', e => { const b = e.target.closest('.sw'); if (!b) return; T.pal = b.dataset.id; applyTheme(true); });
+  $('#customColor').addEventListener('input', e => { T.pal = 'custom'; T.custom = e.target.value; applyTheme(true); });
+  $('#modeSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; T.mode = b.dataset.m; applyTheme(true); });
+  $('#motionSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; T.motion = b.dataset.v; applyTheme(true); });
+  const pop = $('#themePop'), btn = $('#themeBtn');
+  const setOpen = o => { pop.classList.toggle('open', o); btn.setAttribute('aria-expanded', o); if (o) $$('.seg', pop).forEach(placeInd); };
+  btn.addEventListener('click', e => { e.stopPropagation(); setOpen(!pop.classList.contains('open')); });
+  document.addEventListener('click', e => { if (!pop.contains(e.target) && e.target !== btn) setOpen(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
+  applyTheme(false);
+  matchMedia('(prefers-color-scheme: dark)').addEventListener && setInterval(() => { if (T.mode === 'auto') applyTheme(false); }, 60000);
+}
+
+/* =============== DATA HELPERS =============== */
+const S = {}; D.stations.forEach(s => S[s.station_code] = s);
+const R2 = S.RES002;
+let ST = R2; // สถานีที่แสดงอยู่ (เปลี่ยนได้ด้วยตัวกรองในหน้า monitoring)
+const CREST = D.crest, CAP = D.capacity_m3;
+const short = s => s.name_th.replace('อ่างเก็บน้ำ', '');
+const lastN = (arr, n) => arr.slice(Math.max(0, arr.length - n));
+const delta6 = s => { const h = s.history; if (!h.length) return 0; const last = h[h.length - 1], t = new Date(last.t).getTime() - 6 * 3600e3; let ref = h[0]; for (let i = h.length - 1; i >= 0; i--) { if (new Date(h[i].t).getTime() <= t) { ref = h[i]; break; } } return last.level - ref.level; };
+const rain24 = s => lastN(s.rain, 24).reduce((a, r) => a + (r.rain_mm || 0), 0);
+const status = (lvl, crest) => { const d = lvl - crest; return d > 0.003 ? 'crit' : d > -0.10 ? 'warn' : 'ok'; };
+const STATUS_TXT = { crit: 'เหนือสันสปิลเวย์', warn: 'ใกล้สัน', ok: 'ปกติ' };
+
+/* =============== HERO SCENE =============== */
+const Y0 = 380, Y1 = 80;
+const G = { crest: CREST, E0: CREST - 2.045, E1: CREST + 1.455, max: D.max_level_seen, maxLabel: 'สูงสุดที่เคยบันทึก', crestWord: 'สันสปิลเวย์', damLabel: 'สันอ่าง (ภาพประกอบ)' };
+const yOf = e => Y0 - (e - G.E0) / (G.E1 - G.E0) * (Y0 - Y1);
+let Y_BASE = yOf(G.crest - 0.045);
+const prng = (() => { let s = 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
+function wavePath(y, amp, len, w, phase) {
+  let d = `M${-200 + (phase || 0)},${y}`;
+  for (let x = -200 + (phase || 0); x < w + 420; x += len) d += ` q${len / 4},${-amp} ${len / 2},0 t${len / 2},0`;
+  return d + ` L${w + 440},${y + 700} L-220,${y + 700} Z`;
+}
+const PHASE_TXT = { day: 'กลางวัน', dusk: 'ช่วงเช้ามืด/พลบค่ำ', night: 'กลางคืน' };
+function phaseOf(d) {
+  const h = d.getHours() + d.getMinutes() / 60, day = h >= 6.5 && h < 17.5, dusk = (h >= 5.5 && h < 6.5) || (h >= 17.5 && h < 18.5), sun = h >= 5.5 && h < 18.5;
+  const frac = sun ? (h - 5.5) / 13 : ((h < 5.5 ? h + 24 : h) - 18.5) / 11;
+  return { cls: day ? 'day' : dusk ? 'dusk' : 'night', txt: day ? PHASE_TXT.day : dusk ? (h < 12 ? 'ช่วงเช้ามืด' : 'ช่วงพลบค่ำ') : PHASE_TXT.night, x: 110 + clamp(frac, 0, 1) * 680, y: 345 - Math.sin(Math.PI * clamp(frac, 0, 1)) * 295 };
+}
+let scene = {};
+function buildScene() {
+  Y_BASE = yOf(G.crest - 0.045);
+  const yc = yOf(G.crest), yw = yOf(G.crest - 0.10), ym = yOf(G.max);
+  const stars = Array.from({ length: 18 }, () => `<circle class="star" cx="${(prng() * 880 + 10).toFixed(0)}" cy="${(prng() * 150 + 8).toFixed(0)}" r="${(prng() * 1.4 + .6).toFixed(1)}" style="animation-delay:${(-prng() * 3).toFixed(1)}s"/>`).join('');
+  const drops = Array.from({ length: 34 }, () => { const x = (prng() * 900).toFixed(0); return `<line class="drop" x1="${x}" y1="0" x2="${x - 5}" y2="15" style="animation-duration:${(.7 + prng() * .5).toFixed(2)}s;animation-delay:${(-prng() * 1.2).toFixed(2)}s"/>`; }).join('');
+  const cloud = `<ellipse cx="0" cy="0" rx="46" ry="15"/><ellipse cx="-30" cy="6" rx="28" ry="11"/><ellipse cx="32" cy="7" rx="30" ry="11"/><ellipse cx="6" cy="-12" rx="26" ry="14"/>`;
+  let ticks = ''; for (let e = Math.ceil(G.E0 * 2) / 2; e <= G.E1 + 0.001; e += 0.5) { const y = yOf(e); ticks += `<line x1="352" x2="${e % 1 === 0 ? 368 : 362}" y1="${y}" y2="${y}" style="stroke:var(--faint)" stroke-width="1.5"/><text class="tick-lbl" x="346" y="${y + 4}" text-anchor="end">${e.toFixed(1)}</text>`; }
+  $('#scene').innerHTML = `
+<svg viewBox="0 0 900 420" preserveAspectRatio="xMidYMid slice" id="sceneSvg">
+<defs>
+  <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sky-1)"/><stop offset="1" style="stop-color:var(--sky-2)"/></linearGradient>
+  <linearGradient id="gWater" gradientUnits="userSpaceOnUse" x1="0" y1="${Y_BASE}" x2="0" y2="${Y_BASE + 230}"><stop offset="0" style="stop-color:var(--water-1)"/><stop offset="1" style="stop-color:var(--water-2)"/></linearGradient>
+  <radialGradient id="gOrb"><stop offset="0" style="stop-color:var(--orb-glow)"/><stop offset="1" style="stop-color:var(--orb-glow);stop-opacity:0"/></radialGradient>
+  <clipPath id="basinClip"><rect x="0" y="0" width="700" height="420"/></clipPath>
+</defs>
+<rect width="900" height="420" fill="url(#gSky)"/>
+${stars}
+<g class="orb-g" id="orbG" style="transform:translate(170px,110px)"><circle class="sun-glow" cx="0" cy="0" r="74" fill="url(#gOrb)"/><circle cx="0" cy="0" r="22" style="fill:var(--orb)"/></g>
+<path d="M0,230 C80,170 160,190 240,215 C320,240 400,160 520,180 C640,200 740,150 900,210 L900,420 L0,420Z" style="fill:var(--hill-far)"/>
+<path d="M0,272 C100,232 200,262 300,287 C420,312 520,250 640,262 C740,272 820,242 900,264 L900,420 L0,420Z" style="fill:var(--hill-near)"/>
+<g transform="translate(0,66)"><g class="cloud" style="fill:var(--core);opacity:.6">${cloud}</g></g>
+<g transform="translate(0,128)"><g class="cloud c2" style="fill:var(--core);opacity:.45">${cloud}</g></g>
+<g clip-path="url(#basinClip)"><g class="water-g" id="waterG">
+  <path class="wave-b" d="${wavePath(Y_BASE - 3, 9, 200, 700, 40)}" style="fill:var(--water-1);opacity:.7"/>
+  <g transform="translate(212,${Y_BASE})"><g class="boat"><path d="M-27,-3 L27,-3 L18,10 L-18,10Z" style="fill:var(--accent-2)"/><line x1="0" y1="-3" x2="0" y2="-44" style="stroke:var(--strong)" stroke-width="2"/><path d="M3,-42 L3,-9 L26,-9Z" style="fill:var(--core);stroke:var(--strong)" stroke-width="1.2"/><path d="M-3,-34 L-3,-9 L-17,-9Z" style="fill:var(--accent);opacity:.85"/></g></g>
+  <path class="wave-a" d="${wavePath(Y_BASE, 6, 100, 700, 0)}" fill="url(#gWater)"/>
+</g></g>
+<path d="M0,420 L0,182 C60,178 112,238 190,300 C250,346 340,382 440,394 L440,420Z" style="fill:var(--land)"/>
+<path d="M0,420 L0,246 C70,252 130,306 200,340 C270,372 350,396 440,404 L440,420Z" style="fill:var(--land-2);opacity:.7"/>
+<path d="M430,398 L520,120 L580,120 L580,${yc} L700,${yc} L790,330 L900,330 L900,420 L430,420Z" style="fill:var(--land-2)"/>
+<path d="M430,398 L520,120 L580,120 L580,${yc}" fill="none" style="stroke:var(--strong);opacity:.18" stroke-width="2"/>
+<rect x="520" y="116" width="60" height="7" rx="3" style="fill:var(--core);stroke:var(--line-2)"/>
+<rect x="580" y="${yc - 1}" width="120" height="7" rx="3" style="fill:var(--core);stroke:var(--line-2)"/>
+<path d="M700,${yc + 3} L790,333 L800,333 L710,${yc + 3}Z" style="fill:var(--core);opacity:.85"/>
+<g id="spillG"><path id="spillSheet" d="" style="fill:var(--water-1);opacity:.9"/>
+  <path class="foam" d="M706,${yc - 3} L792,326"/><path class="foam" style="animation-delay:-.4s" d="M712,${yc - 9} L796,321"/></g>
+<rect x="790" y="330" width="110" height="15" rx="6" style="fill:var(--water-1);opacity:.75"/>
+<text class="lbl s" x="522" y="108" text-anchor="middle">${G.damLabel}</text>
+<g>
+  <line x1="0" x2="700" y1="${yc}" y2="${yc}" style="stroke:var(--crit)" stroke-width="1.8" stroke-dasharray="9 6"/>
+  <text class="lbl s" x="14" y="${yc - 6}">${G.crestWord} ${G.crest.toFixed(3)} ม.</text>
+  <line x1="0" x2="700" y1="${yw}" y2="${yw}" style="stroke:var(--warn)" stroke-width="1.5" stroke-dasharray="2 6" stroke-linecap="round"/>
+  <text class="lbl s" x="14" y="${yw + 15}">เฝ้าระวัง ${(G.crest - .1).toFixed(3)} ม.</text>
+  <line x1="0" x2="330" y1="${ym}" y2="${ym}" style="stroke:var(--faint)" stroke-width="1.2" stroke-dasharray="1 5" stroke-linecap="round"/>
+  <text class="lbl s" x="14" y="${ym - 6}" style="fill:var(--muted)">${G.maxLabel} ${G.max.toFixed(3)} ม.</text>
+</g>
+<g id="gauge"><line x1="360" x2="360" y1="${Y1 - 6}" y2="${Y0 + 6}" style="stroke:var(--faint)" stroke-width="3" stroke-linecap="round"/>${ticks}
+  <g class="lvl-tag" id="lvlTag" style="transform:translateY(${yOf(G.crest)}px)"><path d="M360,0 l12,-10 h62 a6,6 0 0 1 6,6 v8 a6,6 0 0 1 -6,6 h-62z" style="fill:var(--accent)"/><text id="lvlTagTxt" x="382" y="4.5" style="fill:var(--accent-ink,#fff);font:700 12.5px var(--font)">—</text></g>
+</g>
+<g id="rainG" style="pointer-events:none">${drops}</g>
+</svg>`;
+  scene.orb = $('#orbG'); scene.waterG = $('#waterG'); scene.tag = $('#lvlTag'); scene.tagTxt = $('#lvlTagTxt'); scene.sheet = $('#spillSheet'); scene.root = $('#scene'); scene.yc = yc;
+}
+let curLevel = null, prevCap = 0;
+function setLevel(level, o) {
+  o = o || {};
+  const y = yOf(level), over = level - G.crest;
+  scene.waterG.style.transform = `translateY(${y - Y_BASE}px)`;
+  scene.tag.style.transform = `translateY(${y}px)`;
+  scene.tagTxt.textContent = level.toFixed(3);
+  const sp = over > 0.003; scene.root.classList.toggle('spilling', sp);
+  const t = clamp(over * 90, 3, 24), yc = scene.yc;
+  scene.sheet.setAttribute('d', sp ? `M700,${yc - t} L790,${330 - t} L790,330 L700,${yc}Z` : '');
+  scene.root.classList.toggle('raining', !!o.rain);
+  const ph = phaseOf(o.time || new Date()); ['day', 'dusk', 'night'].forEach(c => scene.root.classList.toggle(c, c === ph.cls)); scene.orb.style.transform = `translate(${ph.x.toFixed(0)}px,${ph.y.toFixed(0)}px)`;
+  // readout
+  const lv = $('#roLevel'); const from = curLevel == null ? level - 0.8 : curLevel;
+  tween(from, level, o.instant ? 0 : 900, v => lv.textContent = v.toFixed(3)); curLevel = level;
+  const st = status(level, G.crest), dl = $('#roDelta');
+  dl.className = 'delta ' + st;
+  dl.textContent = over > 0.003 ? `สูงกว่า${G.crestWord} ${over.toFixed(3)} ม.` : over > -0.10 ? `ต่ำกว่า${G.crestWord} ${(-over).toFixed(3)} ม. · ใกล้ล้น` : `ต่ำกว่า${G.crestWord} ${(-over).toFixed(3)} ม.`;
+  $('#roName').textContent = o.name || 'อ่างเก็บน้ำแม่นาเรือ · RES002';
+  $('#roTrend').textContent = o.trend || '';
+  $('#roNote').innerHTML = o.note || '';
+}
+let RAT = null;
+function ratingVol(h) { // ปริมาตร (ลบ.ม.) ณ ระดับน้ำ h: แม่นาเรือ = เส้นโค้งจากบัญชีน้ำจริง · อ่างอื่น = ประมาณเชิงเส้นรอบระดับปัจจุบัน
+  if (ST === R2 && (D.allrows || []).length) {
+    if (!RAT) { const m = new Map(); D.allrows.forEach(r => { if (r.level != null && r.volume != null) m.set(Math.round(r.level * 1000), r.volume); }); RAT = [...m.entries()].sort((a, b) => a[0] - b[0]).map(([k, v]) => [k / 1000, v]); }
+    const R = RAT, n = R.length; if (n >= 2) { let i = 1; while (i < n - 1 && R[i][0] < h) i++; const [h0, v0] = R[i - 1], [h1, v1] = R[i]; return Math.max(0, v0 + (h - h0) * (v1 - v0) / ((h1 - h0) || 1e-9)); }
+  }
+  const vmax = ST.storage_max_m3 || 0, vnow = ST.storage_m3 || 0, hnow = ST.water_level, crest = G.crest, dh = crest - hnow;
+  const slope = Math.abs(dh) > 0.02 ? (vmax - vnow) / dh : vmax / 3;
+  return Math.max(0, vnow + (h - hnow) * slope);
+}
+function setCap(pct, instant) {
+  if (!has('#roCapN')) return;
+  const mx = Math.max(110, Math.ceil(pct / 10) * 10 + 5), n = $('#roCapN');
+  tween(prevCap, pct, instant ? 0 : 700, v => n.textContent = v.toFixed(1)); prevCap = pct;
+  $('#roCapNW').className = 'capn ' + (pct > 100 ? 'crit' : pct > 90 ? 'warn' : '');
+  $('#roCapF').style.width = (Math.min(pct, 100) / mx * 100).toFixed(1) + '%';
+  $('#roCapO').style.left = (100 / mx * 100).toFixed(1) + '%'; $('#roCapO').style.width = (Math.max(0, pct - 100) / mx * 100).toFixed(1) + '%';
+  $('#roCapM').style.left = (100 / mx * 100).toFixed(1) + '%';
+}
+const capMax = () => ST === R2 ? CAP : (ST.storage_max_m3 || 1);
+function liveReadout(instant) {
+  if (ST.isKwan) {
+    const k = D.kwan, c3 = k.change_3d, fl = { critical: 'วิกฤต', warning: 'เฝ้าระวัง', normal: 'ปกติ' }[k.flag] || k.flag;
+    setLevel(ST.water_level, { instant, rain: false, name: `${ST.name_th} · ตลิ่ง ${k.bank.toFixed(3)} ม.`,
+      trend: `3 วันที่ผ่านมา ${c3 > 0.004 ? 'ระดับขึ้น' : c3 < -0.004 ? 'ระดับลด' : 'ทรงตัว'} ${sgn(c3)} ม.`,
+      note: `สถานะรวม <b>${fl}</b> · ตลิ่งฝั่งร้องไห้ ${k.bank_ronghai.toFixed(3)} ม. · ข้อมูล ${k.generated_at}` });
+    return;
+  }
+  const d6 = delta6(ST), isMain = ST === R2, vol = isMain ? D.ledger[D.ledger.length - 1].volume : ST.storage_m3, capv = isMain ? CAP : ST.storage_max_m3;
+  const raining = lastN(ST.rain, 2).some(r => r.rain_mm > 0);
+  setLevel(ST.water_level, {
+    instant, rain: raining, time: new Date(), name: `${ST.name_th} · ${ST.station_code}`,
+    trend: `6 ชั่วโมงที่ผ่านมา ${d6 > 0.004 ? 'ระดับขึ้น' : d6 < -0.004 ? 'ระดับลด' : 'ทรงตัว'} ${sgn(d6)} ม.`,
+    note: `ปริมาตร <b>${fmt(vol)}</b> / ${fmt(capv)} ลบ.ม. · ฝน 24 ชม. <b>${rain24(ST).toFixed(1)}</b> มม.`
+  });
+  setCap(ST.capacity_pct || 0, instant);
+}
+
+/* =============== KPI =============== */
+const NUMS = {};
+function initKPI() {
+  const dirs = { up: [], down: [], flat: [] };
+  D.stations.forEach(s => { const d = delta6(s); (d > 0.01 ? dirs.up : d < -0.01 ? dirs.down : dirs.flat).push(short(s)); });
+  NUMS.up = dirs.up.length; NUMS.down = dirs.down.length; NUMS.flat = dirs.flat.length;
+  $('#dirAvg').textContent = ['ขึ้น', 'ลด', 'ทรงตัว'].map((n, i) => { const l = [dirs.up, dirs.down, dirs.flat][i]; return l.length ? `${n}: ${l.join(', ')}` : ''; }).filter(Boolean).join(' · ');
+  const L = D.ledger[D.ledger.length - 1];
+  NUMS.cap = R2.capacity_pct; NUMS.spill = L.spill; NUMS.rain = rain24(R2); NUMS.in = L.inflow; NUMS.out = L.release;
+  $('#capNote').textContent = `ปริมาตร ${fmt(L.volume)} / ${fmt(CAP)} ลบ.ม.${R2.capacity_pct > 100 ? ' · เกินความจุปกติ' : ''}`;
+  $('#spillNote').textContent = L.spill > 0 ? `น้ำล้นผ่านสปิลเวย์ · บัญชีน้ำวันที่ ${fmtD(L.date)}` : `ไม่มีน้ำล้น · บัญชีน้ำวันที่ ${fmtD(L.date)}`;
+  $('#bSpill').classList.toggle('alive', L.spill > 0);
+  $('#rainNote').textContent = `ฝน 1 ชม. ล่าสุด ${(lastN(R2.rain, 1)[0] || {}).rain_mm || 0} มม. · บัญชีน้ำวันที่ ${fmtD(L.date)} ฝน ${L.rain} มม.`;
+  const net = L.inflow - L.release;
+  $('#balNote').textContent = `บัญชีน้ำวันที่ ${fmtD(L.date)} · สุทธิ ${net >= 0 ? '+' : '−'}${fmt(Math.abs(net))} ลบ.ม. (${net >= 0 ? 'ปริมาตรเพิ่ม' : 'ปริมาตรลด'}) · "ระบายรวม" นับน้ำล้นสปิลเวย์ด้วย`;
+  // ring
+  const C = 2 * Math.PI * 48, fg = $('#ringFg');
+  if (R2.capacity_pct > 100) { const ov = fg.cloneNode(); ov.removeAttribute('id'); ov.setAttribute('class', 'fg ov'); ov.style.setProperty('--c', '0'); fg.after(ov); NUMS._ov = ov; }
+}
+function kpiIn(card) {
+  $$('[data-num]', card).forEach(n => {
+    const k = n.dataset.num, to = NUMS[k] || 0, dec = +(n.dataset.dec || 0);
+    tween(0, to, 1500, v => n.textContent = fmt(v, dec));
+  });
+  if (card.id === 'bDir') {
+    const m = { 'r-up': NUMS.up, 'r-down': NUMS.down, 'r-flat': NUMS.flat };
+    for (const c in m) { const i = $('.' + c, card); i.style.setProperty('--g', m[c] || 0); if (!m[c]) i.style.display = 'none'; }
+  }
+  if (card.id === 'bCap') {
+    const C = 2 * Math.PI * 48; $('#ringFg').style.setProperty('--c', (Math.min(R2.capacity_pct, 100) / 100 * C).toFixed(1));
+    if (NUMS._ov) NUMS._ov.style.setProperty('--c', (clamp(R2.capacity_pct - 100, 0, 100) / 100 * C).toFixed(1));
+  }
+  if (card.id === 'bBal') {
+    const L = D.ledger[D.ledger.length - 1], tot = L.inflow + L.release || 1;
+    $('.balance .in', card).style.width = (L.inflow / tot * 100).toFixed(1) + '%'; $('.balance .out', card).style.width = (L.release / tot * 100).toFixed(1) + '%';
+  }
+}
+
+/* =============== LEVEL HISTORY (ใช้เอฟเฟกต์แบบ river-profile: เส้นสันวาดเข้า + เส้นน้ำจุดไข่ปลา + แรเงาส่วนต่าง) =============== */
+function smooth(pts, cmd) {
+  if (pts.length < 2) return '';
+  let d = `${cmd || 'M'}${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    d += ` C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+  }
+  return d;
+}
+let lvClip = null, lvW = 900, LV = null;
+function lvCursor(t) {
+  if (!has('#lvNow') || !LV) return; const g = $('#lvNow');
+  const P = LV.pts, tt = t ? t.getTime() : NaN; if (!t || !P.length || tt < P[0].t || tt > P[P.length - 1].t) { g.style.opacity = 0; return; }
+  let i = 1; while (i < P.length - 1 && P[i].t < tt) i++; const a = P[i - 1], b = P[i], f = b.t === a.t ? 0 : clamp((tt - a.t) / (b.t - a.t), 0, 1), lv = a.v + (b.v - a.v) * f, x = LV.xt(tt), y = LV.yv(lv);
+  const lab = fmtDT(t), w = lab.length * 7.4 + 22, bx = clamp(x - w / 2, LV.xL - 6, LV.xR - w + 6);
+  $('#lvNowL').setAttribute('x1', x); $('#lvNowL').setAttribute('x2', x); $('#lvNowD').setAttribute('cx', x); $('#lvNowD').setAttribute('cy', y);
+  $('#lvNowB').setAttribute('x', bx); $('#lvNowB').setAttribute('width', w); $('#lvNowT').setAttribute('x', bx + w / 2); $('#lvNowT').textContent = lab; g.style.opacity = 1;
+}
+function buildLevels() {
+  const H = ST.history, W = 900, HT = 360, xL = 62, xR = 868, yT = 40, yB = 290;
+  const vals = H.map(h => h.level), lo0 = Math.min(...vals, G.crest), hi0 = Math.max(...vals, G.crest), pad = (hi0 - lo0) * .18 || .05;
+  const lo = lo0 - pad, hi = hi0 + pad, yv = v => yB - (v - lo) / (hi - lo) * (yB - yT);
+  const t0 = new Date(H[0].t).getTime(), t1 = new Date(H[H.length - 1].t).getTime(), xt = t => xL + (t - t0) / (t1 - t0) * (xR - xL);
+  const pts = H.map(h => [xt(new Date(h.t).getTime()), yv(h.level)]), yc = yv(G.crest);
+  const line = smooth(pts), area = line + ` L${pts[pts.length - 1][0].toFixed(1)},${yc.toFixed(1)} L${pts[0][0].toFixed(1)},${yc.toFixed(1)}Z`;
+  let grid = '<g class="grid">', ax = '<g class="ax">';
+  for (let i = 0; i <= 4; i++) { const v = lo + (hi - lo) * i / 4, y = yv(v); grid += `<line x1="${xL}" x2="${xR}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}"/>`; ax += `<text x="${xL - 10}" y="${(y + 4).toFixed(1)}" text-anchor="end">${v.toFixed(2)}</text>`; }
+  for (let t = new Date(t0), n = 0; t.getTime() <= t1; t = new Date(t.getTime() + 3600e3)) {
+    if (t.getHours() === 0) { const x = xt(t.getTime()); grid += `<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${yT}" y2="${yB}" style="stroke-dasharray:2 5"/>`; ax += `<text x="${x.toFixed(1)}" y="${yB + 22}" text-anchor="middle">${t.getDate()} ${MON[t.getMonth()]}</text>`; }
+  }
+  grid += '</g>'; ax += '</g>';
+  const last = pts[pts.length - 1], over = ST.water_level - G.crest, col = 'var(--' + (status(ST.water_level, G.crest) === 'crit' ? 'crit' : status(ST.water_level, G.crest) === 'warn' ? 'warn' : 'ok') + ')';
+  let imax = 0; vals.forEach((v, i) => { if (v > vals[imax]) imax = i; });
+  const nearMax = Math.abs(pts[imax][0] - last[0]) < 190;
+  $('#lvBox').innerHTML = `<svg viewBox="0 0 ${W} ${HT}" id="lvSvg" role="img" aria-label="ระดับน้ำ ${ST.station_code} ย้อนหลังเทียบสันสปิลเวย์">
+  <defs><clipPath id="lvClip"><rect id="lvClipRect" x="0" y="0" width="0" height="${HT}"/></clipPath>
+  <clipPath id="lvAbove"><rect x="0" y="0" width="${W}" height="${yc.toFixed(1)}"/></clipPath><clipPath id="lvBelow"><rect x="0" y="${yc.toFixed(1)}" width="${W}" height="${HT}"/></clipPath></defs>
+  ${grid}${ax}
+  <g clip-path="url(#lvClip)"><g clip-path="url(#lvAbove)"><path d="${area}" style="fill:var(--crit);opacity:.28"/></g><g clip-path="url(#lvBelow)"><path d="${area}" style="fill:var(--accent);opacity:.18"/></g>
+    <path d="${line}" fill="none" style="stroke:var(--accent)" stroke-width="3.5" stroke-dasharray="1 8" stroke-linecap="round"/></g>
+  <path class="draw" d="M${xL},${yc.toFixed(1)} L${xR},${yc.toFixed(1)}" fill="none" style="stroke:var(--bank)" stroke-width="3.5" stroke-linecap="round"/>
+  <text class="ax fadein" x="${xR}" y="${(yc - 8).toFixed(1)}" text-anchor="end" style="fill:var(--bank);font:700 12.5px var(--font)">สันสปิลเวย์ ${G.crest.toFixed(3)} ม.</text>
+  <g class="pdot" style="--d:1.9s"><circle class="sonar" cx="${last[0]}" cy="${last[1].toFixed(1)}" r="9" fill="none" style="stroke:${col}" stroke-width="2"/>
+    <circle class="core" cx="${last[0]}" cy="${last[1].toFixed(1)}" r="9" style="fill:${col};stroke:var(--core)" stroke-width="3"/></g>
+  <text class="fadein" x="${(last[0] - 16).toFixed(1)}" y="${(nearMax ? Math.min(yB - 6, last[1] + 30) : last[1] - 16).toFixed(1)}" text-anchor="end" style="fill:${col};font:700 14px var(--font);paint-order:stroke;stroke:var(--core);stroke-width:4px;stroke-linejoin:round">${ST.water_level.toFixed(3)} (${sgn(over, 2)})</text>
+  <g class="pdot" style="--d:1.5s"><circle class="core" cx="${pts[imax][0].toFixed(1)}" cy="${pts[imax][1].toFixed(1)}" r="5.5" style="fill:var(--core);stroke:var(--accent)" stroke-width="3"/></g>
+  <text class="ax fadein" x="${clamp(pts[imax][0], xL + 40, xR - 90).toFixed(1)}" y="${(pts[imax][1] - 14).toFixed(1)}" text-anchor="middle" style="fill:var(--strong);font:600 12.5px var(--font);paint-order:stroke;stroke:var(--core);stroke-width:4px;stroke-linejoin:round">สูงสุด ${vals[imax].toFixed(3)}</text>
+  <g id="lvNow" style="opacity:0;transition:opacity .25s"><line id="lvNowL" y1="${yT - 4}" y2="${yB}" style="stroke:var(--accent-2)" stroke-width="2.6"/><circle id="lvNowD" r="7.5" style="fill:var(--accent-2);stroke:var(--core)" stroke-width="3"/><rect id="lvNowB" y="6" height="22" rx="9" style="fill:var(--strong)"/><text id="lvNowT" y="21.5" text-anchor="middle" style="fill:var(--core);font:700 12px var(--font)"></text></g>
+  <g id="lvCross" style="opacity:0"><line id="lvCl" y1="${yT}" y2="${yB}" style="stroke:var(--line-2)" stroke-dasharray="3 4"/><circle id="lvCd" r="6" style="fill:var(--accent);stroke:var(--core)" stroke-width="2.5"/></g>
+  <rect id="lvHit" x="${xL}" y="${yT}" width="${xR - xL}" height="${yB - yT}" fill="transparent"/></svg><div class="tt" id="lvTT"></div>`;
+  lvClip = $('#lvClipRect'); LV = { xt, yv, xL, xR, W, pts: H.map(h => ({ t: new Date(h.t).getTime(), v: h.level })) };
+  const svg = $('#lvSvg'), tt = $('#lvTT'), cr = $('#lvCross');
+  $('#lvHit').addEventListener('mousemove', e => {
+    const r = svg.getBoundingClientRect(), vx = (e.clientX - r.left) / r.width * W;
+    let bi = 0, bd = 1e9; pts.forEach((p, i) => { const d = Math.abs(p[0] - vx); if (d < bd) { bd = d; bi = i; } });
+    const p = pts[bi], h = H[bi], d = h.level - G.crest;
+    cr.style.opacity = 1; $('#lvCl').setAttribute('x1', p[0]); $('#lvCl').setAttribute('x2', p[0]); $('#lvCd').setAttribute('cx', p[0]); $('#lvCd').setAttribute('cy', p[1]);
+    tt.innerHTML = `<b>${fmtDT(new Date(h.t))}</b><br>ระดับ <b>${h.level.toFixed(3)}</b> ม.<br>${d > 0 ? 'สูงกว่าสัน' : 'ต่ำกว่าสัน'} ${Math.abs(d).toFixed(3)} ม.`;
+    const bx = $('#lvBox').getBoundingClientRect(); let x = e.clientX - bx.left + 14; x = Math.min(x, bx.width - tt.offsetWidth - 4);
+    tt.classList.add('on'); tt.style.left = Math.max(2, x) + 'px'; tt.style.top = Math.max(2, e.clientY - bx.top - 16 - tt.offsetHeight) + 'px';
+  });
+  $('#lvHit').addEventListener('mouseleave', () => { cr.style.opacity = 0; tt.classList.remove('on'); });
+  lvW = W;
+}
+function levelsIn(box) { box.classList.add('drawn'); tween(0, lvW, 2200, v => lvClip.setAttribute('width', v.toFixed(0))); }
+
+/* =============== DAILY BARS (+delta +mascot) =============== */
+const DM = {
+  inflow: { label: 'น้ำไหลเข้า', unit: 'ลบ.ม./วัน', dec: 0 },
+  release: { label: 'น้ำระบายรวม (ท่อ+ล้น)', unit: 'ลบ.ม./วัน', dec: 0 },
+  rain: { label: 'ฝน', unit: 'มม.', dec: 1 },
+  volume: { label: 'ปริมาตรกักเก็บ', unit: 'ลบ.ม.', dec: 0 }
+};
+let dailyKey = 'inflow', dailyStarted = false;
+const mascot = (x, y) => `<g transform="translate(${x},${y})"><g class="mascot"><path d="M0,-30 C10,-15 15,-8 15,0 A15,15 0 0 1 -15,0 C-15,-8 -10,-15 0,-30Z" style="fill:var(--accent);stroke:var(--core)" stroke-width="2"/>
+  <ellipse cx="-5" cy="-9" rx="3" ry="6" fill="#fff" opacity=".55"/><circle cx="-5" cy="-1" r="2.2" fill="#fff"/><circle cx="5" cy="-1" r="2.2" fill="#fff"/><circle cx="-4.6" cy="-1" r=".9" fill="#0b1c27"/><circle cx="5.4" cy="-1" r=".9" fill="#0b1c27"/>
+  <path d="M-4,5 Q0,9 4,5" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></g></g>`;
+function renderDaily(k) {
+  dailyKey = k; const m = DM[k], rows = D.ledger.slice(-14), vals = rows.map(r => r[k]);
+  const W = 900, H = 340, base = 290, left = 14, slot = (W - left * 2) / rows.length, bw = slot * .58, maxH = 168;
+  const mx = Math.max(...vals, 1e-9);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="กราฟแท่งรายวัน ${m.label}"><g class="grid">`;
+  for (let i = 0; i <= 3; i++) { const y = base - maxH * i / 3 * 1; svg += `<line x1="${left}" x2="${W - left}" y1="${y}" y2="${y}"/>`; }
+  svg += '</g>';
+  let tips = '';
+  rows.forEach((r, i) => {
+    const v = vals[i], h = Math.max(2, v / mx * maxH), x = left + i * slot + (slot - bw) / 2, cx = x + bw / 2, top = base - h, last = i === rows.length - 1;
+    const prev = i ? vals[i - 1] : null, d = prev == null ? null : v - prev;
+    const dir = d == null ? null : Math.abs(d) < (k === 'rain' ? 0.05 : Math.max(1, Math.abs(prev) * 0.003)) ? 'flat' : d > 0 ? 'up' : 'down';
+    const lift = last ? 36 : 0;
+    const dtxt = dir == null ? '' : dir === 'flat' ? '● เท่าเดิม' : `${dir === 'up' ? '▲' : '▼'} ${d > 0 ? '+' : '−'}${k === 'rain' ? Math.abs(d).toFixed(1) : fmtK(Math.abs(d))}`;
+    const tip = `<b>${fmtD(r.date)}</b><br>${m.label} <b>${fmt(v, m.dec)}</b> ${m.unit}${d == null ? '' : `<br>เทียบวันก่อน ${d > 0 ? '+' : '−'}${fmt(Math.abs(d), m.dec)}`}<br>ฝน ${r.rain} มม. · ระดับ ${r.level.toFixed(3)} ม.`;
+    svg += `<g data-tip="${tip}"><rect class="bar" x="${x.toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="9" style="fill:var(--accent);opacity:${last ? 1 : .5};--d:${(i * .04).toFixed(2)}s;transform:scaleY(0)"/>
+      <rect x="${(x - 4).toFixed(1)}" y="${(top - 60).toFixed(1)}" width="${(bw + 8).toFixed(1)}" height="${(h + 60).toFixed(1)}" fill="transparent"/></g>`;
+    svg += `<text class="bar-lbl fadein" x="${cx.toFixed(1)}" y="${(top - 9 - lift).toFixed(1)}">${k === 'rain' ? v.toFixed(1) : fmtK(v)}</text>`;
+    if (dtxt) svg += `<text class="bar-delta fadein" x="${cx.toFixed(1)}" y="${(top - 25 - lift).toFixed(1)}" style="fill:var(--${dir})">${dtxt}</text>`;
+    if (last) svg += `<g class="fadein">${mascot(cx.toFixed(1), (top - 3).toFixed(1))}</g>`;
+    svg += `<text class="ax" x="${cx.toFixed(1)}" y="${base + 20}" text-anchor="middle" style="fill:${last ? 'var(--strong)' : 'var(--faint)'};font:${last ? '700' : '400'} 12px var(--font)">${new Date(r.date + 'T00:00:00').getDate()}</text>`;
+    if (i === 0 || new Date(r.date + 'T00:00:00').getDate() === 1) svg += `<text class="ax" x="${cx.toFixed(1)}" y="${base + 36}" text-anchor="middle">${MON[new Date(r.date + 'T00:00:00').getMonth()]}</text>`;
+  });
+  svg += `</svg><div class="tt" id="dailyTT"></div>`;
+  const box = $('#dailyBox'); box.innerHTML = svg; box.classList.remove('drawn');
+  const L = rows[rows.length - 1], prev = rows[rows.length - 2];
+  $('#dailyTitle').textContent = `${m.label} · วันที่ ${fmtD(L.date)}`;
+  $('#dailyBig').innerHTML = `${fmt(L[k], m.dec)} <small style="font-size:14px;color:var(--muted);font-weight:500">${m.unit}</small>`;
+  if (dailyStarted) requestAnimationFrame(() => requestAnimationFrame(() => { $$('.bar', box).forEach(b => b.style.transform = 'scaleY(1)'); box.classList.add('drawn'); }));
+}
+function dailyIn() { dailyStarted = true; renderDaily(dailyKey); }
+
+/* =============== FORECAST (cosine-interpolated curve) =============== */
+function buildForecast() {
+  const F = D.forecast, W = 900, H = 340, x0 = 70, x1 = 830, yb = 270, yt = 56;
+  const mx = Math.max(...F.map(f => f.v)) * 1.12, y = v => yb - v / mx * (yb - yt), x = i => x0 + i * (x1 - x0) / (F.length - 1);
+  const pts = []; for (let i = 0; i < F.length - 1; i++) for (let s = 0; s < 20; s++) { const t = s / 20, w = (1 - Math.cos(Math.PI * t)) / 2; pts.push([x(i + t), y(F[i].v + (F[i + 1].v - F[i].v) * w)]); }
+  pts.push([x(F.length - 1), y(F[F.length - 1].v)]);
+  const line = 'M' + pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' L');
+  const area = line + ` L${x(F.length - 1)},${yb} L${x0},${yb}Z`;
+  let grid = '<g class="grid">'; for (let i = 0; i <= 4; i++) { const v = mx * i / 4; grid += `<line x1="${x0 - 14}" x2="${x1 + 14}" y1="${y(v)}" y2="${y(v)}"/>`; }
+  grid += '</g><g class="ax">'; for (let i = 0; i <= 4; i++) { const v = mx * i / 4; grid += `<text x="${x0 - 22}" y="${y(v) + 4}" text-anchor="end">${fmtK(v)}</text>`; } grid += '</g>';
+  const dots = F.map((f, i) => {
+    const now = i === 0, cx = x(i), cy = y(f.v);
+    const tip = now ? `<b>ตอนนี้</b> (${fmtD(f.date)})<br>น้ำไหลเข้า ${fmt(f.v)} ลบ.ม./วัน<br>จากบัญชีน้ำล่าสุด` : `<b>${fmtD(f.date)} (+${f.h} วัน)</b><br>พยากรณ์ ${fmt(f.v)} ลบ.ม./วัน<br>${f.low ? 'ความเชื่อมั่นต่ำ' : 'ความเชื่อมั่นปกติ'}`;
+    return `<g data-tip="${tip}">${now ? `<circle class="sonar" cx="${cx}" cy="${cy}" r="9" fill="none" style="stroke:var(--accent)" stroke-width="2"/>` : ''}
+      <circle cx="${cx}" cy="${cy}" r="${now ? 8 : 6}" style="fill:${f.low && !now ? 'var(--core)' : 'var(--accent)'};stroke:${now ? 'var(--accent-2)' : 'var(--accent)'}" stroke-width="3" ${f.low && !now ? 'stroke-dasharray="3 2"' : ''} class="fadein"/>
+      <circle cx="${cx}" cy="${cy}" r="20" fill="transparent"/>
+      <text class="bar-lbl fadein" x="${cx}" y="${cy - 16}">${fmtK(f.v)}</text>
+      <text class="ax" x="${cx}" y="${yb + 22}" text-anchor="middle" style="fill:${now ? 'var(--strong)' : 'var(--faint)'};font:${now ? '700' : '400'} 12px var(--font)">${now ? 'ตอนนี้' : '+' + f.h + ' วัน'}</text>
+      <text class="ax" x="${cx}" y="${yb + 38}" text-anchor="middle">${fmtD(f.date)}</text></g>`;
+  }).join('');
+  $('#fcBox').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="กราฟพยากรณ์น้ำไหลเข้า">
+  <defs><linearGradient id="gFc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.35"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></linearGradient></defs>
+  ${grid}<line x1="${x0}" x2="${x0}" y1="${yt - 18}" y2="${yb}" style="stroke:var(--accent-2)" stroke-width="1.6" stroke-dasharray="5 5"/>
+  <text class="ax" x="${x0 + 8}" y="${yt - 22}" style="fill:var(--accent-2);font-weight:700">ค่าจริงล่าสุด → พยากรณ์</text>
+  <path class="fadein" d="${area}" fill="url(#gFc)"/><path class="draw" d="${line}" fill="none" style="stroke:var(--accent)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  ${dots}</svg><div class="tt" id="fcTT"></div>`;
+  const nLow = F.filter(f => f.low).length;
+  $('#fcNote').textContent = `หน่วย ลบ.ม./วัน · วงกลมโปร่งประ = พยากรณ์ความเชื่อมั่นต่ำ (${nLow} จาก ${F.length - 1} จุด) · เส้นโค้งระหว่างจุดเป็นการประมาณค่าเพื่อการแสดงผล ไม่ใช่ค่าพยากรณ์รายชั่วโมง`;
+}
+
+/* =============== STATION TABLE =============== */
+function spark(vals, color) {
+  const w = 88, h = 26, mn = Math.min(...vals), mxv = Math.max(...vals), rg = (mxv - mn) || 1;
+  const d = vals.map((v, i) => `${i ? 'L' : 'M'}${(i / (vals.length - 1) * (w - 4) + 2).toFixed(1)},${(h - 3 - (v - mn) / rg * (h - 6)).toFixed(1)}`).join(' ');
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}"><path class="draw" d="${d}" style="stroke:var(${color})"/></svg>`;
+}
+function buildTable() {
+  const rows = D.stations.map(s => {
+    const crest = s.station_code === 'RES002' ? CREST : s.spillway_msl, d6 = delta6(s), st = status(s.water_level, crest);
+    const col = d6 > 0.01 ? '--up' : d6 < -0.01 ? '--down' : '--flat';
+    return `<tr><td><b style="color:var(--strong)">${short(s)}</b><br><small style="color:var(--faint)">${s.station_code} · สันสปิลเวย์ ${crest.toFixed(3)}</small></td>
+      <td>${s.water_level.toFixed(3)}</td><td>${spark(lastN(s.history, 48).map(h => h.level), col)}</td>
+      <td style="color:var(${col})">${sgn(d6)}</td><td>${rain24(s).toFixed(1)} มม.</td><td>${s.capacity_pct.toFixed(1)}%</td><td><span class="badge ${st}">${STATUS_TXT[st]}</span></td></tr>`;
+  });
+  const k = D.kwan, kst = k.level > k.bank ? 'crit' : k.level > k.bank - .1 ? 'warn' : 'ok';
+  rows.push(`<tr><td><b style="color:var(--strong)">กว๊านพะเยา</b><br><small style="color:var(--faint)">ตลิ่ง ${k.bank.toFixed(3)}</small></td><td>${k.level.toFixed(3)}</td><td style="color:var(--faint)">—</td>
+    <td>${sgn(k.change_3d)} <small style="color:var(--faint)">(3 วัน)</small></td><td>—</td><td>—</td><td><span class="badge ${kst}">${kst === 'crit' ? 'เหนือตลิ่ง' : kst === 'warn' ? 'ใกล้ตลิ่ง' : 'ปกติ'}</span></td></tr>`);
+  $('#stBody').innerHTML = rows.join('');
+}
+
+/* =============== TOOLTIP (delegated) =============== */
+function bindTips(boxSel, ttSel) {
+  const box = $(boxSel), tt = $(ttSel); if (!box || !tt) return;
+  box.addEventListener('mousemove', e => {
+    const g = e.target.closest('[data-tip]'); if (!g) { tt.classList.remove('on'); return; }
+    tt.innerHTML = g.getAttribute('data-tip').replace(/&quot;/g, '"');
+    const r = box.getBoundingClientRect(); let x = e.clientX - r.left + 14, y = e.clientY - r.top - 16;
+    tt.classList.add('on'); x = Math.min(x, r.width - tt.offsetWidth - 4); tt.style.left = Math.max(2, x) + 'px'; tt.style.top = Math.max(2, y - tt.offsetHeight) + 'px';
+  });
+  box.addEventListener('mouseleave', () => tt.classList.remove('on'));
+}
+
+/* =============== LIVE BADGE =============== */
+function updateLive() {
+  const t = new Date(ST.measure_datetime || D.monitoring_updated), age = Date.now() - t.getTime(), mins = Math.max(0, Math.round(age / 60000));
+  const ago = mins < 1 ? 'เมื่อสักครู่' : mins < 60 ? `${mins} นาทีที่แล้ว` : mins < 2880 ? `${Math.round(mins / 60)} ชม.ที่แล้ว` : `${Math.round(mins / 1440)} วันที่แล้ว`;
+  const b = $('#live'); b.className = 'live' + (mins > 120 ? ' stale' : mins > 30 ? ' warn' : '');
+  $('#liveText').textContent = `ข้อมูลโทรมาตร ${fmtDT(t)} · ${ago}${mins > 120 ? ' (snapshot เก่า)' : ''}`;
+  $('#snap').textContent = fmtDT(new Date(D.snapshot));
+}
+
+/* =============== TIME DOCK (ย้อนดูข้อมูล: ระดับน้ำ + ฝน + กลางวัน/กลางคืน) =============== */
+const DOCK = { series: [], timer: null };
+function dockSeries() {
+  if (ST === R2 && D.windows && D.windows.length) return D.windows.map(w => ({ t: new Date(w.window_end), s: new Date(w.window_start), level: w.water_level_end_m, lvStart: w.water_level_start_m, rain: w.rain_6h_mm || 0,
+    note: `น้ำไหลเข้า <b>${fmt(w.q_in_6h_m3)}</b> ลบ.ม. · ระบายท่อ <b>${fmt(w.release_6h_m3)}</b> · ล้นสปิลเวย์ <b>${fmt(w.spill_6h_m3)}</b> · ฝน <b>${w.rain_6h_mm}</b> มม.` }));
+  const H = (ST.history || []).filter(h => h.level != null).map(h => ({ t: new Date(h.t).getTime(), v: h.level })).sort((a, b) => a.t - b.t); if (H.length < 2) return [];
+  const hr = 3600e3, end = H[H.length - 1].t, st = Math.max(H[0].t, end - 84 * hr), out = [];
+  const levelAt = t => { let v = H[0].v; for (let i = 0; i < H.length; i++) { if (H[i].t <= t) v = H[i].v; else break; } return v; };
+  const rainSum = (a, b) => (ST.rain || []).filter(r => { const x = new Date(r.t).getTime(); return x > a && x <= b; }).reduce((q, r) => q + (r.rain_mm || 0), 0);
+  const mk = t => { const r6 = rainSum(t - 6 * hr, t); return { t: new Date(t), s: new Date(t - 6 * hr), level: levelAt(t), lvStart: levelAt(t - 6 * hr), rain: r6, note: `ฝน 6 ชม.ก่อนหน้า <b>${r6.toFixed(1)}</b> มม.` }; };
+  for (let t = Math.ceil(st / hr) * hr; t < end; t += hr) out.push(mk(t));
+  out.push(mk(end)); return out;
+}
+const PH_COL = { day: '#f6d77f', dusk: '#ee9a5a', night: '#27365a' };
+function rebuildDock() {
+  if (!has('#slider')) return;
+  const sr = DOCK.series = dockSeries(), n = sr.length, sl = $('#slider'), svg = $('#dockStrip');
+  sl.max = Math.max(0, n - 1); sl.value = sl.max; sl.disabled = n < 2; DOCK.stop && DOCK.stop();
+  svg.setAttribute('viewBox', `0 0 ${Math.max(1, n)} 34`);
+  svg.innerHTML = sr.map((p, i) => { const ph = phaseOf(p.t), hh = p.rain > 0 ? Math.min(20, 3 + p.rain * 0.9) : 0;
+    return `<rect x="${i}" y="23" width="1.02" height="11" fill="${PH_COL[ph.cls]}" opacity=".9"/>${hh ? `<rect x="${i}" y="${(21 - hh).toFixed(1)}" width="1.02" height="${hh.toFixed(1)}" style="fill:var(--rain)" opacity=".85"/>` : ''}`; }).join('');
+  $('#dockSub').textContent = n > 1 ? `ย้อนดู ${Math.round((sr[n - 1].t - sr[0].t) / 3600e3)} ชม. · ฟ้า = ฝน · เหลือง/น้ำเงิน = วัน/คืน` : 'ไม่มีข้อมูลย้อนหลังพอ';
+  DOCK.apply && DOCK.apply(sl.max);
+}
+function initDock() {
+  if (!has('#slider')) return;
+  const sl = $('#slider'), lbl = $('#dockLbl'), play = $('#play'), icon = $('#playIc');
+  const PLAY = 'M8 5v14l11-7z', PAUSE = 'M7 5h4v14H7zM13 5h4v14h-4z';
+  const stop = DOCK.stop = () => { clearInterval(DOCK.timer); DOCK.timer = null; icon.setAttribute('d', PLAY); };
+  const apply = DOCK.apply = i => {
+    const sr = DOCK.series, n = sr.length; i = +i;
+    if (!n || i >= n - 1) { const ph = phaseOf(new Date()); lbl.textContent = `ปัจจุบัน · ${ph.txt}`; $('#roCapL').textContent = 'เส้นขีด = 100% (ระดับสันสปิลเวย์)'; lvCursor(null); liveReadout(false); return; }
+    const p = sr[i], dl = p.level - p.lvStart, ph = phaseOf(p.t), vol = ratingVol(p.level), capv = capMax(); lbl.textContent = `${fmtDT(p.t)} · ${ph.txt}`;
+    setLevel(p.level, { rain: p.rain > 0, time: p.t, name: `ย้อนดู · ${fmtDT(p.s)} → ${fmtDT(p.t)}`,
+      trend: `ใน 6 ชม. ระดับ ${dl > 0.004 ? 'ขึ้น' : dl < -0.004 ? 'ลด' : 'ทรงตัว'} ${sgn(dl)} ม.`,
+      note: `ปริมาตร ${ST === R2 ? '' : '≈ '}<b>${fmt(vol)}</b> / ${fmt(capv)} ลบ.ม.<br>${p.note}` });
+    setCap(vol / capv * 100, false); $('#roCapL').textContent = ST === R2 ? 'ปริมาตร ณ เวลานั้น (จากเส้นโค้งระดับ–ปริมาตรในบัญชีน้ำ)' : 'ปริมาตร ณ เวลานั้น (ประมาณจากระดับ)'; lvCursor(p.t);
+  };
+  sl.addEventListener('input', () => { stop(); apply(sl.value); });
+  play.addEventListener('click', () => {
+    if (DOCK.timer) { stop(); return; }
+    if (+sl.value >= +sl.max) sl.value = 0;
+    icon.setAttribute('d', PAUSE);
+    DOCK.timer = setInterval(() => { sl.value = +sl.value + 1; apply(sl.value); if (+sl.value >= +sl.max) stop(); }, reduced() ? 900 : 380);
+    apply(sl.value);
+  });
+  $('#toLive').addEventListener('click', () => { stop(); sl.value = sl.max; apply(sl.max); });
+  rebuildDock();
+}
+
+/* =============== REVEAL / NAV =============== */
+function initReveal() {
+  const hooks = (card) => {
+    kpiIn(card);
+    if ($('#lvBox', card)) levelsIn($('#lvBox'));
+    if ($('#dailyBox', card)) dailyIn();
+    if ($('#fcBox', card)) $('#fcBox').classList.add('drawn');
+    if ($('#stBody', card) || $('#resBody', card)) card.classList.add('drawn');
+    if ($('#rainBox', card)) growRain();
+  };
+  const show = el => { if (el.classList.contains('in')) return; el.classList.add('in'); hooks(el); };
+  const items = $$('.rv');
+  if (!('IntersectionObserver' in window) || reduced()) { items.forEach(show); return; }
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { show(e.target); io.unobserve(e.target); } }), { threshold: .15 });
+  items.forEach(i => io.observe(i));
+  const links = $$('.nav a.lnk'), secs = links.map(a => $(a.getAttribute('href')));
+  const so = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { const i = secs.indexOf(e.target); links.forEach((l, j) => l.classList.toggle('on', j === i)); } }), { rootMargin: '-40% 0px -55% 0px' });
+  secs.forEach(s => s && so.observe(s));
+}
+
+/* =============== STATION MODULE (ตัวกรองอ่าง + ข้อมูลสถานีโทรมาตรครบ) =============== */
+const has = sel => { const e = $(sel); return !!e && typeof e.nodeType === 'number'; };
+const ICON = {
+  drop: '<path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11Z"/>', temp: '<path d="M14 14V5a2 2 0 0 0-4 0v9a4 4 0 1 0 4 0Z"/>',
+  hum: '<path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11Z"/><path d="M9 14a3 3 0 0 0 3 3"/>', gauge: '<path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>', ruler: '<path d="M3 17 17 3l4 4L7 21z"/><path d="M8 12l2 2M11 9l2 2M14 6l2 2"/>',
+  tank: '<path d="M4 8c0-2 4-3 8-3s8 1 8 3v9c0 2-4 3-8 3s-8-1-8-3z"/><path d="M4 8c0 2 4 3 8 3s8-1 8-3"/>', clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'
+};
+const ic = k => `<span class="t-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg></span>`;
+const agoTxt = t => { const m = Math.max(0, Math.round((Date.now() - new Date(t).getTime()) / 60000)); return m < 1 ? 'เมื่อสักครู่' : m < 60 ? `${m} นาทีที่แล้ว` : m < 2880 ? `${Math.round(m / 60)} ชม.ที่แล้ว` : `${Math.round(m / 1440)} วันที่แล้ว`; };
+function setStationScale() {
+  const s = ST, crest = s === R2 ? CREST : s.spillway_msl, hs = s.history.map(h => h.level).concat([s.water_level]);
+  G.crest = crest; G.E0 = Math.min(crest - 2.045, Math.min(...hs) - 0.3); G.E1 = Math.max(crest + 1.455, Math.max(...hs) + 0.4);
+  G.max = s === R2 ? Math.max(D.max_level_seen, ...hs) : Math.max(...hs); G.maxLabel = s === R2 ? 'สูงสุดที่เคยบันทึก' : 'สูงสุดในช่วงข้อมูลที่มี';
+  G.crestWord = 'สันสปิลเวย์'; G.damLabel = 'สันอ่าง (ภาพประกอบ)';
+  if (s.isKwan) { G.max = D.kwan.bank_ronghai; G.maxLabel = 'ตลิ่งฝั่งร้องไห้'; G.crestWord = 'ตลิ่ง'; G.damLabel = 'ขอบตลิ่ง (ภาพประกอบ)'; G.E0 = Math.min(G.E0, G.max - 0.3); }
+}
+function teleTiles() {
+  const s = ST, crest = G.crest, f = (v) => v == null ? null : Number(v);
+  const r1 = s.rainfall_1h || 0, r24 = rain24(s), r72 = lastN(s.rain, 72).reduce((a, r) => a + (r.rain_mm || 0), 0);
+  const dist = s.distance_to_spillway_m != null ? s.distance_to_spillway_m : s.water_level - crest, cap = s.capacity_pct || 0;
+  return [
+    { k: 'drop', lb: 'ฝน 1 ชม.', v: r1, dec: 1, u: 'มม.', p: Math.min(1, r1 / 20), sub: `ฝน 24 ชม. ${r24.toFixed(1)} มม. · 72 ชม. ${r72.toFixed(1)} มม.` },
+    { k: 'temp', lb: 'อุณหภูมิ', v: f(s.temperature), dec: 1, u: '°C', p: clamp((s.temperature - 10) / 30, 0, 1), sub: 'แถบเทียบช่วง 10–40 °C' },
+    { k: 'hum', lb: 'ความชื้น', v: f(s.humidity), dec: 1, u: '%', p: clamp(s.humidity / 100, 0, 1), sub: s.humidity >= 85 ? 'อากาศชื้นมาก' : s.humidity < 50 ? 'อากาศแห้ง' : 'ความชื้นปกติ' },
+    { k: 'gauge', lb: 'ความกดอากาศ', v: f(s.pressure), dec: 1, u: 'hPa', p: clamp((s.pressure - 940) / 50, 0, 1), sub: 'ที่ระดับสถานี · แถบเทียบช่วง 940–990' },
+    { k: 'sun', lb: 'รังสีแสงอาทิตย์', v: f(s.solar), dec: 1, u: 'W/m²', p: clamp(s.solar / 1000, 0, 1), sub: 'แถบเทียบช่วง 0–1000 W/m²' },
+    { k: 'ruler', lb: 'ห่างจากสันสปิลเวย์', v: dist, dec: 2, u: 'ม.', sign: true, p: clamp(1 - Math.abs(dist) / 2, 0, 1), sub: dist > 0.003 ? 'ระดับน้ำสูงกว่าสัน' : 'ระดับน้ำต่ำกว่าสัน', cls: dist > 0.003 ? 'over' : '' },
+    { k: 'tank', lb: 'ปริมาตรกักเก็บ', v: cap, dec: 1, u: '% ความจุ', p: clamp(cap / 100, 0, 1), sub: `${fmt(s.storage_m3)} / ${fmt(s.storage_max_m3)} ลบ.ม.`, cls: cap > 100 ? 'over' : '' },
+    { k: 'clock', lb: 'วัดล่าสุด', txt: fmtDT(new Date(s.measure_datetime)), sub: agoTxt(s.measure_datetime) + ' · อัปเดตทุก ~10 นาที' }
+  ];
+}
+function buildTele() {
+  if (!has('#teleBox')) return;
+  $('#teleBox').innerHTML = teleTiles().filter(t => t.k !== 'clock' && t.k !== 'tank').map((t, i) => `<div class="tile" title="${t.sub}" style="--d:${(i * .05).toFixed(2)}s">
+    <div class="t-top">${ic(t.k)}<span>${t.lb}</span></div>
+    <div class="t-num">${t.txt ? `<span style="font-size:20px">${t.txt}</span>` : `<span class="cu" data-to="${t.v == null ? '' : t.v}" data-dec="${t.dec}" data-sign="${t.sign ? 1 : 0}">${t.v == null ? '—' : '0'}</span><small>${t.u}</small>`}</div>
+    ${t.txt ? '' : `<div class="t-bar${t.cls ? ' ' + t.cls : ''}"><i data-p="${(t.p * 100).toFixed(1)}"></i></div>`}<div class="t-sub">${t.sub}</div></div>`).join('');
+  $$('.cu', $('#teleBox')).forEach(n => { const to = parseFloat(n.dataset.to); if (!isFinite(to)) return; const dec = +n.dataset.dec, sg = n.dataset.sign === '1';
+    tween(0, to, 1300, v => { n.textContent = sg ? (v > 0.0049 ? '+' : v < -0.0049 ? '−' : '') + fmt(Math.abs(v), dec) : fmt(v, dec); });
+  });
+  requestAnimationFrame(() => requestAnimationFrame(() => $$('.t-bar i', $('#teleBox')).forEach(i => i.style.width = i.dataset.p + '%')));
+}
+let rainBars = [];
+function buildRain() {
+  if (!has('#rainBox')) return;
+  const R = lastN(ST.rain, 72), W = 900, H = 250, xL = 44, xR = 884, yB = 196, yT = 30, mx = Math.max(4, ...R.map(r => r.rain_mm || 0)), slot = (xR - xL) / Math.max(1, R.length), bw = slot * .72, tot = R.reduce((a, r) => a + (r.rain_mm || 0), 0);
+  let g = '<g class="grid">', ax = '<g class="ax">';
+  [0, .5, 1].forEach(f => { const y = yB - f * (yB - yT); g += `<line x1="${xL}" x2="${xR}" y1="${y}" y2="${y}"/>`; ax += `<text x="${xL - 8}" y="${y + 4}" text-anchor="end">${(mx * f).toFixed(mx < 10 ? 1 : 0)}</text>`; });
+  let bars = '';
+  R.forEach((r, i) => {
+    const v = r.rain_mm || 0, x = xL + i * slot + (slot - bw) / 2, h = v / mx * (yB - yT), d = new Date(r.t);
+    if (d.getHours() === 0) { ax += `<text x="${(x + bw / 2).toFixed(1)}" y="${yB + 20}" text-anchor="middle">${d.getDate()} ${MON[d.getMonth()]}</text>`; g += `<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${yT}" y2="${yB}" style="stroke-dasharray:2 5"/>`; }
+    if (v > 0) bars += `<g data-tip="<b>${fmtDT(d)}</b><br>ฝน <b>${v.toFixed(1)}</b> มม./ชม."><rect class="bar" x="${x.toFixed(1)}" y="${(yB - h).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(2, h).toFixed(1)}" rx="3" style="fill:var(--rain);transform:scaleY(0);--d:${(i * .012).toFixed(3)}s"/>
+      <rect x="${(x - 1).toFixed(1)}" y="${yT}" width="${(bw + 2).toFixed(1)}" height="${yB - yT}" fill="transparent"/></g>`;
+  });
+  g += '</g>'; ax += '</g>';
+  const mxv = Math.max(...R.map(r => r.rain_mm || 0), 0);
+  $('#rainTitle').textContent = `ฝนรายชั่วโมง ${R.length} ชม.ล่าสุด · รวม ${tot.toFixed(1)} มม.${mxv > 0 ? ` · สูงสุด ${mxv.toFixed(1)} มม./ชม.` : ''}`;
+  $('#rainBox').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="ฝนรายชั่วโมง">${g}${ax}${bars}${tot === 0 ? `<text x="${W / 2}" y="${(yB + yT) / 2}" text-anchor="middle" style="fill:var(--faint);font:14px var(--font)">ไม่มีฝนในช่วง ${R.length} ชั่วโมงที่ผ่านมา</text>` : ''}</svg><div class="tt" id="rainTT"></div>`;
+}
+function growRain() { requestAnimationFrame(() => requestAnimationFrame(() => $$('.bar', $('#rainBox')).forEach(b => b.style.transform = 'scaleY(1)'))); }
+function surge() { if (!reduced() && scene.waterG.animate) scene.waterG.animate([{ transform: `translateY(${yOf(ST.water_level) - Y_BASE + 170}px)` }, { transform: `translateY(${yOf(ST.water_level) - Y_BASE}px)` }], { duration: 1500, easing: 'cubic-bezier(.16,1,.3,1)' }); }
+function selectStation(code, first) {
+  ST = S[code] || R2; setStationScale(); curLevel = null; prevCap = 0; buildScene(); liveReadout(true); if (!first) surge();
+  buildLevels(); prepDraw($('#lvBox')); buildRain(); buildTele(); updateLive(); if (!first) rebuildDock();
+  $$('#stSeg button').forEach(b => b.classList.toggle('on', b.dataset.c === code)); placeInd($('#stSeg'));
+  const lc = $('#lvBox').closest && $('#lvBox').closest('.card'); if (lc && lc.classList && lc.classList.contains('in')) levelsIn($('#lvBox'));
+  const rc = $('#rainBox').closest && $('#rainBox').closest('.card'); if (rc && rc.classList && rc.classList.contains('in')) growRain();
+  $('#lvTitle').textContent = `ระดับน้ำย้อนหลังเทียบสันสปิลเวย์ · ${short(ST)}`;
+}
+function initStations() {
+  $('#stSeg').innerHTML = '<i class="ind"></i>' + D.stations.map(s => `<button data-c="${s.station_code}">${short(s)}</button>`).join('');
+  $('#stSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) selectStation(b.dataset.c); });
+  bindTips('#rainBox', '#rainTT'); selectStation('RES002', true);
+}
+
+function initKwan() {
+  const k = D.kwan; ST = { isKwan: true, station_code: 'KWAN', name_th: 'กว๊านพะเยา', spillway_msl: k.bank, water_level: k.level, history: [], rain: [], capacity_pct: null, measure_datetime: String(k.generated_at).replace(' ', 'T') };
+  setStationScale(); curLevel = null; buildScene(); liveReadout(true);
+}
+
+/* =============== RESERVOIR TABLE (แทนตารางรายชื่ออ่างเก็บน้ำ) =============== */
+function buildResTable() {
+  if (!has('#resBody')) return;
+  $('#resBody').innerHTML = (D.reservoirs || []).map(r => {
+    const s = r.station_code ? S[r.station_code] : null, nm = `<b class="rn">${r.name_th}</b><br><small>${r.name_en}</small>`;
+    if (!s || s.water_level == null) return `<tr><td>${nm}</td><td>${r.spillway_msl.toFixed(2)}</td><td>${r.capacity_display}</td><td colspan="5" class="nodata">ยังไม่มีสถานีโทรมาตร</td></tr>`;
+    const crest = s === R2 ? CREST : r.spillway_msl, d6 = delta6(s), st = status(s.water_level, crest), col = d6 > 0.01 ? '--up' : d6 < -0.01 ? '--down' : '--flat', pct = s.capacity_pct || 0;
+    return `<tr><td>${nm}</td><td>${r.spillway_msl.toFixed(2)}</td><td>${r.capacity_display}</td><td><b>${s.water_level.toFixed(3)}</b></td><td>${spark(lastN(s.history, 48).map(h => h.level), col)}</td>
+      <td style="color:var(${col})">${sgn(d6)}</td><td><span class="pctb ${pct > 100 ? 'crit' : pct > 90 ? 'warn' : ''}">${pct.toFixed(1)}%</span><div class="mtrack"><i style="width:${Math.min(pct, 100)}%"></i></div></td><td><span class="badge ${st}">${STATUS_TXT[st]}</span></td></tr>`;
+  }).join('');
+}
+
+/* =============== MONTH SUMMARY MODULE (กล่องสรุปหัวตารางบัญชีน้ำ) =============== */
+const MPREV = {};
+const MTH = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+function mTween(key, id, to, dec) { const el = $(id); const from = MPREV[key] == null ? 0 : MPREV[key]; MPREV[key] = to; tween(from, to, 1100, v => el.textContent = fmt(v, dec)); }
+function renderMonth(ym) {
+  const rows = (D.allrows || []).filter(r => `${r.year}-${String(r.month).padStart(2, '0')}` === ym); if (!rows.length) return;
+  const sum = f => rows.reduce((a, r) => a + (f(r) || 0), 0), n = rows.length;
+  const inflow = sum(r => r.inflow), out = sum(r => (r.outlet || 0) + (r.spill || 0)), spill = sum(r => r.spill), dS = sum(r => r.dS), rain = sum(r => r.rain);
+  const spDays = rows.filter(r => r.spill > 0).length, rnDays = rows.filter(r => r.rain > 0.1 && !(r.spill > 0)).length, rest = n - spDays - rnDays;
+  const lv = rows.map(r => r.level), last = rows[n - 1], first = rows[0], capPct = last.volume / CAP * 100;
+  const mx = rows.reduce((a, r) => r.rain > a.rain ? r : a, rows[0]);
+  $('#mTitle').textContent = `สรุปน้ำเข้า–น้ำออก · ${MTH[+ym.slice(5) - 1]} ${+ym.slice(0, 4) + 543} (${n} วัน)`;
+  mTween('in', '#mIn', inflow, 0); mTween('out', '#mOut', out, 0); mTween('spill', '#mSpS', spill, 0); mTween('rain', '#mRain', rain, 1); mTween('spd', '#mSpD', spDays, 0); mTween('cap', '#mCapN', capPct, 1);
+  const net = $('#mNet'), nv = MPREV.net == null ? 0 : MPREV.net; MPREV.net = dS; tween(nv, dS, 1100, v => net.textContent = (v >= 0 ? '+' : '−') + fmt(Math.abs(v), 0));
+  $('#mNetBox').style.color = dS >= 0 ? 'var(--up)' : 'var(--down)';
+  const tot = inflow + out || 1; $('#mBalIn').style.width = (inflow / tot * 100).toFixed(1) + '%'; $('#mBalOut').style.width = (out / tot * 100).toFixed(1) + '%';
+  $('#mBalNote').textContent = `ปริมาตรเปลี่ยนสุทธิ ΔS ${dS >= 0 ? 'เพิ่มขึ้น' : 'ลดลง'} ${fmt(Math.abs(dS))} ลบ.ม. · "ระบายรวม" = ท่อ + ล้นสปิลเวย์`;
+  const C = 2 * Math.PI * 48; $('#mRingFg').style.setProperty('--c', (Math.min(capPct, 100) / 100 * C).toFixed(1));
+  let ov = $('#mRingOv'); ov.style.setProperty('--c', (clamp(capPct - 100, 0, 100) / 100 * C).toFixed(1));
+  $('#mCapNote').textContent = `${fmt(last.volume)} / ${fmt(CAP)} ลบ.ม. ณ ${fmtD(last.date)}${capPct > 100 ? ' · เกินความจุปกติ' : ''}`;
+  const rt = $('#mDays'), parts = [['r-sp', spDays], ['r-rn', rnDays], ['r-flat', rest]];
+  parts.forEach(([c, v]) => { const i = $('.' + c, rt); i.style.setProperty('--g', v); i.style.display = v ? '' : 'none'; });
+  $('#mSpNote').textContent = `จาก ${n} วัน · ล้นสปิลเวย์ ${spDays} · ฝนตกไม่ล้น ${rnDays} · อื่น ๆ ${rest} · รวมน้ำล้น ${fmt(spill)} ลบ.ม.`;
+  $('#mSpill').classList.toggle('alive', spDays > 0);
+  $('#mRainNote').textContent = rain > 0 ? `วันฝนตก ${rows.filter(r => r.rain > 0.1).length} วัน · สูงสุด ${mx.rain.toFixed(1)} มม. (${fmtD(mx.date)})` : 'ไม่มีฝนในเดือนนี้';
+  $('#mLv1').textContent = first.level.toFixed(3); $('#mLv2').textContent = last.level.toFixed(3);
+  $('#mLvNote').textContent = `เปลี่ยน ${sgn(last.level - first.level)} ม. · ต่ำสุด ${Math.min(...lv).toFixed(3)} · สูงสุด ${Math.max(...lv).toFixed(3)}`;
+  const W = 300, H = 56, lo = Math.min(...lv), hi = Math.max(...lv), rg = (hi - lo) || 1, pts = lv.map((v, i) => [n > 1 ? i / (n - 1) * (W - 6) + 3 : W / 2, H - 5 - (v - lo) / rg * (H - 12)]);
+  const sp = $('#mSpark'); sp.innerHTML = `<path class="draw" d="${smooth(pts)}"/><circle cx="${pts[n - 1][0].toFixed(1)}" cy="${pts[n - 1][1].toFixed(1)}" r="4" style="fill:var(--accent);stroke:var(--core)" stroke-width="2"/>`;
+  const pth = $('.draw', sp); try { pth.style.setProperty('--len', Math.ceil(pth.getTotalLength()) + 2); } catch (e) {}
+  const box = $('#mLvBox'); box.classList.remove('drawn'); requestAnimationFrame(() => requestAnimationFrame(() => box.classList.add('drawn')));
+}
+function initMonth() {
+  const sel = document.getElementById('monthSelect'); if (!sel || !has('#mBox')) return;
+  sel.addEventListener('change', () => renderMonth(sel.value));
+  let n = 0; const iv = setInterval(() => { if (sel.value && (D.allrows || []).length) { renderMonth(sel.value); clearInterval(iv); } else if (++n > 80) clearInterval(iv); }, 250);
+}
+
+/* =============== BOOT =============== */
+function prepDraw(root) {
+  $$('.draw', root || document).forEach(p => { try { p.style.setProperty('--len', Math.ceil(p.getTotalLength()) + 2); } catch (e) {} });
+}
+function boot() {
+  initTheme();
+  buildScene(); initKPI(); buildLevels(); buildForecast(); buildTable();
+  prepDraw();
+  bindTips('#dailyBox', '#dailyTT'); bindTips('#fcBox', '#fcTT');
+  // static texts
+  const st = status(R2.water_level, CREST);
+  $('#heroState').textContent = st === 'crit' ? 'ล้นสปิลเวย์' : st === 'warn' ? 'ใกล้ล้น' : 'ปกติ';
+  const L = D.ledger[D.ledger.length - 1];
+  $('#heroSub').textContent = st === 'crit'
+    ? `ระดับน้ำสูงกว่าสันสปิลเวย์ ${(R2.water_level - CREST).toFixed(3)} ม. มีน้ำล้นผ่านสปิลเวย์ ${fmt(L.spill)} ลบ.ม. ในวันที่ ${fmtD(L.date)}`
+    : `ระดับน้ำต่ำกว่าสันสปิลเวย์ ${(CREST - R2.water_level).toFixed(3)} ม.`;
+  initDock(); updateLive(); setInterval(updateLive, 30000);
+  // daily seg
+  $('#dailySeg').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    $$('#dailySeg button').forEach(x => x.classList.toggle('on', x === b)); placeInd($('#dailySeg')); renderDaily(b.dataset.k);
+  });
+  $$('.seg').forEach(placeInd); window.addEventListener('resize', () => $$('.seg').forEach(placeInd));
+  document.fonts && document.fonts.ready.then(() => $$('.seg').forEach(placeInd));
+  // reveal after skeleton
+  const finish = () => {
+    document.body.classList.remove('is-loading'); $$('[data-sk]').forEach(n => n.removeAttribute('data-sk'));
+    liveReadout(false);
+    if (!reduced() && scene.waterG.animate) scene.waterG.animate([{ transform: `translateY(${yOf(ST.water_level) - Y_BASE + 170}px)` }, { transform: `translateY(${yOf(ST.water_level) - Y_BASE}px)` }], { duration: 1900, easing: 'cubic-bezier(.16,1,.3,1)' });
+    initReveal();
+  };
+  setTimeout(finish, reduced() ? 0 : 900);
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+})();
+
+</script>
+</body>
+</html>

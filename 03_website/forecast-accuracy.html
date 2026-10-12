@@ -4,10 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ติดตามความแม่นยำพยากรณ์น้ำไหลลงอ่าง | ข้อมูลประกอบการตัดสินใจเพื่อการบริหารจัดการน้ำ ตำบลแม่นาเรือ</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="assets/js/chart.umd.min.js"></script>
+<link href="assets/vendor/fonts/fonts.css" rel="stylesheet">
+<script src="assets/js/chart.umd.min.js"></script><script src="assets/uikit/chart-kit.js?v=202610121725"></script>
 <style>
   :root {
     --bg-950: #06161c; --bg-900: #081e26; --bg-800: #0d2a34; --bg-700: #123643;
@@ -23,8 +21,8 @@
   html { scroll-behavior: smooth; }
   body {
     margin: 0;
-    background: radial-gradient(ellipse 1200px 700px at 15% -10%, #103743 0%, transparent 60%),
-                radial-gradient(ellipse 900px 600px at 100% 10%, #0e2f2a 0%, transparent 55%),
+    background: radial-gradient(ellipse 1200px 700px at 15% -10%, var(--bg-glow-1) 0%, transparent 60%),
+                radial-gradient(ellipse 900px 600px at 100% 10%, var(--bg-glow-2) 0%, transparent 55%),
                 var(--bg-950);
     color: var(--text-300); font-family: "IBM Plex Sans Thai", "Sarabun", sans-serif; line-height: 1.65; -webkit-font-smoothing: antialiased;
   }
@@ -35,7 +33,7 @@
   .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: "Space Grotesk", "IBM Plex Sans Thai", sans-serif; font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--teal-300); font-weight: 600; }
   .eyebrow::before { content: ""; width: 16px; height: 1px; background: var(--teal-400); display: inline-block; }
 
-  header.site-header { position: sticky; top: 0; z-index: 1200; background: rgba(6,22,28,0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+  header.site-header { position: sticky; top: 0; z-index: 1200; background: rgba(var(--bg950-rgb),0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
   .header-inner { max-width: 1240px; margin: 0 auto; padding: 14px 40px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
   .back-link { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 13px; color: var(--text-500); font-weight: 500; }
   .back-link:hover { color: var(--teal-300); }
@@ -54,7 +52,7 @@
   .h-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
   .h-tab { border: 1px solid var(--border); background: var(--surface); color: var(--text-500); font-family: "Space Grotesk", sans-serif; font-size: 12.5px; font-weight: 600; padding: 8px 14px; border-radius: 999px; cursor: pointer; transition: all .15s; }
   .h-tab:hover { border-color: var(--border-strong); color: var(--text-300); }
-  .h-tab.active { background: var(--teal-500); border-color: var(--teal-500); color: #06161c; }
+  .h-tab.active { background: var(--teal-500); border-color: var(--teal-500); color: var(--bg-950); }
 
   .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 22px; }
   .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 18px; }
@@ -75,8 +73,8 @@
   table.acc-table td.num { font-family: "Space Grotesk", sans-serif; }
   .table-scroll { max-height: 520px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-md); margin-top: 18px; }
   .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600; }
-  .badge.ok { background: rgba(42,157,143,0.18); color: var(--teal-300); }
-  .badge.low { background: rgba(224,169,79,0.18); color: var(--amber-300); }
+  .badge.ok { background: rgba(var(--t5-rgb),0.18); color: var(--teal-300); }
+  .badge.low { background: rgba(var(--a4-rgb),0.18); color: var(--amber-300); }
   .badge.pending { background: rgba(138,163,160,0.14); color: var(--text-600); }
 
   .loading-note { color: var(--text-600); font-size: 12.5px; padding: 20px 0; }
@@ -132,8 +130,8 @@
       <div class="chart-card">
         <canvas id="accChart" height="90"></canvas>
         <div class="legend-row">
-          <span><span class="dot" style="background:#7fe0d1"></span>พยากรณ์ (Predicted)</span>
-          <span><span class="dot" style="background:#e0a94f"></span>ค่าจริง (Actual)</span>
+          <span><span class="dot" style="background:var(--teal-300)"></span>พยากรณ์ (Predicted)</span>
+          <span><span class="dot" style="background:var(--amber-400)"></span>ค่าจริง (Actual)</span>
         </div>
       </div>
     </div>
@@ -309,5 +307,5 @@ const ACC_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 setInterval(loadLog, ACC_REFRESH_INTERVAL_MS);
 </script>
 
-</body>
+<link rel="stylesheet" href="assets/uikit/theme-kit.css?v=202610121725"><script src="assets/uikit/theme-kit.js?v=202610121725"></script><script src="assets/uikit/page-kit.js?v=202610121725"></script><script src="assets/uikit/kwan-kit.js?v=202610121725"></script><script src="assets/uikit/hero-bg.js?v=202610121725"></script><script src="assets/uikit/inflow-kit.js?v=202610121725"></script><script src="assets/uikit/map-kit.js?v=202610121725"></script><script src="assets/uikit/flood-map-kit.js?v=202610121725"></script><script src="assets/uikit/flood-flow-kit.js?v=202610121725"></script><script src="assets/uikit/flood-3d-kit.js?v=202610121725"></script><script src="assets/uikit/flood-bathtub-kit.js?v=202610121725"></script><script src="assets/uikit/reliability-kit.js?v=202610121725"></script><script src="assets/uikit/flood-hero-kit.js?v=202610121725"></script><script src="assets/uikit/freshness-kit.js?v=202610121725"></script><script src="assets/uikit/i18n-kit.js?v=202610121725"></script><script src="assets/uikit/table-kit.js?v=202610121725"></script><script src="assets/uikit/plain-kit.js?v=202610121725"></script><script src="assets/uikit/csv-kit.js?v=202610121725"></script><script src="assets/uikit/pwa-kit.js?v=202610121725"></script><script src="assets/uikit/report-kit.js?v=202610121725"></script><script src="assets/uikit/diagram-kit.js?v=202610121725"></script><script src="assets/uikit/ukm.js?v=202610121725"></script></body>
 </html>

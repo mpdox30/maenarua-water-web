@@ -4,12 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>สถานการณ์น้ำ | ข้อมูลประกอบการตัดสินใจเพื่อการบริหารจัดการน้ำ ตำบลแม่นาเรือ</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="assets/vendor/fonts/fonts.css" rel="stylesheet">
 <!-- Chart.js เวอร์ชัน local ที่ vendor ไว้แล้ว (ดู 03_website/README.md) -- ไม่พึ่ง CDN เพื่อให้
      กราฟทำงานได้แม้ไม่มีอินเทอร์เน็ต เหมือน inflow-forecast.html / water-demand.html -->
-<script src="assets/js/chart.umd.min.js"></script>
+<script src="assets/js/chart.umd.min.js"></script><script src="assets/uikit/chart-kit.js?v=202610121725"></script>
 <style>
   :root {
     --bg-950: #06161c; --bg-900: #081e26; --bg-800: #0d2a34; --bg-700: #123643;
@@ -24,8 +22,8 @@
   html { scroll-behavior: smooth; }
   body {
     margin: 0;
-    background: radial-gradient(ellipse 1200px 700px at 15% -10%, #103743 0%, transparent 60%),
-                radial-gradient(ellipse 900px 600px at 100% 10%, #0e2f2a 0%, transparent 55%),
+    background: radial-gradient(ellipse 1200px 700px at 15% -10%, var(--bg-glow-1) 0%, transparent 60%),
+                radial-gradient(ellipse 900px 600px at 100% 10%, var(--bg-glow-2) 0%, transparent 55%),
                 var(--bg-950);
     color: var(--text-300); font-family: "IBM Plex Sans Thai", "Sarabun", sans-serif; line-height: 1.65; -webkit-font-smoothing: antialiased;
   }
@@ -35,10 +33,10 @@
   .eyebrow::before { content: ""; width: 16px; height: 1px; background: var(--teal-400); display: inline-block; }
   .wrap { max-width: 1240px; margin: 0 auto; padding: 0 40px; }
 
-  header.site-header { position: sticky; top: 0; z-index: 40; background: rgba(6,22,28,0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+  header.site-header { position: sticky; top: 0; z-index: 40; background: rgba(var(--bg950-rgb),0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
   .header-inner { max-width: 1240px; margin: 0 auto; padding: 16px 40px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
   .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; flex: 1 1 auto; min-width: 0; }
-  .brand-mark { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 35% 30%, rgba(127,224,209,0.35), transparent 70%); flex: none; }
+  .brand-mark { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 35% 30%, rgba(var(--t3-rgb),0.35), transparent 70%); flex: none; }
   .brand-mark svg { width: 18px; height: 18px; }
   .brand-text-th { font-family: "Noto Serif Thai", serif; font-size: 14px; color: var(--text-100); font-weight: 600; line-height: 1.35; max-width: 320px; }
   .brand-text-en { font-family: "Space Grotesk", sans-serif; font-size: 10px; letter-spacing: 0.06em; color: var(--text-500); margin-top: 2px; }
@@ -50,15 +48,15 @@
   .nav-toggle { display: none; flex: none; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border-strong); background: var(--surface); align-items: center; justify-content: center; cursor: pointer; padding: 0; }
   .nav-toggle span { display: block; width: 18px; height: 2px; background: var(--text-100); border-radius: 2px; }
   .nav-toggle span + span { margin-top: 4px; }
-  .mobile-nav { display: none; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: rgba(6,22,28,0.98); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); padding: 8px 24px 16px; }
+  .mobile-nav { display: none; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: rgba(var(--bg950-rgb),0.98); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); padding: 8px 24px 16px; }
   .mobile-nav a { display: block; padding: 12px 4px; font-size: 14px; color: var(--text-300); text-decoration: none; border-bottom: 1px solid var(--border); }
   .mobile-nav a:last-child { border-bottom: none; }
   .mobile-nav a.current { color: var(--teal-300); font-weight: 600; }
   .mobile-nav.open { display: flex; }
 
-  .status-bar { border-bottom: 1px solid var(--border); background: linear-gradient(90deg, rgba(224,169,79,0.08), transparent 60%); }
+  .status-bar { border-bottom: 1px solid var(--border); background: linear-gradient(90deg, rgba(var(--a4-rgb),0.08), transparent 60%); }
   .status-bar-inner { max-width: 1240px; margin: 0 auto; padding: 10px 40px; display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--amber-300); flex-wrap: wrap; }
-  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber-400); box-shadow: 0 0 0 4px rgba(224,169,79,0.18); flex: none; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber-400); box-shadow: 0 0 0 4px rgba(var(--a4-rgb),0.18); flex: none; }
   .status-bar-inner strong { color: var(--amber-300); font-weight: 600; }
   .status-bar-inner span.dim { color: var(--text-500); }
 
@@ -76,11 +74,11 @@
 
   .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
   .kpi-card { background: var(--surface); border: 1px dashed var(--border-strong); border-radius: var(--radius-lg); padding: 22px 20px; position: relative; overflow: hidden; }
-  .kpi-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(69,194,173,0.12); border: 1px solid rgba(69,194,173,0.28); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 16px; }
+  .kpi-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(var(--t4-rgb),0.12); border: 1px solid rgba(var(--t4-rgb),0.28); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 16px; }
   .kpi-label { font-size: 12px; color: var(--text-500); margin-bottom: 8px; font-weight: 500; }
   .kpi-value { font-family: "Space Grotesk", sans-serif; font-size: 24px; font-weight: 600; color: var(--text-600); }
   .kpi-note { font-size: 11.5px; color: var(--text-600); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
-  .pending-badge { display:inline-block; font-size:10.5px; padding:2px 9px; border-radius:999px; background: rgba(224,169,79,0.14); border:1px solid rgba(224,169,79,0.35); color: var(--amber-300); font-weight:600; margin-top:8px; }
+  .pending-badge { display:inline-block; font-size:10.5px; padding:2px 9px; border-radius:999px; background: rgba(var(--a4-rgb),0.14); border:1px solid rgba(var(--a4-rgb),0.35); color: var(--amber-300); font-weight:600; margin-top:8px; }
 
   /* --- per-station telemetry cards (live, 2026-07-17) --- */
   .station-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
@@ -90,22 +88,22 @@
   .station-card-code { font-family: "Space Grotesk", sans-serif; font-size: 11px; color: var(--text-500); letter-spacing: 0.05em; }
   .freshness-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; padding: 3px 10px 3px 8px; border-radius: 999px; font-weight: 600; white-space: nowrap; }
   .freshness-badge .dot { width: 6px; height: 6px; border-radius: 50%; }
-  .freshness-fresh { background: rgba(69,194,173,0.14); border: 1px solid rgba(69,194,173,0.35); color: var(--teal-300); }
+  .freshness-fresh { background: rgba(var(--t4-rgb),0.14); border: 1px solid rgba(var(--t4-rgb),0.35); color: var(--teal-300); }
   .freshness-fresh .dot { background: var(--teal-400); }
-  .freshness-stale { background: rgba(224,169,79,0.14); border: 1px solid rgba(224,169,79,0.35); color: var(--amber-300); }
+  .freshness-stale { background: rgba(var(--a4-rgb),0.14); border: 1px solid rgba(var(--a4-rgb),0.35); color: var(--amber-300); }
   .freshness-stale .dot { background: var(--amber-400); }
-  .freshness-verystale { background: rgba(224,120,79,0.14); border: 1px solid rgba(224,120,79,0.35); color: #e0a479; }
-  .freshness-verystale .dot { background: #e0a479; }
+  .freshness-verystale { background: rgba(224,120,79,0.14); border: 1px solid rgba(224,120,79,0.35); color: var(--orange-txt); }
+  .freshness-verystale .dot { background: var(--orange-txt); }
 
   .capacity-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 7px; }
   .capacity-pct-value { font-family: "Space Grotesk", sans-serif; font-size: 26px; font-weight: 600; color: var(--text-100); }
   .capacity-level-note { font-size: 11.5px; color: var(--text-500); text-align: right; }
-  .capacity-bar-track { width: 100%; height: 8px; border-radius: 999px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); overflow: hidden; margin-bottom: 18px; }
+  .capacity-bar-track { width: 100%; height: 8px; border-radius: 999px; background: rgba(var(--w-rgb),0.06); border: 1px solid var(--border); overflow: hidden; margin-bottom: 18px; }
   .capacity-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--teal-500), var(--teal-300)); }
   .capacity-bar-fill.over { background: linear-gradient(90deg, var(--amber-400), var(--amber-300)); }
 
   .station-metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .metric-chip { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 10px; }
+  .metric-chip { background: rgba(var(--w-rgb),0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 10px; }
   .metric-chip .metric-label { font-size: 10px; color: var(--text-500); margin-bottom: 3px; }
   .metric-chip .metric-value { font-family: "Space Grotesk", sans-serif; font-size: 13.5px; color: var(--text-300); font-weight: 600; }
   .station-updated { font-size: 11px; color: var(--text-600); margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
@@ -125,10 +123,10 @@
     background: transparent; color: var(--text-500); cursor: pointer; transition: all .15s;
   }
   .station-filter-btn:hover { color: var(--text-100); border-color: var(--teal-400); }
-  .station-filter-btn.active { background: rgba(69,194,173,0.14); border-color: var(--teal-400); color: var(--teal-300); }
+  .station-filter-btn.active { background: rgba(var(--t4-rgb),0.14); border-color: var(--teal-400); color: var(--teal-300); }
   .seg-toggle { display: inline-flex; background: var(--bg-800); border: 1px solid var(--border); border-radius: 999px; padding: 3px; gap: 2px; flex-wrap: wrap; }
   .seg-toggle button { border: none; background: transparent; color: var(--text-500); font-size: 12px; font-family: inherit; padding: 6px 13px; border-radius: 999px; cursor: pointer; transition: background .15s, color .15s; }
-  .seg-toggle button.active { background: var(--teal-400); color: #06161c; font-weight: 600; }
+  .seg-toggle button.active { background: var(--teal-400); color: var(--bg-950); font-weight: 600; }
   .chart-range-note { font-size: 11.5px; color: var(--text-600); }
   .chart-canvas-wrap { height: 320px; position: relative; }
   .chart-empty-note { color: var(--text-500); font-size: 13px; text-align: center; padding: 60px 20px; }
@@ -862,5 +860,5 @@ fetch(DATA_ENDPOINT)
   });
 </script>
 
-</body>
+<link rel="stylesheet" href="assets/uikit/theme-kit.css?v=202610121725"><script src="assets/uikit/theme-kit.js?v=202610121725"></script><script src="assets/uikit/page-kit.js?v=202610121725"></script><script src="assets/uikit/kwan-kit.js?v=202610121725"></script><script src="assets/uikit/hero-bg.js?v=202610121725"></script><script src="assets/uikit/inflow-kit.js?v=202610121725"></script><script src="assets/uikit/map-kit.js?v=202610121725"></script><script src="assets/uikit/flood-map-kit.js?v=202610121725"></script><script src="assets/uikit/flood-flow-kit.js?v=202610121725"></script><script src="assets/uikit/flood-3d-kit.js?v=202610121725"></script><script src="assets/uikit/flood-bathtub-kit.js?v=202610121725"></script><script src="assets/uikit/reliability-kit.js?v=202610121725"></script><script src="assets/uikit/flood-hero-kit.js?v=202610121725"></script><script src="assets/uikit/freshness-kit.js?v=202610121725"></script><script src="assets/uikit/i18n-kit.js?v=202610121725"></script><script src="assets/uikit/table-kit.js?v=202610121725"></script><script src="assets/uikit/plain-kit.js?v=202610121725"></script><script src="assets/uikit/csv-kit.js?v=202610121725"></script><script src="assets/uikit/pwa-kit.js?v=202610121725"></script><script src="assets/uikit/report-kit.js?v=202610121725"></script><script src="assets/uikit/diagram-kit.js?v=202610121725"></script><script src="assets/uikit/ukm.js?v=202610121725"></script></body>
 </html>

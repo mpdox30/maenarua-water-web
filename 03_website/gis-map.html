@@ -4,11 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>แผนที่ GIS | ข้อมูลประกอบการตัดสินใจเพื่อการบริหารจัดการน้ำ ตำบลแม่นาเรือ</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link href="assets/vendor/fonts/fonts.css" rel="stylesheet">
+<link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css" />
+<script src="assets/vendor/leaflet/leaflet.js"></script>
 <style>
   :root {
     --bg-950: #06161c; --bg-900: #081e26; --bg-800: #0d2a34; --bg-700: #123643;
@@ -23,8 +21,8 @@
   html { scroll-behavior: smooth; }
   body {
     margin: 0;
-    background: radial-gradient(ellipse 1200px 700px at 15% -10%, #103743 0%, transparent 60%),
-                radial-gradient(ellipse 900px 600px at 100% 10%, #0e2f2a 0%, transparent 55%),
+    background: radial-gradient(ellipse 1200px 700px at 15% -10%, var(--bg-glow-1) 0%, transparent 60%),
+                radial-gradient(ellipse 900px 600px at 100% 10%, var(--bg-glow-2) 0%, transparent 55%),
                 var(--bg-950);
     color: var(--text-300); font-family: "IBM Plex Sans Thai", "Sarabun", sans-serif; line-height: 1.65; -webkit-font-smoothing: antialiased;
   }
@@ -34,10 +32,10 @@
   .eyebrow::before { content: ""; width: 16px; height: 1px; background: var(--teal-400); display: inline-block; }
   .wrap { max-width: 1240px; margin: 0 auto; padding: 0 40px; }
 
-  header.site-header { position: sticky; top: 0; z-index: 40; background: rgba(6,22,28,0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+  header.site-header { position: sticky; top: 0; z-index: 40; background: rgba(var(--bg950-rgb),0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
   .header-inner { max-width: 1240px; margin: 0 auto; padding: 16px 40px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
   .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; flex: 1 1 auto; min-width: 0; }
-  .brand-mark { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 35% 30%, rgba(127,224,209,0.35), transparent 70%); flex: none; }
+  .brand-mark { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 35% 30%, rgba(var(--t3-rgb),0.35), transparent 70%); flex: none; }
   .brand-mark svg { width: 18px; height: 18px; }
   .brand-text-th { font-family: "Noto Serif Thai", serif; font-size: 14px; color: var(--text-100); font-weight: 600; line-height: 1.35; max-width: 320px; }
   .brand-text-en { font-family: "Space Grotesk", sans-serif; font-size: 10px; letter-spacing: 0.06em; color: var(--text-500); margin-top: 2px; }
@@ -49,15 +47,15 @@
   .nav-toggle { display: none; flex: none; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border-strong); background: var(--surface); align-items: center; justify-content: center; cursor: pointer; padding: 0; }
   .nav-toggle span { display: block; width: 18px; height: 2px; background: var(--text-100); border-radius: 2px; }
   .nav-toggle span + span { margin-top: 4px; }
-  .mobile-nav { display: none; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: rgba(6,22,28,0.98); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); padding: 8px 24px 16px; }
+  .mobile-nav { display: none; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: rgba(var(--bg950-rgb),0.98); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); padding: 8px 24px 16px; }
   .mobile-nav a { display: block; padding: 12px 4px; font-size: 14px; color: var(--text-300); text-decoration: none; border-bottom: 1px solid var(--border); }
   .mobile-nav a:last-child { border-bottom: none; }
   .mobile-nav a.current { color: var(--teal-300); font-weight: 600; }
   .mobile-nav.open { display: flex; }
 
-  .status-bar { border-bottom: 1px solid var(--border); background: linear-gradient(90deg, rgba(224,169,79,0.08), transparent 60%); }
+  .status-bar { border-bottom: 1px solid var(--border); background: linear-gradient(90deg, rgba(var(--a4-rgb),0.08), transparent 60%); }
   .status-bar-inner { max-width: 1240px; margin: 0 auto; padding: 10px 40px; display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--amber-300); flex-wrap: wrap; }
-  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber-400); box-shadow: 0 0 0 4px rgba(224,169,79,0.18); flex: none; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber-400); box-shadow: 0 0 0 4px rgba(var(--a4-rgb),0.18); flex: none; }
   .status-bar-inner strong { color: var(--amber-300); font-weight: 600; }
   .status-bar-inner span.dim { color: var(--text-500); }
 
@@ -76,7 +74,7 @@
   .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
   .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px 20px; position: relative; overflow: hidden; transition: transform .22s ease, border-color .22s ease, background .22s ease; }
   .kpi-card:hover { transform: translateY(-4px); border-color: var(--border-strong); background: var(--surface-hover); }
-  .kpi-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(69,194,173,0.12); border: 1px solid rgba(69,194,173,0.28); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 16px; }
+  .kpi-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(var(--t4-rgb),0.12); border: 1px solid rgba(var(--t4-rgb),0.28); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 16px; }
   .kpi-label { font-size: 12px; color: var(--text-500); margin-bottom: 8px; font-weight: 500; }
   .kpi-value { font-family: "Space Grotesk", sans-serif; font-size: 27px; font-weight: 600; color: var(--text-100); }
   .kpi-unit { font-size: 12px; color: var(--text-500); margin-left: 5px; font-weight: 400; }
@@ -86,19 +84,19 @@
   #map { height: 560px; width: 100%; border-radius: var(--radius-md); border: 1px solid var(--border); }
   .map-controls { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; align-items: center; }
   .layer-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-300); cursor: pointer; user-select: none; }
-  .layer-toggle input { accent-color: #45c2ad; width: 14px; height: 14px; }
+  .layer-toggle input { accent-color: var(--teal-400); width: 14px; height: 14px; }
   .legend-dot { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 4px; vertical-align: middle; }
-  .leaflet-popup-content-wrapper { background: #0d2a34; color: #eef6f4; border-radius: 10px; }
-  .leaflet-popup-tip { background: #0d2a34; }
+  .leaflet-popup-content-wrapper { background: var(--bg-800); color: var(--text-100); border-radius: 10px; }
+  .leaflet-popup-tip { background: var(--bg-800); }
   .leaflet-popup-content { font-family: "IBM Plex Sans Thai", sans-serif; font-size: 12.5px; }
-  .leaflet-popup-content b { color: #7fe0d1; }
-  .leaflet-control-attribution { background: rgba(6,22,28,0.7) !important; color: var(--text-500) !important; }
+  .leaflet-popup-content b { color: var(--teal-300); }
+  .leaflet-control-attribution { background: rgba(var(--bg950-rgb),0.7) !important; color: var(--text-500) !important; }
   .leaflet-control-attribution a { color: var(--teal-300) !important; }
 
-  .basemap-control { background: rgba(8,30,38,0.88); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid var(--border-strong); border-radius: 10px; padding: 4px; display: flex; gap: 2px; box-shadow: 0 4px 14px rgba(0,0,0,0.35); margin: 8px !important; }
+  .basemap-control { background: rgba(var(--bg950-rgb),0.88); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid var(--border-strong); border-radius: 10px; padding: 4px; display: flex; gap: 2px; box-shadow: 0 4px 14px rgba(0,0,0,0.35); margin: 8px !important; }
   .basemap-control button { background: transparent; border: none; color: var(--text-500); font-family: "IBM Plex Sans Thai", sans-serif; font-size: 11.5px; font-weight: 500; padding: 6px 11px; border-radius: 7px; cursor: pointer; transition: background .15s, color .15s; white-space: nowrap; }
   .basemap-control button:hover { color: var(--text-100); background: var(--surface-hover); }
-  .basemap-control button.active { background: var(--teal-400); color: #06161c; font-weight: 600; }
+  .basemap-control button.active { background: var(--teal-400); color: var(--bg-950); font-weight: 600; }
 
   table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   table.data-table th, table.data-table td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); }
@@ -112,10 +110,10 @@
   /* 2026-07-14 เพิ่ม — badge/disclaimer-box (คัดลอกจาก inflow-forecast.html เพื่อความสอดคล้อง)
      สำหรับแสดงสถานะ + คำเตือนคุณภาพข้อมูลของผล SAR crop classification */
   .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
-  .badge-ok { background: rgba(69,194,173,0.14); color: var(--teal-300); border: 1px solid rgba(69,194,173,0.35); }
-  .badge-low { background: rgba(224,169,79,0.16); color: var(--amber-300); border: 1px solid rgba(224,169,79,0.42); }
-  .badge-blocked { background: rgba(226,102,90,0.16); color: #f3a89f; border: 1px solid rgba(226,102,90,0.42); }
-  .disclaimer-box { margin-top: 22px; padding: 18px 22px; border-radius: var(--radius-md); background: rgba(224,169,79,0.06); border: 1px solid rgba(224,169,79,0.26); }
+  .badge-ok { background: rgba(var(--t4-rgb),0.14); color: var(--teal-300); border: 1px solid rgba(var(--t4-rgb),0.35); }
+  .badge-low { background: rgba(var(--a4-rgb),0.16); color: var(--amber-300); border: 1px solid rgba(var(--a4-rgb),0.42); }
+  .badge-blocked { background: rgba(226,102,90,0.16); color: var(--red-txt); border: 1px solid rgba(226,102,90,0.42); }
+  .disclaimer-box { margin-top: 22px; padding: 18px 22px; border-radius: var(--radius-md); background: rgba(var(--a4-rgb),0.06); border: 1px solid rgba(var(--a4-rgb),0.26); }
   .disclaimer-box h4 { font-size: 13px; color: var(--amber-300); margin-bottom: 10px; font-family: "IBM Plex Sans Thai", sans-serif; font-weight: 600; }
   .disclaimer-box ul { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--text-500); }
   .disclaimer-box li { margin-bottom: 6px; }
@@ -213,8 +211,8 @@
         จัดทำจากข้อมูล GIS shapefile จริง — คลิกที่พื้นที่หรือจุดอ่างเก็บน้ำเพื่อดูรายละเอียด
       </p>
       <div class="hero-tags">
-        <span class="tag"><span class="dot" style="background:#c4d6d3"></span>ขอบเขตตำบล — 61,188 ไร่</span>
-        <span class="tag"><span class="dot" style="background:#9d7fe0"></span>หมู่บ้าน 18 แห่ง</span>
+        <span class="tag"><span class="dot" style="background:var(--text-300)"></span>ขอบเขตตำบล — 61,188 ไร่</span>
+        <span class="tag"><span class="dot" style="background:var(--violet-txt)"></span>หมู่บ้าน 18 แห่ง</span>
         <span class="tag"><span class="dot" style="background:var(--amber-400)"></span>Zone A — Rainfed</span>
         <span class="tag"><span class="dot" style="background:var(--teal-400)"></span>Zone B — พื้นที่ใช้น้ำ</span>
         <span class="tag"><span class="dot" style="background:#3b82f6"></span>อ่างเก็บน้ำ 5 แห่ง</span>
@@ -272,10 +270,10 @@
       <div class="map-card">
         <div id="map"></div>
         <div class="map-controls">
-          <label class="layer-toggle"><input type="checkbox" id="toggle-tambon" checked><span class="legend-dot" style="background:transparent; border:1.5px solid #c4d6d3;"></span>ขอบเขตตำบล</label>
-          <label class="layer-toggle"><input type="checkbox" id="toggle-village" checked><span class="legend-dot" style="background:transparent; border:1.5px solid #9d7fe0;"></span>ขอบเขตหมู่บ้าน (18 แห่ง)</label>
-          <label class="layer-toggle"><input type="checkbox" id="toggle-a" checked><span class="legend-dot" style="background:#e0a94f"></span>Zone A — Rainfed</label>
-          <label class="layer-toggle"><input type="checkbox" id="toggle-b" checked><span class="legend-dot" style="background:#45c2ad"></span>Zone B — พื้นที่ใช้น้ำ</label>
+          <label class="layer-toggle"><input type="checkbox" id="toggle-tambon" checked><span class="legend-dot" style="background:transparent; border:1.5px solid var(--text-300);"></span>ขอบเขตตำบล</label>
+          <label class="layer-toggle"><input type="checkbox" id="toggle-village" checked><span class="legend-dot" style="background:transparent; border:1.5px solid var(--violet-txt);"></span>ขอบเขตหมู่บ้าน (18 แห่ง)</label>
+          <label class="layer-toggle"><input type="checkbox" id="toggle-a" checked><span class="legend-dot" style="background:var(--amber-400)"></span>Zone A — Rainfed</label>
+          <label class="layer-toggle"><input type="checkbox" id="toggle-b" checked><span class="legend-dot" style="background:var(--teal-400)"></span>Zone B — พื้นที่ใช้น้ำ</label>
           <label class="layer-toggle"><input type="checkbox" id="toggle-res" checked><span class="legend-dot" style="background:#3b82f6"></span>อ่างเก็บน้ำ (5 แห่ง)</label>
           <label class="layer-toggle"><input type="checkbox" id="toggle-canal" checked><span class="legend-dot" style="background:transparent; border:1.5px solid #0ea5e9;"></span>คลอง/เส้นน้ำ (23 เส้น)</label>
           <label class="layer-toggle"><input type="checkbox" id="toggle-dam" checked><span class="legend-dot" style="background:#b45309"></span>ฝาย (50 แห่ง)</label>
@@ -684,5 +682,5 @@ fetch(SAR_DATA_ENDPOINT)
   });
 </script>
 
-</body>
+<link rel="stylesheet" href="assets/uikit/theme-kit.css?v=202610121725"><script src="assets/uikit/theme-kit.js?v=202610121725"></script><script src="assets/uikit/page-kit.js?v=202610121725"></script><script src="assets/uikit/kwan-kit.js?v=202610121725"></script><script src="assets/uikit/hero-bg.js?v=202610121725"></script><script src="assets/uikit/inflow-kit.js?v=202610121725"></script><script src="assets/uikit/map-kit.js?v=202610121725"></script><script src="assets/uikit/flood-map-kit.js?v=202610121725"></script><script src="assets/uikit/flood-flow-kit.js?v=202610121725"></script><script src="assets/uikit/flood-3d-kit.js?v=202610121725"></script><script src="assets/uikit/flood-bathtub-kit.js?v=202610121725"></script><script src="assets/uikit/reliability-kit.js?v=202610121725"></script><script src="assets/uikit/flood-hero-kit.js?v=202610121725"></script><script src="assets/uikit/freshness-kit.js?v=202610121725"></script><script src="assets/uikit/i18n-kit.js?v=202610121725"></script><script src="assets/uikit/table-kit.js?v=202610121725"></script><script src="assets/uikit/plain-kit.js?v=202610121725"></script><script src="assets/uikit/csv-kit.js?v=202610121725"></script><script src="assets/uikit/pwa-kit.js?v=202610121725"></script><script src="assets/uikit/report-kit.js?v=202610121725"></script><script src="assets/uikit/diagram-kit.js?v=202610121725"></script><script src="assets/uikit/ukm.js?v=202610121725"></script></body>
 </html>
