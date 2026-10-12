@@ -127,3 +127,9 @@ function countUp(){
 function init(){buildUI();apply(false);reveal();countUp()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+/* หัวเว็บ: ชื่อไทย 2 บรรทัด (ตัดก่อนคำว่า "ตำบล") — เฉพาะโหมดไทย */
+(function(){function f(){var en=false;try{en=localStorage.getItem('uk_lang')==='en'}catch(e){}if(en||document.documentElement.lang==='en')return;
+  var el=document.querySelector('header.site-header .brand-text-th');if(!el||el.querySelector('br'))return;var t=(el.textContent||'').trim(),i=t.lastIndexOf('ตำบล');if(i<8)return;
+  el.textContent='';el.appendChild(document.createTextNode(t.slice(0,i).trim()));el.appendChild(document.createElement('br'));el.appendChild(document.createTextNode(t.slice(i)))}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',f);else f()})();

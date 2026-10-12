@@ -125,7 +125,7 @@
   css.textContent = 'html[lang="en"] .brand-text-en{display:none}#uk-lang{all:unset;box-sizing:border-box;cursor:pointer;margin-left:10px;padding:4px 10px;border-radius:999px;border:1px solid var(--border-strong,rgba(127,127,127,.4));font-size:12px;font-weight:600;color:var(--text-300,#888);letter-spacing:.04em}#uk-lang:hover{color:var(--text-100,#000);border-color:var(--teal-400,#2a9d8f)}#uk-lang:focus-visible{outline:2px solid var(--teal-400,#2a9d8f);outline-offset:2px}@media(max-width:640px){#uk-lang{margin-left:6px;padding:3px 8px}}';
   document.head.appendChild(css);
   function mount() {
-    var host = document.querySelector('header.site-header nav.main-nav') || document.querySelector('header.site-header'); if (!host) return;
+    var host = document.querySelector('header.site-header nav.main-nav') || document.querySelector('header.site-header'); if (!host) return; if (host.matches('nav.main-nav')) { var tl = host.querySelector('.uk-tools'); if (!tl) { tl = document.createElement('div'); tl.className = 'uk-tools'; host.appendChild(tl); } host = tl; }
     var b = document.createElement('button'); b.id = 'uk-lang'; b.type = 'button'; b.setAttribute('aria-label', 'Switch language / เปลี่ยนภาษา'); host.appendChild(b);
     function paint() { b.textContent = lang === 'en' ? 'TH' : 'EN'; b.title = lang === 'en' ? 'เปลี่ยนเป็นภาษาไทย' : 'Switch to English'; b.setAttribute('data-i18n', 'off'); }
     paint();

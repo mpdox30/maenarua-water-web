@@ -329,7 +329,7 @@
   }
   function mount() {
     if (document.getElementById('uk-report')) return;
-    var host = document.querySelector('header.site-header nav.main-nav') || document.querySelector('header.site-header'); if (!host) return;
+    var host = document.querySelector('header.site-header nav.main-nav') || document.querySelector('header.site-header'); if (!host) return; if (host.matches('nav.main-nav')) { var tl = host.querySelector('.uk-tools'); if (!tl) { tl = document.createElement('div'); tl.className = 'uk-tools'; host.appendChild(tl); } host = tl; }
     var b = document.createElement('button'); b.id = 'uk-report'; b.type = 'button'; b.textContent = T('📄 สรุป', '📄 Report'); b.title = T('สร้างรายงานสรุปสถานการณ์น้ำ (PNG/PDF)', 'Create a water situation summary (PNG/PDF)'); b.setAttribute('data-i18n', 'off');
     b.onclick = chooser; host.appendChild(b);
   }
