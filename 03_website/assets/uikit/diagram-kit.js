@@ -71,7 +71,7 @@
     '#water-diagram .wd-leg,#water-diagram .wd-leg2{bottom:8px;padding:5px 10px;font-size:10px;display:flex;gap:10px;flex-wrap:wrap}#water-diagram .wd-leg{right:8px;justify-content:flex-end;max-width:220px}#water-diagram .wd-leg2{left:8px;padding:6px 10px;display:grid;grid-template-columns:auto auto;gap:3px 10px}' +
     '#water-diagram .wd-leg span,#water-diagram .wd-leg2 div{display:flex;align-items:center;gap:4px}#water-diagram .wd-leg i{width:14px;height:9px;border-radius:2px;flex-shrink:0;display:inline-block}' +
     '#water-diagram .wd-li{width:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}' +
-    '#water-diagram .wd-pn{top:8px;right:8px;max-width:260px;padding:10px 14px 12px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.18);background:#fff;border:1.5px solid #cbd5e1}#water-diagram .wd-pn h5{margin:0;font-size:13px;color:' + C.navy + '}#water-diagram .wd-pn .x{border:none;background:none;cursor:pointer;font-size:14px;color:' + C.muted + ';line-height:1;padding:0;float:right}' +
+    '#water-diagram .wd-pn{top:8px;right:8px;width:270px;max-width:calc(100% - 16px);max-height:calc(100% - 16px);overflow:auto;z-index:5;padding:10px 14px 12px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.18);background:#fff;border:1.5px solid #cbd5e1}#water-diagram .wd-pn h5{margin:0;font-size:13px;color:' + C.navy + '}#water-diagram .wd-pn .x{border:none;background:none;cursor:pointer;font-size:14px;color:' + C.muted + ';line-height:1;padding:0;float:right}' +
     '#water-diagram .wd-pn small{display:block;font-size:10px;color:' + C.muted + '}#water-diagram .wd-pn .b{background:#f8fafc;border-radius:6px;padding:6px 8px}#water-diagram .wd-pn .g{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}' +
     '#water-diagram .wd-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.85);font-size:13px;color:' + C.muted + ';z-index:4}' +
     '#water-diagram .wd-leg{position:absolute}#water-diagram .wd-cap{padding:8px 2px;font-size:11px;color:' + C.muted + '}' +
@@ -95,10 +95,9 @@
   var sec = document.createElement('section'); sec.className = 'section'; sec.id = 'water-diagram'; sec.style.display = 'none';
   sec.innerHTML = '<div class="wrap"><div class="section-head"><div><div class="eyebrow">' + T('ผังน้ำ', 'Water network') + '</div><h2>' + T('ผังน้ำตำบลแม่นาเรือ', 'Mae Na Rua water-flow diagram') + '</h2></div>' +
     '<p>' + T('ผังการไหลของน้ำระหว่างแหล่งเก็บกัก พร้อมปริมาณน้ำปัจจุบันเป็น % ของความจุ — กดที่โหนดเพื่อดูรายละเอียด', 'How water moves between storage sources, with current storage as % of capacity — click a node for details.') + '</p></div>' +
-    '<div class="wd-panel"><div class="wd-frame" id="wd-frame"></div><div class="wd-cap">' + T('กล่องสี % ทับตำแหน่งแหล่งเก็บกักบนผังน้ำ — กดเพื่อดูรายละเอียด (ฝาย/เช็คดำไม่แสดง % เนื่องจากไม่มีการติดตาม)', 'Colored % boxes sit on each storage source — click for details (weirs/check dams have no % because they are not monitored).') + '</div>' +
-    '<div id="wd-det"></div><div class="wd-flt" id="wd-flt"></div><div class="wd-grid" id="wd-grid"></div></div></div>';
+    '<div class="wd-panel"><div class="wd-frame" id="wd-frame"></div></div></div>';
   host.parentNode.insertBefore(sec, host.nextSibling);
-  var frame = sec.querySelector('#wd-frame'), detEl = sec.querySelector('#wd-det'), grid = sec.querySelector('#wd-grid'), flt = sec.querySelector('#wd-flt');
+  var frame = sec.querySelector('#wd-frame');
 
   function legendHtml() { return '<div class="wd-ov wd-leg">' + ['critical', 'warning', 'medium', 'safe', 'unknown'].map(function (k) { return '<span><i style="background:' + ST[k].badge + '"></i><em style="font-style:normal;color:' + ST[k].text + '">' + ST[k].dot + ' ' + sl(k) + '</em></span>'; }).join('') + '</div>'; }
 
@@ -137,42 +136,30 @@
       '<line x1="' + l + '" x2="' + (W - r) + '" y1="' + Y(20) + '" y2="' + Y(20) + '" stroke="#ef4444" stroke-dasharray="4 4"/><text x="' + (W - r - 2) + '" y="' + (Y(20) - 3) + '" font-size="9" text-anchor="end" fill="#b91c1c">' + sl('critical') + '</text>' + xt +
       '<path d="' + line + '" fill="none" stroke="' + C.navy + '" stroke-width="2" stroke-linejoin="round"/><circle class="wd-dot" r="4" fill="' + C.navy + '" stroke="#fff" stroke-width="1.5" cx="-9" cy="-9"/></svg>';
   }
-  function place(n) { return n.moo != null ? T('หมู่ ', 'Moo ') + n.moo + (n.village ? ' (' + n.village + ')' : '') : (n.stationCode || FALLBACK_STATION[n.id] ? T('สถานีโทรมาตร ', 'Telemetry ') + (n.stationCode || FALLBACK_STATION[n.id]) : T('ไม่มีสถานีโทรมาตร', 'No telemetry station')); }
-  function paintGrid() {
-    var list = NODES.filter(function (n) { return mooF === 'all' || String(n.moo) === String(mooF); });
-    grid.innerHTML = list.map(function (n) {
-      var d = S[n.id] || {}, k = getStatus(d.pct), cfg = ST[k], tr = trendInfo(d.dW), on = sel === n.id;
-      return '<button type="button" class="wd-sc" data-id="' + esc(n.id) + '" style="background:' + cfg.bg + ';border:1.5px solid ' + (on ? C.navy : cfg.border) + '"><div class="r1"><div><div class="t">' + esc(nm(n)) + '</div><div class="s">' + esc(place(n)) + (n.isolated ? ' · ☁ ' + T('รับน้ำจากฝนเท่านั้น', 'rain-fed only') : '') + '</div></div>' +
-        '<span class="pb" style="background:' + cfg.badge + '">' + cfg.dot + ' ' + sl(k) + '</span></div><div class="big"><b style="color:' + cfg.text + '">' + (d.pct != null ? d.pct + '%' : '—') + '</b><span>' + (d.m3 != null ? fmt(d.m3) + ' / ' + fmt(d.maxM3) + T(' ลบ.ม.', ' m³') : T('ไม่มีข้อมูลระดับน้ำ', 'No level data')) + '</span></div>' +
-        '<div class="bar"><i style="width:' + Math.min(100, d.pct || 0) + '%;background:' + cfg.badge + '"></i></div><div class="tr" style="color:' + tr.color + '">' + tr.icon + ' ' + tr.label + '</div></button>';
-    }).join('');
-    var moos = []; NODES.forEach(function (n) { if (n.moo != null && moos.indexOf(n.moo) < 0) moos.push(n.moo); }); moos.sort(function (a, b) { return a - b; });
-    flt.innerHTML = moos.length ? '<span>' + T('กรองตามหมู่:', 'Filter by moo:') + '</span><button type="button" data-moo="all" class="' + (mooF === 'all' ? 'on' : '') + '">' + T('ทั้งหมด', 'All') + '</button>' + moos.map(function (m) { return '<button type="button" data-moo="' + m + '" class="' + (String(mooF) === String(m) ? 'on' : '') + '">' + T('หมู่ ', 'Moo ') + m + '</button>'; }).join('') : '';
-  }
-  function paintDet() {
-    var n = NODES.filter(function (x) { return x.id === sel; })[0]; if (!n) { detEl.innerHTML = ''; return; }
+  function place(n) { return n.moo != null ? T('หมู่ ', 'Moo ') + n.moo + (n.village ? ' (' + n.village + ')' : '') : (((S[n.id] || {}).st || {}).station_code || n.stationCode || FALLBACK_STATION[n.id] ? T('สถานีโทรมาตร ', 'Telemetry ') + (((S[n.id] || {}).st || {}).station_code || n.stationCode || FALLBACK_STATION[n.id]) : T('ไม่มีสถานีโทรมาตร', 'No telemetry station')); }
+  function paintDet() {   // กล่องข้อมูลอ่าง (มุมขวาบนของผัง) สไตล์เดียวกับกล่องโทรมาตร
+    var n = NODES.filter(function (x) { return x.id === sel; })[0]; if (!n) { panel(''); return; }
     var d = S[n.id] || {}, k = getStatus(d.pct), cfg = ST[k], tr = trendInfo(d.dW), has = d.hist && d.hist.length > 1;
-    detEl.innerHTML = '<div class="wd-det" style="border:1.5px solid ' + cfg.border + '"><div class="wd-ph"><b>📷</b><span>' + T('ยังไม่มีรูปภาพ', 'No photo yet') + '</span><button class="wd-x" type="button" data-close="1" title="' + T('ปิด', 'Close') + '">✕</button></div><div class="wd-bd">' +
-      '<div class="wd-hd"><div><div class="wd-nm">' + esc(nm(n)) + '</div><div class="wd-sub">' + esc(place(n)) + (n.isolated ? ' · ☁ ' + T('รับน้ำจากฝนเท่านั้น', 'rain-fed only') : '') + (d.t ? ' · ' + (d.snap ? T('ข้อมูล ณ ', 'as of ') : T('วัดเมื่อ ', 'measured ')) + fmtDT(d.t) : '') + '</div></div>' +
-      '<span class="wd-bg" style="background:' + cfg.badge + '">' + cfg.dot + ' ' + sl(k) + (d.pct != null ? ' · ' + d.pct + '%' : '') + '</span></div>' +
-      '<div class="wd-g2"><div><small>' + T('ปริมาตรน้ำ', 'Water volume') + '</small><b style="color:' + C.navy + '">' + (d.m3 != null ? fmt(d.m3) + ' / ' + fmt(d.maxM3) + T(' ลบ.ม.', ' m³') : T('ไม่มีข้อมูล', 'No data')) + '</b></div><div><small>' + T('แนวโน้ม/สัปดาห์', 'Trend / week') + '</small><b style="color:' + tr.color + '">' + tr.icon + ' ' + tr.label + '</b></div></div>' +
-      (has ? '<div class="wd-chl">📈 ' + T('ระดับน้ำย้อนหลัง (%)', 'Level history (%)') + '</div><div class="wd-ch">' + chartSvg(d.hist) + '<div class="wd-tip"></div></div>'
-        : '<div style="margin-top:12px;font-size:11px;color:' + C.muted + ';text-align:center;padding:10px 0">' + T('ยังไม่มีข้อมูลย้อนหลังเพียงพอสำหรับกราฟ', 'Not enough history for a chart yet') + '</div>') + '</div></div>';
-    var ch = detEl.querySelector('.wd-ch');
+    panel('<button class="x" type="button">✕</button><h5>' + esc(nm(n)) + '</h5><small>' + esc(place(n)) + (n.isolated ? ' · ☁ ' + T('รับน้ำจากฝนเท่านั้น', 'rain-fed only') : '') + '</small>' +
+      '<small style="margin-top:6px">🕐 ' + (d.t ? (d.snap ? T('ข้อมูล ณ ', 'As of ') : T('ข้อมูลล่าสุด ', 'Latest ')) + fmtDT(d.t) : T('ไม่มีข้อมูล', 'No data')) + '</small>' +
+      '<div style="margin-top:8px"><span class="wd-bg" style="background:' + cfg.badge + '">' + cfg.dot + ' ' + sl(k) + (d.pct != null ? ' · ' + d.pct + '%' : '') + '</span></div>' +
+      '<div class="g"><div class="b"><small>' + T('ปริมาตรน้ำ', 'Water volume') + '</small><b style="font-size:13px;color:' + C.navy + '">' + (d.m3 != null ? fmt(d.m3) + ' / ' + fmt(d.maxM3) : T('ไม่มีข้อมูล', 'No data')) + '</b><small>' + T('ลบ.ม.', 'm³') + '</small></div>' +
+      '<div class="b"><small>' + T('แนวโน้ม/สัปดาห์', 'Trend / week') + '</small><b style="font-size:13px;color:' + tr.color + '">' + tr.icon + ' ' + tr.label + '</b></div></div>' +
+      (has ? '<small style="margin-top:8px">📈 ' + T('ระดับน้ำย้อนหลัง (%)', 'Level history (%)') + '</small><div class="wd-ch">' + chartSvg(d.hist) + '<div class="wd-tip"></div></div>'
+        : '<div style="margin-top:8px;font-size:11px;color:' + C.muted + '">' + T('ยังไม่มีข้อมูลย้อนหลังเพียงพอสำหรับกราฟ', 'Not enough history for a chart yet') + '</div>'));
+    var pn = frame.querySelector('.wd-pn'), x = pn && pn.querySelector('.x'); if (x) x.onclick = function () { sel = null; if (MODE === 'svg') paintSvg(); else cyHighlight(); panel(''); };
+    var ch = pn && pn.querySelector('.wd-ch');
     if (ch) {
       var svg = ch.querySelector('svg'), tip = ch.querySelector('.wd-tip'), dot = svg.querySelector('.wd-dot'), h = d.hist, W = 620, l = 34, r = 10, mx = Math.max(100, Math.ceil(Math.max.apply(null, h.map(function (p) { return p.pct; })) / 10) * 10);
       ch.addEventListener('mousemove', function (e) { var b = svg.getBoundingClientRect(), x = (e.clientX - b.left) / b.width * W, i = Math.max(0, Math.min(h.length - 1, Math.round((x - l) / (W - l - r) * (h.length - 1))));
         dot.setAttribute('cx', l + (W - l - r) * i / Math.max(1, h.length - 1)); dot.setAttribute('cy', 170 - 22 - (170 - 22 - 10) * h[i].pct / mx);
-        tip.style.display = 'block'; tip.innerHTML = fmtDate(h[i].iso) + ' · <b>' + h[i].pct + '%</b>'; tip.style.left = Math.min(b.width - 130, Math.max(0, e.clientX - b.left + 10)) + 'px'; tip.style.top = '6px'; });
+        tip.style.display = 'block'; tip.innerHTML = fmtDate(h[i].iso) + ' · <b>' + h[i].pct + '%</b>'; tip.style.left = Math.min(b.width - 110, Math.max(0, e.clientX - b.left + 8)) + 'px'; tip.style.top = '0px'; });
       ch.addEventListener('mouseleave', function () { tip.style.display = 'none'; dot.setAttribute('cx', -9); });
     }
   }
-  function pick(id) { sel = id; if (MODE === 'svg') paintSvg(); else cyHighlight(); paintGrid(); paintDet(); }
+  function pick(id) { sel = id; if (MODE === 'svg') paintSvg(); else cyHighlight(); paintDet(); }
   sec.addEventListener('click', function (e) {
-    if (e.target.closest && e.target.closest('[data-close]')) { sel = null; if (MODE === 'svg') paintSvg(); else cyHighlight(); paintGrid(); paintDet(); return; }
-    var m = e.target.closest && e.target.closest('[data-moo]'); if (m) { mooF = m.getAttribute('data-moo'); paintGrid(); return; }
     if (MODE === 'svg') { var t = e.target.closest && e.target.closest('[data-id]'); if (t) pick(t.getAttribute('data-id')); }
-    else { var c = e.target.closest && e.target.closest('.wd-sc[data-id]'); if (c) pick(c.getAttribute('data-id')); }
   });
   sec.addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.getAttribute && e.target.getAttribute('data-id') && e.target.tagName !== 'BUTTON') { e.preventDefault(); pick(e.target.getAttribute('data-id')); } });
 
@@ -193,11 +180,11 @@
     MODE = 'svg';
     frame.innerHTML = '<svg viewBox="0 0 ' + VB_W + ' ' + VB_H + '" role="img" aria-label="' + T('ผังน้ำตำบลแม่นาเรือ', 'Mae Na Rua water-flow diagram') + '"><image href="' + BASE + 'assets/img/water-network-diagram.svg" x="0" y="0" width="' + VB_W + '" height="' + VB_H + '"/><g id="wd-g"></g></svg>' + legendHtml();
     var probe = new Image(); probe.onload = function () { sec.style.display = ''; }; probe.src = BASE + 'assets/img/water-network-diagram.svg';
-    buildData(); paintSvg(); paintGrid();
+    buildData(); paintSvg();
   }
 
   /* ================= โหมดหลัก: Cytoscape ================= */
-  var cyBase = BASE + 'assets/vendor/cytoscape/cytoscape.min.js', flowDots = [], flowOn = true, flowCancel = false, fontSize = 12, userMoved = false;
+  var FH = Math.round(Math.min(720, Math.max(520, window.innerHeight * 0.78))) + 'px', cyBase = BASE + 'assets/vendor/cytoscape/cytoscape.min.js', flowDots = [], flowOn = true, flowCancel = false, fontSize = 12, userMoved = false;
   function loadCy(cb) {
     if (window.cytoscape) return cb(true);
     var s = document.createElement('script'); s.src = cyBase; s.onload = function () { cb(!!window.cytoscape); }; s.onerror = function () { cb(false); }; document.head.appendChild(s);
@@ -225,7 +212,7 @@
       { selector: 'node[type = "waterbody"][dir = "v"]', style: { width: 35, height: 70 } },
       { selector: 'node[?hasStatus]', style: { 'background-color': 'data(statusColor)', 'border-color': 'data(statusColor)' } },
       { selector: 'node[status = "ชำรุด"]', style: { 'background-color': '#dc2626', 'border-color': '#7f1d1d', 'border-width': 2.5 } },
-      { selector: '.flow-dot', style: { label: '', shape: 'ellipse', width: 6, height: 6, 'background-color': '#7dd3fc', 'background-opacity': 0.95, 'border-width': 1, 'border-color': '#0ea5e9', 'border-opacity': 0.6, events: 'no', 'z-compound-depth': 'top' } },
+      { selector: '.flow-dot', style: { label: '', shape: 'ellipse', width: 13, height: 13, 'background-color': '#7dd3fc', 'background-opacity': 0.95, 'border-width': 2, 'border-color': '#0ea5e9', 'border-opacity': 0.6, events: 'no', 'z-compound-depth': 'top' } },
       { selector: '.selected-source', style: { 'border-width': 4, 'border-color': '#9333ea', 'border-opacity': 1 } }
     ];
   }
@@ -274,7 +261,7 @@
     var leg2 = '<div class="wd-ov wd-leg2">' + li('<i style="width:16px;height:2px;background:#4da6ff;display:block"></i>', T('แม่น้ำ/คลอง', 'River/canal')) + li('<i style="width:10px;height:10px;background:#000;transform:rotate(45deg);display:block"></i>', T('ปตร.', 'Gate')) +
       li('<i style="width:12px;height:11px;background:#000;clip-path:polygon(50% 0,100% 100%,0 100%);display:block"></i>', T('อ่างเก็บน้ำ', 'Reservoir')) + li('<i style="width:14px;height:5px;background:#000;display:block"></i>', T('ฝาย', 'Weir')) +
       li('<i style="width:10px;height:10px;border-radius:50%;border:2.5px solid #000;background:#fff;display:block"></i>', T('โทรมาตร', 'Telemetry')) + li('<i style="width:10px;height:10px;border-radius:50%;border:1.5px solid #000;background:#fff;font-size:7px;font-weight:700;display:flex;align-items:center;justify-content:center;font-style:normal">P</i>', T('ระบบสูบน้ำ', 'Pump')) + li('<span style="font-size:12px">☁</span>', T('รับน้ำจากฝนเท่านั้น', 'Rain-fed only')) + '</div>';
-    frame.style.height = '460px';
+    frame.style.height = FH;
     frame.innerHTML = '<div id="wd-cyc" style="width:100%;height:100%"></div><div class="wd-msg" id="wd-msg">⏳ ' + T('กำลังโหลดผังน้ำ…', 'Loading diagram…') + '</div>' + tb + leg2 + legendHtml();
     sec.style.display = '';
     var started = false;
@@ -293,7 +280,7 @@
             var ty = t.data('type'), lab = t.data('origLabel') || t.data('label') || ty;
             if (ty === 'gate' || ty === 'weir' || ty === 'pump') structPanel('infra', lab, ty, t.data('status')); else if (ty === 'telemetry') structPanel('tele', lab, ty, null, lab);
           });
-          cy.on('tap', function (e) { if (e.target === cy) panel(''); }); cy.on('pan zoom', function () { userMoved = true; });
+          cy.on('tap', function (e) { if (e.target === cy) { panel(''); sel = null; cyHighlight(); } }); cy.on('pan zoom', function () { userMoved = true; });
           var comps = cy.elements().components(), main = cy.elements();
           if (comps.length > 1) { var big = comps.reduce(function (a, b) { return a.length >= b.length ? a : b; }); main = big.union(cy.elements().filter(function (e) { return e.isEdge() || e.data('sourceRef') || (e.data('label') && String(e.data('label')).trim()); })); }
           fitTarget = main; cyRefit(); setTimeout(function () { if (cy && !userMoved) cyRefit(); }, 200);
@@ -311,8 +298,8 @@
       else if (a === 'fs') { if (document.fullscreenElement) document.exitFullscreen && document.exitFullscreen(); else frame.requestFullscreen && frame.requestFullscreen(); }
       else if (a === 'flow') { flowOn = !flowOn; b.textContent = '💧 ' + (flowOn ? T('น้ำไหล: เปิด', 'Flow: on') : T('น้ำไหล: ปิด', 'Flow: off')); b.style.borderColor = flowOn ? '#0ea5e9' : '#cbd5e1'; b.style.background = flowOn ? '#e0f2fe' : '#fff'; startFlow(); }
     });
-    document.addEventListener('fullscreenchange', function () { var on = document.fullscreenElement === frame; frame.style.height = on ? '100vh' : '460px'; var b = frame.querySelector('#wd-fsb'); if (b) b.textContent = '⤢ ' + (on ? T('ออกเต็มจอ', 'Exit fullscreen') : T('เต็มจอ', 'Fullscreen')); requestAnimationFrame(cyRefit); });
-    buildData(); paintGrid();
+    document.addEventListener('fullscreenchange', function () { var on = document.fullscreenElement === frame; frame.style.height = on ? '100vh' : FH; var b = frame.querySelector('#wd-fsb'); if (b) b.textContent = '⤢ ' + (on ? T('ออกเต็มจอ', 'Exit fullscreen') : T('เต็มจอ', 'Fullscreen')); requestAnimationFrame(cyRefit); });
+    buildData();
   }
 
   /* ---- เริ่มทำงาน ---- */
