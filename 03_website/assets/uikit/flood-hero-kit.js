@@ -28,8 +28,8 @@
     '.fh-msgs .hd{font-size:15px;font-weight:600;color:var(--text-100);line-height:1.45}',
     '.fh-msgs .ch{display:flex;flex-wrap:wrap;gap:6px}',
     '.fh-msgs .ch span{font-size:11.8px;line-height:1.4;padding:3px 11px;border-radius:999px;color:var(--text-300);background:rgba(255,255,255,.72);border:1px solid var(--border)}',
-    '.fh-msgs .ch span.hot{color:#a3321f;border-color:rgba(224,82,82,.45);background:rgba(224,82,82,.1)}',
-    '.fh-msgs .ch span.mid{color:#8a5a12;border-color:rgba(224,169,79,.5);background:rgba(224,169,79,.12)}',
+    '.fh-msgs .ch span.hot{color:var(--red-txt,#a3321f);border-color:rgba(224,82,82,.45);background:rgba(224,82,82,.1)}',
+    '.fh-msgs .ch span.mid{color:var(--orange-txt,#8a5a12);border-color:rgba(224,169,79,.5);background:rgba(224,169,79,.12)}',
     /* KPI */
     '.kpi-grid .kpi{position:relative;overflow:hidden;padding:20px 22px 18px;transition:transform .35s var(--uk-ease,ease),box-shadow .35s}',
     '.kpi-grid .kpi::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,rgb(var(--ac)),rgba(var(--ac),.25))}',
@@ -41,11 +41,11 @@
     '.fh-ic svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}',
     '.kpi .value{font-size:32px}',
     '.kpi .sub.up,.kpi .sub.down{display:inline-flex;align-items:center;margin-top:8px;padding:2px 10px;border-radius:999px;font-size:11.5px;font-weight:600}',
-    '.kpi .sub.up{color:#a3321f;background:rgba(224,82,82,.12)}.kpi .sub.down{color:#17776a;background:rgba(42,157,143,.14)}',
+    '.kpi .sub.up{color:var(--red-txt,#a3321f);background:rgba(224,82,82,.12)}.kpi .sub.down{color:var(--teal-500,#17776a);background:rgba(42,157,143,.14)}',
     '.fh-sp{margin-top:12px;width:100%;height:76px;display:block;overflow:visible}',
     '.fh-sp .ln{fill:none;stroke:rgb(var(--ac));stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:fh-draw 1.6s .2s cubic-bezier(.16,1,.3,1) forwards}',
     '.fh-sp .fc{fill:none;stroke:rgb(var(--ac));stroke-width:2;stroke-dasharray:4 4;opacity:.85}',
-    '.fh-sp .bd{fill:rgba(var(--ac),.16)}',
+    '.fh-sp .bd{fill:rgba(var(--ac),.16)}','.fh-sp .gp{stroke:rgb(var(--ac));stroke-width:1.8;stroke-dasharray:2 4;opacity:.6}',
     '.fh-sp .bk{stroke:#e05252;stroke-width:1;stroke-dasharray:3 3;opacity:.85}',
     '.fh-sp text{font:10px "IBM Plex Sans Thai",sans-serif;fill:var(--text-500)}',
     '@keyframes fh-draw{to{stroke-dashoffset:0}}',
@@ -92,6 +92,7 @@
     var n = el.firstChild; if (!n || n.nodeType !== 3) return;
     var txt = n.nodeValue, v = num(txt); if (isNaN(v)) return;
     var dec = (txt.split('.')[1] || '').replace(/\D/g, '').length, t0 = performance.now(), D = 1100;
+    setTimeout(function () { n.nodeValue = txt; }, D + 400); /* แท็บพื้นหลัง rAF ไม่ทำงาน → บังคับจบด้วยค่าจริง */
     (function f(t) {
       var p = Math.min(1, (t - t0) / D), e = 1 - Math.pow(1 - p, 3);
       n.nodeValue = (v * e).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
@@ -136,7 +137,7 @@
     var join = obs.length && fc.length ? [obs[obs.length - 1]].concat(fc) : fc;
     var svg = '<svg class="fh-sp" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' + band +
       (bank != null ? '<line class="bk" x1="0" x2="' + W + '" y1="' + Y(bank).toFixed(1) + '" y2="' + Y(bank).toFixed(1) + '"/>' : '') +
-      (obs.length > 1 ? '<path class="ln" pathLength="1" d="' + path(obs) + '"/>' : '') +
+      (obs.length > 1 ? '<path class="ln" pathLength="1" d="' + obs.map(function (p, i) { return (i && p.t - obs[i - 1].t > 1.5 * 864e5 ? 'M' : (i ? 'L' : 'M')) + X(p.t).toFixed(1) + ' ' + Y(p.y).toFixed(1); }).join('') + '"/>' + obs.map(function (p, i) { return i && p.t - obs[i - 1].t > 1.5 * 864e5 ? '<line class="gp" x1="' + X(obs[i - 1].t).toFixed(1) + '" y1="' + Y(obs[i - 1].y).toFixed(1) + '" x2="' + X(p.t).toFixed(1) + '" y2="' + Y(p.y).toFixed(1) + '"/>' : ''; }).join('') : '') +
       (join.length > 1 ? '<path class="fc" d="' + path(join) + '"/>' : '') +
       (obs.length ? '<circle cx="' + X(obs[obs.length - 1].t).toFixed(1) + '" cy="' + Y(obs[obs.length - 1].y).toFixed(1) + '" r="3.4" fill="rgb(var(--ac))" stroke="#fff" stroke-width="1.5"/>' : '') + '</svg>';
     var l = document.createElement('div'); l.innerHTML = svg + '<div class="fh-sp-l"><span>ย้อนหลัง 30 วัน</span><span>' + (bank != null ? '<span style="color:#d34a4a">┄ ตลิ่งห้วยแม่นาเรือ</span> · ' : '') + 'พยากรณ์ 7 วัน</span></div>';

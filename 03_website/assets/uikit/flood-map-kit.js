@@ -112,6 +112,7 @@ function buildPanel() {
     }
   });
   new Ctl().addTo(M);
+  if (window.innerWidth <= 640 && panel) panel.classList.add('shut');   /* มือถือ: เริ่มแบบพับ */
 }
 
 /* ---------- ย่านของฉัน ---------- */

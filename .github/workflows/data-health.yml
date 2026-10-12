@@ -1,0 +1,56 @@
+name: Data Freshness Check
+
+# ตรวจความสดของไฟล์ข้อมูลหลักที่เว็บใช้ ทุก 3 ชั่วโมง -- อ่านอย่างเดียว ไม่แก้ไฟล์ ไม่ push ไม่แตะ pipeline อื่น
+# ถ้ามีไฟล์เก่าเกินเกณฑ์ → เปิด (หรือคอมเมนต์ใน) Issue "ข้อมูลเว็บไม่อัปเดต" ; กลับมาปกติ → คอมเมนต์แล้วปิด Issue อัตโนมัติ
+# แจ้งเตือนผ่านระบบ notification ของ GitHub เอง (อีเมล/แอป) ตามที่ตั้งไว้ใน GitHub ของผู้ใช้ ไม่ต้องใช้บริการภายนอก
+# ปิดใช้งาน: ลบไฟล์นี้ หรือคอมเมนต์ schedule (เหลือ workflow_dispatch กดรันมือได้)
+on:
+  schedule:
+    - cron: "17 */3 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: data-health
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0     # ต้องการประวัติ commit เพื่อดูเวลาของไฟล์ที่ไม่มี timestamp ในตัว
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check freshness
+        id: chk
+        env:
+          FRESH_REPORT: ${{ runner.temp }}/stale.md
+        run: |
+          set +e
+          python .github/scripts/check_data_freshness.py
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Open / update / close issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CODE: ${{ steps.chk.outputs.code }}
+          REPORT: ${{ runner.temp }}/stale.md
+        run: |
+          TITLE="ข้อมูลเว็บไม่อัปเดต (ตรวจอัตโนมัติ)"
+          NUM=$(gh issue list --state open --search "in:title $TITLE" --json number --jq '.[0].number' || true)
+          if [ "$CODE" != "0" ] && [ -f "$REPORT" ]; then
+            if [ -n "$NUM" ]; then
+              gh issue edit "$NUM" --body-file "$REPORT"    # อัปเดตเนื้อหาเดิม ไม่เพิ่มคอมเมนต์ซ้ำทุก 3 ชม.
+            else
+              gh issue create --title "$TITLE" --body-file "$REPORT"
+            fi
+          elif [ -n "$NUM" ]; then
+            gh issue comment "$NUM" --body "ข้อมูลกลับมาอัปเดตตามเกณฑ์แล้ว — ปิดอัตโนมัติ"
+            gh issue close "$NUM"
+          fi

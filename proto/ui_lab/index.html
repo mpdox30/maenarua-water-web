@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="th" data-mode="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UI Lab (ต้นแบบ) | อ่างเก็บน้ำแม่นาเรือ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="ui.css">
+</head>
+<body class="is-loading">
+<script>document.documentElement.classList.add('js')</script>
+
+<nav class="nav" id="nav">
+  <span class="brand"><i></i>แม่นาเรือ <span style="color:var(--accent)">UI Lab</span></span>
+  <div class="scroller">
+    <a class="lnk" href="#top">ภาพรวม</a><a class="lnk" href="#kpi">ตัวชี้วัด</a><a class="lnk" href="#levels">ระดับน้ำ</a>
+    <a class="lnk" href="#daily">รายวัน</a><a class="lnk" href="#forecast">พยากรณ์</a><a class="lnk" href="#stations">สถานี</a>
+  </div>
+  <button class="btn-ico" id="themeBtn" aria-label="เปลี่ยนธีมสี" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-.8 2-1.7 0-.9-.6-1.3-.6-2.2 0-1 .8-1.6 1.8-1.6H17a4 4 0 0 0 4-4c0-4.4-4-8.5-9-8.5Z"/><circle cx="7.5" cy="11" r="1" fill="currentColor"/><circle cx="10.5" cy="7" r="1" fill="currentColor"/><circle cx="15" cy="7.5" r="1" fill="currentColor"/></svg>
+  </button>
+</nav>
+
+<div class="theme-pop" id="themePop" role="dialog" aria-label="ตั้งค่าธีม">
+  <h4>เลือกสีธีม</h4>
+  <div class="swatches" id="swatches"></div>
+  <div class="row"><span>สีที่เลือกเอง</span><input type="color" id="customColor" value="#1f6f99" aria-label="เลือกสีเอง"></div>
+  <div class="row"><span>โหมดการแสดงผล</span>
+    <div class="seg" id="modeSeg"><i class="ind"></i><button data-m="light">สว่าง</button><button data-m="dark">มืด</button><button data-m="auto">อัตโนมัติ</button></div>
+  </div>
+  <div class="row"><span>ลดการเคลื่อนไหว</span><div class="seg" id="motionSeg"><i class="ind"></i><button data-v="0">ปกติ</button><button data-v="1">ลด</button></div></div>
+</div>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="hero-copy">
+      <span class="live" id="live"><i></i><span id="liveText" data-sk>กำลังโหลดข้อมูล…</span></span>
+      <h1>อ่างแม่นาเรือตอนนี้ <em id="heroState" data-sk>…</em></h1>
+      <p class="sub" id="heroSub" data-sk>กำลังรวบรวมค่าจากสถานีโทรมาตรและบัญชีน้ำ</p>
+    </div>
+    <div class="hero-grid" style="margin-top:6px">
+      <div class="scene" id="scene" role="img" aria-label="ภาพจำลองระดับน้ำในอ่างเก็บน้ำแม่นาเรือเทียบกับสันสปิลเวย์"></div>
+      <aside class="readout" id="readout">
+        <small id="roName" data-sk>อ่างเก็บน้ำแม่นาเรือ · RES002</small>
+        <div class="big"><span id="roLevel" data-sk>489.000</span><span>ม.รทก.</span></div>
+        <div class="delta" id="roDelta" data-sk>—</div>
+        <small id="roTrend" data-sk>—</small>
+        <div class="capb"><div class="capn" id="roCapNW"><span id="roCapN">0</span><small>% ของความจุ</small></div><div class="captrack"><i class="f" id="roCapF"></i><i class="o" id="roCapO"></i><b class="m" id="roCapM"></b></div><div class="caplbl" id="roCapL">เส้นขีด = 100% (ระดับสันสปิลเวย์)</div></div>
+        <div class="note" id="roNote" data-sk>—</div>
+      </aside>
+    </div>
+  </div>
+</header>
+
+<main>
+<section class="sec" id="kpi"><div class="wrap">
+  <div class="sec-head rv"><div class="eyebrow">ตัวชี้วัดหลัก</div><h2>สรุปสถานการณ์ในหน้าเดียว</h2><p>ตัวเลขนับขึ้นเมื่อเลื่อนมาถึง แถบสัดส่วนและวงแหวนเคลื่อนไหวตามค่า</p></div>
+  <div class="bento">
+    <div class="card b w rv" id="bDir" style="--d:.05s">
+      <svg class="waves-bg" viewBox="0 0 800 120" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40 q50 -30 100 0 t100 0 t100 0 t100 0 t100 0 t100 0 t100 0 t100 0 t100 0 t100 0"/><path d="M0 80 q60 30 120 0 t120 0 t120 0 t120 0 t120 0 t120 0 t120 0"/></svg>
+      <h3 id="dirTitle">ทิศทางของน้ำ เทียบ 6 ชั่วโมงก่อน</h3>
+      <div class="trio"><div><div class="num up" data-num="up">0</div><div class="cap">กำลังขึ้น</div></div><div><div class="num down" data-num="down">0</div><div class="cap">กำลังลด</div></div><div><div class="num flat" data-num="flat">0</div><div class="cap">ทรงตัว</div></div></div>
+      <div class="ratio" id="ratio"><i class="r-up"></i><i class="r-down"></i><i class="r-flat"></i></div>
+      <div class="cap" id="dirAvg">—</div>
+    </div>
+    <div class="card b rv" id="bCap" style="--d:.12s">
+      <h3>ความจุอ่างแม่นาเรือ</h3>
+      <div class="flexrow"><svg class="ring" viewBox="0 0 120 120" aria-hidden="true"><circle class="bg" cx="60" cy="60" r="48"/><circle class="fg" id="ringFg" cx="60" cy="60" r="48" style="--c:0"/></svg>
+        <div><div class="num"><span data-num="cap" data-dec="1">0</span><small>%</small></div><div class="cap" id="capNote">—</div></div></div>
+    </div>
+    <div class="card b rv" id="bSpill" style="--d:.05s">
+      <span class="alive-dot"></span>
+      <h3>น้ำล้นสปิลเวย์ (บัญชีน้ำวันล่าสุด)</h3>
+      <div class="num"><span data-num="spill">0</span><small>ลบ.ม.</small></div><div class="cap" id="spillNote">—</div>
+    </div>
+    <div class="card b rv" id="bRain" style="--d:.12s">
+      <h3>ฝนสะสม 24 ชั่วโมง (สันอ่าง)</h3>
+      <div class="num"><span data-num="rain" data-dec="1">0</span><small>มม.</small></div><div class="cap" id="rainNote">—</div>
+    </div>
+    <div class="card b w rv" id="bBal" style="--d:.19s">
+      <h3>น้ำเข้า เทียบ น้ำออก (บัญชีน้ำวันล่าสุด)</h3>
+      <div class="trio" style="margin-top:6px"><div><div class="num" style="color:var(--accent)" data-num="in">0</div><div class="cap">ไหลเข้า (ลบ.ม.)</div></div><div><div class="num" style="color:var(--accent-2)" data-num="out">0</div><div class="cap">ระบายรวม ท่อ+ล้น (ลบ.ม.)</div></div></div>
+      <div class="balance"><i class="in" style="width:50%"></i><i class="out" style="width:50%"></i></div>
+      <div class="cap" id="balNote">—</div>
+    </div>
+  </div>
+</div></section>
+
+<section class="sec" id="levels"><div class="wrap">
+  <div class="sec-head rv"><div class="eyebrow">ระดับน้ำย้อนหลัง</div><h2>ระดับน้ำอ่างแม่นาเรือเทียบสันสปิลเวย์</h2><p>เส้นสีน้ำตาล = สันสปิลเวย์ · เส้นจุดไข่ปลา = ระดับน้ำรายชั่วโมง · แรเงาแดง = ส่วนที่สูงกว่าสัน · เลื่อนเมาส์เพื่อดูค่ารายชั่วโมง</p></div>
+  <div class="card rv"><div class="chart-box" id="lvBox"></div><div class="legend"><span><i style="background:var(--ok)"></i>ต่ำกว่าสัน</span><span><i style="background:var(--warn)"></i>ใกล้สัน (&lt; 0.10 ม.)</span><span><i style="background:var(--crit)"></i>สูงกว่าสัน</span></div></div>
+</div></section>
+
+<section class="sec" id="daily"><div class="wrap">
+  <div class="sec-head rv"><div class="eyebrow">เปรียบเทียบรายวัน</div><h2>14 วันที่ผ่านมา</h2><p>ตัวเลขเหนือแท่ง = ค่าของวัน · ตัวเลขสีเหนือค่า = เปลี่ยนจากวันก่อน (ส้มแดง = เพิ่ม, เขียว = ลด, ฟ้า = เท่าเดิม)</p></div>
+  <div class="card rv">
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:8px">
+      <div><div class="cap" id="dailyTitle" style="color:var(--muted);font-size:13px">—</div><div style="font-size:30px;font-weight:800;color:var(--strong)" id="dailyBig">—</div></div>
+      <div class="seg" id="dailySeg"><i class="ind"></i><button data-k="inflow" class="on">น้ำไหลเข้า</button><button data-k="release">น้ำระบาย</button><button data-k="rain">ฝน</button><button data-k="volume">ปริมาตร</button></div>
+    </div>
+    <div class="chart-box" id="dailyBox"></div>
+  </div>
+</div></section>
+
+<section class="sec" id="forecast"><div class="wrap">
+  <div class="sec-head rv"><div class="eyebrow">พยากรณ์น้ำไหลเข้าอ่าง</div><h2>1–7 วันข้างหน้า</h2><p>เส้นโค้งเรียบระหว่างจุดพยากรณ์ (เป็นค่าประมาณระหว่างจุด) · เส้นประ "ตอนนี้" คือค่าล่าสุดจากบัญชีน้ำ</p></div>
+  <div class="card rv"><div class="chart-box" id="fcBox"></div><div class="cap" id="fcNote" style="font-size:12.5px;color:var(--faint);margin-top:6px"></div></div>
+</div></section>
+
+<section class="sec" id="stations"><div class="wrap">
+  <div class="sec-head rv"><div class="eyebrow">ทุกสถานี</div><h2>สถานีและอ่างเก็บน้ำในพื้นที่</h2><p>เส้นจิ๋วแสดงระดับน้ำ ~48 ชั่วโมงล่าสุด สีตามแนวโน้ม</p></div>
+  <div class="card rv tbl-wrap"><table class="st"><thead><tr><th>สถานี</th><th>ระดับน้ำ (ม.)</th><th>เส้นแนวโน้ม</th><th>6 ชม.</th><th>ฝน 24 ชม.</th><th>ความจุ</th><th>สถานะ</th></tr></thead><tbody id="stBody"></tbody></table></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><b>ต้นแบบ UI Lab (ยังไม่ใช่ production)</b> · ข้อมูลเป็น snapshot จริงเมื่อ <span id="snap">—</span> · สร้างจาก <code>build_data.py</code> · แนวคิดการแสดงผลศึกษาจาก flood.pop.in.th (เขียนใหม่ ไม่ได้คัดลอกโค้ด/ภาพ)</div></footer>
+
+<div class="dock" id="dock" aria-label="ย้อนดูข้อมูล">
+  <button class="play" id="play" aria-label="เล่น/หยุด"><svg viewBox="0 0 24 24" fill="currentColor"><path id="playIc" d="M8 5v14l11-7z"/></svg></button>
+  <div class="lbl"><small id="dockSub">ย้อนดูข้อมูล</small><b id="dockLbl">ปัจจุบัน</b></div>
+  <div class="dtrack"><svg id="dockStrip" viewBox="0 0 100 34" preserveAspectRatio="none" aria-hidden="true"></svg><input type="range" id="slider" min="0" max="0" value="0" aria-label="เลื่อนย้อนเวลา"></div>
+  <button class="live-btn" id="toLive">ล่าสุด</button>
+</div>
+
+<script src="data.js"></script>
+<script src="ui.js"></script>
+</body>
+</html>

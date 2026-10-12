@@ -116,6 +116,7 @@ function countUp(){
     var dec=(txt.split('.')[1]||'').length,comma=txt.indexOf(',')>=0,key=tn.nodeValue;
     if(el._ukKey===key||reduce())return;el._ukKey=key;
     var pre=tn.nodeValue.slice(0,m.index),post=tn.nodeValue.slice(m.index+txt.length),t0=performance.now();
+    setTimeout(function(){if(tn.nodeValue!==key&&el._ukKey===key)tn.nodeValue=key},1500); /* แท็บพื้นหลัง rAF ไม่ทำงาน → บังคับจบด้วยค่าจริง */
     (function f(t){var p=clamp((t-t0)/1300,0,1),v=to*(1-Math.pow(1-p,4)),s=v.toFixed(dec);
       if(comma){var q=s.split('.');q[0]=q[0].replace(/\B(?=(\d{3})+(?!\d))/g,',');s=q.join('.')}
       tn.nodeValue=pre+s+post;if(p<1)requestAnimationFrame(f);else{tn.nodeValue=key}})(t0);

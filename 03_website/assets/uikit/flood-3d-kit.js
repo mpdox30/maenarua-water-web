@@ -15,7 +15,7 @@ var tierMcm = function (v) { return v > 0.2 ? 'critical' : v > 0.05 ? 'warning' 
 var dshort = function (iso) { var d = new Date(iso + 'T00:00:00'); return isNaN(d) ? iso : d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }); };
 var addDays = function (iso, n) { var d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 
-var D = null, M = null, N = [], tubes = {}, t = 0, timer = null, tourTimer = null, panel, bar, info, userMk = null, todayIso = '';
+var D = null, M = null, N = [], tubes = {}, t = 0, timer = null, tourTimer = null, panel, bar, info, todayIso = '', onDepth = null;
 
 function build() {
   var fc = D.kwan_forecast || [], ob = D.kwan_observed_30d || [];
@@ -101,18 +101,6 @@ function tour() {
   b.textContent = '■ หยุดทัวร์'; b.classList.add('on'); var list = ranked(), i = 0;
   (function next() { if (i >= list.length) { stopTour(); M.flyTo({ center: [99.87, 19.115], zoom: 13.2, pitch: 60, bearing: -12, duration: 2400 }); info.classList.remove('show'); return; } focus(list[i], true, i, list.length); i++; tourTimer = setTimeout(next, 5200); })();
 }
-function locate() {
-  if (!navigator.geolocation) { info.textContent = 'เบราว์เซอร์นี้ไม่รองรับการระบุตำแหน่ง'; info.classList.add('show'); return; }
-  info.textContent = 'กำลังหาตำแหน่งของคุณ…'; info.classList.add('show');
-  navigator.geolocation.getCurrentPosition(function (p) {
-    var la = p.coords.latitude, lo = p.coords.longitude, near = null, dm = 1e12;
-    N.forEach(function (n) { var d = Math.hypot((n.lat - la) * 111.2, (n.lon - lo) * 111.2 * Math.cos(la * Math.PI / 180)); if (d < dm) { dm = d; near = n; } });
-    if (dm > 25) { info.textContent = 'ตำแหน่งของคุณอยู่นอกพื้นที่ศึกษา (ห่างจุดเฝ้าระวังที่ใกล้สุด ' + dm.toFixed(0) + ' กม.)'; return; }
-    if (!userMk) { var d = document.createElement('div'); d.className = 'f3-me'; userMk = new maplibregl.Marker({ element: d }); }
-    userMk.setLngLat([lo, la]).addTo(M); M.flyTo({ center: [lo, la], zoom: 15, pitch: 60, bearing: -12, duration: 2200 });
-    var s = state(near, t); info.innerHTML = '<b>จุดเฝ้าระวังที่ใกล้ที่สุด</b><br>' + esc(near.name) + ' (' + dm.toFixed(1) + ' กม.) · <span style="color:' + HEX[s.tier] + '">' + TH[s.tier] + '</span>';
-  }, function () { info.textContent = 'ไม่ได้รับอนุญาตให้ระบุตำแหน่ง'; }, { timeout: 10000 });
-}
 
 
 /* ---------- ภาพ → ไทล์ราสเตอร์ (protocol "ukimg") ----------
@@ -147,7 +135,7 @@ function removeImg(map, lid) { if (!lid) return; if (map.getLayer(lid)) map.remo
 window.__ukImgTiles = { add: addImg, remove: removeImg, ready: function () { return typeof maplibregl !== 'undefined' && !!maplibregl.addProtocol; } };
 
 /* ---------- ชั้นความลึกน้ำท่วม (ยากิ 2567 / P95 / พยากรณ์รายวัน) ซ้อนบนภูมิประเทศ 3 มิติ ---------- */
-var dReadyUnused = 0, DB = { s: 19.01883856557195, w: 99.75718730414324, n: 19.158288896246347, e: 99.92468585009338 }, dOn = true, dReady = false, vmaxF = 0.02;
+var dReadyUnused = 0, DB = { s: 19.01883856557195, w: 99.75718730414324, n: 19.158288896246347, e: 99.92468585009338 }, dOn = true, dReady = false, vmaxF = 0.02, dayMax = {};
 var DCOORD = [[DB.w, DB.n], [DB.e, DB.n], [DB.e, DB.s], [DB.w, DB.s]];
 function dSrc() { var b = document.querySelector('#map3dSourceToggle button.active'); return b ? b.dataset.source : 'forecast'; }
 function dDay() { var r = document.getElementById('dayRange'); return parseInt(r && r.value, 10) || 1; }
@@ -155,7 +143,9 @@ function dInfo() {
   var k = dSrc(), day = dDay();
   if (k === 'p95') return { id: 'p95', url: 'assets/data/flood_risk_p95.png', label: 'ความเสี่ยงเชิงสถิติ (P95)', vmax: 4, op: .85 };
   if (k === 'yagi2024') return { id: 'yagi', url: 'assets/data/flood_depth_yagi2024.png', label: 'ความลึกน้ำท่วมจริง — พายุยากิ 2567', vmax: 4, op: .85 };
-  return { id: 'd' + day, url: 'assets/data/flood_depth_forecast_d' + day + '.png', label: 'พยากรณ์ 7 วัน — วันที่ ' + day + ' (ลึกระดับมิลลิเมตร)', vmax: vmaxF, op: .55 };
+  var mx = dayMax[day], note = '';
+  if (typeof mx === 'number') note = 'ความลึกสูงสุดวันนี้ ≈ ' + (mx >= 0.01 ? (mx * 100).toFixed(1) + ' ซม.' : (mx * 1000).toFixed(1) + ' มม.') + (mx < 0.05 ? ' — ตื้นมาก ยังไม่ถึงระดับน้ำท่วมที่เป็นอันตราย (สีที่เห็นคือจุดลุ่มที่มีน้ำขังตื้น ๆ)' : '');
+  return { id: 'd' + day, url: 'assets/data/flood_depth_forecast_d' + day + '.png', label: 'พยากรณ์ 7 วัน — วันที่ ' + day + (typeof mx === 'number' && mx < 0.05 ? ' (สเกลขยายให้เห็นความต่าง)' : ''), vmax: vmaxF, op: .55, note: note };
 }
 var fmtD = function (v) { return v >= 1 ? v.toFixed(1) : v >= 0.01 ? v.toFixed(3) : v.toFixed(4); };
 /* หนึ่ง source/layer ต่อภาพ (สร้างตอนใช้ครั้งแรก) แล้วสลับ visibility — ไม่ใช้ updateImage เพราะบางเวอร์ชันไม่รีเฟรชภาพ */
@@ -165,10 +155,12 @@ function depthUpdate() {
   if (!dLayers[d.id]) dLayers[d.id] = addImg(M, 'depth', d.url, DBB, d.op, before);
   Object.keys(dLayers).forEach(function (k) { M.setLayoutProperty(dLayers[k], 'visibility', dOn && k === d.id ? 'visible' : 'none'); });
   var dl = panel.querySelector('.f3-dl'); dl.style.display = dOn ? 'block' : 'none';
+  var q = dl.querySelector('.dq'); if (!q) { q = document.createElement('div'); q.className = 'dq'; dl.appendChild(q); } q.textContent = d.note || ''; q.style.display = d.note ? 'block' : 'none';
   dl.querySelector('.dn').textContent = d.label; dl.querySelector('.dm').textContent = fmtD(d.vmax / 2); dl.querySelector('.dx').textContent = fmtD(d.vmax) + ' ม.+';
+  if (onDepth) onDepth();
 }
 function depthInit() {
-  fetch('assets/data/flood_depth_forecast_series_meta.json').then(function (r) { return r.json(); }).then(function (j) { if (typeof j.vmax_m === 'number') vmaxF = j.vmax_m; depthUpdate(); }).catch(function () {});
+  fetch('assets/data/flood_depth_forecast_series_meta.json').then(function (r) { return r.json(); }).then(function (j) { if (typeof j.vmax_m === 'number') vmaxF = j.vmax_m; (j.days || []).forEach(function (x) { dayMax[x.day] = x.max_depth_m; }); depthUpdate(); }).catch(function () {});
   depthUpdate();
   var tg = document.getElementById('map3dSourceToggle'); if (tg) tg.addEventListener('click', function () { setTimeout(depthUpdate, 0); });
   var rg = document.getElementById('dayRange'); if (rg) rg.addEventListener('input', function () { if (dSrc() === 'forecast') depthUpdate(); });
@@ -231,7 +223,7 @@ function start() {
   build();
   N.forEach(makeTube);
   panel = document.createElement('div'); panel.className = 'f3-panel';
-  panel.innerHTML = '<button type="button" class="tour">▶ พาชมจุดวิกฤต</button><button type="button" class="dp on">ชั้นความลึกน้ำท่วม: เปิด</button><div class="f3-dl"><div class="dn"></div><div class="db"></div><div class="ds"><span>0</span><span class="dm"></span><span class="dx"></span></div></div><button type="button" class="fl">น้ำฝนไหลไปไหน (คลิกแผนที่)</button><button type="button" class="fun">โหมดสนุก: ปิด</button><div class="f3-info"></div><div class="f3-key"><i></i>หลอดแก้ว = ระดับน้ำเทียบตลิ่ง · เส้นแดง = ตลิ่ง · น้ำทะลุหลอด = ล้นตลิ่ง · วงกลม = อ่างเก็บน้ำ (% ความจุ)</div>';
+  panel.innerHTML = '<button type="button" class="f3-pt">☰ เมนูแผนที่</button><button type="button" class="tour">▶ พาชมจุดวิกฤต</button><button type="button" class="dp on">ชั้นความลึกน้ำท่วม: เปิด</button><div class="f3-dl"><div class="dn"></div><div class="db"></div><div class="ds"><span>0</span><span class="dm"></span><span class="dx"></span></div></div><button type="button" class="fl">น้ำฝนไหลไปไหน (คลิกแผนที่)</button><button type="button" class="fun">โหมดสนุก: ปิด</button><select class="f3-vs" aria-label="เลือกหมู่บ้าน"><option value="">บินไปหมู่บ้าน…</option></select><div class="f3-ab"><button type="button" class="sh">🔗 คัดลอกลิงก์มุมมอง</button><button type="button" class="sv">📷 บันทึกภาพ</button><button type="button" class="pr">🖨 พิมพ์หน้านี้</button></div><div class="f3-info"></div><div class="f3-key"><i></i>หลอดแก้ว = ระดับน้ำเทียบตลิ่ง · เส้นแดง = ตลิ่ง · น้ำทะลุหลอด = ล้นตลิ่ง · วงกลม = อ่างเก็บน้ำ (% ความจุ)</div>';
   info = panel.querySelector('.f3-info');
   bar = document.createElement('div'); bar.className = 'f3-time';
   bar.innerHTML = '<button type="button" class="pl">▶</button><div class="sl"><input type="range" min="-7" max="7" step="1" value="0"><div class="tk"><span>ย้อนหลัง 7 วัน</span><span>ล่าสุด</span><span>พยากรณ์ 7 วัน</span></div></div><span class="lab"></span>';
@@ -248,6 +240,7 @@ function start() {
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && host.classList.contains('f3-pfs')) { host.classList.remove('f3-pfs'); after(); } });
   ['mousedown', 'dblclick', 'wheel', 'touchstart'].forEach(function (ev) { fs.addEventListener(ev, function (x) { x.stopPropagation(); }); });
   [panel, bar].forEach(function (e) { ['mousedown', 'dblclick', 'wheel', 'touchstart'].forEach(function (ev) { e.addEventListener(ev, function (x) { x.stopPropagation(); }); }); });
+  panel.querySelector('.f3-pt').onclick = function () { panel.classList.toggle('open'); this.textContent = panel.classList.contains('open') ? '✕ ปิดเมนู' : '☰ เมนูแผนที่'; };
   panel.querySelector('.tour').onclick = function () { stop(); tour(); };
   panel.querySelector('.fl').onclick = function () { stopTour(); flowOn(!flow3); };
   panel.querySelector('.fun').onclick = function () { var on = !host.classList.contains('f3-fun'); host.classList.toggle('f3-fun', on); this.classList.toggle('on', on); this.textContent = 'โหมดสนุก: ' + (on ? 'เปิด' : 'ปิด'); };
@@ -300,6 +293,74 @@ function start() {
   }
   M.on('idle', bldInit);
   M.on('click', flowClick); reservoirs(); depthInit();
+
+  /* ---------- D2: เลือกหมู่บ้าน → บินไป + สรุปอาคารที่ได้รับผลกระทบ ---------- */
+  var VIL = [], vSel = null, vOf = null;
+  function bbox(c, b) { if (typeof c[0] === 'number') { b[0] = Math.min(b[0], c[0]); b[1] = Math.min(b[1], c[1]); b[2] = Math.max(b[2], c[0]); b[3] = Math.max(b[3], c[1]); } else c.forEach(function (x) { bbox(x, b); }); return b; }
+  function inRing(x, y, r) { var o = false; for (var i = 0, j = r.length - 1; i < r.length; j = i++) { if ((r[i][1] > y) !== (r[j][1] > y) && x < (r[j][0] - r[i][0]) * (y - r[i][1]) / (r[j][1] - r[i][1]) + r[i][0]) o = !o; } return o; }
+  function inVil(v, x, y) { var g = v.g; if (x < v.b[0] || x > v.b[2] || y < v.b[1] || y > v.b[3]) return false; var polys = g.type === 'Polygon' ? [g.coordinates] : g.coordinates; return polys.some(function (p) { return inRing(x, y, p[0]); }); }
+  function ctr(c) { var r = c; while (typeof r[0][0] !== 'number') r = r[0]; var sx = 0, sy = 0; r.forEach(function (p) { sx += p[0]; sy += p[1]; }); return [sx / r.length, sy / r.length]; }
+  function vilIndex() { /* อาคารแต่ละหลังอยู่หมู่บ้านไหน (คำนวณครั้งเดียว) */
+    if (vOf || !bldRaw) return; vOf = bldRaw.map(function (f) { var c = ctr(f.geometry.coordinates), k = -1; for (var i = 0; i < VIL.length; i++) if (inVil(VIL[i], c[0], c[1])) { k = i; break; } return k; });
+  }
+  function vilStats() {
+    var i = vSel; if (i == null || i < 0) return; var v = VIL[i]; vilIndex();
+    if (!vOf) { info.innerHTML = '<b>' + esc(v.name) + '</b> (หมู่ ' + v.moo + ')<br>กำลังโหลดข้อมูลอาคาร…'; info.classList.add('show'); setTimeout(vilStats, 1500); return; }
+    var n = 0, w1 = 0, w10 = 0, mx = 0;
+    bldRaw.forEach(function (f, j) { if (vOf[j] !== i) return; n++; var d = bldDepth(f.properties || {}); if (d > mx) mx = d; if (d >= .001) w1++; if (d >= .1) w10++; });
+    var dl = mx >= .1 ? mx.toFixed(2) + ' ม.' : mx >= .01 ? (mx * 100).toFixed(1) + ' ซม.' : (mx * 1000).toFixed(1) + ' มม.';
+    var lv = mx >= .5 ? 'critical' : mx >= .1 ? 'warning' : mx >= .01 ? 'watch' : 'normal';
+    info.innerHTML = '<b style="color:' + HEX[lv] + '">' + esc(v.name) + '</b> (หมู่ ' + v.moo + ')<br>อาคารในแผนที่ ' + n + ' หลัง · มีน้ำ ≥ 1 มม. ' + w1 + ' หลัง · ≥ 10 ซม. ' + w10 + ' หลัง<br>ลึกสุด ' + dl + (n ? '' : ' <small>(ไม่พบอาคารในข้อมูล)</small>');
+    info.classList.add('show');
+  }
+  fetch('assets/data/villages.geojson.json').then(function (r) { return r.json(); }).then(function (j) {
+    VIL = (j.features || []).filter(function (f) { return f.geometry; }).map(function (f) { var b = bbox(f.geometry.coordinates, [1e9, 1e9, -1e9, -1e9]); return { name: f.properties.Name_TH || ('หมู่ ' + f.properties.Moo), moo: f.properties.Moo, g: f.geometry, b: b, c: [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2] }; }).sort(function (a, b) { return a.moo - b.moo; });
+    var s = panel.querySelector('.f3-vs'); VIL.forEach(function (v, i) { var o = document.createElement('option'); o.value = i; o.textContent = 'หมู่ ' + v.moo + ' ' + v.name.replace(/^บ้าน/, ''); s.appendChild(o); });
+    if (pendV != null) goVil(pendV);
+  }).catch(function () {});
+  var pendV = null;
+  function goVil(i) { if (!VIL.length) { pendV = i; return; } vSel = i; var v = VIL[i]; stopTour(); M.flyTo({ center: v.c, zoom: 15.6, pitch: 60, bearing: -12, duration: 1800, essential: true }); vilStats(); panel.querySelector('.f3-vs').value = i; }
+  panel.querySelector('.f3-vs').onchange = function () { if (this.value === '') { vSel = null; info.classList.remove('show'); return; } goVil(+this.value); };
+  onDepth = function () { if (vSel != null) vilStats(); };
+
+  /* ---------- D1: ลิงก์แชร์มุมมอง (#v3=lat,lng,zoom,pitch,bearing,แหล่ง,วัน) ---------- */
+  var SRC = ['forecast', 'p95', 'yagi2024'];
+  function shareUrl() {
+    var c = M.getCenter(), a = [c.lat.toFixed(5), c.lng.toFixed(5), M.getZoom().toFixed(2), M.getPitch().toFixed(0), M.getBearing().toFixed(0), Math.max(0, SRC.indexOf(dSrc())), dDay()];
+    return location.href.split('#')[0] + '#v3=' + a.join(',');
+  }
+  panel.querySelector('.sh').onclick = function () {
+    var b = this, u = shareUrl(), ok = function () { b.textContent = '✓ คัดลอกแล้ว'; setTimeout(function () { b.textContent = '🔗 คัดลอกลิงก์มุมมอง'; }, 1800); };
+    try { history.replaceState(null, '', u); } catch (e) {}
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(u).then(ok, function () { prompt('คัดลอกลิงก์นี้', u); });
+    else { prompt('คัดลอกลิงก์นี้', u); }
+  };
+  function applyHash() {
+    var m = /v3=(-?[\d.]+),(-?[\d.]+),([\d.]+),(-?[\d.]+),(-?[\d.]+)(?:,(\d),(\d))?/.exec(location.hash); if (!m) return;
+    var s = +m[6] || 0, dy = +m[7] || 0, bt = document.querySelectorAll('#map3dSourceToggle button');
+    if (bt[s] && !bt[s].classList.contains('active')) bt[s].click();
+    var r = document.getElementById('dayRange'); if (s === 0 && dy >= 1 && dy <= 7 && r) { r.value = dy; r.dispatchEvent(new Event('input', { bubbles: true })); t = dy; render(); }
+    M.jumpTo({ center: [+m[2], +m[1]], zoom: +m[3], pitch: +m[4], bearing: +m[5] });
+    try { host.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+  }
+  applyHash();
+
+  /* ---------- D4: บันทึกภาพแผนที่ 3 มิติเป็น PNG (ประกอบแผนที่ + ป้ายหัวเรื่อง) ---------- */
+  panel.querySelector('.pr').onclick = function () { window.print(); };
+  panel.querySelector('.sv').onclick = function () {
+    var b = this; b.textContent = 'กำลังสร้างภาพ…';
+    M.once('render', function () {
+      try {
+        var c = M.getCanvas(), w = c.width, h = c.height, pad = Math.round(h * .07), o = document.createElement('canvas'); o.width = w; o.height = h + pad;
+        var x = o.getContext('2d'), s = Math.max(1, w / 900);
+        x.fillStyle = '#081e26'; x.fillRect(0, 0, w, h + pad); x.drawImage(c, 0, 0);
+        x.fillStyle = '#eef6f4'; x.font = '600 ' + Math.round(13 * s) + 'px sans-serif'; x.textBaseline = 'middle';
+        x.fillText('แม่นาเรือ — แผนที่น้ำท่วม 3 มิติ · ' + (bar.querySelector('.lab').textContent || '') + ' · ' + panel.querySelector('.f3-dl .dn').textContent, 12 * s, h + pad / 2);
+        o.toBlob(function (bl) { var a = document.createElement('a'); a.href = URL.createObjectURL(bl); a.download = 'maenarua-flood-3d-' + new Date().toISOString().slice(0, 10) + '.png'; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000); b.textContent = '📷 บันทึกภาพ'; }, 'image/png');
+      } catch (e) { console.warn('f3 save', e); b.textContent = '📷 บันทึกภาพ (ไม่สำเร็จ)'; }
+    });
+    M.triggerRepaint();
+  };
   bar.querySelector('input').oninput = function () { stop(); setT(+this.value); };
   bar.querySelector('.pl').onclick = function () {
     if (timer) { stop(); return; } this.textContent = '⏸'; if (t >= 7) setT(-7); else setT(t + 1);
@@ -310,6 +371,8 @@ function start() {
   render();
 }
 
+/* ลิงก์แชร์ #v3=… → เปิดโหมด 3 มิติให้อัตโนมัติ (kit จะย้ายกล้องเองเมื่อแผนที่พร้อม) */
+if (/v3=/.test(location.hash)) { var ob3 = document.getElementById('view3dBtn'); if (ob3) setTimeout(function () { if (!M) ob3.click(); }, 800); }
 fetch('assets/data/flood_latest.json').then(function (r) { return r.json(); }).then(function (j) { D = j; }).catch(function () {});
 var iv = setInterval(function () {
   if (!D || !window.__wmbMap3d || typeof maplibregl === 'undefined') return;

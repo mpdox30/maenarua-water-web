@@ -65,7 +65,17 @@ function frame() {
   c.save(); c.beginPath(); c.rect(padL - 4, 0, (xNow - padL + 8) * tObs, H); c.clip();
   var g = c.createLinearGradient(0, top, 0, bot); g.addColorStop(0, rgba(A, .32)); g.addColorStop(1, rgba(A, 0));
   c.beginPath(); obs.forEach(function (o, i) { i ? c.lineTo(X(i), Y(o.level)) : c.moveTo(X(i), Y(o.level)); }); c.lineTo(xNow, bot); c.lineTo(X(0), bot); c.closePath(); c.fillStyle = g; c.fill();
-  c.strokeStyle = rgba(A5, 1); c.lineWidth = 3; c.lineJoin = 'round'; c.lineCap = 'round'; c.beginPath(); obs.forEach(function (o, i) { i ? c.lineTo(X(i), Y(o.level)) : c.moveTo(X(i), Y(o.level)); }); c.stroke();
+  c.strokeStyle = rgba(A5, 1); c.lineWidth = 3; c.lineJoin = 'round'; c.lineCap = 'round';
+  /* ช่วงที่ข้อมูลวัดขาด (>1 วัน) วาดเป็นเส้นประจาง = ค่าประมาณ (interpolation) ไม่ใช่ค่าวัดจริง */
+  var gapDays = function (i) { return (Date.parse(obs[i].date) - Date.parse(obs[i - 1].date)) / 864e5; }, gaps = [];
+  c.beginPath(); obs.forEach(function (o, i) { if (i && gapDays(i) > 1.5) { gaps.push(i); c.moveTo(X(i), Y(o.level)); } else i ? c.lineTo(X(i), Y(o.level)) : c.moveTo(X(i), Y(o.level)); }); c.stroke();
+  if (gaps.length) {
+    c.save(); c.setLineDash([3, 6]); c.lineWidth = 2.2; c.strokeStyle = rgba(A5, .55);
+    gaps.forEach(function (i) { c.beginPath(); c.moveTo(X(i - 1), Y(obs[i - 1].level)); c.lineTo(X(i), Y(obs[i].level)); c.stroke(); });
+    c.setLineDash([]); c.font = '500 10.5px ' + FONT; c.textAlign = 'center'; c.fillStyle = rgba(rgb('--bd-rgb', [120, 150, 150]), .95);
+    gaps.forEach(function (i) { c.fillText('ข้อมูลขาด ' + Math.round(gapDays(i) - 1) + ' วัน (ประมาณ)', (X(i - 1) + X(i)) / 2, Math.min(bot - 6, Y(Math.min(obs[i - 1].level, obs[i].level)) + 20)); });
+    c.restore();
+  }
   c.restore();
   // แถบ P10–P90 กางพัดจากจุด "วันนี้"
   if (tFan > 0) {

@@ -91,6 +91,7 @@ function buildPanel() {
     }
   });
   new Ctl().addTo(M); listEl = panel.querySelector('#ukmList'); legend();
+  if (window.innerWidth <= 640) panel.classList.add('shut');   /* มือถือ: เริ่มแบบพับ ไม่บังแผนที่ */
 }
 function legend() {
   var el = panel && panel.querySelector('#ukmLg'); if (!el) return;
