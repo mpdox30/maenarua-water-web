@@ -109,3 +109,6 @@ water-balance: กราฟเปรียบเทียบเป็นแท�
 - `i18n-kit.js` ปุ่ม EN/TH (กดแล้วโหลดหน้าใหม่): แปลข้อความทั้งหมดที่หน้า/kit แสดง (DOM + canvas + รูปแบบวันที่) ผ่านพจนานุกรม DICT ที่ฝังในไฟล์ · ที่ยังเป็นไทย: ข้อความที่มาจากไฟล์ข้อมูลโดยตรง · จำภาษาใน localStorage `uk_lang`
 - `vendor_cdn.py` (รันบนเครื่องที่ต่อเน็ต) เก็บ Leaflet/MapLibre/deck.gl/hammer/chartjs-zoom/ฟอนต์ไว้ใน `assets/vendor/` แล้วแก้ลิงก์ในหน้า
 - ไม่ทำ E1 (รวมไฟล์ kit): HTTP/2 + แคชทำให้แทบไม่เร็วขึ้น และแยกไฟล์ช่วยให้ kit หนึ่งพังแล้วตัวอื่นยังทำงาน
+- `plain-kit.js` หมายเหตุโมเดลเป็นภาษาคน (TH/EN): inflow-forecast การ์ดสรุป +1…+7 วัน (ชิปสี จาก NSE) · water-demand "ตัวเลขนี้มาจากไหน" (Live/Static/ผสม) · SAR quality (gis-map, index) — กล่องเทคนิคเดิมย้ายเข้า `<details>` (ไม่ลบ)
+- `csv-kit.js` ปุ่ม "ดาวน์โหลด CSV" ใต้ทุก `.table-card` (อ่านค่าที่แสดงบนจอ, UTF-8 BOM เปิดใน Excel ได้)
+- PWA: `python make_pwa_assets.py` สร้าง `manifest.webmanifest`, `sw.js`, ไอคอน (`assets/img/icon-*.png`) · `pwa-kit.js` ลงทะเบียน (ข้ามบน localhost; `?nosw=1` ถอน service worker) · sw: หน้า html เครือข่ายก่อน, vendor/uikit/img/js เก็บใช้ซ้ำ, `assets/data` และลิงก์ข้ามโดเมนไม่แตะ

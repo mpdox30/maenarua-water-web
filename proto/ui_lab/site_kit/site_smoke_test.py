@@ -57,5 +57,14 @@ try:
     a = age_h(u); (fail if a > 12 else warn if a > 2 else print)(('ข้อมูลสถานีเก่า %.1f ชม.' % a) if a > 2 else 'OK  ข้อมูลสถานีอายุ %.1f ชม.' % a)
 except Exception as e: fail('อ่าน monitoring.json ไม่ได้: %s' % e)
 
+# PWA: manifest + service worker + ไอคอนต้องมีและอ่านได้
+try:
+    m = json.load(open(os.path.join(SITE, 'manifest.webmanifest'), encoding='utf-8'))
+    for ic in m.get('icons', []):
+        if not os.path.exists(os.path.join(SITE, ic['src'])): fail('manifest: ไม่พบไอคอน ' + ic['src'])
+    if not os.path.exists(os.path.join(SITE, m.get('start_url', 'index.html').lstrip('./') or 'index.html')): fail('manifest: start_url ไม่มีไฟล์')
+except Exception as e: fail('อ่าน manifest.webmanifest ไม่ได้ (รัน make_pwa_assets.py): %s' % e)
+if not os.path.exists(os.path.join(SITE, 'sw.js')): fail('ไม่พบ sw.js (รัน make_pwa_assets.py)')
+
 print('\nหน้าที่ตรวจ: %d | FAIL %d | WARN %d' % (len(pages), len(fails), len(warns)))
 sys.exit(1 if fails else 0)
