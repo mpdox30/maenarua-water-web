@@ -19,11 +19,24 @@ function lvlBase() { if (!D) return 0; if (src === 'now') return D.kwan_now ? D.
 function toLL(x, y) { var n = Math.PI - 2 * Math.PI * y / G.world; return [180 / Math.PI * Math.atan(.5 * (Math.exp(n) - Math.exp(-n))), x / G.world * 360 - 180]; }
 function toPx(lat, lon) { var s = Math.sin(lat * Math.PI / 180); return [(lon + 180) / 360 * G.world, (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * G.world]; }
 
+/* ตรวจ "รอยลากต่อขอบ" ของ DEM นอกพื้นที่ LiDAR: ค่าเท่ากันซ้ำยาวเป็นแนวเดียว (แนวตั้งหรือแนวนอน) */
+function smearMask(o, w, h) {
+  var N = w * h, T = 30, BIG = 60, EPS = 0.05, hr = new Int32Array(N), vr = new Int32Array(N), bad = new Uint8Array(N), i, x, y, a, b;
+  function same(p, q) { return o[p] === o[p] ? (o[q] === o[q] && Math.abs(o[p] - o[q]) < EPS) : false; }
+  for (y = 0; y < h; y++) { x = 0; while (x < w) { a = y * w + x; if (!(o[a] === o[a])) { x++; continue; } b = x + 1; while (b < w && same(y * w + b - 1, y * w + b)) b++; for (i = x; i < b; i++) hr[y * w + i] = b - x; x = b; } }
+  for (x = 0; x < w; x++) { y = 0; while (y < h) { a = y * w + x; if (!(o[a] === o[a])) { y++; continue; } b = y + 1; while (b < h && same((b - 1) * w + x, b * w + x)) b++; for (i = y; i < b; i++) vr[i * w + x] = b - y; y = b; } }
+  for (i = 0; i < N; i++) { if (!(o[i] === o[i])) continue; var H1 = hr[i], V1 = vr[i]; if ((V1 >= T && H1 < T) || (H1 >= T && V1 < T) || (H1 >= T && V1 >= T && (H1 >= BIG || V1 >= BIG))) bad[i] = 1; }
+  var out = new Uint8Array(bad);   // ขยาย 1 เซลล์
+  for (y = 0; y < h; y++) for (x = 0; x < w; x++) if (bad[y * w + x]) { if (x > 0) out[y * w + x - 1] = 1; if (x < w - 1) out[y * w + x + 1] = 1; if (y > 0) out[(y - 1) * w + x] = 1; if (y < h - 1) out[(y + 1) * w + x] = 1; }
+  return out;
+}
+
 /* ---------- เตรียมกริด + หมู่บ้าน ---------- */
 function prep() {
   if (G) return Promise.resolve();
   return window.__ukFlow.grid().then(function (g) {
-    G = g; var tl = toLL(g.ox * g.pool, g.oy * g.pool), br = toLL((g.ox + g.w) * g.pool, (g.oy + g.h) * g.pool);
+    G = g; (function () { var bad = smearMask(g.orig, g.w, g.h), n = g.orig.length; G.o = new Float32Array(g.orig); G.sd = new Uint8Array(g.seed); for (var i = 0; i < n; i++) if (bad[i]) { G.o[i] = NaN; G.sd[i] = 0; } })();
+    var tl = toLL(g.ox * g.pool, g.oy * g.pool), br = toLL((g.ox + g.w) * g.pool, (g.oy + g.h) * g.pool);
     corners = [[tl[1], tl[0]], [br[1], tl[0]], [br[1], br[0]], [tl[1], br[0]]];
     var mpp = 156543.03392 * Math.cos(19.12 * Math.PI / 180) / (g.world / 256) * g.pool; G.cellKm2 = mpp * mpp / 1e6;
     return fetch('assets/data/villages.geojson.json').then(function (r) { return r.json(); }).then(function (v) {
@@ -42,8 +55,8 @@ function prep() {
 function baseLevel() { return D && D.kwan_now ? D.kwan_now.level : 0; }
 var OUT0 = null;
 function flood(L0) {
-  var w = G.w, h = G.h, N = w * h, o = G.orig, out = new Uint8Array(N), q = new Int32Array(N), hd = 0, tl = 0;
-  for (var i = 0; i < N; i++) if (G.seed[i] === 1) { out[i] = 2; q[tl++] = i; }
+  var w = G.w, h = G.h, N = w * h, o = G.o, out = new Uint8Array(N), q = new Int32Array(N), hd = 0, tl = 0;
+  for (var i = 0; i < N; i++) if (G.sd[i] === 1) { out[i] = 2; q[tl++] = i; }
   while (hd < tl) {
     var c = q[hd++], x = c % w, y = (c / w) | 0, j;
     if (x > 0) { j = c - 1; if (!out[j] && o[j] <= L0) { out[j] = 1; q[tl++] = j; } }
@@ -56,7 +69,7 @@ function flood(L0) {
 /* ส่วนที่น้ำ "เข้าไปเพิ่ม" = พื้นที่ที่สูงกว่าระดับล่าสุด (B) แต่ไม่เกินระดับที่เลือก (L0) และต่อเนื่องจากผืนน้ำกว๊านเดิม
    (ไม่นับแอ่งต่ำที่อยู่ต่ำกว่า B แต่ไม่เชื่อมกับกว๊าน เช่น ร่องน้ำท้ายน้ำ เพราะน้ำจะไหลลงไปไม่ใช่ท่วมขังเท่าระดับกว๊าน) */
 function compute(L0) {
-  var w = G.w, h = G.h, o = G.orig, N = o.length, B = baseLevel(); if (!OUT0) OUT0 = flood(B);
+  var w = G.w, h = G.h, o = G.o, N = o.length, B = baseLevel(); if (!OUT0) OUT0 = flood(B);
   var out = new Uint8Array(N), q = new Int32Array(N), hd = 0, tl = 0, cnt0 = 0, ext = 0, mx = 0;
   for (var i = 0; i < N; i++) if (OUT0[i]) { out[i] = OUT0[i]; q[tl++] = i; if (OUT0[i] === 1) cnt0++; }
   if (L0 > B) while (hd < tl) {
@@ -72,7 +85,7 @@ function compute(L0) {
 }
 var cv = document.createElement('canvas');
 function render(r, L0) {
-  cv.width = G.w; cv.height = G.h; var cx = cv.getContext('2d'), im = cx.createImageData(G.w, G.h), d = im.data, o = G.orig, out = r.out, B = r.base;
+  cv.width = G.w; cv.height = G.h; var cx = cv.getContext('2d'), im = cx.createImageData(G.w, G.h), d = im.data, o = G.o, out = r.out, B = r.base;
   for (var i = 0, n = out.length; i < n; i++) if (out[i] === 1 || out[i] === 3) {
     var p = i * 4;
     if (out[i] === 1) { d[p] = 110; d[p + 1] = 190; d[p + 2] = 235; d[p + 3] = 70; }                       // ผืนน้ำกว๊านที่ระดับล่าสุด (พื้นฐาน)
