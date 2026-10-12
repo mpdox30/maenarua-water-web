@@ -184,7 +184,8 @@
   }
 
   /* ================= โหมดหลัก: Cytoscape ================= */
-  var FH = Math.round(Math.min(720, Math.max(520, window.innerHeight * 0.78))) + 'px', cyBase = BASE + 'assets/vendor/cytoscape/cytoscape.min.js', flowDots = [], flowOn = true, flowCancel = false, fontSize = 12, userMoved = false;
+  var FH = Math.round(Math.min(720, Math.max(520, window.innerHeight * 0.78))) + 'px', cyBase = BASE + 'assets/vendor/cytoscape/cytoscape.min.js', flowDots = [], flowOn = true, flowCancel = false, fontSize = 12, userMoved = false, lineScale = 2;
+  function applyLines() { if (!cy) return; var k = lineScale; cy.style().selector('edge').style({ width: 3 * k, 'arrow-scale': Math.max(0.8, k * 0.8) }).selector('edge[type = "main"]').style({ width: 6 * k }).update(); }
   function loadCy(cb) {
     if (window.cytoscape) return cb(true);
     var s = document.createElement('script'); s.src = cyBase; s.onload = function () { cb(!!window.cytoscape); }; s.onerror = function () { cb(false); }; document.head.appendChild(s);
@@ -255,6 +256,7 @@
     MODE = 'cy';
     var tb = '<div class="wd-ov wd-north"><div style="font-size:16px;line-height:1">↑</div><div>' + T('เหนือ', 'North') + '</div></div>' +
       '<div class="wd-ov wd-tb"><span style="color:' + C.muted + ';margin-right:2px">' + T('ตัวอักษร', 'Font') + '</span><button class="wd-sq" data-a="f-">−</button><span id="wd-fs" style="width:16px;text-align:center">12</span><button class="wd-sq" data-a="f+">+</button><div class="wd-sep"></div>' +
+      '<span style="color:' + C.muted + ';margin-right:2px">' + T('เส้น', 'Lines') + '</span><button class="wd-sq" data-a="l-">−</button><span id="wd-ls" style="min-width:26px;text-align:center">' + lineScale.toFixed(1) + '×</span><button class="wd-sq" data-a="l+">+</button><div class="wd-sep"></div>' +
       '<button class="wd-bw" data-a="fit" title="' + T('จัดกึ่งกลางผังน้ำใหม่', 'Re-center') + '">⤢ ' + T('จัดกึ่งกลาง', 'Fit') + '</button><div class="wd-sep"></div><button class="wd-bw" data-a="fs" id="wd-fsb">⤢ ' + T('เต็มจอ', 'Fullscreen') + '</button><div class="wd-sep"></div>' +
       '<button class="wd-bw" data-a="flow" id="wd-flow" style="border-color:#0ea5e9;background:#e0f2fe">💧 ' + T('น้ำไหล: เปิด', 'Flow: on') + '</button></div>';
     var li = function (shape, label) { return '<div><span class="wd-li">' + shape + '</span><span style="color:#334155">' + label + '</span></div>'; };
@@ -285,7 +287,7 @@
           if (comps.length > 1) { var big = comps.reduce(function (a, b) { return a.length >= b.length ? a : b; }); main = big.union(cy.elements().filter(function (e) { return e.isEdge() || e.data('sourceRef') || (e.data('label') && String(e.data('label')).trim()); })); }
           fitTarget = main; cyRefit(); setTimeout(function () { if (cy && !userMoved) cyRefit(); }, 200);
           var m = frame.querySelector('#wd-msg'); if (m) m.remove();
-          cyLabels(); cyHighlight(); startFlow();
+          applyLines(); cyLabels(); cyHighlight(); startFlow();
           if (window.ResizeObserver) new ResizeObserver(function () { if (cy && !userMoved) cyRefit(); }).observe(c);
         }); });
       });
@@ -294,6 +296,7 @@
     frame.addEventListener('click', function (e) {
       var b = e.target.closest && e.target.closest('[data-a]'); if (!b || !cy) return; var a = b.getAttribute('data-a'), fsE = frame.querySelector('#wd-fs');
       if (a === 'f-' || a === 'f+') { fontSize = Math.max(6, Math.min(24, fontSize + (a === 'f+' ? 1 : -1))); fsE.textContent = fontSize; cy.style().selector('node').style({ 'font-size': fontSize + 'px' }).selector('edge').style({ 'font-size': Math.max(fontSize - 2, 8) + 'px' }).update(); }
+      else if (a === 'l-' || a === 'l+') { lineScale = Math.max(0.6, Math.min(5, Math.round((lineScale + (a === 'l+' ? 0.5 : -0.5)) * 10) / 10)); frame.querySelector('#wd-ls').textContent = lineScale.toFixed(1) + '×'; applyLines(); }
       else if (a === 'fit') cyRefit();
       else if (a === 'fs') { if (document.fullscreenElement) document.exitFullscreen && document.exitFullscreen(); else frame.requestFullscreen && frame.requestFullscreen(); }
       else if (a === 'flow') { flowOn = !flowOn; b.textContent = '💧 ' + (flowOn ? T('น้ำไหล: เปิด', 'Flow: on') : T('น้ำไหล: ปิด', 'Flow: off')); b.style.borderColor = flowOn ? '#0ea5e9' : '#cbd5e1'; b.style.background = flowOn ? '#e0f2fe' : '#fff'; startFlow(); }
