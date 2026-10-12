@@ -61,7 +61,7 @@
   var css = document.createElement('style');
   css.textContent = '#water-diagram .wd-panel{background:' + C.bg + ';border:1px solid ' + C.border + ';border-radius:20px;padding:16px;font-family:' + SANS + ';color:' + C.text + '}' +
     '#water-diagram .wd-frame{position:relative;border-radius:12px;overflow:hidden;border:1.5px solid ' + C.border + ';box-shadow:0 2px 12px rgba(0,0,0,.08);background:#fff;text-align:left}#water-diagram .wd-frame>svg{display:block;width:100%;height:auto}' +
-    '#water-diagram .wd-frame:fullscreen{border-radius:0}' +
+    '#water-diagram .wd-frame:fullscreen{border-radius:0}#water-diagram .wd-frame:fullscreen .wd-ov{zoom:var(--wdz,1.6)}#water-diagram .wd-frame:fullscreen .wd-pn{max-height:calc((100vh - 24px) / var(--wdz,1.6))}' +
     '#water-diagram .wd-n{cursor:pointer}#water-diagram .wd-n:focus{outline:none}#water-diagram .wd-n:focus-visible .wd-s{stroke:#0c4a6e;stroke-width:6}' +
     '#water-diagram .wd-ov{position:absolute;background:rgba(255,255,255,.92);border-radius:8px;box-shadow:0 1px 6px rgba(0,0,0,.15);font-size:11px;color:#0f172a;z-index:3}' +
     '#water-diagram .wd-tb{top:8px;left:70px;padding:4px 6px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}#water-diagram .wd-north{top:8px;left:8px;padding:4px 10px 6px;display:flex;flex-direction:column;align-items:center;font-weight:700}' +
@@ -153,7 +153,7 @@
       var svg = ch.querySelector('svg'), tip = ch.querySelector('.wd-tip'), dot = svg.querySelector('.wd-dot'), h = d.hist, W = 620, l = 34, r = 10, mx = Math.max(100, Math.ceil(Math.max.apply(null, h.map(function (p) { return p.pct; })) / 10) * 10);
       ch.addEventListener('mousemove', function (e) { var b = svg.getBoundingClientRect(), x = (e.clientX - b.left) / b.width * W, i = Math.max(0, Math.min(h.length - 1, Math.round((x - l) / (W - l - r) * (h.length - 1))));
         dot.setAttribute('cx', l + (W - l - r) * i / Math.max(1, h.length - 1)); dot.setAttribute('cy', 170 - 22 - (170 - 22 - 10) * h[i].pct / mx);
-        tip.style.display = 'block'; tip.innerHTML = fmtDate(h[i].iso) + ' · <b>' + h[i].pct + '%</b>'; tip.style.left = Math.min(b.width - 110, Math.max(0, e.clientX - b.left + 8)) + 'px'; tip.style.top = '0px'; });
+        tip.style.display = 'block'; tip.innerHTML = fmtDate(h[i].iso) + ' · <b>' + h[i].pct + '%</b>'; var z = document.fullscreenElement === frame ? (parseFloat(frame.style.getPropertyValue('--wdz')) || 1) : 1; tip.style.left = Math.min(b.width / z - 110, Math.max(0, (e.clientX - b.left) / z + 8)) + 'px'; tip.style.top = '0px'; });
       ch.addEventListener('mouseleave', function () { tip.style.display = 'none'; dot.setAttribute('cx', -9); });
     }
   }
@@ -301,7 +301,7 @@
       else if (a === 'fs') { if (document.fullscreenElement) document.exitFullscreen && document.exitFullscreen(); else frame.requestFullscreen && frame.requestFullscreen(); }
       else if (a === 'flow') { flowOn = !flowOn; b.textContent = '💧 ' + (flowOn ? T('น้ำไหล: เปิด', 'Flow: on') : T('น้ำไหล: ปิด', 'Flow: off')); b.style.borderColor = flowOn ? '#0ea5e9' : '#cbd5e1'; b.style.background = flowOn ? '#e0f2fe' : '#fff'; startFlow(); }
     });
-    document.addEventListener('fullscreenchange', function () { var on = document.fullscreenElement === frame; frame.style.height = on ? '100vh' : FH; var b = frame.querySelector('#wd-fsb'); if (b) b.textContent = '⤢ ' + (on ? T('ออกเต็มจอ', 'Exit fullscreen') : T('เต็มจอ', 'Fullscreen')); requestAnimationFrame(cyRefit); });
+    document.addEventListener('fullscreenchange', function () { var on = document.fullscreenElement === frame; frame.style.setProperty('--wdz', String(Math.round(Math.max(1.4, Math.min(2.4, window.innerWidth / 1000)) * 10) / 10)); frame.style.height = on ? '100vh' : FH; var b = frame.querySelector('#wd-fsb'); if (b) b.textContent = '⤢ ' + (on ? T('ออกเต็มจอ', 'Exit fullscreen') : T('เต็มจอ', 'Fullscreen')); requestAnimationFrame(cyRefit); });
     buildData();
   }
 
