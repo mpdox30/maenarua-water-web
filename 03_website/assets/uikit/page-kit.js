@@ -120,7 +120,7 @@ function mapFx() {
 }
 
 /* ---------- ซ่อนส่วน "การเข้าถึงข้อมูล" (access-grid) ทุกหน้า ---------- */
-function hideAccess() { $$('.access-grid').forEach(function (g) { var s = g.closest('section'); if (s) s.style.display = 'none'; }); }
+function hideAccess() { $$('.access-grid, .card-grid:has(.nav-card)').forEach(function (g) { var s = g.closest('section'); if (s) s.style.display = 'none'; }); }   /* + ส่วน "สำรวจข้อมูล / ไปยังหมวดข้อมูลอื่น" (หน้าแรก) — ซ่อนชั่วคราว: ลบ selector หลัง , ออกเพื่อนำกลับมา */
 
 /* ---------- หน้าแรก: ตัวชี้วัดสำคัญ แบบ bento (อ่านค่าจากการ์ดเดิม ไม่ hardcode) ---------- */
 function indexKpi() {
