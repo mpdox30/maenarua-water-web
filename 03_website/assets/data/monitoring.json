@@ -14276,7 +14276,7 @@
       "name_th": "อ่างเก็บน้ำห้วยถ้ำ",
       "name_en": "Huai Tham Reservoir",
       "spillway_msl": 478.1,
-      "water_level": 478.67,
+      "water_level": 478.66,
       "rainfall_1h": 0.0,
       "temperature": 29.1,
       "humidity": 95.9,
@@ -14285,8 +14285,8 @@
       "measure_datetime": "2026-10-13T17:30:00",
       "storage_m3": 547520.2,
       "storage_max_m3": 495467.8,
-      "capacity_pct": 110.5,
-      "distance_to_spillway_m": 0.57,
+      "capacity_pct": 110.3,
+      "distance_to_spillway_m": 0.56,
       "history": [
         {
           "t": "2026-09-29T18:00:00",
