@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-12T01:05:22.525336+00:00",
+ "generated_at": "2026-10-13T03:51:54.644661+00:00",
  "unit_note": "Water Level = MSL (m); Volume/Inflow/O/Spill/Runoff/Evap/Infiltration/DeltaS = m3 (ยกเว้น rain_24h_mm = mm)",
  "source_note": "ดึงจาก D:\\WMB_Phayao\\01_raw_data\\Reservoirs\\บัญชีน้ำ\\<year>_<Month>_MNR.xlsx ('ฉบับสูตรสปิลเวย์แก้ไข' -- เขียนโดย recompute_corrected_ledger.py, ไม่ใช่ไฟล์ทางการ production) ด้วย build_water_ledger_json.py",
  "formula_note": "Spill คำนวณด้วย critical-flow + Manning friction model (n=0.017) แทนสูตร Q=1.82*L*H^1.5 เดิม -- ใช้เฉพาะหน้า water-balance.html เท่านั้น ไม่กระทบไฟล์ทางการ/โมเดล ML ใน production ดูคอลัมน์ note ต่อแถวว่าวันนั้นคำนวณด้วยสูตรใหม่จริง หรือ fallback ใช้ค่าเดิม",
@@ -8063,6 +8063,23 @@
    "year": 2026,
    "month": 10,
    "date": "2026-10-12"
+  },
+  {
+   "day": 13,
+   "water_level_m": 489.829,
+   "water_volume_m3": 1710454.4363393,
+   "inflow_m3": 183277.9619576604,
+   "outlet_release_m3": 15019.2,
+   "spill_m3": 185612.8940935679,
+   "rain_24h_mm": 0,
+   "runoff_m3": 0,
+   "evap_m3": 777.7914361399211,
+   "infiltration_m3": 311.30156955261,
+   "delta_s_m3": -18443.22514160001,
+   "note": "ใช้ค่าเดิม (ไม่มี telemetry รายชั่วโมงครบ 20ชม. ช่วงนี้) | ⚠ rating ชั่วคราว (สันประสิทธิผล +0.17 ม.) ยังไม่ผ่านการยืนยัน: Spill/Inflow อาจคลาดเคลื่อน",
+   "year": 2026,
+   "month": 10,
+   "date": "2026-10-13"
   }
  ]
 }
