@@ -16,7 +16,8 @@ fails, warns = [], []
 def fail(m): fails.append(m); print('FAIL', m)
 def warn(m): warns.append(m); print('WARN', m)
 
-pages = sorted(glob.glob(os.path.join(SITE, '*.html')))
+pages = sorted(p for p in glob.glob(os.path.join(SITE, '*.html')) if os.path.basename(p) != 'research.html')   # research.html = stub "เร็วๆ นี้" (ไม่ฝัง kit ตั้งใจ)
+stub = os.path.join(SITE, 'research.html')
 if not pages: fail('ไม่พบหน้า .html ใน ' + SITE)
 vers = set(); outside = {}
 URLRE = re.compile(r'(?:src|href)\s*=\s*["\']([^"\'#?]+)(\?[^"\']*)?["\']', re.I)

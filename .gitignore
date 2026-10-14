@@ -75,3 +75,11 @@ _website_refactor_wip/
 # เพิ่มขั้นตอน git add แบบกว้าง (ทั้งโฟลเดอร์ inflow/) ให้ run_reservoir_daily_orchestration.bat ได้
 # อย่างปลอดภัย ไม่ดึง backup พวกนี้ติดไปด้วย
 01_data/Reservoirs/inflow/*/*.bak_before_*
+
+# 2026-10-14: repo เป็น public + GitHub Pages เสิร์ฟทั้ง 03_website -- ไม่ commit ไฟล์สำรอง/ของที่ยังไม่เผยแพร่
+proto/_deploy_backups/
+proto/_local_hold/
+03_website/_backup_*/
+03_website/**/*.bak
+03_website/**/*.bak_*
+01_data/scripts and code/Reservoir_inflow/active/Retrain/manuscript_figures_final/

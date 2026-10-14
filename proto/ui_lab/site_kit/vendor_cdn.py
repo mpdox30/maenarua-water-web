@@ -3,7 +3,7 @@ vendor_cdn.py — ดาวน์โหลดไลบรารี/ฟอนต�
 ทำไม: เว็บไม่ล่มเมื่อ CDN (unpkg / jsdelivr / Google Fonts) ช้า/ล่ม/ถูกบล็อก และไม่ส่งข้อมูลผู้เข้าชมไปบุคคลที่สาม
 ใช้:   python vendor_cdn.py            ดาวน์โหลด + แก้ลิงก์ (ต้องต่ออินเทอร์เน็ตบนเครื่องคุณ)
        python vendor_cdn.py --dry      แสดงว่าจะแก้อะไร ไม่ดาวน์โหลด/ไม่เขียนไฟล์
-ปลอดภัย: สำรอง .html ที่จะแก้ไว้ 03_website/_backup_before_vendor_<วันที่>/ · รันซ้ำได้ · ดาวน์โหลดไม่ครบจะไม่แก้หน้าใดเลย
+ปลอดภัย: สำรอง .html ที่จะแก้ไว้ proto/_deploy_backups/_backup_before_vendor_<วันที่>/ · รันซ้ำได้ · ดาวน์โหลดไม่ครบจะไม่แก้หน้าใดเลย
 ถอยกลับ: คัดลอก .html จากโฟลเดอร์สำรองกลับมาทับ (ลบ assets/vendor ได้หรือจะทิ้งไว้ก็ได้)
 หลังรัน: python site_smoke_test.py แล้ว git add 03_website && git commit && git push
 """
@@ -12,7 +12,8 @@ HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import preview_server as ps
 SITE = ps.SITE; DRY = '--dry' in sys.argv
 VEND = os.path.join(SITE, 'assets', 'vendor')
-BK = os.path.join(SITE, '_backup_before_vendor_' + time.strftime('%Y%m%d'))
+BK_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), '_deploy_backups')   # proto/_deploy_backups (ไม่ถูก commit/เสิร์ฟ)
+BK = os.path.join(BK_ROOT, '_backup_before_vendor_' + time.strftime('%Y%m%d'))
 UA_MODERN = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
 
 # (URL ในหน้า, ไฟล์ปลายทางใต้ assets/vendor)
@@ -77,4 +78,4 @@ for p in pages:
             dst = os.path.join(BK, rel)
             if not os.path.exists(dst): os.makedirs(os.path.dirname(dst), exist_ok=True); shutil.copy2(p, dst)
             open(p, 'w', encoding='utf-8', newline='').write(n)
-print('เสร็จ: แก้ %d หน้า' % changed + (' (dry-run)' if DRY else ' | สำรองที่ ' + os.path.relpath(BK, SITE)))
+print('เสร็จ: แก้ %d หน้า' % changed + (' (dry-run)' if DRY else ' | สำรองที่ ' + os.path.relpath(BK, os.path.dirname(BK_ROOT))))
