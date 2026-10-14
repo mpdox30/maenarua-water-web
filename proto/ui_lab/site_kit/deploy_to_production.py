@@ -3,11 +3,12 @@ deploy_to_production.py — ปล่อยชั้นธีม/ลูกเล
 ใช้:   python deploy_to_production.py            ปล่อย/อัปเดตทั้งหมด (ปลอดภัย รันซ้ำได้)
        python deploy_to_production.py --dry      ดูว่าจะทำอะไร ไม่เขียนไฟล์
 สิ่งที่ทำ
-  1) สำรอง .html ต้นฉบับครั้งแรกไว้ที่ 03_website/_backup_before_uikit_<วันที่>/  (ไม่ทับถ้ามีแล้ว)
+  1) สำรอง .html ต้นฉบับครั้งแรกไว้ที่ proto/_deploy_backups/_backup_before_uikit_<วันที่>/  (ไม่ทับถ้ามีแล้ว)
+     (2026-10-14 ย้ายออกจาก 03_website — repo เป็น public + Pages เสิร์ฟทุกอย่างใน 03_website; โฟลเดอร์นี้อยู่ใน .gitignore)
   2) คัดลอก kit (*.js, *.css, hero_contours.json) ไป 03_website/assets/uikit/
   3) หน้า .html ที่ยังไม่เคยฝัง: แปลงสี + แทรก <link>/<script> (พาธ assets/uikit/…?v=<เวลา>)
      หน้าที่ฝังแล้ว: แค่เปลี่ยน ?v= เพื่อให้เบราว์เซอร์โหลดไฟล์ kit ใหม่
-ถอยกลับทั้งหมด: คัดลอกไฟล์จาก _backup_before_uikit_*/ กลับมาทับ แล้วลบ assets/uikit/
+ถอยกลับทั้งหมด: คัดลอกไฟล์จาก proto/_deploy_backups/_backup_before_uikit_*/ กลับมาทับ แล้วลบ assets/uikit/
 หลังรัน: git add 03_website && git commit && git push   (GitHub Pages จะอัปเดตเอง)
 """
 import os, re, sys, shutil, time, glob
@@ -18,13 +19,15 @@ SITE = ps.SITE
 DRY = '--dry' in sys.argv
 VER = time.strftime('%Y%m%d%H%M')
 DEST = os.path.join(SITE, 'assets', 'uikit')
-BK = os.path.join(SITE, '_backup_before_uikit_' + time.strftime('%Y%m%d'))
+BK_ROOT = os.path.join(os.path.dirname(os.path.dirname(HERE)), '_deploy_backups')   # = proto/_deploy_backups (ไม่ถูก commit/ไม่ถูกเสิร์ฟ)
+BK = os.path.join(BK_ROOT, '_backup_before_uikit_' + time.strftime('%Y%m%d'))
+SKIP_PAGES = {'research.html'}   # หน้า "เร็วๆ นี้" (stub) — ไม่ฝัง kit; ของจริงเก็บที่ proto/_local_hold/ จนกว่างานวิจัยจะตีพิมพ์
 MARK = 'uikit/theme-kit.css'
 
 def log(*a): print(('[dry] ' if DRY else '') + ' '.join(str(x) for x in a))
 
 def pages():
-    out = sorted(glob.glob(os.path.join(SITE, '*.html')))
+    out = sorted(p for p in glob.glob(os.path.join(SITE, '*.html')) if os.path.basename(p) not in SKIP_PAGES)
     emb = os.path.join(SITE, 'assets', 'embeds')
     if os.path.isdir(emb): out += sorted(glob.glob(os.path.join(emb, '*.html')))
     return out
@@ -39,7 +42,7 @@ def write(p, s):
     with open(p, 'w', encoding='utf-8', newline='') as f: f.write(s)
 
 # 1) สำรอง
-existing_bk = glob.glob(os.path.join(SITE, '_backup_before_uikit_*'))
+existing_bk = glob.glob(os.path.join(BK_ROOT, '_backup_before_uikit_*'))
 if existing_bk: BK = existing_bk[0]
 for p in pages():
     t = read(p)
@@ -73,4 +76,4 @@ for p in pages():
     n = re.sub(r'(uikit/[A-Za-z0-9_.\-]+?\.(?:js|css))(["\'])', lambda m: m.group(1) + '?v=' + VER + m.group(2), n)
     log('inject', rel)
     if not DRY: write(p, n)
-print('เสร็จ  เวอร์ชัน kit =', VER, '| สำรองที่', os.path.relpath(BK, SITE))
+print('เสร็จ  เวอร์ชัน kit =', VER, '| สำรองที่', os.path.relpath(BK, os.path.dirname(BK_ROOT)))
