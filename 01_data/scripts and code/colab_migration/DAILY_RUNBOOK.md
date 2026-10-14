@@ -51,7 +51,8 @@ test, GEE setup, SAR test, MEI/CHIRPS test เดี่ยวๆ) ที่ไ�
 | 8 | **Cell 9** — รัน WMB_Phayao `daily_update_colab.py` | พยากรณ์น้ำท่วม 7 วัน + inflow อ่าง 5 อ่าง → export `flood_latest.json`/`reservoir_inflow.json` | ✅ ทุกวัน |
 | 9 | **Cell 10** — รัน `sar_background_job.py` (Colab-side) | เช็ค/classify ภาพ SAR ใหม่ถ้าถึงรอบ (แยกจาก GitHub Actions SAR job ที่พอร์ตไปคู่ขนานแล้ว) | ✅ ทุกวัน (เช็คเฉยๆ ถ้ายังไม่ถึงรอบ) |
 | 10 | **Cell 11** — รัน Mae Na Rua หลัก (`run_pipeline()`) | climate features (MEI/CHIRPS/ERA5T) → อ่าน SAR ที่แคชไว้ → ทำนาย Water Demand + Reservoir Inflow → เขียน `latest.json` | ✅ ทุกวัน |
-| 11 | **Cell 12** — push ผลลัพธ์ขึ้น GitHub (รวม 1 เซลล์แล้ว) | commit+push `ml_features_live.csv` + `latest.json` + `flood_latest.json` + `reservoir_inflow.json` + `flood_depth_forecast.png` ในรอบ pull/commit/push เดียว | ✅ ทุกวัน (ท้ายสุดเสมอ) |
+| 11 | **Cell 12** — push ผลลัพธ์ขึ้น GitHub (รวม 1 เซลล์แล้ว) | **(2026-10-14) เก็บสำเนาค่าพยากรณ์ที่ออกจริงรายวันลง `01_data/archive_live/` ก่อน** (`archive_live_outputs.py`) แล้ว commit+push `ml_features_live.csv` + `latest.json` + `flood_latest.json` + `reservoir_inflow.json` + `flood_depth_forecast.png` + `archive_live/` ในรอบ pull/commit/push เดียว | ✅ ทุกวัน (ท้ายสุดเสมอ) |
+| 12 | **Cell 13** — ตรวจช่องว่าง (อ่านอย่างเดียว) | `check_data_gaps.py`: วันที่ขาดใน `archive_live` + ช่องว่าง/การหยุดของโทรมาตรใน Google Sheet — ขึ้น `!!` แปลว่ามีอะไรต้องเก็บตก (ดูหัวข้อด้านล่าง) | ✅ ทุกวัน (หลัง push) |
 
 **2026-09-08 ลบออกแล้ว** (ไม่มีในเซลล์ปัจจุบันอีกต่อไป): เซลล์ #7.5 เดิม (sync `ml_features_live.csv`
 จาก GitHub แยกก่อนรัน) — ไม่จำเป็นแล้วเพราะ Cell 1 clone ทั้ง repo สดอยู่แล้ว, เซลล์ #8.5 เดิม (push
@@ -137,6 +138,33 @@ FILES_TO_PUSH = [
 # ... (add เฉพาะไฟล์ที่มีอยู่จริง, commit+push พร้อม retry เมื่อ non-fast-forward สูงสุด 3 ครั้ง —
 # เนื้อหาเต็มดู Cell 12 ใน maenaruea_pipeline_colab_CLEANED.ipynb โดยตรง)
 ```
+
+---
+
+## วันไหนไม่ได้เปิดคอมหลัก (2026-10-14) — อะไรสำคัญ อะไรเก็บตกได้
+
+หลักคิด: เว็บยังไม่เปิดสาธารณะ จึงปล่อยให้ข้อมูลหน้าเว็บช้าได้ — สิ่งที่ต้องกันคือ **ข้อมูลที่กู้ย้อนหลังไม่ได้**
+
+| ข้อมูล | อยู่ที่ไหน | ถ้าวันไหนไม่มีใครรัน |
+|---|---|---|
+| โทรมาตรทุกสถานี (10 นาที) | Google Sheet (Apps Script บนคลาวด์ poll เอง) — แท็บสดเก็บ **30 วัน** แล้วย้ายเข้า archive รายเดือน (`DAYS_TO_KEEP=30`) | ไม่หาย แต่สคริปต์เว็บอ่านแค่แท็บสด → **ต้องเก็บตก (ด้านล่าง) ภายใน ~30 วัน** ไม่งั้นต้อง export จากไฟล์ archive มาใช้ผ่าน `--sheet-source` |
+| ค่าพยากรณ์ที่ออกจริงรายวัน (WMB, WeatherNext, latest.json, flood_latest.json) | `01_data/archive_live/` (git) | **กู้ไม่ได้** → ต้องรัน Colab (Cell 12 เก็บให้อัตโนมัติ) ทุกวันที่เป็นไปได้ |
+| ไฟล์ทางการ `2026_MM_MNR.xlsx`, `water_ledger.json` | คำนวณจากโทรมาตรโดย `reservoir_daily_orchestration` (Windows 07:30) | คำนวณย้อนหลังได้ (catch-up 3 วันอัตโนมัติ ถ้านานกว่านั้นต้องระบุเอง) |
+| `forecast_accuracy_log.csv`, shadow 6 ชม. | Windows (monitoring builder / `shadow_predict.py`) | สร้างย้อนหลังได้จากประวัติ git ของ `latest.json` / re-log จากโทรมาตรอัตโนมัติ |
+
+**ขั้นต่ำสุดเมื่อไม่ได้เปิดคอมหลัก:** รัน Colab ตามตารางข้างบนให้ครบ (Cell 1→13) — Cell 12 จะ push `archive_live/` ให้ เท่านี้ไม่มีข้อมูล "กู้ไม่ได้" ขาดหาย
+ถ้ารันไม่ได้บางวัน ให้บันทึกวันนั้นไว้ใน `01_data/archive_live/KNOWN_GAPS.txt` เพื่อไม่ให้ Cell 13 เตือนซ้ำ
+
+### เก็บตกเมื่อกลับมาเปิดคอมหลัก (ทำตามลำดับ)
+
+1. `git pull --no-rebase --no-edit origin master` ทั้ง `D:\maenaruea-water-web` และ `D:\WMB_Phayao` (เอาผลที่ Colab push มา)
+2. เก็บของที่ Windows สร้างไว้ลง archive (ปลอดภัยรันซ้ำ ไม่ทับของเดิม):
+   `python "01_data\scripts and code\colab_migration\archive_live_outputs.py" --web D:\maenaruea-water-web --wmb D:\WMB_Phayao`
+3. เติมไฟล์ทางการ/บัญชีน้ำของวันที่ขาด (ตัวอย่างขาด 7 วัน):
+   `cd "01_data\scripts and code\pipeline"` แล้ว `..\..\..\.venv\Scripts\python.exe reservoir_daily_orchestration.py --catchup-days 7`
+   (ค่า default = 3 วัน; ถ้าต้องการวันเดียว ใช้ `--date YYYY-MM-DD`) จากนั้นรัน `run_reservoir_daily_orchestration.bat` หนึ่งครั้งเพื่อสร้าง `water_ledger.json` และ push
+4. เติม log ความแม่นยำจาก git: `python backfill_forecast_log_from_git.py` (ไม่ทับค่า actual ที่มีแล้ว) — shadow 6 ชม. เติมเองตอน Task Scheduler รอบถัดไป
+5. ตรวจ: `python .github/scripts/check_data_gaps.py` ที่ root repo เว็บ แล้ว `git add 01_data/archive_live` → commit → push
 
 ---
 
