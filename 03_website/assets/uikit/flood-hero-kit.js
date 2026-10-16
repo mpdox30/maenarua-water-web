@@ -2,6 +2,7 @@
    ไม่แก้หน้าเดิม: อ่านค่าที่หน้าเดิมเติมไว้ + ดึง flood_latest.json (cache เดียวกัน) มาวาดกราฟเล็ก
    ถอยกลับ: ลบ <script src="/__uikit/flood-hero-kit.js"> ออกจาก preview_server.py */
 (function () {
+  function thaiDT(s){if(!s)return s;var t=Date.parse(String(s).replace(' ','T')+(/[zZ]|[+-]\d\d:?\d\d$/.test(s)?'':'Z'));if(isNaN(t))return s;var i=new Date(t+7*36e5).toISOString();return i.slice(0,10)+' '+i.slice(11,16);} /* generated_at เป็น UTC -> แสดงเวลาไทย */
   var kpis = document.querySelectorAll('.kpi-grid .kpi');
   if (!kpis.length) return;
   var css = document.createElement('style');
@@ -118,7 +119,7 @@
   function heroMeta(d) {
     var wrap = document.querySelector('.page-hero .wrap'), lead = wrap && wrap.querySelector('.lead'); if (!lead || wrap.querySelector('.fh-meta')) return;
     var m = document.createElement('div'); m.className = 'fh-meta';
-    m.innerHTML = '<span class="fh-pill fh-tag">Flood Forecast · WMB Model</span><span class="fh-pill"><i></i>อัปเดต <b>' + esc(d.generated_at) + '</b></span><span class="fh-pill">วันฐานพยากรณ์ <b>' + esc(d.base_date) + '</b></span><span class="fh-pill">พยากรณ์ล่วงหน้า <b>7</b> วัน</span><span class="fh-pill">ตรวจพิสูจน์ด้วย <b>3</b> ชุดข้อมูลอิสระ</span>';
+    m.innerHTML = '<span class="fh-pill fh-tag">Flood Forecast · WMB Model</span><span class="fh-pill"><i></i>อัปเดต <b>' + esc(thaiDT(d.generated_at) + ' น.') + '</b></span><span class="fh-pill">วันฐานพยากรณ์ <b>' + esc(d.base_date) + '</b></span><span class="fh-pill">พยากรณ์ล่วงหน้า <b>7</b> วัน</span><span class="fh-pill">ตรวจพิสูจน์ด้วย <b>3</b> ชุดข้อมูลอิสระ</span>';
     lead.parentNode.insertBefore(m, lead.nextSibling);
   }
 

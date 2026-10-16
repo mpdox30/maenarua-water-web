@@ -27,7 +27,7 @@ function loadData() {
     for (var h = 1; h <= 7; h++) { var p = inf.horizons['h' + h]; if (p) fc.push({ date: day(h), h: h, v: p.prediction_m3_per_day, low: !!p.low_confidence }); }
     return { snapshot: new Date().toISOString(), monitoring_updated: mon.meta.updated, capacity_m3: 1625000, crest: 489.545, max_level_seen: Math.max.apply(null, led.rows.map(function (r) { return r.water_level_m; })),
       stations: stations, reservoirs: mon.reservoirs || [], ledger: ledger, allrows: allrows, windows: w6.windows, forecast: fc,
-      kwan: { level: fl.kwan_now.level, change_3d: fl.kwan_now.change_3d, bank: fl.banks.Mae_Main1, bank_ronghai: fl.banks.RongHai, flag: fl.flags.overall, generated_at: fl.generated_at } };
+      kwan: { level: fl.kwan_now.level, change_3d: fl.kwan_now.change_3d, bank: fl.banks.Mae_Main1, bank_ronghai: fl.banks.RongHai, flag: fl.flags.overall, generated_at: (function (s) { var t = Date.parse(String(s).replace(' ', 'T') + (/[zZ]|[+-]\d\d:?\d\d$/.test(s) ? '' : 'Z')); if (isNaN(t)) return s; var i = new Date(t + 7 * 36e5).toISOString(); return i.slice(0, 10) + ' ' + i.slice(11, 16) + ' น.'; })(fl.generated_at) } };
   });
 }
 function run(D, ROOTS, HOSTS) {
