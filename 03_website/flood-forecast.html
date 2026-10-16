@@ -7,7 +7,7 @@
 <link href="assets/vendor/fonts/fonts.css" rel="stylesheet">
 <link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css" />
 <script src="assets/vendor/leaflet/leaflet.js"></script>
-<script src="assets/js/chart.umd.min.js"></script><script src="assets/uikit/chart-kit.js?v=202610161518"></script>
+<script src="assets/js/chart.umd.min.js"></script><script src="assets/uikit/chart-kit.js?v=202610161527"></script>
 <script src="assets/vendor/hammerjs/hammer.min.js"></script>
 <script src="assets/vendor/chartjs-plugin-zoom/chartjs-plugin-zoom.min.js"></script>
 <style>
@@ -300,7 +300,7 @@
         <div class="eyebrow">Overflow Heatmap</div>
         <h2>น้ำล้นตลิ่งคาดการณ์ รายลำน้ำ × รายวัน</h2>
         <p>ปริมาณน้ำล้นจากแบบจำลอง WMB (ล้าน ลบ.ม./วัน) — สีเข้มขึ้นตามปริมาณ
-           สมมุติฐานฝนล่วงหน้า = ไม่มีฝนเพิ่ม (ค่าประมาณด้านต่ำ)</p>
+           <span id="rainFwdNote">สมมุติฐานฝนล่วงหน้า = ไม่มีฝนเพิ่ม (ค่าประมาณด้านต่ำ)</span></p>
       </div>
       <div id="heatContainer" class="heat-wrap"></div>
     </div>
@@ -532,7 +532,14 @@ function render(d) {
   // ---------- reliability ----------
   document.getElementById('modelInfoList').innerHTML =
     d.model_info.split('|').map(x => '<li>' + x.trim() + '</li>').join('') +
-    '<li>สมมุติฐานฝนล่วงหน้า = 0 มม. (ค่าประมาณด้านต่ำ) — ช่วงพายุควรติดตามรายวัน</li>';
+    (d.rain_forward_source === 'weathernext' && Array.isArray(d.rain_forward)
+      ? '<li>ฝนล่วงหน้า (WeatherNext 3, รวม ' + d.rain_forward.length + ' วัน) = ' +
+        (Math.round(d.rain_forward.reduce((a, r) => a + (+r.mm || 0), 0) * 10) / 10) + ' มม. — ค่าพยากรณ์อาจคลาดเคลื่อน ช่วงพายุควรติดตามรายวัน</li>'
+      : '<li>สมมุติฐานฝนล่วงหน้า = 0 มม. (ค่าประมาณด้านต่ำ) — ช่วงพายุควรติดตามรายวัน</li>');
+  if (d.rain_forward_source === 'weathernext') {
+    const rn = document.getElementById('rainFwdNote');
+    if (rn) rn.textContent = 'ฝนล่วงหน้าใช้พยากรณ์ WeatherNext 3';
+  }
   document.getElementById('warnList').innerHTML = (d.warnings && d.warnings.length)
     ? d.warnings.map(w => '<li class="warn-li">' + w + '</li>').join('')
     : '<li>ไม่มีคำเตือน — ข้อมูลครบถ้วน</li>';
@@ -1415,5 +1422,5 @@ fetch(WMB_MODEL_ENDPOINT)
   });
 </script>
 
-<link rel="stylesheet" href="assets/uikit/theme-kit.css?v=202610161518"><script src="assets/uikit/theme-kit.js?v=202610161518"></script><script src="assets/uikit/page-kit.js?v=202610161518"></script><script src="assets/uikit/kwan-kit.js?v=202610161518"></script><script src="assets/uikit/hero-bg.js?v=202610161518"></script><script src="assets/uikit/inflow-kit.js?v=202610161518"></script><script src="assets/uikit/map-kit.js?v=202610161518"></script><script src="assets/uikit/flood-map-kit.js?v=202610161518"></script><script src="assets/uikit/flood-flow-kit.js?v=202610161518"></script><script src="assets/uikit/flood-3d-kit.js?v=202610161518"></script><script src="assets/uikit/flood-bathtub-kit.js?v=202610161518"></script><script src="assets/uikit/reliability-kit.js?v=202610161518"></script><script src="assets/uikit/flood-hero-kit.js?v=202610161518"></script><script src="assets/uikit/freshness-kit.js?v=202610161518"></script><script src="assets/uikit/i18n-kit.js?v=202610161518"></script><script src="assets/uikit/table-kit.js?v=202610161518"></script><script src="assets/uikit/plain-kit.js?v=202610161518"></script><script src="assets/uikit/csv-kit.js?v=202610161518"></script><script src="assets/uikit/pwa-kit.js?v=202610161518"></script><script src="assets/uikit/report-kit.js?v=202610161518"></script><script src="assets/uikit/diagram-kit.js?v=202610161518"></script><script src="assets/uikit/ukm.js?v=202610161518"></script></body>
+<link rel="stylesheet" href="assets/uikit/theme-kit.css?v=202610161527"><script src="assets/uikit/theme-kit.js?v=202610161527"></script><script src="assets/uikit/page-kit.js?v=202610161527"></script><script src="assets/uikit/kwan-kit.js?v=202610161527"></script><script src="assets/uikit/hero-bg.js?v=202610161527"></script><script src="assets/uikit/inflow-kit.js?v=202610161527"></script><script src="assets/uikit/map-kit.js?v=202610161527"></script><script src="assets/uikit/flood-map-kit.js?v=202610161527"></script><script src="assets/uikit/flood-flow-kit.js?v=202610161527"></script><script src="assets/uikit/flood-3d-kit.js?v=202610161527"></script><script src="assets/uikit/flood-bathtub-kit.js?v=202610161527"></script><script src="assets/uikit/reliability-kit.js?v=202610161527"></script><script src="assets/uikit/flood-hero-kit.js?v=202610161527"></script><script src="assets/uikit/freshness-kit.js?v=202610161527"></script><script src="assets/uikit/i18n-kit.js?v=202610161527"></script><script src="assets/uikit/table-kit.js?v=202610161527"></script><script src="assets/uikit/plain-kit.js?v=202610161527"></script><script src="assets/uikit/csv-kit.js?v=202610161527"></script><script src="assets/uikit/pwa-kit.js?v=202610161527"></script><script src="assets/uikit/report-kit.js?v=202610161527"></script><script src="assets/uikit/diagram-kit.js?v=202610161527"></script><script src="assets/uikit/ukm.js?v=202610161527"></script></body>
 </html>
