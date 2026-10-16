@@ -295,10 +295,12 @@ def get_telemetry_data() -> tuple[list[TelemetryReading], str]:
         readings = fetch_telemetry_from_api(TELEMETRY_API_URL, TELEMETRY_API_KEY)
         if readings:
             return readings, "api"
-        logger.warning("API ไม่คืนข้อมูล หรือดึงไม่สำเร็จ — fallback ไปใช้ mock data แทน")
-        return generate_mock_telemetry(), "mock"
+        logger.warning("API ไม่คืนข้อมูล หรือดึงไม่สำเร็จ — ไม่ใส่ข้อมูลโทรมาตรใน latest.json")
+        return [], "unavailable"
 
-    return generate_mock_telemetry(), "mock"
+    # 2026-10-16: เดิม fallback เป็นสถานีสุ่ม MOCK-01..03 ลง latest.json ทุกวัน (ไม่มีใครใช้ + เสี่ยงถูกเข้าใจผิดว่าเป็นข้อมูลจริง)
+    # โทรมาตรจริงอยู่ใน monitoring.json (Google Sheet wide_log) -- latest.json จึงเว้น readings ว่างไว้
+    return [], "not_configured"
 
 
 def get_sar_crop_classification() -> Optional[dict]:
