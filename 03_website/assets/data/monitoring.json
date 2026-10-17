@@ -1,7 +1,7 @@
 {
   "meta": {
     "source": "สถานีโทรมาตร สสน. (API) ผ่าน Google Sheet wide_log (poll ทุก 10 นาที) + HII open data (tiservice.hii.or.th, รายชั่วโมงผ่าน QC, เดือนที่ปิดแล้ว) + 01_data/Reservoirs/reference (rating curve ต่ออ่าง)",
-    "updated": "2026-10-17T08:50:00",
+    "updated": "2026-10-17T09:00:00",
     "data_connected": true
   },
   "stations": [
@@ -10,17 +10,17 @@
       "name_th": "อ่างเก็บน้ำแม่นาเรือ",
       "name_en": "Mae Na Rua Reservoir",
       "spillway_msl": 489.54,
-      "water_level": 489.572,
+      "water_level": 489.578,
       "rainfall_1h": 0.0,
-      "temperature": 29.06,
-      "humidity": 82.57,
-      "pressure": 959.93,
-      "solar": 432.3,
-      "measure_datetime": "2026-10-17T08:50:00",
-      "storage_m3": 1635096.7,
+      "temperature": 29.81,
+      "humidity": 82.03,
+      "pressure": 960.01,
+      "solar": 464.8,
+      "measure_datetime": "2026-10-17T09:00:00",
+      "storage_m3": 1636904.6,
       "storage_max_m3": 1625463.8,
-      "capacity_pct": 100.6,
-      "distance_to_spillway_m": 0.032,
+      "capacity_pct": 100.7,
+      "distance_to_spillway_m": 0.038,
       "history": [
         {
           "t": "2026-10-03T09:00:00",
@@ -1345,6 +1345,10 @@
         {
           "t": "2026-10-17T08:00:00",
           "level": 489.552
+        },
+        {
+          "t": "2026-10-17T09:00:00",
+          "level": 489.578
         }
       ],
       "rainfall_hourly": [
@@ -7087,6 +7091,10 @@
         {
           "t": "2026-10-17T08:00:00",
           "rain_mm": 0.0
+        },
+        {
+          "t": "2026-10-17T09:00:00",
+          "rain_mm": 0.0
         }
       ]
     },
@@ -7097,11 +7105,11 @@
       "spillway_msl": 457.07,
       "water_level": 456.489,
       "rainfall_1h": 0.0,
-      "temperature": 28.28,
-      "humidity": 84.26,
-      "pressure": 963.79,
-      "solar": 489.9,
-      "measure_datetime": "2026-10-17T08:50:00",
+      "temperature": 29.24,
+      "humidity": 80.51,
+      "pressure": 963.84,
+      "solar": 500.2,
+      "measure_datetime": "2026-10-17T09:00:00",
       "storage_m3": 315770.5,
       "storage_max_m3": 347778.7,
       "capacity_pct": 90.8,
@@ -8430,6 +8438,10 @@
         {
           "t": "2026-10-17T08:00:00",
           "level": 456.49
+        },
+        {
+          "t": "2026-10-17T09:00:00",
+          "level": 456.489
         }
       ],
       "rainfall_hourly": [
@@ -14196,6 +14208,10 @@
         {
           "t": "2026-10-17T08:00:00",
           "rain_mm": 0.0
+        },
+        {
+          "t": "2026-10-17T09:00:00",
+          "rain_mm": 0.0
         }
       ]
     },
@@ -14206,11 +14222,11 @@
       "spillway_msl": 478.1,
       "water_level": 478.63,
       "rainfall_1h": 0.0,
-      "temperature": 30.4,
-      "humidity": 89.0,
+      "temperature": 33.8,
+      "humidity": 80.4,
       "pressure": 963.4,
-      "solar": 388.0,
-      "measure_datetime": "2026-10-17T08:30:00",
+      "solar": 485.6,
+      "measure_datetime": "2026-10-17T09:00:00",
       "storage_m3": 543736.1,
       "storage_max_m3": 495467.8,
       "capacity_pct": 109.7,
@@ -15478,6 +15494,10 @@
         },
         {
           "t": "2026-10-17T08:00:00",
+          "level": 478.63
+        },
+        {
+          "t": "2026-10-17T09:00:00",
           "level": 478.63
         }
       ],
@@ -21181,6 +21201,10 @@
         {
           "t": "2026-10-17T08:00:00",
           "rain_mm": 0.0
+        },
+        {
+          "t": "2026-10-17T09:00:00",
+          "rain_mm": 0.0
         }
       ]
     },
@@ -21191,11 +21215,11 @@
       "spillway_msl": 508.1,
       "water_level": 508.171,
       "rainfall_1h": 0.0,
-      "temperature": 30.65,
-      "humidity": 76.5,
-      "pressure": 958.12,
-      "solar": 447.4,
-      "measure_datetime": "2026-10-17T08:50:00",
+      "temperature": 30.74,
+      "humidity": 76.28,
+      "pressure": 958.13,
+      "solar": 482.2,
+      "measure_datetime": "2026-10-17T09:00:00",
       "storage_m3": 124895.2,
       "storage_max_m3": 122441.9,
       "capacity_pct": 102.0,
@@ -22524,6 +22548,10 @@
         {
           "t": "2026-10-17T08:00:00",
           "level": 508.14
+        },
+        {
+          "t": "2026-10-17T09:00:00",
+          "level": 508.171
         }
       ],
       "rainfall_hourly": [
@@ -28293,6 +28321,10 @@
         },
         {
           "t": "2026-10-17T08:00:00",
+          "rain_mm": 0.0
+        },
+        {
+          "t": "2026-10-17T09:00:00",
           "rain_mm": 0.0
         }
       ]
