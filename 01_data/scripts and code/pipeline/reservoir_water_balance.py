@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import bisect
 import csv
+import datetime as _dt
 from pathlib import Path
 from typing import Optional
 
@@ -52,6 +53,14 @@ FLOW_RATE_SPILLWAY_CSV = REFERENCE_DIR / "flow_rate_spillway.csv"
 SPILLWAY_LEVEL_ADJ_OFFSET_M = 0.155   # (เลิกใช้ในสูตรใหม่ 2026-10 -- เก็บไว้อ้างอิง)
 SPILLWAY_FRICTION_CURVE_CSV = REFERENCE_DIR / "spillway_friction_curve_n017.csv"
 _spill_curve_cache = None   # water_level (ADJ) = water_level - 0.155
+
+# [2026-10-07] rating ชั่วคราว (PROVISIONAL, ยังไม่ยืนยันสาเหตุ): ตั้งแต่ 11 ก.ย. 2026 สูตรสันล้วนให้ spill สูงเกินจริง ~2-3 เท่าที่ head สูง
+# (สมดุลน้ำเทียบฝน IMERG ได้ C~2.1; ดู 01_data/experiments/rating_highhead_20261007/) -> ยก "สันประสิทธิผล" ขึ้น delta เมตร เฉพาะวัน >= FROM
+# datum offset ยังเป็น 0 (ไม้วัด 22 ม.ค. 2026). ปิดได้ด้วย SPILLWAY_EFFECTIVE_CREST_RAISE_M = 0.0 หรือ env SPILL_DELTA_M=0
+import os as _os
+SPILLWAY_EFFECTIVE_CREST_RAISE_M = float(_os.environ.get("SPILL_DELTA_M", "0.17"))
+SPILLWAY_EFFECTIVE_CREST_RAISE_FROM = _dt.date(2026, 9, 11)
+SPILLWAY_EFFECTIVE_CREST_RAISE_TO = _dt.date(2099, 12, 31)   # ปรับเมื่อยืนยัน rating / แก้สิ่งกีดขวางแล้ว
 SPILLWAY_CREST_LEVEL_MSL = 489.545    # Spillway_level
 SPILLWAY_WEIR_COEFFICIENT_C = 1.82
 SPILLWAY_WEIR_LENGTH_M = 30           # ความยาวสัน spillway (L) — จากสูตร Q(m3/s) = C * L * H^1.5
@@ -202,7 +211,7 @@ def _load_spillway_friction_curve():
     return _spill_curve_cache
 
 
-def compute_spillway_overflow_m3(hourly_levels_msl: list[float]) -> float:
+def compute_spillway_overflow_m3(hourly_levels_msl: list[float], day=None) -> float:
     """
     ปริมาณน้ำล้นสปิลเวย์รายวัน (m3) จากระดับน้ำรายชั่วโมง -- สูตรใหม่ (2026-10): critical-flow + Manning friction
     (n=0.017) interpolate จาก spillway_friction_curve_n017.csv, offset ระดับน้ำ = 0 (ไม่หัก 0.155), L = 30 m,
@@ -211,7 +220,12 @@ def compute_spillway_overflow_m3(hourly_levels_msl: list[float]) -> float:
     """
     import numpy as _np
     heads, qs = _load_spillway_friction_curve()
-    head = _np.clip(_np.asarray(hourly_levels_msl, dtype=float) - SPILLWAY_CREST_LEVEL_MSL, 0.0, None)
+    delta = 0.0
+    if day is not None:
+        d = day.date() if hasattr(day, "date") and callable(day.date) else day
+        if SPILLWAY_EFFECTIVE_CREST_RAISE_FROM <= d <= SPILLWAY_EFFECTIVE_CREST_RAISE_TO:
+            delta = SPILLWAY_EFFECTIVE_CREST_RAISE_M   # day = วันที่ของหน้าต่าง (ตามธรรมเนียม ledger: หน้าต่าง 24 ชม. สิ้นสุด 07:00 ของวันนั้น)
+    head = _np.clip(_np.asarray(hourly_levels_msl, dtype=float) - SPILLWAY_CREST_LEVEL_MSL - delta, 0.0, None)
     q_m3_s = _np.interp(head, heads, qs) * SPILLWAY_WEIR_LENGTH_M
     return float((q_m3_s * 3600.0).sum())
 

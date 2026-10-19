@@ -156,6 +156,22 @@ if not "%BUILDER_EXIT_CODE%"=="0" if not "%INFLOW_EXIT_CODE%"=="0" if not "%LOGG
     goto :SKIP_GIT_PUSH
 )
 
+REM 2026-10-19 เพิ่ม: โหมดเครื่องสำรอง -- ถ้ามีไฟล์ standby.flag ข้างสคริปต์นี้ (สร้างเฉพาะเครื่อง 2) จะ push เฉพาะตอนที่
+REM monitoring.json บน origin เก่าเกิน 45 นาที (เครื่องหลักหยุด) ไม่งั้นข้าม push กันสองเครื่องชนกัน (ดู standby_gate.py)
+if exist "%SCRIPT_DIR%standby.flag" (
+    pushd "%SCRIPT_DIR%..\..\..\"
+    "%VENV_PYTHON%" "%SCRIPT_DIR%standby_gate.py" --max-age-min 45
+    set "GATE_EXIT_CODE=!ERRORLEVEL!"
+    if not "!GATE_EXIT_CODE!"=="0" (
+        echo [INFO] STANDBY: เครื่องหลักยัง push อยู่ ^(หรือเช็คไม่ได้^) -- ข้าม commit/push รอบนี้
+        git checkout -- "03_website/assets/data/monitoring.json" "03_website/assets/data/inflow_6h_display.json" "01_data/forecasting_results/Reservoir_inflow/forecast_accuracy_log.csv" "03_website/assets/data/forecast_accuracy_log.csv" 2>nul
+        popd
+        goto :SKIP_GIT_PUSH
+    )
+    echo [INFO] STANDBY: เครื่องหลักหยุด push เกินเกณฑ์ -- เครื่องนี้ทำหน้าที่ push แทนรอบนี้
+    popd
+)
+
 pushd "%SCRIPT_DIR%..\..\..\"
 
 REM เช็คก่อนว่ามี rebase/merge ค้างอยู่จากรอบก่อนหรือคนกำลังแก้ conflict มืออยู่หรือไม่ -- ถ้ามี

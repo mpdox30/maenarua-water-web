@@ -1,0 +1,63 @@
+{
+  "worker_script": "era5t_worker.py",
+  "run_at": "2026-10-13T04:07:37.874719Z",
+  "mode": "weekly",
+  "requested_date": null,
+  "as_of_date": "2026-10-13",
+  "dataset": "reanalysis-era5-single-levels",
+  "time_utc_used": "12:00",
+  "grib_source": "cds_live_week:none + rolling:['D:\\\\maenaruea-water-web\\\\01_data\\\\scripts and code\\\\pipeline\\\\era5t_output\\\\era5t_week_202610_06-12.grib']",
+  "fetch_elapsed_sec": null,
+  "grib_size_bytes": null,
+  "variables": null,
+  "valid_time": null,
+  "latitude": null,
+  "longitude": null,
+  "n_grib_datasets": null,
+  "missing_variables": null,
+  "iso_year": 2026,
+  "iso_week": 42,
+  "candidate_days": [
+    "2026-10-12"
+  ],
+  "n_days_in_week": 2,
+  "daily_breakdown": [
+    {
+      "ETo_mm_day": 1.2387164726178876,
+      "T_c": 23.878686523437523,
+      "RH_pct": 93.62767672599087,
+      "VPD_kPa": 0.1887647198770197,
+      "u2_ms": 0.6350921761097748,
+      "Rn_MJ": 4.0597253375,
+      "date": "2026-10-06"
+    },
+    {
+      "ETo_mm_day": 3.2069442515060174,
+      "T_c": 26.575036621093773,
+      "RH_pct": 76.82347048713204,
+      "VPD_kPa": 0.8059430526675326,
+      "u2_ms": 0.2605266611406902,
+      "Rn_MJ": 10.087994652499999,
+      "date": "2026-10-07"
+    }
+  ],
+  "ET0_mm_week": 15.5598,
+  "T_mean": 25.2269,
+  "RH_pct": 85.2256,
+  "VPD_kPa": 0.4974,
+  "u2_ms": 0.4478,
+  "Rn_MJ": 7.0739,
+  "is_rolling_estimate": true,
+  "rolling_window": {
+    "start": "2026-10-06",
+    "end": "2026-10-12"
+  },
+  "warnings": [
+    "ดึงข้อมูลวัน [datetime.date(2026, 10, 12)] ไม่สำเร็จ (HTTPError: 400 Client Error: Bad Request for url: https://cds.climate.copernicus.eu/api/retrieve/v1/processes/reanalysis-era5-single-levels/execution\ninvalid request\nNone of the data you have requested is available yet, please revise the period requested. The latest date available for this dataset is: 2026-10-08 04:00) — ตัดวันล่าสุด (2026-10-12) ออกแล้วลองใหม่ (อาจเป็นเพราะ ERA5T ยังไม่ปล่อยข้อมูล ของวันนั้นจริงๆ)",
+    "ไม่สามารถดึงข้อมูลของกลุ่มวัน [datetime.date(2026, 10, 12)] ได้เลยแม้แต่วันเดียว",
+    "สัปดาห์ปฏิทิน ISO (2026-W42) ไม่มีข้อมูล จริงเลยสักวัน — ใช้ rolling 7-day window แทน (2026-10-06 ถึง 2026-10-12, 2 วันที่มีข้อมูลจริงในช่วงนั้น) เป็นค่าประมาณการ (is_rolling_estimate=true — ไม่ใช่ผลรวมของสัปดาห์ปฏิทินจริง ห้ามป้อนเข้าโมเดลตรงๆ)"
+  ],
+  "fetch_error": null,
+  "ET0_mm_sum_available": 4.4457,
+  "et0_scaled_to_7d": true
+}

@@ -178,7 +178,7 @@ def compute_6h_windows(
         evap_6h = surface_area_m2 * ((evap_const_mm / days_in_month / 4.0) * rwb.EVAP_PAN_COEFFICIENT) / 1000.0
         infiltration_6h = terrain_area_m2 * ((rwb.INFILTRATION_RATE_MM_PER_DAY / 4.0) / 1000.0)
         release_6h, release_note = _release_rate_for_window(release_events, start_mark, end_mark)
-        spill_6h = rwb.compute_spillway_overflow_m3(hourly_levels)
+        spill_6h = rwb.compute_spillway_overflow_m3(hourly_levels, day=end_mark)
 
         q_in_raw = delta_s - r_runoff + release_6h + spill_6h + evap_6h + infiltration_6h
         q_in_6h = max(0.0, q_in_raw)

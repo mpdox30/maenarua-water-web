@@ -83,3 +83,6 @@ proto/_local_hold/
 03_website/**/*.bak
 03_website/**/*.bak_*
 01_data/scripts and code/Reservoir_inflow/active/Retrain/manuscript_figures_final/
+
+# เครื่องสำรอง (เครื่อง 2): ไฟล์ธงโหมด standby ของ run_monitoring_data_builder.bat -- ห้าม commit
+01_data/scripts and code/pipeline/standby.flag

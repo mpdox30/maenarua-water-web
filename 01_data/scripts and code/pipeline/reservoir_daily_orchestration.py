@@ -299,7 +299,7 @@ def compute_for_date(
 
     prev_storage_m3 = _storage_from_level(yesterday_inputs["level_msl"])
 
-    spill_m3 = rwb.compute_spillway_overflow_m3(today_inputs["hourly_levels_msl"])
+    spill_m3 = rwb.compute_spillway_overflow_m3(today_inputs["hourly_levels_msl"], day=target_date)
 
     events = get_release_events(release_csv)
     release_o_m3, release_note = get_release_o_for_date(events, target_date)
