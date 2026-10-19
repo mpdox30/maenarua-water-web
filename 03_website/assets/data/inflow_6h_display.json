@@ -1,23 +1,12 @@
 {
-  "computed_at": "2026-10-19T18:25:11.893310",
-  "reference_now": "2026-10-19T18:25:04.757327",
+  "computed_at": "2026-10-19T19:25:12.174094",
+  "reference_now": "2026-10-19T19:25:04.605336",
   "target_reservoir": "อ่างเก็บน้ำแม่นาเรือ (Mae Na Rua Reservoir)",
   "method": "display-only water-balance estimate ที่ resolution 6 ชม. (สไลด์ทีละ 1 ชม. ย้อนหลัง 84 ชม.) reuse สูตร/ค่าคงที่ตรงจาก reservoir_water_balance.py (rating curve, spillway weir, evap/infiltration รายเดือน หาร 4) -- ไม่ใช่ค่าที่โมเดล พยากรณ์ CatBoost ใช้ ใช้แสดงผลเสริมบนเว็บเท่านั้น (ดู docstring หัวไฟล์ script นี้)",
   "lookback_hours": 84,
   "window_hours": 6,
   "n_windows_computed": 79,
   "windows": [
-    {
-      "window_start": "2026-10-16T06:00:00",
-      "window_end": "2026-10-16T12:00:00",
-      "q_in_6h_m3": 992.9,
-      "water_level_start_m": 489.65,
-      "water_level_end_m": 489.642,
-      "rain_6h_mm": 0.0,
-      "release_6h_m3": 3754.8,
-      "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
-    },
     {
       "window_start": "2026-10-16T07:00:00",
       "window_end": "2026-10-16T13:00:00",
@@ -27,7 +16,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-16T08:00:00",
@@ -38,7 +27,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-16T09:00:00",
@@ -49,7 +38,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-16T10:00:00",
@@ -60,7 +49,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-16T11:00:00",
@@ -71,7 +60,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-16T12:00:00",
@@ -82,7 +71,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-16T13:00:00",
@@ -93,7 +82,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-16T14:00:00",
@@ -104,7 +93,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-16T15:00:00",
@@ -115,7 +104,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-16T16:00:00",
@@ -126,7 +115,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-16T17:00:00",
@@ -137,7 +126,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-16T18:00:00",
@@ -148,7 +137,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-16T19:00:00",
@@ -159,7 +148,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-16T20:00:00",
@@ -170,7 +159,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-16T21:00:00",
@@ -181,7 +170,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-16T22:00:00",
@@ -192,7 +181,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-16T23:00:00",
@@ -203,7 +192,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T00:00:00",
@@ -214,7 +203,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T01:00:00",
@@ -225,7 +214,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T02:00:00",
@@ -236,7 +225,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T03:00:00",
@@ -247,7 +236,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T04:00:00",
@@ -258,7 +247,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T05:00:00",
@@ -269,7 +258,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T06:00:00",
@@ -280,7 +269,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T07:00:00",
@@ -291,7 +280,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T08:00:00",
@@ -302,7 +291,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T09:00:00",
@@ -313,7 +302,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T10:00:00",
@@ -324,7 +313,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T11:00:00",
@@ -335,7 +324,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T12:00:00",
@@ -346,7 +335,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T13:00:00",
@@ -357,7 +346,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T14:00:00",
@@ -368,7 +357,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T15:00:00",
@@ -379,7 +368,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T16:00:00",
@@ -390,7 +379,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T17:00:00",
@@ -401,7 +390,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T18:00:00",
@@ -412,7 +401,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T19:00:00",
@@ -423,7 +412,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T20:00:00",
@@ -434,7 +423,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T21:00:00",
@@ -445,7 +434,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T22:00:00",
@@ -456,7 +445,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-17T23:00:00",
@@ -467,7 +456,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T00:00:00",
@@ -478,7 +467,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T01:00:00",
@@ -489,7 +478,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T02:00:00",
@@ -500,7 +489,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T03:00:00",
@@ -511,7 +500,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T04:00:00",
@@ -522,7 +511,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T05:00:00",
@@ -533,7 +522,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T06:00:00",
@@ -544,7 +533,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T07:00:00",
@@ -555,7 +544,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T08:00:00",
@@ -566,7 +555,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T09:00:00",
@@ -577,7 +566,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T10:00:00",
@@ -588,7 +577,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T11:00:00",
@@ -599,7 +588,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T12:00:00",
@@ -610,7 +599,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T13:00:00",
@@ -621,7 +610,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T14:00:00",
@@ -632,7 +621,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T15:00:00",
@@ -643,7 +632,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T16:00:00",
@@ -654,7 +643,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T17:00:00",
@@ -665,7 +654,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T18:00:00",
@@ -676,7 +665,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T19:00:00",
@@ -687,7 +676,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T20:00:00",
@@ -698,7 +687,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T21:00:00",
@@ -709,7 +698,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T22:00:00",
@@ -720,7 +709,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-18T23:00:00",
@@ -731,7 +720,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-19T00:00:00",
@@ -742,7 +731,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-19T01:00:00",
@@ -753,7 +742,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-19T02:00:00",
@@ -764,7 +753,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-19T03:00:00",
@@ -775,7 +764,7 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
-      "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     },
     {
       "window_start": "2026-10-19T04:00:00",
@@ -875,6 +864,17 @@
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 0.0,
       "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
+    },
+    {
+      "window_start": "2026-10-19T13:00:00",
+      "window_end": "2026-10-19T19:00:00",
+      "q_in_6h_m3": 0.0,
+      "water_level_start_m": 489.468,
+      "water_level_end_m": 489.439,
+      "rain_6h_mm": 0.0,
+      "release_6h_m3": 3754.8,
+      "spill_6h_m3": 0.0,
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     }
   ],
   "peak_window": {
@@ -886,6 +886,6 @@
     "rain_6h_mm": 0.0,
     "release_6h_m3": 3754.8,
     "spill_6h_m3": 0.0,
-    "release_note": "event#3(6.0h@5572.8m3/d, ยังไม่ปิด); event#4(6.0h@9446.4m3/d, ยังไม่ปิด)"
+    "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
   }
 }
