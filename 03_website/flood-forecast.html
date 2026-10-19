@@ -7,7 +7,7 @@
 <link href="assets/vendor/fonts/fonts.css" rel="stylesheet">
 <link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css" />
 <script src="assets/vendor/leaflet/leaflet.js"></script>
-<script src="assets/js/chart.umd.min.js"></script><script src="assets/uikit/chart-kit.js?v=202610140948"></script>
+<script src="assets/js/chart.umd.min.js"></script><script src="assets/uikit/chart-kit.js?v=202610181435"></script>
 <script src="assets/vendor/hammerjs/hammer.min.js"></script>
 <script src="assets/vendor/chartjs-plugin-zoom/chartjs-plugin-zoom.min.js"></script>
 <style>
@@ -300,7 +300,7 @@
         <div class="eyebrow">Overflow Heatmap</div>
         <h2>น้ำล้นตลิ่งคาดการณ์ รายลำน้ำ × รายวัน</h2>
         <p>ปริมาณน้ำล้นจากแบบจำลอง WMB (ล้าน ลบ.ม./วัน) — สีเข้มขึ้นตามปริมาณ
-           สมมุติฐานฝนล่วงหน้า = ไม่มีฝนเพิ่ม (ค่าประมาณด้านต่ำ)</p>
+           <span id="rainFwdNote">สมมุติฐานฝนล่วงหน้า = ไม่มีฝนเพิ่ม (ค่าประมาณด้านต่ำ)</span></p>
       </div>
       <div id="heatContainer" class="heat-wrap"></div>
     </div>
@@ -434,7 +434,7 @@ const DEPTH_LAYERS_META = {
   // render ครั้งแรก แล้ว fetch metaUrl ทันทีที่เปิด layer เพื่อได้ค่าจริงของรอบนั้นมาแก้ legend
   // (ตัวภาพเองสร้างด้วย vmax ที่ถูกต้องอยู่แล้วจากฝั่ง gen_map02_forecast.py -- แค่ legend ต้อง sync ตาม)
   forecast7d: { url: 'assets/data/flood_depth_forecast.png', metaUrl: 'assets/data/flood_depth_forecast_meta.json',
-                label: 'พยากรณ์น้ำท่วม 7 วันข้างหน้า (ล้นตลิ่ง+กว๊านหนุน, สมมติไม่มีฝนเพิ่ม)', vmax: DEPTH_VMAX },
+                label: 'พยากรณ์น้ำท่วม 7 วันข้างหน้า (ล้นตลิ่ง+กว๊านหนุน, ตามฝนล่วงหน้าที่ระบบใช้)', vmax: DEPTH_VMAX },
 };
 // ให้ตัวเลขความลึกที่แสดง legend อ่านง่ายไม่ว่าค่าจะเล็ก (มม.) หรือใหญ่ (ม.) แค่ไหน -- คงหน่วย "ม."
 // เดียวกันทุก layer (ไม่ผสมหน่วย มม./ซม./ม. ให้สับสน) แค่ปรับจำนวนทศนิยมตามขนาดค่า
@@ -483,13 +483,15 @@ async function main() {
 
 function render(d) {
   // ---------- staleness ----------
-  const gen = new Date(d.generated_at.replace(' ', 'T'));
+  function thaiDT(s){if(!s)return s;var t=Date.parse(String(s).replace(' ','T')+(/[zZ]|[+-]\d\d:?\d\d$/.test(s)?'':'Z'));if(isNaN(t))return s;var i=new Date(t+7*36e5).toISOString();return i.slice(0,10)+' '+i.slice(11,16);} /* generated_at เป็น UTC -> แสดงเวลาไทย */
+  const gen = new Date(thaiDT(d.generated_at) ? d.generated_at.replace(' ', 'T') + (/[zZ]|[+-]\d\d:?\d\d$/.test(d.generated_at) ? '' : 'Z') : NaN);
+  const genTh = thaiDT(d.generated_at) + ' น.';
   const ageH = (Date.now() - gen.getTime()) / 36e5;
   let flag = FLAG[d.flags.overall] || FLAG.normal;
   if (ageH > STALE_HOURS) {
     const sn = document.getElementById('staleNote');
     sn.style.display = 'block';
-    sn.textContent = 'ข้อมูลไม่ได้อัปเดตตั้งแต่ ' + d.generated_at +
+    sn.textContent = 'ข้อมูลไม่ได้อัปเดตตั้งแต่ ' + genTh +
       ' (' + Math.round(ageH) + ' ชม.ที่แล้ว) — ธงเตือนด้านบนอาจไม่สะท้อนสถานการณ์ปัจจุบัน';
   }
   // ---------- ธง ----------
@@ -500,9 +502,9 @@ function render(d) {
   document.getElementById('flagBadgeText').textContent = 'ระดับ: ' + flag.th;
   document.getElementById('flagMsg').textContent = d.flags.message;
   document.getElementById('flagMeta').innerHTML =
-    'วันฐานพยากรณ์ <span class="num">' + d.base_date + '</span><br>อัปเดต <span class="num">' + d.generated_at + '</span>';
+    'วันฐานพยากรณ์ <span class="num">' + d.base_date + '</span><br>อัปเดต <span class="num">' + genTh + '</span>';
   document.getElementById('footerStatus').textContent =
-    'อัปเดตอัตโนมัติรายวัน · รอบล่าสุด ' + d.generated_at;
+    'อัปเดตอัตโนมัติรายวัน · รอบล่าสุด ' + genTh;
 
   // ---------- KPI ----------
   document.getElementById('kpiKwan').innerHTML = fmt(d.kwan_now.level, 2) + '<small>ม.รทก</small>';
@@ -530,7 +532,14 @@ function render(d) {
   // ---------- reliability ----------
   document.getElementById('modelInfoList').innerHTML =
     d.model_info.split('|').map(x => '<li>' + x.trim() + '</li>').join('') +
-    '<li>สมมุติฐานฝนล่วงหน้า = 0 มม. (ค่าประมาณด้านต่ำ) — ช่วงพายุควรติดตามรายวัน</li>';
+    (d.rain_forward_source === 'weathernext' && Array.isArray(d.rain_forward)
+      ? '<li>ฝนล่วงหน้า (WeatherNext 3, รวม ' + d.rain_forward.length + ' วัน) = ' +
+        (Math.round(d.rain_forward.reduce((a, r) => a + (+r.mm || 0), 0) * 10) / 10) + ' มม. — ค่าพยากรณ์อาจคลาดเคลื่อน ช่วงพายุควรติดตามรายวัน</li>'
+      : '<li>สมมุติฐานฝนล่วงหน้า = 0 มม. (ค่าประมาณด้านต่ำ) — ช่วงพายุควรติดตามรายวัน</li>');
+  if (d.rain_forward_source === 'weathernext') {
+    const rn = document.getElementById('rainFwdNote');
+    if (rn) rn.textContent = 'ฝนล่วงหน้าใช้พยากรณ์ WeatherNext 3';
+  }
   document.getElementById('warnList').innerHTML = (d.warnings && d.warnings.length)
     ? d.warnings.map(w => '<li class="warn-li">' + w + '</li>').join('')
     : '<li>ไม่มีคำเตือน — ข้อมูลครบถ้วน</li>';
@@ -1413,5 +1422,5 @@ fetch(WMB_MODEL_ENDPOINT)
   });
 </script>
 
-<link rel="stylesheet" href="assets/uikit/theme-kit.css?v=202610140948"><script src="assets/uikit/theme-kit.js?v=202610140948"></script><script src="assets/uikit/page-kit.js?v=202610140948"></script><script src="assets/uikit/kwan-kit.js?v=202610140948"></script><script src="assets/uikit/hero-bg.js?v=202610140948"></script><script src="assets/uikit/inflow-kit.js?v=202610140948"></script><script src="assets/uikit/map-kit.js?v=202610140948"></script><script src="assets/uikit/flood-map-kit.js?v=202610140948"></script><script src="assets/uikit/flood-flow-kit.js?v=202610140948"></script><script src="assets/uikit/flood-3d-kit.js?v=202610140948"></script><script src="assets/uikit/flood-bathtub-kit.js?v=202610140948"></script><script src="assets/uikit/reliability-kit.js?v=202610140948"></script><script src="assets/uikit/flood-hero-kit.js?v=202610140948"></script><script src="assets/uikit/freshness-kit.js?v=202610140948"></script><script src="assets/uikit/i18n-kit.js?v=202610140948"></script><script src="assets/uikit/table-kit.js?v=202610140948"></script><script src="assets/uikit/plain-kit.js?v=202610140948"></script><script src="assets/uikit/csv-kit.js?v=202610140948"></script><script src="assets/uikit/pwa-kit.js?v=202610140948"></script><script src="assets/uikit/report-kit.js?v=202610140948"></script><script src="assets/uikit/diagram-kit.js?v=202610140948"></script><script src="assets/uikit/ukm.js?v=202610140948"></script></body>
+<link rel="stylesheet" href="assets/uikit/theme-kit.css?v=202610181435"><script src="assets/uikit/theme-kit.js?v=202610181435"></script><script src="assets/uikit/page-kit.js?v=202610181435"></script><script src="assets/uikit/kwan-kit.js?v=202610181435"></script><script src="assets/uikit/hero-bg.js?v=202610181435"></script><script src="assets/uikit/inflow-kit.js?v=202610181435"></script><script src="assets/uikit/map-kit.js?v=202610181435"></script><script src="assets/uikit/flood-map-kit.js?v=202610181435"></script><script src="assets/uikit/flood-flow-kit.js?v=202610181435"></script><script src="assets/uikit/flood-3d-kit.js?v=202610181435"></script><script src="assets/uikit/flood-bathtub-kit.js?v=202610181435"></script><script src="assets/uikit/reliability-kit.js?v=202610181435"></script><script src="assets/uikit/flood-hero-kit.js?v=202610181435"></script><script src="assets/uikit/freshness-kit.js?v=202610181435"></script><script src="assets/uikit/i18n-kit.js?v=202610181435"></script><script src="assets/uikit/table-kit.js?v=202610181435"></script><script src="assets/uikit/plain-kit.js?v=202610181435"></script><script src="assets/uikit/csv-kit.js?v=202610181435"></script><script src="assets/uikit/pwa-kit.js?v=202610181435"></script><script src="assets/uikit/report-kit.js?v=202610181435"></script><script src="assets/uikit/diagram-kit.js?v=202610181435"></script><script src="assets/uikit/ukm.js?v=202610181435"></script></body>
 </html>

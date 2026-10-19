@@ -73,7 +73,8 @@
         gauges.push({ v: v, name: name || 'ความแม่นยำ', metric: m[1] === 'R2' ? 'R²' : m[1], pts: pts });
       } else if (/ฝนล่วงหน้า/.test(t)) {
         var z = t.match(/=\s*([0-9.]+)\s*(มม\.?)/);
-        assume = '<div class="rk-card rk-warn"><h4>สมมุติฐานฝนล่วงหน้า</h4><div class="big">' + esc(z ? z[1] : '0') + '<small>' + esc(z ? z[2] : 'มม.') + '</small></div><p>ใช้เป็นค่าประมาณด้านต่ำ — ช่วงพายุควรติดตามรายวัน</p></div>';
+        var wn = /WeatherNext/.test(t);
+        assume = '<div class="rk-card rk-warn"><h4>' + (wn ? 'ฝนล่วงหน้าที่ใช้ (7 วัน)' : 'สมมุติฐานฝนล่วงหน้า') + '</h4><div class="big">' + esc(z ? z[1] : '0') + '<small>' + esc(z ? z[2] : 'มม.') + '</small></div><p>' + (wn ? 'จากพยากรณ์ WeatherNext 3 (ค่าเฉลี่ยทั้งพื้นที่) — ค่าอาจคลาดเคลื่อน ช่วงพายุควรติดตามรายวัน' : 'ใช้เป็นค่าประมาณด้านต่ำ — ช่วงพายุควรติดตามรายวัน') + '</p></div>';
       } else if (h) {
         var a = +h[1], b = +h[2], d = '';
         for (var k = 1; k <= 7; k++) d += '<i class="' + (k >= a && k <= b ? 'on' : '') + '">' + k + '</i>';

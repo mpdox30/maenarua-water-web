@@ -27,6 +27,7 @@
   var MO = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'], MOE = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   function pd(s) { var m = /(\d{4})-(\d\d)-(\d\d)(?:[T ](\d\d):(\d\d))?/.exec(String(s || '')); return m ? { y: +m[1], mo: +m[2], d: +m[3], h: m[4], mi: m[5] } : null; }
   function fDate(s, short) { var p = pd(s); if (!p) return '—'; return short ? (p.d + ' ' + (EN ? MOE : MO)[p.mo - 1]) : EN ? p.d + ' ' + MOE[p.mo - 1] + ' ' + p.y : p.d + ' ' + MO[p.mo - 1] + ' ' + (p.y + 543); }
+  function thaiDT(s){if(!s)return s;var t=Date.parse(String(s).replace(' ','T')+(/[zZ]|[+-]\d\d:?\d\d$/.test(s)?'':'Z'));if(isNaN(t))return s;var i=new Date(t+7*36e5).toISOString();return i.slice(0,10)+' '+i.slice(11,16);} /* generated_at เป็น UTC -> แสดงเวลาไทย */
   function fDT(s) { var p = pd(s); return p && p.h ? fDate(s) + ' ' + p.h + ':' + p.mi + (EN ? '' : ' น.') : fDate(s); }
   function f2(x, n) { return x == null || isNaN(x) ? '—' : Number(x).toFixed(n == null ? 2 : n); }
   function fN(x) { return x == null || isNaN(x) ? '—' : Math.round(x).toLocaleString('en-US'); }
@@ -41,7 +42,7 @@
     return Promise.all([J('flood_latest.json'), J('monitoring.json'), J('villages.geojson.json'), J('buildings_flood_risk.geojson'), J('latest.json'), J('water_ledger.json')]).then(function (a) {
       var fl = a[0], mo = a[1], vg = a[2], bg = a[3], lt = a[4], wl = a[5];
       if (!fl) throw new Error('flood_latest');
-      var m = { fl: fl, lt: lt, gen: fl.generated_at, level: fl.flags && fl.flags.overall || 'normal', kwan: fl.kwan_now.level, d3: fl.kwan_now.change_3d,
+      var m = { fl: fl, lt: lt, gen: thaiDT(fl.generated_at), level: fl.flags && fl.flags.overall || 'normal', kwan: fl.kwan_now.level, d3: fl.kwan_now.change_3d,
         bankMain: fl.banks.Mae_Main1, bankRH: fl.banks.RongHai, fc: fl.kwan_forecast || [], obs: fl.kwan_observed_30d || [], rain: fl.rain_7d || {}, res: [], vil: [], streams: [], ledger: [] };
       if (LV.indexOf(m.level) < 0) m.level = 'normal';
       m.res = ((mo && mo.stations) || []).map(function (s) { return { name: s.name_th, en: s.name_en, pct: s.capacity_pct, v: s.storage_m3 / 1e6, mx: s.storage_max_m3 / 1e6, lv: s.water_level, spill: s.distance_to_spillway_m, t: s.measure_datetime }; });
