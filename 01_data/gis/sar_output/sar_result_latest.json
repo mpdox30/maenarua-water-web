@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-09-20T09:11:45.626122",
+  "generated_at": "2026-10-20T08:35:49.876953",
   "sar_trigger": {
-    "as_of_date": "2026-09-20",
+    "as_of_date": "2026-10-20",
     "year": 2026,
-    "latest_s1_image_date": "2026-09-15"
+    "latest_s1_image_date": "2026-10-18"
   },
   "year": 2026,
   "status": "ok",
