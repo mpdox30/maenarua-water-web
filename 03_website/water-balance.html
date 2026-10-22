@@ -399,6 +399,13 @@ const DATA_ENDPOINT = 'assets/data/water_ledger.json';
 const THAI_MONTH = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
                      "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
 
+// ภาษา EN: ป้ายบนกราฟ (canvas) แปลโดย i18n-kit ไม่ได้ -> เลือกชื่อเดือน/ปี ค.ศ. เองตามภาษาที่จำไว้ (uk_lang)
+const IS_EN = (() => { try { return localStorage.getItem('uk_lang') === 'en'; } catch (e) { return false; } })();
+const EN_MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const EN_MONTH_FULL = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const yLabel = y => IS_EN ? y : y + 543;                       // ปี พ.ศ. (TH) / ค.ศ. (EN)
+const mShort = m => IS_EN ? EN_MONTH_SHORT[m - 1] : THAI_MONTH[m - 1].slice(0, 3) + '.';
+
 let ledger = null;
 
 function fmtNum(n, digits) {
@@ -410,12 +417,12 @@ function fmtLevel(n) { return fmtNum(n, 3); }
 
 function thaiMonthLabel(ym) {
   const [y, m] = ym.split('-').map(Number);
-  return `${THAI_MONTH[m - 1]} ${y + 543}`;
+  return IS_EN ? `${EN_MONTH_FULL[m - 1]} ${y}` : `${THAI_MONTH[m - 1]} ${y + 543}`;
 }
 
 function thaiDateLabel(iso) {
   const [y, m, d] = iso.split('-').map(Number);
-  return `${d} ${THAI_MONTH[m - 1]} ${y + 543}`;
+  return IS_EN ? `${d} ${EN_MONTH_SHORT[m - 1]} ${y}` : `${d} ${THAI_MONTH[m - 1]} ${y + 543}`;
 }
 
 function populateMonthSelect() {
@@ -547,9 +554,9 @@ function cmpPopulate() {
   cmpIndex = cmpBuildIndex();
   const years = Object.keys(cmpIndex).map(Number).sort((a, b) => b - a);
   const ysel = document.getElementById('cmpYears');
-  ysel.innerHTML = years.map(y => `<option value="${y}" selected>${y + 543}</option>`).join('');
+  ysel.innerHTML = years.map(y => `<option value="${y}" selected>${yLabel(y)}</option>`).join('');
   const msel = document.getElementById('cmpMonth');
-  msel.innerHTML = THAI_MONTH.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
+  msel.innerHTML = (IS_EN ? EN_MONTH_FULL : THAI_MONTH).map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
   const latest = ledger.rows[ledger.rows.length - 1];
   const [, lm, ld] = latest.date.split('-').map(Number);
   msel.value = String(lm);
@@ -607,7 +614,7 @@ function cmpRender() {
     const vals = years.map(y => (cmpIndex[y] && cmpIndex[y][md]) ? cmpIndex[y][md][typeKey] : null);
     cmpChart = new Chart(ctx, {
       type: 'bar',
-      data: { labels: years.map(y => String(y + 543)), datasets: [{ label: T.label, data: vals, backgroundColor: '#7ab8ec', borderColor: '#7ab8ec', borderWidth: 1, maxBarThickness: 80 }] },
+      data: { labels: years.map(y => String(yLabel(y))), datasets: [{ label: T.label, data: vals, backgroundColor: '#7ab8ec', borderColor: '#7ab8ec', borderWidth: 1, maxBarThickness: 80 }] },
       options: { ...baseOpts,
         layout: { padding: { top: 22 } },
         plugins: { ...baseOpts.plugins, legend: { display: false },
@@ -624,9 +631,9 @@ function cmpRender() {
     titleEl.textContent = `อ่างเก็บน้ำแม่นาเรือ — ${T.label} (ซ้อนปีตลอดทั้งปี)`;
     subEl.textContent = `หน่วย: ${T.unit}`;
     const labels = []; const days = [];
-    for (let m = 1; m <= 12; m++) { const n = new Date(2024, m, 0).getDate(); for (let d = 1; d <= n; d++) { days.push(`${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`); labels.push(`${d} ${THAI_MONTH[m - 1].slice(0, 3)}.`); } }
+    for (let m = 1; m <= 12; m++) { const n = new Date(2024, m, 0).getDate(); for (let d = 1; d <= n; d++) { days.push(`${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`); labels.push(`${d} ${mShort(m)}`); } }
     const datasets = years.map((y, i) => ({
-      label: String(y + 543), borderColor: CMP_COLORS[i % CMP_COLORS.length], backgroundColor: CMP_COLORS[i % CMP_COLORS.length],
+      label: String(yLabel(y)), borderColor: CMP_COLORS[i % CMP_COLORS.length], backgroundColor: CMP_COLORS[i % CMP_COLORS.length],
       borderWidth: 2, pointRadius: 0, pointHitRadius: 6, spanGaps: false, tension: 0.15,
       data: days.map(md => (cmpIndex[y] && cmpIndex[y][md]) ? cmpIndex[y][md][typeKey] : null),
     }));
