@@ -84,7 +84,7 @@
         var parts = t.split(/\s[—–-]\s/), ttl = parts[0], rest = parts.slice(1).join(' — ');
         var dt = ttl.match(/^(.*?)\s*\(([^)]*)\)\s*$/);
         head = '<div class="rk-head"><div class="rk-eye"><i></i>Model · ที่ใช้งานอยู่</div><h3 class="rk-title">' + esc(dt ? dt[1] : ttl) + (dt ? '<small>' + esc(dt[2]) + '</small>' : '') + '</h3><div class="rk-chips">' +
-          rest.split(/\s\+\s/).filter(Boolean).map(function (c) { var kv = c.match(/^([\w฀-๿_ ./]+?)=\s*([0-9.]+)$/); return '<span class="rk-chip">' + (kv ? esc(kv[1]) + ' <b>' + esc(kv[2]) + '</b>' : esc(c)) + '</span>'; }).join('') + '</div></div>';
+          rest.split(/\s\+\s/).filter(function (c) { return c && !/inflow\/release/.test(c); })   /* รายละเอียดเชิงเทคนิค -> ไปดูในเปเปอร์ (หน้า Research) */.map(function (c) { var kv = c.match(/^([\w฀-๿_ ./]+?)=\s*([0-9.]+)$/); return '<span class="rk-chip">' + (kv ? esc(kv[1]) + ' <b>' + esc(kv[2]) + '</b>' : esc(c)) + '</span>'; }).join('') + '</div></div>';
       } else extra.push(t);
     });
     var gh = gauges.length ? '<div class="rk-gauges">' + gauges.map(function (g) {
