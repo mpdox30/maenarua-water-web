@@ -69,7 +69,7 @@
       var h = t.match(/(\d+)\s*[–-]\s*(\d+)\s*วัน/);
       if (m) {
         var v = parseFloat(m[2]), name = t.slice(0, m.index).replace(/^[^:]*:\s*/, '').replace(/\d+\s*จุด/, '').trim();
-        var pts = (t.match(/\d+\s*จุด(?:\s+(?:calibrate|held-out|SAR อิสระ))?/) || [])[0] || '';
+        var pts = (t.match(/\d+\s*จุด(?:\s+(?:calibrate|held-out|SAR))?/) || [])[0] || '';
         gauges.push({ v: v, name: name || 'ความแม่นยำ', metric: m[1] === 'R2' ? 'R²' : m[1], pts: pts });
       } else if (/ฝนล่วงหน้า/.test(t)) {
         var z = t.match(/=\s*([0-9.]+)\s*(มม\.?)/);
