@@ -65,11 +65,11 @@
     if (!items.length) return;
     var head = '', gauges = [], hor = '', assume = '', extra = [];
     items.forEach(function (t, i) {
-      var m = t.match(/(R²|R2|r)\s*=\s*([0-9.]+)/);
+      var m = t.match(/(R²|R2|r|NSE|KGE)\s*=\s*([0-9.]+)/);   // mech_E: NSE/KGE (LOO-CV) แทน R² ของ candidate D
       var h = t.match(/(\d+)\s*[–-]\s*(\d+)\s*วัน/);
       if (m) {
         var v = parseFloat(m[2]), name = t.slice(0, m.index).replace(/^[^:]*:\s*/, '').replace(/\d+\s*จุด/, '').trim();
-        var pts = (t.match(/\d+\s*จุด(?:\s+(?:calibrate|held-out))?/) || [])[0] || '';
+        var pts = (t.match(/\d+\s*จุด(?:\s+(?:calibrate|held-out|SAR อิสระ))?/) || [])[0] || '';
         gauges.push({ v: v, name: name || 'ความแม่นยำ', metric: m[1] === 'R2' ? 'R²' : m[1], pts: pts });
       } else if (/ฝนล่วงหน้า/.test(t)) {
         var z = t.match(/=\s*([0-9.]+)\s*(มม\.?)/);
