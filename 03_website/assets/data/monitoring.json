@@ -21417,7 +21417,7 @@
       "name_th": "อ่างเก็บน้ำห้วยโซ้",
       "name_en": "Huai So Reservoir",
       "spillway_msl": 508.1,
-      "water_level": 508.057,
+      "water_level": 508.056,
       "rainfall_1h": 0.0,
       "temperature": 24.72,
       "humidity": 93.85,
@@ -21427,7 +21427,7 @@
       "storage_m3": 120964.9,
       "storage_max_m3": 122441.9,
       "capacity_pct": 98.8,
-      "distance_to_spillway_m": -0.043,
+      "distance_to_spillway_m": -0.044,
       "history": [
         {
           "t": "2026-10-08T19:00:00",

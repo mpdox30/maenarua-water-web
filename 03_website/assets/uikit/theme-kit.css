@@ -298,6 +298,7 @@ html.uk-reduce svg.spark .uks-line{stroke-dashoffset:0;animation:none}html.uk-re
 .uk-heat .hc.none{background:transparent;border-style:dashed;border-color:rgba(var(--bd-rgb),.3)}.uk-heat .hc.none b{color:var(--text-600);font-weight:500}
 .uk-heat .hc.pk{box-shadow:0 0 0 2px rgba(var(--c),.8)}
 .uk-heat .hc.pk::after{content:"▲ สูงสุด";position:absolute;top:3px;right:6px;font:700 9.5px "IBM Plex Sans Thai",sans-serif;color:rgb(var(--c))}
+html[lang="en"] .uk-heat .hc.pk::after{content:"▲ Peak"}
 .uk-heat .rs{display:flex;flex-direction:column;gap:2px;padding-left:6px}
 .uk-heat .rs b{font-size:18px;color:var(--text-100)}.uk-heat .rs small{font-size:11px;color:var(--text-500)}
 .uk-heat .rs .bar{display:block;height:6px;border-radius:99px;background:rgba(var(--bd-rgb),.2);overflow:hidden;margin-top:3px}
