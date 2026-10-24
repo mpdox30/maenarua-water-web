@@ -1,5 +1,5 @@
 {
-  "run_timestamp": "2026-10-23T02:32:13.064270+00:00",
+  "run_timestamp": "2026-10-24T03:50:37.638899+00:00",
   "telemetry": {
     "source": "not_configured",
     "is_mock": false,
@@ -150,17 +150,17 @@
           "อ่างเก็บน้ำแม่นาเรือ": {
             "allocated_m3": 23333.43,
             "share": 0.682046,
-            "fao56_estimate_m3": 48907.94
+            "fao56_estimate_m3": 47971.8
           },
           "อ่างเก็บน้ำห้วยถ้ำ": {
             "allocated_m3": 3352.36,
             "share": 0.097991,
-            "fao56_estimate_m3": 7026.67
+            "fao56_estimate_m3": 6892.18
           },
           "อ่างเก็บน้ำห้วยโซ้": {
             "allocated_m3": 7525.14,
             "share": 0.219963,
-            "fao56_estimate_m3": 15773.04
+            "fao56_estimate_m3": 15471.13
           }
         },
         "total_m3": 34210.93,
@@ -173,7 +173,7 @@
     "inflow": {
       "status": "ok",
       "forecast": {
-        "as_of_date": "2026-10-23",
+        "as_of_date": "2026-10-24",
         "current_qin_m3_per_day": 0.0,
         "unit": "m3_per_day",
         "data_source": "live_monthly_account_files",
@@ -197,7 +197,7 @@
             "prediction_before_bias_correction_m3_per_day": 0.0
           },
           "h2": {
-            "prediction_m3_per_day": 93.84,
+            "prediction_m3_per_day": 37.09,
             "stage_used": "direct_regressor",
             "model_name": "CatBoost",
             "test_nse": null,
@@ -211,10 +211,10 @@
             "low_confidence": false,
             "rain_forecast_flag_used": null,
             "bias_correction_applied_m3": 0.0,
-            "prediction_before_bias_correction_m3_per_day": 93.84
+            "prediction_before_bias_correction_m3_per_day": 37.09
           },
           "h3": {
-            "prediction_m3_per_day": 676.39,
+            "prediction_m3_per_day": 676.32,
             "stage_used": "direct_regressor",
             "model_name": "CatBoost",
             "test_nse": null,
@@ -228,10 +228,10 @@
             "low_confidence": true,
             "rain_forecast_flag_used": null,
             "bias_correction_applied_m3": 0.0,
-            "prediction_before_bias_correction_m3_per_day": 676.39
+            "prediction_before_bias_correction_m3_per_day": 676.32
           },
           "h4": {
-            "prediction_m3_per_day": 86.98,
+            "prediction_m3_per_day": 65.06,
             "stage_used": "direct_regressor",
             "model_name": "CatBoost",
             "test_nse": null,
@@ -245,10 +245,10 @@
             "low_confidence": true,
             "rain_forecast_flag_used": null,
             "bias_correction_applied_m3": 0.0,
-            "prediction_before_bias_correction_m3_per_day": 86.98
+            "prediction_before_bias_correction_m3_per_day": 65.06
           },
           "h5": {
-            "prediction_m3_per_day": 348.02,
+            "prediction_m3_per_day": 300.88,
             "stage_used": "direct_regressor",
             "model_name": "CatBoost",
             "test_nse": null,
@@ -262,7 +262,7 @@
             "low_confidence": true,
             "rain_forecast_flag_used": null,
             "bias_correction_applied_m3": 0.0,
-            "prediction_before_bias_correction_m3_per_day": 348.02
+            "prediction_before_bias_correction_m3_per_day": 300.88
           },
           "h6": {
             "prediction_m3_per_day": 0.0,
@@ -336,7 +336,6 @@
             "2025-06-24T00:00:00",
             "2025-06-25T00:00:00",
             "2025-06-26T00:00:00",
-            "2026-10-24T00:00:00",
             "2026-10-25T00:00:00",
             "2026-10-26T00:00:00",
             "2026-10-27T00:00:00",
@@ -600,7 +599,7 @@
     },
     "errors": [],
     "is_stale": false,
-    "age_days": 2
+    "age_days": 3
   },
   "model_version": "water_demand_2stage(n_zone_horizon_models=24); reservoir_inflow_direct(n_horizon_models=7)",
   "status": "ok",
