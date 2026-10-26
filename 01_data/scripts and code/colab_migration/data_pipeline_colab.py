@@ -1497,6 +1497,43 @@ def backfill_historical_weeks(
     return result
 
 
+def _et0_fallback_from_csv(as_of_date, csv_path: Path = ML_FEATURES_LIVE_CSV):
+    """
+    2026-10-26 เพิ่ม -- fallback ของ ET0 สัปดาห์นี้: ถ้ารอบนี้ ERA5T ได้ 0 วัน (เช่น cdsapi ไม่ได้ติดตั้งใน session
+    Colab, หรือต้นสัปดาห์ที่ ERA5T latency ยังไม่ทัน) แต่ "รอบอื่นของวันเดียวกัน" (เช่นเครื่องหลักที่ดึง ERA5T ได้)
+    เขียนแถวที่มี ET0_mm_week จริงลง ml_features_live.csv ไว้แล้ว -> ใช้ค่านั้นแทนที่จะปล่อย NaN
+    (ถ้าไม่ทำ แถว NaN ของรอบหลังจะทับแถวดีของรอบก่อน และ reservoir_breakdown ของ Zone B จะหายทั้งวัน)
+
+    เงื่อนไข: as_of_date ต้องตรงกันทุกประการ (ไม่ใช้ค่าจากวันอื่น) และ ET0_mm_week ต้องไม่ว่าง
+    คืน dict {ET0_mm_week, T_mean, RH_pct, VPD_kPa, u2_ms, Rn_MJ, n_days_in_week, is_rolling_estimate, run_timestamp}
+    หรือ None ถ้าไม่พบ/อ่านไม่ได้ (ไม่ raise)
+    """
+    try:
+        if not Path(csv_path).exists():
+            return None
+        import pandas as _pd
+        df = _pd.read_csv(csv_path)
+        day = str(as_of_date)[:10]
+        sub = df[(df["as_of_date"].astype(str).str[:10] == day) & df["ET0_mm_week"].notna()]
+        if sub.empty:
+            return None
+        r = sub.sort_values("run_timestamp").iloc[-1]
+        def _f(k):
+            v = r.get(k)
+            return None if v is None or _pd.isna(v) else float(v)
+        nd = r.get("era5t_n_days_in_week")
+        return {
+            "ET0_mm_week": _f("ET0_mm_week"), "T_mean": _f("T_mean"), "RH_pct": _f("RH_pct"),
+            "VPD_kPa": _f("VPD_kPa"), "u2_ms": _f("u2_ms"), "Rn_MJ": _f("Rn_MJ"),
+            "n_days_in_week": None if nd is None or _pd.isna(nd) else int(nd),
+            "is_rolling_estimate": str(r.get("era5t_is_rolling_estimate")).strip().lower() == "true",
+            "run_timestamp": str(r.get("run_timestamp")),
+        }
+    except Exception as exc:  # noqa: BLE001 -- fallback ต้องไม่ทำให้ pipeline พัง
+        logger.warning("_et0_fallback_from_csv ล้มเหลว (%s) -- ข้าม fallback", exc)
+        return None
+
+
 def _fetch_climate_features_step(as_of_date: Optional[Any] = None) -> dict:
     """
     Integration step ที่เรียกต่อจาก Step 1 (telemetry) ใน run_pipeline() — เรียก MEI -> CHIRPS ->
@@ -1573,6 +1610,22 @@ def _fetch_climate_features_step(as_of_date: Optional[Any] = None) -> dict:
                 "ที่ ERA5T latency ยังไม่ทันข้อมูลของวันก่อนหน้า) — ET0_mm_week/AI_week ของรอบนี้จึงไม่พร้อมใช้"
             )
             logger.warning("ERA5T weekly (integration step): %s", era5t_fetch_error)
+
+    # 2026-10-26: ถ้ารอบนี้ไม่ได้ ET0 แต่รอบอื่นของวันเดียวกันได้แล้ว -> ใช้ค่าจากแถวนั้น (ดู _et0_fallback_from_csv)
+    if et0_mm_week is None:
+        _fb = _et0_fallback_from_csv(as_of)
+        if _fb is not None and _fb.get("ET0_mm_week") is not None:
+            et0_mm_week = _fb["ET0_mm_week"]
+            n_days_in_week = _fb["n_days_in_week"]
+            worker_output = dict(worker_output)
+            for _k in ("T_mean", "RH_pct", "VPD_kPa", "u2_ms", "Rn_MJ"):
+                worker_output[_k] = _fb[_k]
+            worker_output["is_rolling_estimate"] = _fb["is_rolling_estimate"]
+            era5t_fetch_error = (
+                "รอบนี้ ERA5T ได้ 0 วัน -- ใช้ ET0/ตัวแปรอากาศจากแถวของรอบอื่นวันเดียวกัน (run_timestamp="
+                + str(_fb["run_timestamp"]) + ")"
+            )
+            logger.warning("ERA5T weekly: %s -> ET0_mm_week=%s", era5t_fetch_error, et0_mm_week)
 
     ai_week_results = {}
     for zone in ("zone_A", "zone_B"):
