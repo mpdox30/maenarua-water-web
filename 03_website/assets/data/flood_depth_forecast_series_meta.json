@@ -1,48 +1,48 @@
 {
- "vmax_m": 0.01,
- "raw_max_m": 0.00841,
+ "vmax_m": 0.05,
+ "raw_max_m": 0.02526,
  "generated_at": "2026-10-28",
  "days": [
   {
    "day": 1,
    "date": "2026-10-29",
-   "max_depth_m": 0.00841,
+   "max_depth_m": 0.02526,
    "wet_px": 144358
   },
   {
    "day": 2,
    "date": "2026-10-30",
-   "max_depth_m": 0.00811,
+   "max_depth_m": 0.02435,
    "wet_px": 144358
   },
   {
    "day": 3,
    "date": "2026-10-31",
-   "max_depth_m": 0.00782,
+   "max_depth_m": 0.02347,
    "wet_px": 144358
   },
   {
    "day": 4,
    "date": "2026-11-01",
-   "max_depth_m": 0.00754,
+   "max_depth_m": 0.02263,
    "wet_px": 144358
   },
   {
    "day": 5,
    "date": "2026-11-02",
-   "max_depth_m": 0.00727,
+   "max_depth_m": 0.02181,
    "wet_px": 144358
   },
   {
    "day": 6,
    "date": "2026-11-03",
-   "max_depth_m": 0.007,
+   "max_depth_m": 0.02103,
    "wet_px": 144358
   },
   {
    "day": 7,
    "date": "2026-11-04",
-   "max_depth_m": 0.00676,
+   "max_depth_m": 0.02027,
    "wet_px": 144358
   }
  ]
