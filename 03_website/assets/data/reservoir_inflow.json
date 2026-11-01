@@ -6789,42 +6789,6 @@
    "total": 0.37459
   },
   {
-   "date": "2026-08-24",
-   "MaeNaRua": 0.0,
-   "HuayTham": 0.0,
-   "So": 0.0,
-   "CAT": 0.0,
-   "ChamTum": 0.0,
-   "total": 0.0
-  },
-  {
-   "date": "2026-08-25",
-   "MaeNaRua": 0.01096,
-   "HuayTham": 0.0018,
-   "So": 0.00016,
-   "CAT": 0.0,
-   "ChamTum": 0.0009,
-   "total": 0.01382
-  },
-  {
-   "date": "2026-08-26",
-   "MaeNaRua": 0.21346,
-   "HuayTham": 0.03948,
-   "So": 0.01385,
-   "CAT": 0.00642,
-   "ChamTum": 0.01737,
-   "total": 0.29058
-  },
-  {
-   "date": "2026-08-27",
-   "MaeNaRua": 0.0,
-   "HuayTham": 0.0,
-   "So": 0.0,
-   "CAT": 0.0,
-   "ChamTum": 0.0,
-   "total": 0.0
-  },
-  {
    "date": "2026-08-28",
    "MaeNaRua": 0.0,
    "HuayTham": 0.0,
@@ -7312,6 +7276,42 @@
   },
   {
    "date": "2026-10-28",
+   "MaeNaRua": 0.0,
+   "HuayTham": 0.0,
+   "So": 0.0,
+   "CAT": 0.0,
+   "ChamTum": 0.0,
+   "total": 0.0
+  },
+  {
+   "date": "2026-10-29",
+   "MaeNaRua": 0.0,
+   "HuayTham": 0.0,
+   "So": 0.0,
+   "CAT": 0.0,
+   "ChamTum": 0.0,
+   "total": 0.0
+  },
+  {
+   "date": "2026-10-30",
+   "MaeNaRua": 0.0,
+   "HuayTham": 0.0,
+   "So": 0.0,
+   "CAT": 0.0,
+   "ChamTum": 0.0,
+   "total": 0.0
+  },
+  {
+   "date": "2026-10-31",
+   "MaeNaRua": 0.0,
+   "HuayTham": 0.0,
+   "So": 0.0,
+   "CAT": 0.0,
+   "ChamTum": 0.0,
+   "total": 0.0
+  },
+  {
+   "date": "2026-11-01",
    "MaeNaRua": 0.0,
    "HuayTham": 0.0,
    "So": 0.0,
@@ -8331,12 +8331,12 @@
   },
   {
    "date": "2026-08-30",
-   "MaeNaRua": 0.2486,
-   "HuayTham": 0.0495,
-   "So": 0.0246,
-   "CAT": 0.0125,
-   "ChamTum": 0.0201,
-   "total": 0.3554
+   "MaeNaRua": 0.0242,
+   "HuayTham": 0.0082,
+   "So": 0.0106,
+   "CAT": 0.0061,
+   "ChamTum": 0.0018,
+   "total": 0.051
   },
   {
    "date": "2026-09-06",
@@ -8648,12 +8648,12 @@
   },
   {
    "date": "2026-08",
-   "MaeNaRua": 0.296,
-   "HuayTham": 0.059,
-   "So": 0.03,
-   "CAT": 0.016,
-   "ChamTum": 0.024,
-   "total": 0.426
+   "MaeNaRua": 0.072,
+   "HuayTham": 0.018,
+   "So": 0.016,
+   "CAT": 0.009,
+   "ChamTum": 0.006,
+   "total": 0.121
   },
   {
    "date": "2026-09",
@@ -8672,6 +8672,15 @@
    "CAT": 0.096,
    "ChamTum": 0.109,
    "total": 2.037
+  },
+  {
+   "date": "2026-11",
+   "MaeNaRua": 0.0,
+   "HuayTham": 0.0,
+   "So": 0.0,
+   "CAT": 0.0,
+   "ChamTum": 0.0,
+   "total": 0.0
   }
  ]
 }
