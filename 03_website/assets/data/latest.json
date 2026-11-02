@@ -1,5 +1,5 @@
 {
-  "run_timestamp": "2026-11-01T00:52:25.694217+00:00",
+  "run_timestamp": "2026-11-02T10:07:02.883014+00:00",
   "telemetry": {
     "source": "not_configured",
     "is_mock": false,
@@ -9,161 +9,161 @@
     "demand_zone_a": {
       "as_of": {
         "year": 2026,
-        "week": 44
+        "week": 45
       },
       "unit": "m3_per_week",
       "data_source": "live_reconstructed",
       "horizons": {
         "h1": {
           "probability_active": 0.757,
-          "magnitude_m3": 180067.5,
-          "final_m3": 136309.49
+          "magnitude_m3": 44893.24,
+          "final_m3": 33983.78
         },
         "h2": {
           "probability_active": 0.7286,
-          "magnitude_m3": 52676.84,
-          "final_m3": 38381.37
+          "magnitude_m3": 83444.83,
+          "final_m3": 60799.52
         },
         "h3": {
           "probability_active": 0.8365,
-          "magnitude_m3": 9772.59,
-          "final_m3": 8175.21
+          "magnitude_m3": 11178.05,
+          "final_m3": 9350.94
         },
         "h4": {
           "probability_active": 0.6201,
-          "magnitude_m3": 4814.28,
-          "final_m3": 2985.43
+          "magnitude_m3": 14748.21,
+          "final_m3": 9145.66
         },
         "h5": {
           "probability_active": 0.7097,
-          "magnitude_m3": 819.16,
-          "final_m3": 581.38
+          "magnitude_m3": 7305.05,
+          "final_m3": 5184.57
         },
         "h6": {
-          "probability_active": 0.7854,
-          "magnitude_m3": 13678.33,
-          "final_m3": 10743.52
+          "probability_active": 0.7625,
+          "magnitude_m3": 59430.1,
+          "final_m3": 45318.22
         },
         "h7": {
-          "probability_active": 0.8698,
-          "magnitude_m3": 59325.72,
-          "final_m3": 51602.83
+          "probability_active": 0.8309,
+          "magnitude_m3": 56249.26,
+          "final_m3": 46739.15
         },
         "h8": {
-          "probability_active": 0.7161,
-          "magnitude_m3": 67174.25,
-          "final_m3": 48106.17
+          "probability_active": 0.6961,
+          "magnitude_m3": 73376.1,
+          "final_m3": 51074.64
         },
         "h9": {
-          "probability_active": 0.7673,
-          "magnitude_m3": 64656.01,
-          "final_m3": 49610.64
+          "probability_active": 0.789,
+          "magnitude_m3": 64171.41,
+          "final_m3": 50628.44
         },
         "h10": {
-          "probability_active": 0.8944,
-          "magnitude_m3": 43700.29,
-          "final_m3": 39086.84
+          "probability_active": 0.9064,
+          "magnitude_m3": 81430.55,
+          "final_m3": 73811.47
         },
         "h11": {
-          "probability_active": 0.7675,
-          "magnitude_m3": 80754.56,
-          "final_m3": 61978.77
+          "probability_active": 0.7645,
+          "magnitude_m3": 83003.87,
+          "final_m3": 63457.78
         },
         "h12": {
-          "probability_active": 0.787,
-          "magnitude_m3": 97402.01,
-          "final_m3": 76652.41
+          "probability_active": 0.7257,
+          "magnitude_m3": 81904.81,
+          "final_m3": 59442.36
         }
       }
     },
     "demand_zone_b": {
       "as_of": {
         "year": 2026,
-        "week": 44
+        "week": 45
       },
       "unit": "m3_per_week",
       "data_source": "live_reconstructed",
       "horizons": {
         "h1": {
-          "probability_active": 0.8307,
-          "magnitude_m3": 33683.58,
-          "final_m3": 27979.6
+          "probability_active": 0.8211,
+          "magnitude_m3": 4394.28,
+          "final_m3": 3608.08
         },
         "h2": {
-          "probability_active": 0.7651,
-          "magnitude_m3": 6146.86,
-          "final_m3": 4702.8
+          "probability_active": 0.8081,
+          "magnitude_m3": 5028.9,
+          "final_m3": 4063.91
         },
         "h3": {
-          "probability_active": 0.8234,
-          "magnitude_m3": 4415.79,
-          "final_m3": 3635.86
+          "probability_active": 0.8683,
+          "magnitude_m3": 5273.02,
+          "final_m3": 4578.35
         },
         "h4": {
-          "probability_active": 0.7738,
-          "magnitude_m3": 2674.05,
-          "final_m3": 2069.21
+          "probability_active": 0.8198,
+          "magnitude_m3": 4558.8,
+          "final_m3": 3737.5
         },
         "h5": {
-          "probability_active": 0.8753,
-          "magnitude_m3": 6643.72,
-          "final_m3": 5815.02
+          "probability_active": 0.8817,
+          "magnitude_m3": 4472.67,
+          "final_m3": 3943.5
         },
         "h6": {
-          "probability_active": 0.8149,
-          "magnitude_m3": 2512.68,
-          "final_m3": 2047.68
+          "probability_active": 0.8001,
+          "magnitude_m3": 27220.28,
+          "final_m3": 21779.56
         },
         "h7": {
-          "probability_active": 0.642,
-          "magnitude_m3": 20862.66,
-          "final_m3": 13394.42
+          "probability_active": 0.669,
+          "magnitude_m3": 28303.33,
+          "final_m3": 18935.94
         },
         "h8": {
           "probability_active": 0.7912,
-          "magnitude_m3": 37236.42,
-          "final_m3": 29461.27
+          "magnitude_m3": 25819.25,
+          "final_m3": 20428.06
         },
         "h9": {
-          "probability_active": 0.8925,
-          "magnitude_m3": 24171.03,
-          "final_m3": 21571.52
+          "probability_active": 0.9381,
+          "magnitude_m3": 22557.94,
+          "final_m3": 21160.56
         },
         "h10": {
-          "probability_active": 0.7633,
-          "magnitude_m3": 12964.79,
-          "final_m3": 9895.46
+          "probability_active": 0.7613,
+          "magnitude_m3": 25056.1,
+          "final_m3": 19075.91
         },
         "h11": {
           "probability_active": 0.7852,
-          "magnitude_m3": 31699.21,
-          "final_m3": 24889.72
+          "magnitude_m3": 30488.38,
+          "final_m3": 23938.99
         },
         "h12": {
-          "probability_active": 0.8372,
-          "magnitude_m3": 39677.8,
-          "final_m3": 33218.08
+          "probability_active": 0.8469,
+          "magnitude_m3": 37152.27,
+          "final_m3": 31464.98
         }
       },
       "reservoir_breakdown": {
         "reservoirs": {
           "อ่างเก็บน้ำแม่นาเรือ": {
-            "allocated_m3": 19081.3,
-            "share": 0.681972,
-            "fao56_estimate_m3": 17414.2
+            "allocated_m3": 2460.64,
+            "share": 0.68198,
+            "fao56_estimate_m3": 19541.9
           },
           "อ่างเก็บน้ำห้วยถ้ำ": {
-            "allocated_m3": 2742.2,
-            "share": 0.098007,
-            "fao56_estimate_m3": 2502.62
+            "allocated_m3": 353.61,
+            "share": 0.098005,
+            "fao56_estimate_m3": 2808.31
           },
           "อ่างเก็บน้ำห้วยโซ้": {
-            "allocated_m3": 6156.1,
-            "share": 0.220021,
-            "fao56_estimate_m3": 5618.25
+            "allocated_m3": 793.83,
+            "share": 0.220015,
+            "fao56_estimate_m3": 6304.45
           }
         },
-        "total_m3": 27979.6,
+        "total_m3": 3608.08,
         "basis": "model_final_m3_allocated_by_fao56_ratio",
         "share_basis": "sar_live",
         "note": "จัดสรรตัวเลขพยากรณ์จริงจากโมเดล (final_m3, h=1) ตามสัดส่วนความต้องการใช้น้ำ FAO-56 ต่ออ่าง (พื้นที่/ชนิดพืชจาก SAR classification ล่าสุด x climate สัปดาห์นี้) -- ผลรวมทุกอ่าง = final_m3 เป๊ะ ไม่ใช่ตัวเลขอิสระจากโมเดลแยกต่ออ่าง (ยังไม่มีโมเดลแบบนั้น)"
@@ -400,7 +400,7 @@
           ],
           "note": "API_t ในบางวันคำนวณด้วย fallback logic ที่ผู้ implement เพิ่มเอง (reset กลับไปเริ่ม นับจาก Rain_obs_t ของวันนั้นตรงๆ เมื่อวันก่อนหน้าไม่มีข้อมูลฝน) ซึ่งไม่มีอยู่ในสูตร Excel ต้นฉบับ (Training_Ready!API_t ใน inflow_ml_training_template_3d.xlsx) — ดูรายละเอียดใน model_metadata.json > known_deviations_from_original_template"
         },
-        "gap_days": 1,
+        "gap_days": 2,
         "staleness_status": "ok",
         "staleness_message": null
       }
@@ -592,7 +592,7 @@
     },
     "errors": [],
     "is_stale": false,
-    "age_days": 11
+    "age_days": 13
   },
   "model_version": "water_demand_2stage(n_zone_horizon_models=24); reservoir_inflow_direct(n_horizon_models=7)",
   "status": "ok",
