@@ -1,5 +1,5 @@
 {
-  "run_timestamp": "2026-11-02T10:07:02.883014+00:00",
+  "run_timestamp": "2026-11-04T10:16:56.361341+00:00",
   "telemetry": {
     "source": "not_configured",
     "is_mock": false,
@@ -16,63 +16,63 @@
       "horizons": {
         "h1": {
           "probability_active": 0.757,
-          "magnitude_m3": 44893.24,
-          "final_m3": 33983.78
+          "magnitude_m3": 54206.89,
+          "final_m3": 41034.13
         },
         "h2": {
-          "probability_active": 0.7286,
-          "magnitude_m3": 83444.83,
-          "final_m3": 60799.52
+          "probability_active": 0.5508,
+          "magnitude_m3": 8358.47,
+          "final_m3": 4603.43
         },
         "h3": {
-          "probability_active": 0.8365,
-          "magnitude_m3": 11178.05,
-          "final_m3": 9350.94
+          "probability_active": 0.6841,
+          "magnitude_m3": 10148.78,
+          "final_m3": 6943.08
         },
         "h4": {
           "probability_active": 0.6201,
-          "magnitude_m3": 14748.21,
-          "final_m3": 9145.66
+          "magnitude_m3": 17180.45,
+          "final_m3": 10653.94
         },
         "h5": {
-          "probability_active": 0.7097,
-          "magnitude_m3": 7305.05,
-          "final_m3": 5184.57
+          "probability_active": 0.7128,
+          "magnitude_m3": 9383.44,
+          "final_m3": 6688.9
         },
         "h6": {
-          "probability_active": 0.7625,
-          "magnitude_m3": 59430.1,
-          "final_m3": 45318.22
+          "probability_active": 0.7234,
+          "magnitude_m3": 54002.6,
+          "final_m3": 39066.73
         },
         "h7": {
-          "probability_active": 0.8309,
-          "magnitude_m3": 56249.26,
-          "final_m3": 46739.15
+          "probability_active": 0.7673,
+          "magnitude_m3": 54536.94,
+          "final_m3": 41846.0
         },
         "h8": {
-          "probability_active": 0.6961,
-          "magnitude_m3": 73376.1,
-          "final_m3": 51074.64
+          "probability_active": 0.6847,
+          "magnitude_m3": 74180.32,
+          "final_m3": 50793.18
         },
         "h9": {
-          "probability_active": 0.789,
-          "magnitude_m3": 64171.41,
-          "final_m3": 50628.44
+          "probability_active": 0.7574,
+          "magnitude_m3": 52994.99,
+          "final_m3": 40140.45
         },
         "h10": {
-          "probability_active": 0.9064,
-          "magnitude_m3": 81430.55,
-          "final_m3": 73811.47
+          "probability_active": 0.9261,
+          "magnitude_m3": 108271.65,
+          "final_m3": 100274.72
         },
         "h11": {
-          "probability_active": 0.7645,
-          "magnitude_m3": 83003.87,
-          "final_m3": 63457.78
+          "probability_active": 0.7647,
+          "magnitude_m3": 74904.98,
+          "final_m3": 57279.28
         },
         "h12": {
           "probability_active": 0.7257,
-          "magnitude_m3": 81904.81,
-          "final_m3": 59442.36
+          "magnitude_m3": 78340.15,
+          "final_m3": 56855.31
         }
       }
     },
@@ -85,85 +85,85 @@
       "data_source": "live_reconstructed",
       "horizons": {
         "h1": {
-          "probability_active": 0.8211,
-          "magnitude_m3": 4394.28,
-          "final_m3": 3608.08
+          "probability_active": 0.797,
+          "magnitude_m3": 5922.96,
+          "final_m3": 4720.57
         },
         "h2": {
-          "probability_active": 0.8081,
-          "magnitude_m3": 5028.9,
-          "final_m3": 4063.91
+          "probability_active": 0.5273,
+          "magnitude_m3": 2714.06,
+          "final_m3": 1431.15
         },
         "h3": {
-          "probability_active": 0.8683,
-          "magnitude_m3": 5273.02,
-          "final_m3": 4578.35
+          "probability_active": 0.6157,
+          "magnitude_m3": 8188.79,
+          "final_m3": 5041.59
         },
         "h4": {
-          "probability_active": 0.8198,
-          "magnitude_m3": 4558.8,
-          "final_m3": 3737.5
+          "probability_active": 0.7989,
+          "magnitude_m3": 5617.78,
+          "final_m3": 4488.1
         },
         "h5": {
-          "probability_active": 0.8817,
-          "magnitude_m3": 4472.67,
-          "final_m3": 3943.5
+          "probability_active": 0.8487,
+          "magnitude_m3": 5736.01,
+          "final_m3": 4868.4
         },
         "h6": {
-          "probability_active": 0.8001,
-          "magnitude_m3": 27220.28,
-          "final_m3": 21779.56
+          "probability_active": 0.7099,
+          "magnitude_m3": 18374.14,
+          "final_m3": 13044.47
         },
         "h7": {
           "probability_active": 0.669,
-          "magnitude_m3": 28303.33,
-          "final_m3": 18935.94
+          "magnitude_m3": 28643.43,
+          "final_m3": 19163.48
         },
         "h8": {
-          "probability_active": 0.7912,
-          "magnitude_m3": 25819.25,
-          "final_m3": 20428.06
+          "probability_active": 0.7501,
+          "magnitude_m3": 23017.1,
+          "final_m3": 17265.71
         },
         "h9": {
           "probability_active": 0.9381,
-          "magnitude_m3": 22557.94,
-          "final_m3": 21160.56
+          "magnitude_m3": 20185.52,
+          "final_m3": 18935.1
         },
         "h10": {
           "probability_active": 0.7613,
-          "magnitude_m3": 25056.1,
-          "final_m3": 19075.91
+          "magnitude_m3": 40772.04,
+          "final_m3": 31040.9
         },
         "h11": {
           "probability_active": 0.7852,
-          "magnitude_m3": 30488.38,
-          "final_m3": 23938.99
+          "magnitude_m3": 29529.82,
+          "final_m3": 23186.34
         },
         "h12": {
-          "probability_active": 0.8469,
-          "magnitude_m3": 37152.27,
-          "final_m3": 31464.98
+          "probability_active": 0.83,
+          "magnitude_m3": 37899.0,
+          "final_m3": 31454.56
         }
       },
       "reservoir_breakdown": {
         "reservoirs": {
           "อ่างเก็บน้ำแม่นาเรือ": {
-            "allocated_m3": 2460.64,
-            "share": 0.68198,
-            "fao56_estimate_m3": 19541.9
+            "allocated_m3": 3218.74,
+            "share": 0.681854,
+            "fao56_estimate_m3": 12278.26
           },
           "อ่างเก็บน้ำห้วยถ้ำ": {
-            "allocated_m3": 353.61,
-            "share": 0.098005,
-            "fao56_estimate_m3": 2808.31
+            "allocated_m3": 462.78,
+            "share": 0.098034,
+            "fao56_estimate_m3": 1765.31
           },
           "อ่างเก็บน้ำห้วยโซ้": {
-            "allocated_m3": 793.83,
-            "share": 0.220015,
-            "fao56_estimate_m3": 6304.45
+            "allocated_m3": 1039.06,
+            "share": 0.220113,
+            "fao56_estimate_m3": 3963.61
           }
         },
-        "total_m3": 3608.08,
+        "total_m3": 4720.57,
         "basis": "model_final_m3_allocated_by_fao56_ratio",
         "share_basis": "sar_live",
         "note": "จัดสรรตัวเลขพยากรณ์จริงจากโมเดล (final_m3, h=1) ตามสัดส่วนความต้องการใช้น้ำ FAO-56 ต่ออ่าง (พื้นที่/ชนิดพืชจาก SAR classification ล่าสุด x climate สัปดาห์นี้) -- ผลรวมทุกอ่าง = final_m3 เป๊ะ ไม่ใช่ตัวเลขอิสระจากโมเดลแยกต่ออ่าง (ยังไม่มีโมเดลแบบนั้น)"
@@ -171,7 +171,7 @@
       "reservoir_breakdown_reason": "ok"
     },
     "inflow": {
-      "status": "ok",
+      "status": "stale_data_warning",
       "forecast": {
         "as_of_date": "2026-10-31",
         "current_qin_m3_per_day": 0.0,
@@ -400,9 +400,9 @@
           ],
           "note": "API_t ในบางวันคำนวณด้วย fallback logic ที่ผู้ implement เพิ่มเอง (reset กลับไปเริ่ม นับจาก Rain_obs_t ของวันนั้นตรงๆ เมื่อวันก่อนหน้าไม่มีข้อมูลฝน) ซึ่งไม่มีอยู่ในสูตร Excel ต้นฉบับ (Training_Ready!API_t ใน inflow_ml_training_template_3d.xlsx) — ดูรายละเอียดใน model_metadata.json > known_deviations_from_original_template"
         },
-        "gap_days": 2,
-        "staleness_status": "ok",
-        "staleness_message": null
+        "gap_days": 4,
+        "staleness_status": "stale_data_warning",
+        "staleness_message": "ข้อมูลที่ใช้ทำนาย (as_of=2026-10-31) เก่ากว่าวันที่รันจริง (2026-11-04) อยู่ 4 วัน — มักเกิดเพราะยังไม่มีการอัปโหลด ไฟล์ 'บัญชีน้ำ' ของเดือนใหม่ (ดู ARCHITECTURE.md > Manual Dependencies) ยังคำนวณผลทำนายให้ตามปกติ แต่ควรพิจารณาด้วยความระมัดระวังเพิ่มขึ้น"
       }
     }
   },
@@ -592,7 +592,7 @@
     },
     "errors": [],
     "is_stale": false,
-    "age_days": 13
+    "age_days": 15
   },
   "model_version": "water_demand_2stage(n_zone_horizon_models=24); reservoir_inflow_direct(n_horizon_models=7)",
   "status": "ok",
