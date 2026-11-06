@@ -1,5 +1,5 @@
 {
-  "run_timestamp": "2026-11-05T04:13:42.648313+00:00",
+  "run_timestamp": "2026-11-06T02:31:25.578455+00:00",
   "telemetry": {
     "source": "not_configured",
     "is_mock": false,
@@ -16,63 +16,63 @@
       "horizons": {
         "h1": {
           "probability_active": 0.757,
-          "magnitude_m3": 47133.63,
-          "final_m3": 35679.73
+          "magnitude_m3": 43940.91,
+          "final_m3": 33262.88
         },
         "h2": {
           "probability_active": 0.5508,
-          "magnitude_m3": 8653.05,
-          "final_m3": 4765.68
+          "magnitude_m3": 7347.25,
+          "final_m3": 4046.5
         },
         "h3": {
           "probability_active": 0.6841,
-          "magnitude_m3": 8796.96,
-          "final_m3": 6018.26
+          "magnitude_m3": 9483.8,
+          "final_m3": 6488.15
         },
         "h4": {
           "probability_active": 0.6201,
-          "magnitude_m3": 18376.0,
-          "final_m3": 11395.32
+          "magnitude_m3": 16377.91,
+          "final_m3": 10156.27
         },
         "h5": {
           "probability_active": 0.7128,
-          "magnitude_m3": 10265.02,
-          "final_m3": 7317.33
+          "magnitude_m3": 10528.47,
+          "final_m3": 7505.13
         },
         "h6": {
           "probability_active": 0.7234,
-          "magnitude_m3": 48781.46,
-          "final_m3": 35289.64
+          "magnitude_m3": 54459.85,
+          "final_m3": 39397.52
         },
         "h7": {
           "probability_active": 0.7673,
-          "magnitude_m3": 49884.56,
-          "final_m3": 38276.25
+          "magnitude_m3": 50023.1,
+          "final_m3": 38382.55
         },
         "h8": {
           "probability_active": 0.6847,
-          "magnitude_m3": 79351.99,
-          "final_m3": 54334.36
+          "magnitude_m3": 79678.6,
+          "final_m3": 54557.99
         },
         "h9": {
           "probability_active": 0.7214,
-          "magnitude_m3": 46820.12,
-          "final_m3": 33774.5
+          "magnitude_m3": 48475.99,
+          "final_m3": 34969.0
         },
         "h10": {
           "probability_active": 0.9261,
-          "magnitude_m3": 110748.61,
-          "final_m3": 102568.74
+          "magnitude_m3": 109919.07,
+          "final_m3": 101800.46
         },
         "h11": {
           "probability_active": 0.7647,
-          "magnitude_m3": 73866.15,
-          "final_m3": 56484.88
+          "magnitude_m3": 70567.42,
+          "final_m3": 53962.38
         },
         "h12": {
           "probability_active": 0.7257,
-          "magnitude_m3": 79223.36,
-          "final_m3": 57496.3
+          "magnitude_m3": 79888.92,
+          "final_m3": 57979.33
         }
       }
     },
@@ -86,84 +86,84 @@
       "horizons": {
         "h1": {
           "probability_active": 0.797,
-          "magnitude_m3": 6853.63,
-          "final_m3": 5462.31
+          "magnitude_m3": 7298.1,
+          "final_m3": 5816.55
         },
         "h2": {
           "probability_active": 0.5273,
-          "magnitude_m3": 2244.03,
-          "final_m3": 1183.3
+          "magnitude_m3": 1870.88,
+          "final_m3": 986.54
         },
         "h3": {
           "probability_active": 0.6143,
-          "magnitude_m3": 7386.85,
-          "final_m3": 4537.56
+          "magnitude_m3": 6706.7,
+          "final_m3": 4119.77
         },
         "h4": {
-          "probability_active": 0.7989,
-          "magnitude_m3": 1896.66,
-          "final_m3": 1515.26
+          "probability_active": 0.7868,
+          "magnitude_m3": 2690.83,
+          "final_m3": 2117.2
         },
         "h5": {
           "probability_active": 0.867,
-          "magnitude_m3": 3912.77,
-          "final_m3": 3392.38
+          "magnitude_m3": 4121.59,
+          "final_m3": 3573.43
         },
         "h6": {
           "probability_active": 0.7099,
-          "magnitude_m3": 16145.34,
-          "final_m3": 11462.16
+          "magnitude_m3": 15984.9,
+          "final_m3": 11348.26
         },
         "h7": {
           "probability_active": 0.669,
-          "magnitude_m3": 28416.23,
-          "final_m3": 19011.48
+          "magnitude_m3": 28067.39,
+          "final_m3": 18778.09
         },
         "h8": {
           "probability_active": 0.7501,
-          "magnitude_m3": 23302.34,
-          "final_m3": 17479.68
+          "magnitude_m3": 23954.09,
+          "final_m3": 17968.57
         },
         "h9": {
           "probability_active": 0.9063,
-          "magnitude_m3": 18036.18,
-          "final_m3": 16345.92
+          "magnitude_m3": 19637.18,
+          "final_m3": 17796.88
         },
         "h10": {
           "probability_active": 0.7613,
-          "magnitude_m3": 41540.0,
-          "final_m3": 31625.56
+          "magnitude_m3": 39134.77,
+          "final_m3": 29794.39
         },
         "h11": {
           "probability_active": 0.7852,
-          "magnitude_m3": 30804.35,
-          "final_m3": 24187.09
+          "magnitude_m3": 29290.21,
+          "final_m3": 22998.21
         },
         "h12": {
           "probability_active": 0.83,
-          "magnitude_m3": 38237.46,
-          "final_m3": 31735.46
+          "magnitude_m3": 39304.71,
+          "final_m3": 32621.23
         }
       },
       "reservoir_breakdown": {
         "reservoirs": {
           "อ่างเก็บน้ำแม่นาเรือ": {
-            "allocated_m3": 3724.64,
-            "share": 0.68188,
-            "fao56_estimate_m3": 14250.26
+            "allocated_m3": 3966.24,
+            "share": 0.681889,
+            "fao56_estimate_m3": 15035.06
           },
           "อ่างเก็บน้ำห้วยถ้ำ": {
-            "allocated_m3": 535.46,
-            "share": 0.098028,
-            "fao56_estimate_m3": 2048.63
+            "allocated_m3": 570.17,
+            "share": 0.098026,
+            "fao56_estimate_m3": 2161.38
           },
           "อ่างเก็บน้ำห้วยโซ้": {
-            "allocated_m3": 1202.21,
-            "share": 0.220092,
-            "fao56_estimate_m3": 4599.59
+            "allocated_m3": 1280.14,
+            "share": 0.220085,
+            "fao56_estimate_m3": 4852.69
           }
         },
-        "total_m3": 5462.31,
+        "total_m3": 5816.55,
         "basis": "model_final_m3_allocated_by_fao56_ratio",
         "share_basis": "sar_live",
         "note": "จัดสรรตัวเลขพยากรณ์จริงจากโมเดล (final_m3, h=1) ตามสัดส่วนความต้องการใช้น้ำ FAO-56 ต่ออ่าง (พื้นที่/ชนิดพืชจาก SAR classification ล่าสุด x climate สัปดาห์นี้) -- ผลรวมทุกอ่าง = final_m3 เป๊ะ ไม่ใช่ตัวเลขอิสระจากโมเดลแยกต่ออ่าง (ยังไม่มีโมเดลแบบนั้น)"
@@ -400,9 +400,9 @@
           ],
           "note": "API_t ในบางวันคำนวณด้วย fallback logic ที่ผู้ implement เพิ่มเอง (reset กลับไปเริ่ม นับจาก Rain_obs_t ของวันนั้นตรงๆ เมื่อวันก่อนหน้าไม่มีข้อมูลฝน) ซึ่งไม่มีอยู่ในสูตร Excel ต้นฉบับ (Training_Ready!API_t ใน inflow_ml_training_template_3d.xlsx) — ดูรายละเอียดใน model_metadata.json > known_deviations_from_original_template"
         },
-        "gap_days": 5,
+        "gap_days": 6,
         "staleness_status": "stale_data_warning",
-        "staleness_message": "ข้อมูลที่ใช้ทำนาย (as_of=2026-10-31) เก่ากว่าวันที่รันจริง (2026-11-05) อยู่ 5 วัน — มักเกิดเพราะยังไม่มีการอัปโหลด ไฟล์ 'บัญชีน้ำ' ของเดือนใหม่ (ดู ARCHITECTURE.md > Manual Dependencies) ยังคำนวณผลทำนายให้ตามปกติ แต่ควรพิจารณาด้วยความระมัดระวังเพิ่มขึ้น"
+        "staleness_message": "ข้อมูลที่ใช้ทำนาย (as_of=2026-10-31) เก่ากว่าวันที่รันจริง (2026-11-06) อยู่ 6 วัน — มักเกิดเพราะยังไม่มีการอัปโหลด ไฟล์ 'บัญชีน้ำ' ของเดือนใหม่ (ดู ARCHITECTURE.md > Manual Dependencies) ยังคำนวณผลทำนายให้ตามปกติ แต่ควรพิจารณาด้วยความระมัดระวังเพิ่มขึ้น"
       }
     }
   },
@@ -592,7 +592,7 @@
     },
     "errors": [],
     "is_stale": false,
-    "age_days": 15
+    "age_days": 16
   },
   "model_version": "water_demand_2stage(n_zone_horizon_models=24); reservoir_inflow_direct(n_horizon_models=7)",
   "status": "ok",
