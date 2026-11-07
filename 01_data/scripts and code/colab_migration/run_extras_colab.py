@@ -120,7 +120,9 @@ def _auth_args(pat):
 
 def _git(repo, *a, pat=None, timeout=300):
     cmd = ["git", "-C", str(repo), "-c", "merge.autoStash=false", "-c", "rebase.autoStash=false", "-c", "pull.autoStash=false"] + (_auth_args(pat) if pat else []) + list(a)
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+    r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
+    r.stdout = r.stdout or ""
+    r.stderr = r.stderr or ""
     if pat:
         r.stdout = (r.stdout or "").replace(pat, "***")
         r.stderr = (r.stderr or "").replace(pat, "***")
@@ -128,7 +130,9 @@ def _git(repo, *a, pat=None, timeout=300):
 
 
 def changed_files(repo, prefixes):
-    r = _git(repo, "status", "--porcelain", "-z", "--untracked-files=all")
+    r = _git(repo, "-c", "core.quotepath=false", "status", "--porcelain", "-z", "--untracked-files=all")
+    if r.returncode != 0:
+        raise RuntimeError("git status ล้มเหลว: " + (r.stderr or "")[-300:])
     out = []
     for ent in (r.stdout or "").split("\0"):
         if len(ent) < 4:
@@ -231,7 +235,7 @@ def run_all(web, wmb, pat, force=False, host="colab", do_pull=False, do_push=Tru
             continue
         t0 = time.time()
         try:
-            r = subprocess.run(cmd, cwd=cwd, env=env, capture_output=True, text=True, timeout=to)
+            r = subprocess.run(cmd, cwd=cwd, env=env, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=to)
             ok = r.returncode == 0
             results[name] = "ok" if ok else f"exit {r.returncode}"
             _log(f"{'OK ' if ok else '!! '} {name} ({time.time() - t0:.0f}s)")
