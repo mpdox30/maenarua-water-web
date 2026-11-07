@@ -1,17 +1,14 @@
 {
- "host": "colab",
- "finished_bkk": "2026-11-07T09:51:45+07:00",
+ "host": "laptop",
+ "finished_bkk": "2026-11-07T10:34:41+07:00",
  "complete": true,
  "steps": {
   "wmb_daily_refresh": "ok",
-  "monitoring_builder": "ok",
-  "inflow_6h_display": "ok",
-  "forecast_accuracy_logger": "ok",
-  "reservoir_orchestration": "ok",
-  "ledger_recompute": "ok",
-  "ledger_json": "ok",
-  "shadow_predict_6h": "ok"
+  "flood_daily_update": "ok",
+  "data_pipeline": "ok",
+  "reservoir_ledger": "ok",
+  "sar": "ok"
  },
- "last_complete_bkk": "2026-11-07T09:51:45+07:00",
- "last_complete_host": "colab"
+ "last_complete_bkk": "2026-11-07T10:34:41+07:00",
+ "last_complete_host": "laptop"
 }
