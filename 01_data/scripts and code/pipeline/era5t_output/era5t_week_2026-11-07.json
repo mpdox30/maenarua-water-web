@@ -1,0 +1,65 @@
+{
+  "worker_script": "era5t_worker.py",
+  "run_at": "2026-11-07T04:45:34.939315Z",
+  "mode": "weekly",
+  "requested_date": null,
+  "as_of_date": "2026-11-07",
+  "dataset": "reanalysis-era5-single-levels",
+  "time_utc_used": "12:00",
+  "grib_source": "cds_live_week:['D:\\\\maenaruea-water-web\\\\01_data\\\\scripts and code\\\\pipeline\\\\era5t_output\\\\era5t_week_202611_02-06.grib'] + rolling:['D:\\\\maenaruea-water-web\\\\01_data\\\\scripts and code\\\\pipeline\\\\era5t_output\\\\era5t_week_202610_31-31.grib', 'D:\\\\maenaruea-water-web\\\\01_data\\\\scripts and code\\\\pipeline\\\\era5t_output\\\\era5t_week_202611_01-06.grib']",
+  "fetch_elapsed_sec": null,
+  "grib_size_bytes": null,
+  "variables": null,
+  "valid_time": null,
+  "latitude": null,
+  "longitude": null,
+  "n_grib_datasets": null,
+  "missing_variables": null,
+  "iso_year": 2026,
+  "iso_week": 45,
+  "candidate_days": [
+    "2026-11-02",
+    "2026-11-03",
+    "2026-11-04",
+    "2026-11-05",
+    "2026-11-06"
+  ],
+  "n_days_in_week": 2,
+  "daily_breakdown": [
+    {
+      "ETo_mm_day": 3.085498991733441,
+      "T_c": 26.892663574218773,
+      "RH_pct": 85.74716979324475,
+      "VPD_kPa": 0.504970680762312,
+      "u2_ms": 0.8597953710873183,
+      "Rn_MJ": 9.619739345,
+      "date": "2026-10-31"
+    },
+    {
+      "ETo_mm_day": 2.9339663050418467,
+      "T_c": 26.343713378906273,
+      "RH_pct": 89.65881454085284,
+      "VPD_kPa": 0.35473842847586123,
+      "u2_ms": 0.38848794708234186,
+      "Rn_MJ": 9.4825463225,
+      "date": "2026-11-01"
+    }
+  ],
+  "ET0_mm_week": 21.0681,
+  "T_mean": 26.6182,
+  "RH_pct": 87.703,
+  "VPD_kPa": 0.4299,
+  "u2_ms": 0.6241,
+  "Rn_MJ": 9.5511,
+  "is_rolling_estimate": true,
+  "rolling_window": {
+    "start": "2026-10-31",
+    "end": "2026-11-06"
+  },
+  "warnings": [
+    "สัปดาห์ปฏิทิน ISO (2026-W45) ไม่มีข้อมูล จริงเลยสักวัน — ใช้ rolling 7-day window แทน (2026-10-31 ถึง 2026-11-06, 2 วันที่มีข้อมูลจริงในช่วงนั้น) เป็นค่าประมาณการ (is_rolling_estimate=true — ไม่ใช่ผลรวมของสัปดาห์ปฏิทินจริง ห้ามป้อนเข้าโมเดลตรงๆ)"
+  ],
+  "fetch_error": null,
+  "ET0_mm_sum_available": 6.0195,
+  "et0_scaled_to_7d": true
+}

@@ -1,14 +1,20 @@
 @echo off
-REM รันรุ่นผู้สมัคร shadow: (1) ดึง IMERG (2) ทำนาย+บันทึก log  (3) เขียน heartbeat
-REM ใช้ .venv ของ repo ที่ไฟล์นี้อยู่ ใช้ได้ทั้ง 2 เครื่อง
+REM Candidate 6h shadow runner: (1) fetch IMERG (2) predict + log (3) write heartbeat
+REM ASCII ONLY on purpose: Thai text in a .bat + chcp 65001 makes cmd mis-parse lines
+REM (it ran garbled fragments as commands and returned exit code 9009 = command not found).
 REM
-REM โหมด Google Drive (แนะนำ): ตั้ง env ครั้งเดียวต่อเครื่อง ชี้ไปโฟลเดอร์ที่ Google Drive for desktop ซิงก์
+REM Uses the repo .venv (repo root = 3 levels above this file). Works on both machines.
+REM
+REM Google Drive mode (recommended): set once per machine, pointing at the Drive-synced folder
 REM   setx CAND_SYNC_DIR "G:\My Drive\MaeNaRua_candidate_logs"
-REM แต่ละเครื่องเขียนไฟล์ของตัวเอง (candidate_log_%COMPUTERNAME%.csv + heartbeat_%COMPUTERNAME%.csv) -> ไม่ชนกันบน Drive
-REM ถ้าไม่ตั้ง CAND_SYNC_DIR จะเขียนในโฟลเดอร์นี้เหมือนเดิม
-chcp 65001 >nul
+REM Each machine writes its own files (candidate_log_%COMPUTERNAME%.csv + heartbeat_%COMPUTERNAME%.csv)
+REM If CAND_SYNC_DIR is not set, files are written in this folder.
+REM
+REM Exit code of this script = worst of fetch/shadow exit codes (0 = OK) so Task Scheduler
+REM "Last Result" is meaningful. Full output of the last run: last_run_%COMPUTERNAME%.log
 set "PY=%~dp0..\..\..\.venv\Scripts\python.exe"
 cd /d "%~dp0"
+set "RUNLOG=%~dp0last_run_%COMPUTERNAME%.log"
 if defined CAND_SYNC_DIR (
   if not exist "%CAND_SYNC_DIR%" mkdir "%CAND_SYNC_DIR%"
   set "CAND_LOG=%CAND_SYNC_DIR%\candidate_log_%COMPUTERNAME%.csv"
@@ -16,10 +22,17 @@ if defined CAND_SYNC_DIR (
 ) else (
   set "HB=%~dp0heartbeat_%COMPUTERNAME%.csv"
 )
-"%PY%" fetch_imerg_early_earthaccess.py
+set "PYTHONIOENCODING=utf-8"
+>"%RUNLOG%" echo %DATE% %TIME% start, PY=%PY%
+if not exist "%PY%" >>"%RUNLOG%" echo ERROR: python not found at %PY%
+"%PY%" fetch_imerg_early_earthaccess.py >>"%RUNLOG%" 2>&1
 set "E1=%ERRORLEVEL%"
-"%PY%" shadow_candidate.py
+"%PY%" shadow_candidate.py >>"%RUNLOG%" 2>&1
 set "E2=%ERRORLEVEL%"
 if not exist "%HB%" >"%HB%" echo run_at,machine,fetch_exit,shadow_exit
-REM heartbeat: เขียนตัวชี้ไฟล์ไว้หน้าคำสั่ง echo (กันเลข exit code ตัวเดียวถูกตีความเป็นหมายเลข handle)
 >>"%HB%" echo %DATE% %TIME%,%COMPUTERNAME%,%E1%,%E2%
+>>"%RUNLOG%" echo %DATE% %TIME% done, fetch_exit=%E1% shadow_exit=%E2%
+set "RC=0"
+if not "%E1%"=="0" set "RC=%E1%"
+if not "%E2%"=="0" set "RC=%E2%"
+exit /b %RC%

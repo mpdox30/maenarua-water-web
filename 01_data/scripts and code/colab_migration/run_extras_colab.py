@@ -40,6 +40,7 @@ WEB_PREFIXES = (
     "01_data/Reservoirs/reference/hii_rainfall_archive/",
     "01_data/run_state/",
     "01_data/experiments/sixhourly_refresh_20260918/shadow_",
+    "01_data/experiments/sixhourly_candidate_20261008/colab_sync/",
     "01_data/scripts and code/pipeline/ml_features_live.csv",
 )
 WMB_PREFIXES = (
@@ -209,6 +210,15 @@ def build_steps(web, wmb):
          None if has_release else "ข้าม (ต้องรันหลัง reservoir_orchestration)"),
         ("shadow_predict_6h", [sys.executable, "shadow_predict.py"], exp6, 1200, None),
     ]
+    # candidate 6h shadow (cand_norain/cand_imerg) -- ต้องมี Colab Secret EARTHDATA_USERNAME / EARTHDATA_PASSWORD
+    cand = f"{web}/01_data/experiments/sixhourly_candidate_20261008"
+    no_ed = None if os.environ.get("EARTHDATA_USERNAME") else "ไม่มี env EARTHDATA_USERNAME/PASSWORD (ตั้งเป็น Colab Secret)"
+    steps += [
+        ("candidate_imerg_fetch", [sys.executable, "fetch_imerg_early_earthaccess.py"], cand, 900, no_ed,
+         {"LOOKBACK_DAYS": "10", "WMB_ROOT": wmb}),
+        ("candidate_shadow", [sys.executable, "shadow_candidate.py"], cand, 900, no_ed,
+         {"CAND_LOG": "colab_sync/candidate_log_COLAB.csv", "WMB_ROOT": wmb}),
+    ]
     return steps
 
 
@@ -224,7 +234,9 @@ def run_all(web, wmb, pat, force=False, host="colab", do_pull=False, do_push=Tru
     env["PYTHONPATH"] = os.pathsep.join(
         [f"{web}/01_data/scripts and code/pipeline", f"{wmb}/colab_migration", env.get("PYTHONPATH", "")])
     results = {}
-    for name, cmd, cwd, to, skip in build_steps(web, wmb):
+    for _st in build_steps(web, wmb):
+        name, cmd, cwd, to, skip = _st[:5]
+        step_env = {**env, **(_st[5] if len(_st) > 5 else {})}
         if skip:
             results[name] = f"skipped: {skip}"
             _log(f"-- {name}: ข้าม ({skip})")
@@ -235,7 +247,7 @@ def run_all(web, wmb, pat, force=False, host="colab", do_pull=False, do_push=Tru
             continue
         t0 = time.time()
         try:
-            r = subprocess.run(cmd, cwd=cwd, env=env, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=to)
+            r = subprocess.run(cmd, cwd=cwd, env=step_env, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=to)
             ok = r.returncode == 0
             results[name] = "ok" if ok else f"exit {r.returncode}"
             _log(f"{'OK ' if ok else '!! '} {name} ({time.time() - t0:.0f}s)")

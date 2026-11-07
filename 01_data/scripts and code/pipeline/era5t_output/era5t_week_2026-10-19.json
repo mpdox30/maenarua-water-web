@@ -1,6 +1,6 @@
 {
   "worker_script": "era5t_worker.py",
-  "run_at": "2026-10-19T02:13:31.905542Z",
+  "run_at": "2026-10-19T03:00:34.923435Z",
   "mode": "weekly",
   "requested_date": null,
   "as_of_date": "2026-10-19",
