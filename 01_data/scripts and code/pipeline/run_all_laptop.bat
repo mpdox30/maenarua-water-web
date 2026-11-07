@@ -15,7 +15,7 @@ set "R_WMB=?" & set "R_FLOOD=?" & set "R_PIPE=?" & set "R_MON=?" & set "R_RES=?"
 
 cd /d "%WEB%" & "%PYW%" "%SCRIPT_DIR%mark_run.py" --check
 git -C "%WEB%" pull --no-rebase --no-edit origin master
-git -C "%WMB%" pull --no-rebase --no-edit origin main
+"%PYW%" "%SCRIPT_DIR%push_wmb_data.py" --wmb "%WMB%"
 
 call "%WMB%\09_live\daily_wmb_refresh\run_daily_wmb_refresh.bat"
 if errorlevel 1 (set "R_WMB=fail") else (set "R_WMB=ok")
@@ -37,6 +37,7 @@ if errorlevel 1 (set "R_SAR=fail") else (set "R_SAR=ok")
 
 set "R_6H=scheduler"
 
+"%PYW%" "%SCRIPT_DIR%push_wmb_data.py" --wmb "%WMB%"
 cd /d "%WEB%"
 "%PYW%" "%SCRIPT_DIR%mark_run.py" --done wmb_daily_refresh=%R_WMB% flood_daily_update=%R_FLOOD% data_pipeline=%R_PIPE% reservoir_ledger=%R_RES% sar=%R_SAR%
 git add "01_data/run_state/last_run.json"

@@ -119,7 +119,7 @@ def _auth_args(pat):
 
 
 def _git(repo, *a, pat=None, timeout=300):
-    cmd = ["git", "-C", str(repo)] + (_auth_args(pat) if pat else []) + list(a)
+    cmd = ["git", "-C", str(repo), "-c", "merge.autoStash=false", "-c", "rebase.autoStash=false", "-c", "pull.autoStash=false"] + (_auth_args(pat) if pat else []) + list(a)
     r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
     if pat:
         r.stdout = (r.stdout or "").replace(pat, "***")
@@ -176,7 +176,7 @@ def push_repo(repo, prefixes, branch, pat, msg, retries=3):
             _log(f"push ล้มเหลว {Path(repo).name}: {err[-400:]}")
             return False
         # ไฟล์ที่ pipeline เพิ่งสร้างรอบนี้ให้ชนะ (-X ours) ไฟล์อื่นรวมตามปกติ
-        p = _git(repo, "pull", "--no-rebase", "--no-edit", "-X", "ours", "origin", branch, pat=pat)
+        p = _git(repo, "pull", "--no-rebase", "--no-edit", "--no-autostash", "-X", "ours", "origin", branch, pat=pat)
         if p.returncode != 0:
             _log(f"pull ระหว่างลอง push ล้มเหลว: {(p.stderr or p.stdout)[-300:]}")
             return False
