@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-31T11:12:37.034337+00:00",
+ "generated_at": "2026-11-07T01:59:34.282213+00:00",
  "unit_note": "Water Level = MSL (m); Volume/Inflow/O/Spill/Runoff/Evap/Infiltration/DeltaS = m3 (ยกเว้น rain_24h_mm = mm)",
  "source_note": "ดึงจาก D:\\WMB_Phayao\\01_raw_data\\Reservoirs\\บัญชีน้ำ\\<year>_<Month>_MNR.xlsx ('ฉบับสูตรสปิลเวย์แก้ไข' -- เขียนโดย recompute_corrected_ledger.py, ไม่ใช่ไฟล์ทางการ production) ด้วย build_water_ledger_json.py",
  "formula_note": "Spill คำนวณด้วย critical-flow + Manning friction model (n=0.017) แทนสูตร Q=1.82*L*H^1.5 เดิม -- ใช้เฉพาะหน้า water-balance.html เท่านั้น ไม่กระทบไฟล์ทางการ/โมเดล ML ใน production ดูคอลัมน์ note ต่อแถวว่าวันนั้นคำนวณด้วยสูตรใหม่จริง หรือ fallback ใช้ค่าเดิม",
@@ -20,7 +20,8 @@
   "2026-07",
   "2026-08",
   "2026-09",
-  "2026-10"
+  "2026-10",
+  "2026-11"
  ],
  "rows": [
   {
@@ -8386,6 +8387,74 @@
    "year": 2026,
    "month": 10,
    "date": "2026-10-31"
+  },
+  {
+   "day": 4,
+   "water_level_m": 488.807,
+   "water_volume_m3": 1407732.4119656,
+   "inflow_m3": 0,
+   "outlet_release_m3": 0,
+   "spill_m3": 0,
+   "rain_24h_mm": 0,
+   "runoff_m3": 0,
+   "evap_m3": 684.2448162849787,
+   "infiltration_m3": 293.68223248227,
+   "delta_s_m3": -2901.852486999938,
+   "note": "ใช้ค่าเดิม (ไม่มี telemetry รายชั่วโมงครบ 20ชม. ช่วงนี้)",
+   "year": 2026,
+   "month": 11,
+   "date": "2026-11-04"
+  },
+  {
+   "day": 5,
+   "water_level_m": 488.846,
+   "water_volume_m3": 1419344.4679611,
+   "inflow_m3": 12416.78069480641,
+   "outlet_release_m3": 0,
+   "spill_m3": 0,
+   "rain_24h_mm": 0.6000000000000001,
+   "runoff_m3": 174.27164331372,
+   "evap_m3": 684.9694807902893,
+   "infiltration_m3": 294.02686182989,
+   "delta_s_m3": 11612.05599549995,
+   "note": "ใช้ค่าเดิม (ไม่มี telemetry รายชั่วโมงครบ 20ชม. ช่วงนี้)",
+   "year": 2026,
+   "month": 11,
+   "date": "2026-11-05"
+  },
+  {
+   "day": 6,
+   "water_level_m": 488.878,
+   "water_volume_m3": 1428061.5598544,
+   "inflow_m3": 9696.895690826252,
+   "outlet_release_m3": 0,
+   "spill_m3": 0,
+   "rain_24h_mm": 0,
+   "runoff_m3": 0,
+   "evap_m3": 685.5169264686499,
+   "infiltration_m3": 294.28687105742,
+   "delta_s_m3": 8717.091893300181,
+   "note": "ใช้ค่าเดิม (ไม่มี telemetry รายชั่วโมงครบ 20ชม. ช่วงนี้)",
+   "year": 2026,
+   "month": 11,
+   "date": "2026-11-06"
+  },
+  {
+   "day": 7,
+   "water_level_m": 488.903,
+   "water_volume_m3": 1436785.673304,
+   "inflow_m3": 9297.443759115506,
+   "outlet_release_m3": 0,
+   "spill_m3": 0,
+   "rain_24h_mm": 1.4,
+   "runoff_m3": 407.285974407984,
+   "evap_m3": 686.0680022751924,
+   "infiltration_m3": 294.54828164847,
+   "delta_s_m3": 8724.113449599827,
+   "note": "ใช้ค่าเดิม (ไม่มี telemetry รายชั่วโมงครบ 20ชม. ช่วงนี้)",
+   "year": 2026,
+   "month": 11,
+   "date": "2026-11-07"
   }
  ]
 }
