@@ -20,14 +20,14 @@ git -C "%WMB%" pull --no-rebase --no-edit origin main
 call "%WMB%\09_live\daily_wmb_refresh\run_daily_wmb_refresh.bat"
 if errorlevel 1 (set "R_WMB=fail") else (set "R_WMB=ok")
 
-cd /d "%WMB%\09_live" & "%PYM%" daily_update.py
+cd /d "%WMB%" & python 09_live\daily_update.py >> 09_live\logs\daily.log 2>&1
 if errorlevel 1 (set "R_FLOOD=fail") else (set "R_FLOOD=ok")
 
 call "%SCRIPT_DIR%run_pipeline.bat"
 if errorlevel 1 (set "R_PIPE=fail") else (set "R_PIPE=ok")
 
-call "%SCRIPT_DIR%run_monitoring_data_builder.bat"
-if errorlevel 1 (set "R_MON=fail") else (set "R_MON=ok")
+REM monitoring builder (every 15 min) and 6h shadow have their OWN scheduled tasks -> not called here (avoid concurrent git pushes)
+set "R_MON=scheduler"
 
 call "%SCRIPT_DIR%run_reservoir_daily_orchestration.bat"
 if errorlevel 1 (set "R_RES=fail") else (set "R_RES=ok")
@@ -35,11 +35,10 @@ if errorlevel 1 (set "R_RES=fail") else (set "R_RES=ok")
 call "%SCRIPT_DIR%run_sar_background_job.bat"
 if errorlevel 1 (set "R_SAR=fail") else (set "R_SAR=ok")
 
-call "%WEB%\01_data\experiments\sixhourly_refresh_20260918\run_shadow_predict.bat"
-if errorlevel 1 (set "R_6H=fail") else (set "R_6H=ok")
+set "R_6H=scheduler"
 
 cd /d "%WEB%"
-"%PYW%" "%SCRIPT_DIR%mark_run.py" --done wmb_daily_refresh=%R_WMB% flood_daily_update=%R_FLOOD% data_pipeline=%R_PIPE% monitoring_6h_accuracy=%R_MON% reservoir_ledger=%R_RES% sar=%R_SAR% shadow_6h=%R_6H%
+"%PYW%" "%SCRIPT_DIR%mark_run.py" --done wmb_daily_refresh=%R_WMB% flood_daily_update=%R_FLOOD% data_pipeline=%R_PIPE% reservoir_ledger=%R_RES% sar=%R_SAR%
 git add "01_data/run_state/last_run.json"
 git commit -m "Auto-update: run state (laptop) %DATE% %TIME%" >nul 2>&1
 git pull --no-rebase --no-edit origin master
