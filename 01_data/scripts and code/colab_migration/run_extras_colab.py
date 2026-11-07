@@ -37,6 +37,7 @@ WEB_PREFIXES = (
     "01_data/gis/sar_output/",
     "01_data/gis/.sar_last_classified",
     "01_data/archive_live/",
+    "01_data/Reservoirs/reference/hii_rainfall_archive/",
     "01_data/run_state/",
     "01_data/experiments/sixhourly_refresh_20260918/shadow_",
     "01_data/scripts and code/pipeline/ml_features_live.csv",
@@ -46,7 +47,11 @@ WMB_PREFIXES = (
     "09_live/daily_wmb_refresh/03_model/simulation/",
     "09_live/daily_wmb_refresh/wmb_daily_model_latest.json",
     "09_live/data/",
-    "09_live/output/",
+    "09_live/output/forecast_",
+    "09_live/output/Flood_output_forecast_latest.csv",
+    "01_raw_data/rainfall/weathernext_archive/",
+    "01_raw_data/rainfall/weathernext_forecast_daily.csv",
+    "01_raw_data/kwaan_level/kwaan_level_daily.csv",
     "01_raw_data/Reservoirs/บัญชีน้ำ/",
 )
 SKIP_SUFFIX = (".pyc", ".bak", ".tmp")
