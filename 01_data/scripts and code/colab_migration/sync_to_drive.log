@@ -1,10 +1,10 @@
-===== sync_to_drive.bat ‡πÄ‡∏£‡∏¥‡πà‡∏°‡∏£‡∏±‡∏ô Tue 10/20/2026  8:47:57.01 ===== 
+===== sync_to_drive.bat ‡πÄ‡∏£‡∏¥‡πà‡∏°‡∏£‡∏±‡∏ô Wed 10/28/2026  9:20:58.80 ===== 
 
 -------------------------------------------------------------------------------
    ROBOCOPY     ::     Robust File Copy for Windows                              
 -------------------------------------------------------------------------------
 
-  Started : Tuesday, October 20, 2026 8:47:57 AM
+  Started : Wednesday, October 28, 2026 9:20:58 AM
    Source : D:\maenaruea-water-web\
      Dest = G:\My Drive\Colab Notebooks\Mae_Na_Rua\maenaruea-water-web\
 
@@ -24,14 +24,18 @@
 	                   7	D:\maenaruea-water-web\.github\workflows\
 	                   0	D:\maenaruea-water-web\01_data\
 	                   2	D:\maenaruea-water-web\01_data\archive_live\
-	                   6	D:\maenaruea-water-web\01_data\archive_live\flood_latest\
-	    New File  		    1851	flood_latest_2026-10-19.json.gz
-	                   6	D:\maenaruea-water-web\01_data\archive_live\latest\
-	    New File  		    4746	latest_2026-10-19.json.gz
-	                   8	D:\maenaruea-water-web\01_data\archive_live\weathernext\
-	    New File  		    1107	forecast_20261018_18Z.csv
-	                  93	D:\maenaruea-water-web\01_data\archive_live\wmb_forecast\
-	    New File  		     667	forecast_2026-10-19.csv
+	                  14	D:\maenaruea-water-web\01_data\archive_live\flood_latest\
+	    New File  		    1858	flood_latest_2026-10-26.json.gz
+	    New File  		    1861	flood_latest_2026-10-27.json.gz
+	                  14	D:\maenaruea-water-web\01_data\archive_live\latest\
+	    New File  		    4315	latest_2026-10-26.json.gz
+	    New File  		    4704	latest_2026-10-27.json.gz
+	                  16	D:\maenaruea-water-web\01_data\archive_live\weathernext\
+	    New File  		    1101	forecast_20261025_18Z.csv
+	    New File  		    1101	forecast_20261026_18Z.csv
+	                 101	D:\maenaruea-water-web\01_data\archive_live\wmb_forecast\
+	    New File  		     665	forecast_2026-10-26.csv
+	    New File  		     676	forecast_2026-10-27.csv
 	                   0	D:\maenaruea-water-web\01_data\experiments\
 	                   4	D:\maenaruea-water-web\01_data\experiments\catboost_info\
 	                   1	D:\maenaruea-water-web\01_data\experiments\catboost_info\learn\
@@ -104,8 +108,8 @@
 	                   3	D:\maenaruea-water-web\01_data\experiments\sixhourly_beat_persistence_20261008\catboost_info\
 	                   1	D:\maenaruea-water-web\01_data\experiments\sixhourly_beat_persistence_20261008\catboost_info\learn\
 	                   1	D:\maenaruea-water-web\01_data\experiments\sixhourly_beat_persistence_20261008\catboost_info\tmp\
-	                  12	D:\maenaruea-water-web\01_data\experiments\sixhourly_candidate_20261008\
-	    Newer     		   18912	imerg_early_halfhourly_main1.csv
+	                  14	D:\maenaruea-water-web\01_data\experiments\sixhourly_candidate_20261008\
+	    Newer     		   28127	imerg_early_halfhourly_main1.csv
 	    Newer     		     144	last_run_MP-LAPTOP-TUF-F.log
 	                  29	D:\maenaruea-water-web\01_data\experiments\sixhourly_newspill_20261007\
 	                   4	D:\maenaruea-water-web\01_data\experiments\sixhourly_newspill_20261007\catboost_info\
@@ -114,8 +118,9 @@
 	                   0	D:\maenaruea-water-web\01_data\experiments\sixhourly_newspill_20261007\catboost_info\tmp\
 	                  18	D:\maenaruea-water-web\01_data\experiments\sixhourly_newspill_20261007\shadow_models_candidate_newspill\
 	                  18	D:\maenaruea-water-web\01_data\experiments\sixhourly_newspill_20261007\shadow_models_quickcand\
-	                  45	D:\maenaruea-water-web\01_data\experiments\sixhourly_refresh_20260918\
-	    Newer     		  23.3 m	shadow_gdrive_raw_store.csv
+	                  50	D:\maenaruea-water-web\01_data\experiments\sixhourly_refresh_20260918\
+	    Newer     		  25.5 m	shadow_gdrive_raw_store.csv
+	    Newer     		   39346	shadow_predictions_log.csv
 	                   4	D:\maenaruea-water-web\01_data\experiments\sixhourly_refresh_20260918\catboost_info\
 	                   1	D:\maenaruea-water-web\01_data\experiments\sixhourly_refresh_20260918\catboost_info\learn\
 	                   1	D:\maenaruea-water-web\01_data\experiments\sixhourly_refresh_20260918\catboost_info\test\
@@ -128,28 +133,25 @@
 	                  15	D:\maenaruea-water-web\01_data\experiments\sixhourly_stormfix_20261006\
 	                  18	D:\maenaruea-water-web\01_data\experiments\weathernext_hindcast_20261006\
 	                   1	D:\maenaruea-water-web\01_data\forecasting_results\
-	    Newer     		   31565	latest.json
+	    Newer     		   31307	latest.json
 	                   9	D:\maenaruea-water-web\01_data\forecasting_results\Reservoir_inflow\
-	    Newer     		   89565	forecast_accuracy_log.csv
+	    Newer     		   95495	forecast_accuracy_log.csv
 	                   4	D:\maenaruea-water-web\01_data\forecasting_results\Water_demand\
 	                  36	D:\maenaruea-water-web\01_data\gis\
-	    Newer     		      10	.sar_last_classified
 	                   6	D:\maenaruea-water-web\01_data\gis\sar_output\
-	    New File  		    4653	sar_result_2026_2026-10-20.json
-	    Newer     		    4653	sar_result_latest.json
 	                   2	D:\maenaruea-water-web\01_data\gis\sar_rasters\
-	    Newer     		   24640	crop_map_v3b_zone_A_2026.tif
-	    Newer     		    9753	crop_map_v3b_zone_B_2026.tif
 	                   2	D:\maenaruea-water-web\01_data\plans\
 	                   5	D:\maenaruea-water-web\01_data\Reservoirs\
 	                   8	D:\maenaruea-water-web\01_data\Reservoirs\inflow\
 	                   7	D:\maenaruea-water-web\01_data\Reservoirs\inflow\2025\
-	                 199	D:\maenaruea-water-web\01_data\Reservoirs\inflow\2026\
-	    Newer     		  328877	2026_October_MNR.xlsx
-	    New File  		  328821	2026_October_MNR.xlsx.bak_before_live_write_20261020_083352
-	    New File  		  328877	2026_October_MNR.xlsx.bak_before_live_write_20261020_083652
+	                 213	D:\maenaruea-water-web\01_data\Reservoirs\inflow\2026\
+	    Newer     		  329375	2026_October_MNR.xlsx
+	    New File  		  329230	2026_October_MNR.xlsx.bak_before_live_write_20261027_094734
+	    New File  		  329312	2026_October_MNR.xlsx.bak_before_live_write_20261027_095154
+	    New File  		  329311	2026_October_MNR.xlsx.bak_before_live_write_20261028_091045
+	    New File  		  329375	2026_October_MNR.xlsx.bak_before_live_write_20261028_091700
 	                   3	D:\maenaruea-water-web\01_data\Reservoirs\inflow_auto\
-	    Newer     		   26703	RES002_daily_computed.csv
+	    Newer     		   28816	RES002_daily_computed.csv
 	                   6	D:\maenaruea-water-web\01_data\Reservoirs\inflow_backup_post_round2_pre_recalc\
 	                   0	D:\maenaruea-water-web\01_data\Reservoirs\inflow_backup_pre_fix\
 	                   5	D:\maenaruea-water-web\01_data\Reservoirs\inflow_backup_pre_fix\2026\
@@ -164,30 +166,30 @@
 	                   1	D:\maenaruea-water-web\01_data\Reservoirs\release_log\
 	                   0	D:\maenaruea-water-web\01_data\scripts and code\
 	                   1	D:\maenaruea-water-web\01_data\scripts and code\apps_script\
-	                  16	D:\maenaruea-water-web\01_data\scripts and code\colab_migration\
+	                  17	D:\maenaruea-water-web\01_data\scripts and code\colab_migration\
+	    Newer     		  208943	data_pipeline_colab.py
+	    New File  		  205178	data_pipeline_colab.py.bak_before_et0fallback_20261026
 	    Newer     		      84	sync_to_drive.log
 	                   1	D:\maenaruea-water-web\01_data\scripts and code\colab_migration\test_output\
 	                  65	D:\maenaruea-water-web\01_data\scripts and code\pipeline\
-	    Newer     		  325304	ml_features_live.csv
+	    Newer     		  351346	ml_features_live.csv
 	                   4	D:\maenaruea-water-web\01_data\scripts and code\pipeline\chirps_v3_test_20260722\
 	                  44	D:\maenaruea-water-web\01_data\scripts and code\pipeline\chirps_v3_test_20260722\ftp_cache\
 	                   1	D:\maenaruea-water-web\01_data\scripts and code\pipeline\chirps_v3_test_20260722\logs\
-	                 458	D:\maenaruea-water-web\01_data\scripts and code\pipeline\era5t_output\
-	    Newer     		    2502	era5t_week_2026-10-19.json
-	    New File  		    3024	era5t_week_2026-10-20.json
-	    Newer     		   21168	era5t_week_202610_12-18.grib
-	    New File  		   19600	era5t_week_202610_13-19.grib
-	    New File  		   15935	era5t_week_202610_13-19.grib.5b7b6.idx
+	                 484	D:\maenaruea-water-web\01_data\scripts and code\pipeline\era5t_output\
+	    Newer     		    2503	era5t_week_2026-10-26.json
+	    New File  		    3021	era5t_week_2026-10-27.json
+	    New File  		    3768	era5t_week_2026-10-28.json
+	    Newer     		   21168	era5t_week_202610_19-25.grib
+	    New File  		   20384	era5t_week_202610_20-26.grib
+	    New File  		   16512	era5t_week_202610_20-26.grib.5b7b6.idx
+	    New File  		   20384	era5t_week_202610_21-27.grib
+	    New File  		   16512	era5t_week_202610_21-27.grib.5b7b6.idx
 	                 315	D:\maenaruea-water-web\01_data\scripts and code\pipeline\era5t_output_fixed\
 	                   2	D:\maenaruea-water-web\01_data\scripts and code\pipeline\era5_test_output\
-	                 137	D:\maenaruea-water-web\01_data\scripts and code\pipeline\ftp_cache\
-	    New File  		  12.2 m	chirps-v3.0.prelim.2026.10.11.tif
-	    New File  		  12.2 m	chirps-v3.0.prelim.2026.10.12.tif
-	    New File  		  12.0 m	chirps-v3.0.prelim.2026.10.13.tif
-	    New File  		  12.5 m	chirps-v3.0.prelim.2026.10.14.tif
-	    New File  		  11.9 m	chirps-v3.0.prelim.2026.10.15.tif
+	                 141	D:\maenaruea-water-web\01_data\scripts and code\pipeline\ftp_cache\
 	                   1	D:\maenaruea-water-web\01_data\scripts and code\pipeline\logs\
-	    Newer     		   5.2 m	pipeline_log.txt
+	    Newer     		   5.5 m	pipeline_log.txt
 	                   0	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\
 	                  31	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\active\
 	                   2	D:\maenaruea-water-web\01_data\scripts and code\Reservoir_inflow\active\Retrain\
@@ -215,24 +217,24 @@
 	                  12	D:\maenaruea-water-web\03_website\
 	                   0	D:\maenaruea-water-web\03_website\assets\
 	                  36	D:\maenaruea-water-web\03_website\assets\data\
-	    Newer     		  175966	flood_depth_forecast.png
-	    Newer     		  175966	flood_depth_forecast_d1.png
-	    Newer     		  172765	flood_depth_forecast_d2.png
-	    Newer     		  170459	flood_depth_forecast_d3.png
-	    Newer     		  167651	flood_depth_forecast_d4.png
-	    Newer     		  165150	flood_depth_forecast_d5.png
-	    Newer     		  162292	flood_depth_forecast_d6.png
-	    Newer     		  159813	flood_depth_forecast_d7.png
+	    Newer     		  204237	flood_depth_forecast.png
+	    Newer     		  204237	flood_depth_forecast_d1.png
+	    Newer     		  201046	flood_depth_forecast_d2.png
+	    Newer     		  198037	flood_depth_forecast_d3.png
+	    Newer     		  195280	flood_depth_forecast_d4.png
+	    Newer     		  192549	flood_depth_forecast_d5.png
+	    Newer     		  188775	flood_depth_forecast_d6.png
+	    Newer     		  184732	flood_depth_forecast_d7.png
 	    Newer     		     122	flood_depth_forecast_meta.json
-	    Newer     		     793	flood_depth_forecast_series_meta.json
-	    Newer     		   11173	flood_latest.json
-	    Newer     		   89565	forecast_accuracy_log.csv
-	    Newer     		   35073	inflow_6h_display.json
-	    Newer     		   31565	latest.json
-	    Newer     		  628172	monitoring.json
-	    Newer     		  157902	reservoir_inflow.json
-	    Newer     		  228432	water_ledger.json
-	    Newer     		   64312	wmb_daily_model.json
+	    Newer     		     791	flood_depth_forecast_series_meta.json
+	    Newer     		    8202	flood_latest.json
+	    Newer     		   95495	forecast_accuracy_log.csv
+	    Newer     		   35272	inflow_6h_display.json
+	    Newer     		   31307	latest.json
+	    Newer     		  631005	monitoring.json
+	    Newer     		  159446	reservoir_inflow.json
+	    Newer     		  232042	water_ledger.json
+	    Newer     		   64781	wmb_daily_model.json
 	                   0	D:\maenaruea-water-web\03_website\assets\data\terrain\
 	                   0	D:\maenaruea-water-web\03_website\assets\data\terrain\10\
 	                   2	D:\maenaruea-water-web\03_website\assets\data\terrain\10\795\
@@ -392,21 +394,21 @@
 
                Total    Copied   Skipped  Mismatch    FAILED    Extras
     Dirs :       330         0       330         0         0         0
-   Files :      4071        49      4022         0         0         0
-   Bytes :   3.315 g   93.69 m   3.223 g         0         0         0
-   Times :   0:00:01   0:00:01                       0:00:00   0:00:00
+   Files :      4155        51      4104         0         0         0
+   Bytes :   3.366 g   36.39 m   3.331 g         0         0         0
+   Times :   0:00:02   0:00:01                       0:00:00   0:00:00
 
 
-   Speed :           83,467,595 Bytes/sec.
-   Speed :            4,776.054 MegaBytes/min.
-   Ended : Tuesday, October 20, 2026 8:47:58 AM
+   Speed :           25,771,374 Bytes/sec.
+   Speed :            1,474.650 MegaBytes/min.
+   Ended : Wednesday, October 28, 2026 9:21:00 AM
 
 
 -------------------------------------------------------------------------------
    ROBOCOPY     ::     Robust File Copy for Windows                              
 -------------------------------------------------------------------------------
 
-  Started : Tuesday, October 20, 2026 8:47:58 AM
+  Started : Wednesday, October 28, 2026 9:21:00 AM
    Source : D:\WMB_Phayao\
      Dest = G:\My Drive\Colab Notebooks\Mae_Na_Rua\WMB_Phayao\
 
@@ -420,7 +422,7 @@
 
 ------------------------------------------------------------------------------
 
-	                   2	D:\WMB_Phayao\
+	                   4	D:\WMB_Phayao\
 	                   7	D:\WMB_Phayao\00_project_docs\
 	                   1	D:\WMB_Phayao\01_raw_data\
 	                   1	D:\WMB_Phayao\01_raw_data\buildings\
@@ -458,13 +460,6 @@
 	                   6	D:\WMB_Phayao\01_raw_data\cross_section\shp_kml\5_3\
 	                   0	D:\WMB_Phayao\01_raw_data\cross_section\shp_kml\5_3\Files\
 	                   8	D:\WMB_Phayao\01_raw_data\DEM\
-	    New File  		   3.2 g	DTM_MNR_50CM.tif
-	    New File  		    2775	DTM_MNR_50CM.tif.aux.xml
-	    New File  		       5	MNR_contour_50cm.cpg
-	    New File  		   2.0 m	MNR_contour_50cm.dbf
-	    New File  		     382	MNR_contour_50cm.prj
-	    New File  		 207.4 m	MNR_contour_50cm.shp
-	    New File  		  177636	MNR_contour_50cm.shx
 	                   2	D:\WMB_Phayao\01_raw_data\flood_history\
 	                  23	D:\WMB_Phayao\01_raw_data\flow_network\
 	                  12	D:\WMB_Phayao\01_raw_data\Irrigation system\
@@ -476,34 +471,32 @@
 	                   1	D:\WMB_Phayao\01_raw_data\lulc\°√¡ Ëß‡ √‘¡\
 	                  73	D:\WMB_Phayao\01_raw_data\lulc\°√¡ Ëß‡ √‘¡\shp\
 	                   9	D:\WMB_Phayao\01_raw_data\rainfall\
-	    Newer     		    1107	weathernext_forecast_daily.csv
 	                   4	D:\WMB_Phayao\01_raw_data\rainfall\Mae_Sai_Station\
 	                   4	D:\WMB_Phayao\01_raw_data\rainfall\MOU078\
-	                   6	D:\WMB_Phayao\01_raw_data\rainfall\weathernext_archive\
-	    Newer     		    1107	forecast_20261018_18Z.csv
+	                  10	D:\WMB_Phayao\01_raw_data\rainfall\weathernext_archive\
 	                   7	D:\WMB_Phayao\01_raw_data\rainfall\‡Àπ◊Õ°«Í“π\
 	                   9	D:\WMB_Phayao\01_raw_data\rainfall\‡Àπ◊Õ°«Í“π\New download\
 	                  22	D:\WMB_Phayao\01_raw_data\Reservoirs\
 	                  17	D:\WMB_Phayao\01_raw_data\Reservoirs\2025\
 	                   4	D:\WMB_Phayao\01_raw_data\Reservoirs\RES002_New\
 	                  23	D:\WMB_Phayao\01_raw_data\Reservoirs\∫—≠™’πÈ”\
-	    Newer     		    9037	2025_August_MNR.xlsx
-	    Newer     		    8096	2025_December_MNR.xlsx
-	    Newer     		    8858	2025_July_MNR.xlsx
-	    Newer     		    5988	2025_June_MNR.xlsx
-	    Newer     		    8611	2025_November_MNR.xlsx
-	    Newer     		    8810	2025_October_MNR.xlsx
-	    Newer     		    8825	2025_September_MNR.xlsx
-	    Newer     		    8001	2026_April_MNR.xlsx
-	    Newer     		    8627	2026_August_MNR.xlsx
-	    Newer     		    7318	2026_February_MNR.xlsx
-	    Newer     		    8054	2026_January_MNR.xlsx
-	    Newer     		    8678	2026_July_MNR.xlsx
-	    Newer     		    8351	2026_June_MNR.xlsx
-	    Newer     		    8077	2026_March_MNR.xlsx
-	    Newer     		    8750	2026_May_MNR.xlsx
-	    Newer     		    7881	2026_October_MNR.xlsx
-	    Newer     		    9043	2026_September_MNR.xlsx
+	    Newer     		    9038	2025_August_MNR.xlsx
+	    Newer     		    8097	2025_December_MNR.xlsx
+	    Newer     		    8859	2025_July_MNR.xlsx
+	    Newer     		    5989	2025_June_MNR.xlsx
+	    Newer     		    8612	2025_November_MNR.xlsx
+	    Newer     		    8811	2025_October_MNR.xlsx
+	    Newer     		    8826	2025_September_MNR.xlsx
+	    Newer     		    8002	2026_April_MNR.xlsx
+	    Newer     		    8628	2026_August_MNR.xlsx
+	    Newer     		    7319	2026_February_MNR.xlsx
+	    Newer     		    8055	2026_January_MNR.xlsx
+	    Newer     		    8679	2026_July_MNR.xlsx
+	    Newer     		    8352	2026_June_MNR.xlsx
+	    Newer     		    8078	2026_March_MNR.xlsx
+	    Newer     		    8751	2026_May_MNR.xlsx
+	    Newer     		    8661	2026_October_MNR.xlsx
+	    Newer     		    9044	2026_September_MNR.xlsx
 	                   8	D:\WMB_Phayao\01_raw_data\soil_ldd\
 	                   8	D:\WMB_Phayao\01_raw_data\subwatershed\
 	                   0	D:\WMB_Phayao\02_processed\
@@ -534,43 +527,43 @@
 	                  26	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\model_maenarua_fix\results\alpha_sweep\
 	                   3	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\
 	    Older     		       0	01_raw_data
-2026/10/20 08:48:43 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\01_raw_data
+2026/10/28 09:21:01 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\01_raw_data
 The file cannot be accessed by the system.
 Waiting 5 seconds... Retrying...
 	    Older     		       0	01_raw_data
-2026/10/20 08:48:48 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\01_raw_data
+2026/10/28 09:21:06 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\01_raw_data
 The file cannot be accessed by the system.
 Waiting 5 seconds... Retrying...
 	    Older     		       0	01_raw_data
-2026/10/20 08:48:53 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\01_raw_data
+2026/10/28 09:21:11 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\01_raw_data
 The file cannot be accessed by the system.
 
 ERROR: RETRY LIMIT EXCEEDED.
 
 	    Older     		       0	02_processed
-2026/10/20 08:48:53 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\02_processed
+2026/10/28 09:21:11 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\02_processed
 The file cannot be accessed by the system.
 Waiting 5 seconds... Retrying...
 	    Older     		       0	02_processed
-2026/10/20 08:48:58 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\02_processed
+2026/10/28 09:21:16 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\02_processed
 The file cannot be accessed by the system.
 Waiting 5 seconds... Retrying...
 	    Older     		       0	02_processed
-2026/10/20 08:49:03 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\02_processed
+2026/10/28 09:21:21 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\02_processed
 The file cannot be accessed by the system.
 
 ERROR: RETRY LIMIT EXCEEDED.
 
 	    Older     		       0	04_validation
-2026/10/20 08:49:03 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\04_validation
+2026/10/28 09:21:21 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\04_validation
 The file cannot be accessed by the system.
 Waiting 5 seconds... Retrying...
 	    Older     		       0	04_validation
-2026/10/20 08:49:08 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\04_validation
+2026/10/28 09:21:26 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\04_validation
 The file cannot be accessed by the system.
 Waiting 5 seconds... Retrying...
 	    Older     		       0	04_validation
-2026/10/20 08:49:13 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\04_validation
+2026/10/28 09:21:31 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\04_validation
 The file cannot be accessed by the system.
 
 ERROR: RETRY LIMIT EXCEEDED.
@@ -578,58 +571,58 @@ ERROR: RETRY LIMIT EXCEEDED.
 	                   0	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\
 	                   2	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\network\
 	    Older     		       0	dag_links.json
-2026/10/20 08:49:13 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\network\dag_links.json
+2026/10/28 09:21:31 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\network\dag_links.json
 The file cannot be accessed by the system.
 Waiting 5 seconds... Retrying...
 	    Older     		       0	dag_links.json
-2026/10/20 08:49:18 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\network\dag_links.json
+2026/10/28 09:21:36 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\network\dag_links.json
 The file cannot be accessed by the system.
 Waiting 5 seconds... Retrying...
 	    Older     		       0	dag_links.json
-2026/10/20 08:49:23 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\network\dag_links.json
+2026/10/28 09:21:41 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\network\dag_links.json
 The file cannot be accessed by the system.
 
 ERROR: RETRY LIMIT EXCEEDED.
 
 	    Older     		       0	dag_nodes.json
-2026/10/20 08:49:23 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\network\dag_nodes.json
+2026/10/28 09:21:41 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\network\dag_nodes.json
 The file cannot be accessed by the system.
 Waiting 5 seconds... Retrying...
 	    Older     		       0	dag_nodes.json
-2026/10/20 08:49:28 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\network\dag_nodes.json
+2026/10/28 09:21:46 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\network\dag_nodes.json
 The file cannot be accessed by the system.
 Waiting 5 seconds... Retrying...
 	    Older     		       0	dag_nodes.json
-2026/10/20 08:49:33 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\network\dag_nodes.json
+2026/10/28 09:21:51 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\network\dag_nodes.json
 The file cannot be accessed by the system.
 
 ERROR: RETRY LIMIT EXCEEDED.
 
 	                   3	D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\parameters\
 	    Older     		       0	bias_factors_v2.json
-2026/10/20 08:49:33 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\parameters\bias_factors_v2.json
+2026/10/28 09:21:51 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\parameters\bias_factors_v2.json
 The file cannot be accessed by the system.
 Waiting 5 seconds... Retrying...
 	    Older     		       0	bias_factors_v2.json
-2026/10/20 08:49:38 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\parameters\bias_factors_v2.json
+2026/10/28 09:21:56 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\parameters\bias_factors_v2.json
 The file cannot be accessed by the system.
 Waiting 5 seconds... Retrying...
 	    Older     		       0	bias_factors_v2.json
-2026/10/20 08:49:43 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\parameters\bias_factors_v2.json
+2026/10/28 09:22:01 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\parameters\bias_factors_v2.json
 The file cannot be accessed by the system.
 
 ERROR: RETRY LIMIT EXCEEDED.
 
 	    Older     		       0	mountain_fraction.json
-2026/10/20 08:49:43 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\parameters\mountain_fraction.json
+2026/10/28 09:22:01 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\parameters\mountain_fraction.json
 The file cannot be accessed by the system.
 Waiting 5 seconds... Retrying...
 	    Older     		       0	mountain_fraction.json
-2026/10/20 08:49:48 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\parameters\mountain_fraction.json
+2026/10/28 09:22:06 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\parameters\mountain_fraction.json
 The file cannot be accessed by the system.
 Waiting 5 seconds... Retrying...
 	    Older     		       0	mountain_fraction.json
-2026/10/20 08:49:53 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\parameters\mountain_fraction.json
+2026/10/28 09:22:11 ERROR 1920 (0x00000780) Copying File D:\WMB_Phayao\05_outputs\2568\reservoir_analysis\phase5_rerun_candidateD\03_model\parameters\mountain_fraction.json
 The file cannot be accessed by the system.
 
 ERROR: RETRY LIMIT EXCEEDED.
@@ -773,9 +766,9 @@ ERROR: RETRY LIMIT EXCEEDED.
 	                  10	D:\WMB_Phayao\05_outputs\maps\
 	                   1	D:\WMB_Phayao\05_outputs\report\
 	                   7	D:\WMB_Phayao\05_outputs\tables\
-	    Newer     		   41119	reservoir_inflow_daily.csv
-	    Newer     		    1550	reservoir_inflow_monthly.csv
-	    Newer     		    6341	reservoir_inflow_weekly.csv
+	    Newer     		   41482	reservoir_inflow_daily.csv
+	    Newer     		    1554	reservoir_inflow_monthly.csv
+	    Newer     		    6408	reservoir_inflow_weekly.csv
 	                   0	D:\WMB_Phayao\06_scripts\
 	                   6	D:\WMB_Phayao\06_scripts\phase1_terrain\
 	                   3	D:\WMB_Phayao\06_scripts\phase2_cn\
@@ -792,7 +785,7 @@ ERROR: RETRY LIMIT EXCEEDED.
 	                   4	D:\WMB_Phayao\08_Kwan_prediction\exp_north_rain\scripts\
 	                  11	D:\WMB_Phayao\08_Kwan_prediction\results\
 	                   6	D:\WMB_Phayao\08_Kwan_prediction\scripts\
-	                  10	D:\WMB_Phayao\09_live\
+	                  11	D:\WMB_Phayao\09_live\
 	                   1	D:\WMB_Phayao\09_live\chart_refresh_20260720\
 	                   1	D:\WMB_Phayao\09_live\chart_refresh_20260720\01_raw_data\
 	                   1	D:\WMB_Phayao\09_live\chart_refresh_20260720\01_raw_data\kwaan_level\
@@ -806,17 +799,17 @@ ERROR: RETRY LIMIT EXCEEDED.
 	                   4	D:\WMB_Phayao\09_live\chart_refresh_20260720\03_model\simulation\
 	                   8	D:\WMB_Phayao\09_live\chart_refresh_20260720\06_scripts\
 	                   3	D:\WMB_Phayao\09_live\daily_wmb_refresh\
-	    Newer     		   64312	wmb_daily_model_latest.json
+	    Newer     		   64781	wmb_daily_model_latest.json
 	                   0	D:\WMB_Phayao\09_live\daily_wmb_refresh\01_raw_data\
 	                   1	D:\WMB_Phayao\09_live\daily_wmb_refresh\01_raw_data\kwaan_level\
-	    Newer     		   40256	kwaan_level_daily.csv
+	    Newer     		   40685	kwaan_level_daily.csv
 	                   3	D:\WMB_Phayao\09_live\daily_wmb_refresh\01_raw_data\rainfall\
-	    Newer     		    7539	tele_rain_daily.csv
-	    Newer     		   82571	wbyn_rain_daily.csv
+	    Newer     		    7668	tele_rain_daily.csv
+	    Newer     		   82700	wbyn_rain_daily.csv
 	                   1	D:\WMB_Phayao\09_live\daily_wmb_refresh\01_raw_data\rainfall\Mae_Sai_Station\
-	    Newer     		  279419	WBYN.csv
+	    Newer     		  279877	WBYN.csv
 	                   1	D:\WMB_Phayao\09_live\daily_wmb_refresh\01_raw_data\Reservoirs\
-	    Newer     		   36450	res_maenarua_observed_daily.csv
+	    Newer     		   36925	res_maenarua_observed_daily.csv
 	                   0	D:\WMB_Phayao\09_live\daily_wmb_refresh\02_processed\
 	                   1	D:\WMB_Phayao\09_live\daily_wmb_refresh\02_processed\sub_catchment\
 	                   0	D:\WMB_Phayao\09_live\daily_wmb_refresh\03_model\
@@ -824,39 +817,42 @@ ERROR: RETRY LIMIT EXCEEDED.
 	                  11	D:\WMB_Phayao\09_live\daily_wmb_refresh\03_model\parameters\
 	    Newer     		    1228	bias_factors_v2.json
 	                   4	D:\WMB_Phayao\09_live\daily_wmb_refresh\03_model\simulation\
-	    Newer     		  108791	Diversion_loss.csv
+	    Newer     		  109577	Diversion_loss.csv
 	    Newer     		   1.0 m	Flood_output.csv
-	    Newer     		   36634	mass_balance.csv
-	    Newer     		   60057	rain_daily_corrected.csv
+	    Newer     		   36880	mass_balance.csv
+	    Newer     		   60386	rain_daily_corrected.csv
 	                   8	D:\WMB_Phayao\09_live\daily_wmb_refresh\06_scripts\
 	                   7	D:\WMB_Phayao\09_live\daily_wmb_refresh\_backup_before_candidateD_20260724\
 	                   5	D:\WMB_Phayao\09_live\daily_wmb_refresh\_backup_before_candidateD_20260724\toplevel_03_model_simulation\
 	                   3	D:\WMB_Phayao\09_live\data\
-	    Newer     		  23.1 m	api_snapshots.csv
-	    Newer     		  17.8 m	gdrive_log.xlsx
-	    Newer     		    8110	reservoir_levels_daily.csv
+	    Newer     		  25.7 m	api_snapshots.csv
+	    Newer     		  21.5 m	gdrive_log.xlsx
+	    Newer     		    8786	reservoir_levels_daily.csv
 	                   2	D:\WMB_Phayao\09_live\logs\
-	    Newer     		  591298	daily.log
-	                 150	D:\WMB_Phayao\09_live\output\
-	    Newer     		  175966	flood_depth_forecast.png
-	    Newer     		  175966	flood_depth_forecast_2026-10-19.png
-	    New File  		  175966	flood_depth_forecast_2026-10-20.png
-	    Newer     		  175966	flood_depth_forecast_d1.png
-	    Newer     		  172765	flood_depth_forecast_d2.png
-	    Newer     		  170459	flood_depth_forecast_d3.png
-	    Newer     		  167651	flood_depth_forecast_d4.png
-	    Newer     		  165150	flood_depth_forecast_d5.png
-	    Newer     		  162292	flood_depth_forecast_d6.png
-	    Newer     		  159813	flood_depth_forecast_d7.png
+	    Newer     		  667448	daily.log
+	                 174	D:\WMB_Phayao\09_live\output\
+	    Newer     		  204237	flood_depth_forecast.png
+	    Newer     		  210646	flood_depth_forecast_2026-10-26.png
+	    New File  		  207094	flood_depth_forecast_2026-10-27.png
+	    New File  		  204237	flood_depth_forecast_2026-10-28.png
+	    Newer     		  204237	flood_depth_forecast_d1.png
+	    Newer     		  201046	flood_depth_forecast_d2.png
+	    Newer     		  198037	flood_depth_forecast_d3.png
+	    Newer     		  195280	flood_depth_forecast_d4.png
+	    Newer     		  192549	flood_depth_forecast_d5.png
+	    Newer     		  188775	flood_depth_forecast_d6.png
+	    Newer     		  184732	flood_depth_forecast_d7.png
 	    Newer     		     122	flood_depth_forecast_meta.json
-	    Newer     		     793	flood_depth_forecast_series_meta.json
-	    Newer     		   11173	flood_latest.json
-	    Newer     		    8785	Flood_output_forecast_latest.csv
-	    Newer     		     664	forecast_2026-10-19.csv
-	    New File  		     658	forecast_2026-10-20.csv
+	    Newer     		     791	flood_depth_forecast_series_meta.json
+	    Newer     		    8202	flood_latest.json
+	    Newer     		    9163	Flood_output_forecast_latest.csv
+	    Newer     		     658	forecast_2026-10-26.csv
+	    New File  		     587	forecast_2026-10-27.csv
+	    New File  		     584	forecast_2026-10-28.csv
 	    Newer     		   2.3 m	paddy_ponding_depth_forecast.tif
-	    Newer     		   2.3 m	paddy_ponding_depth_forecast_2026-10-19.tif
-	    New File  		   2.3 m	paddy_ponding_depth_forecast_2026-10-20.tif
+	    Newer     		   2.3 m	paddy_ponding_depth_forecast_2026-10-26.tif
+	    New File  		   2.3 m	paddy_ponding_depth_forecast_2026-10-27.tif
+	    New File  		   2.3 m	paddy_ponding_depth_forecast_2026-10-28.tif
 	    Newer     		   2.3 m	paddy_ponding_depth_forecast_d1.tif
 	    Newer     		   2.3 m	paddy_ponding_depth_forecast_d2.tif
 	    Newer     		   2.3 m	paddy_ponding_depth_forecast_d3.tif
@@ -864,7 +860,7 @@ ERROR: RETRY LIMIT EXCEEDED.
 	    Newer     		   2.3 m	paddy_ponding_depth_forecast_d5.tif
 	    Newer     		   2.3 m	paddy_ponding_depth_forecast_d6.tif
 	    Newer     		   2.3 m	paddy_ponding_depth_forecast_d7.tif
-	    Newer     		     746	paddy_ponding_depth_forecast_daily_meta.json
+	    Newer     		     744	paddy_ponding_depth_forecast_daily_meta.json
 	                   0	D:\WMB_Phayao\09_live\telemetry_append_20260917\
 	                   1	D:\WMB_Phayao\09_live\telemetry_append_20260917\06_scripts\
 	                   1	D:\WMB_Phayao\09_live\_backup_before_calibnote_fix_20260921\
@@ -895,7 +891,7 @@ ERROR: RETRY LIMIT EXCEEDED.
 	                  25	D:\WMB_Phayao\10_manuscript\WSE\tables\reservoir\
 	                  23	D:\WMB_Phayao\10_manuscript\WSE\tables\validation\
 	                   1	D:\WMB_Phayao\10_manuscript\WSE\template\
-	                   4	D:\WMB_Phayao\colab_migration\
+	                   5	D:\WMB_Phayao\colab_migration\
 	                  20	D:\WMB_Phayao\GIS\
 	                  27	D:\WMB_Phayao\NSE_Invest\
 	                   3	D:\WMB_Phayao\NSE_Invest\evidence_from_Recheck\
@@ -1082,13 +1078,13 @@ ERROR: RETRY LIMIT EXCEEDED.
 
                Total    Copied   Skipped  Mismatch    FAILED    Extras
     Dirs :       521         0       521         0         0         0
-   Files :      3645        71      3567         0         7         0
-   Bytes :  12.120 g   3.557 g   8.563 g         0         0         0
-   Times :   0:02:01   0:00:50                       0:01:10   0:00:00
+   Files :      3677        65      3605         0         7         0
+   Bytes :  12.161 g   77.99 m  12.085 g         0         0         0
+   Times :   0:01:11   0:00:01                       0:01:10   0:00:00
 
 
-   Speed :           75,810,570 Bytes/sec.
-   Speed :            4,337.916 MegaBytes/min.
-   Ended : Tuesday, October 20, 2026 8:49:59 AM
+   Speed :           58,918,400 Bytes/sec.
+   Speed :            3,371.338 MegaBytes/min.
+   Ended : Wednesday, October 28, 2026 9:22:12 AM
 
-===== sync_to_drive.bat ‡∏à‡∏ö Tue 10/20/2026  8:49:59.67 (RC_WEB=1 RC_WMB=9) ===== 
+===== sync_to_drive.bat ‡∏à‡∏ö Wed 10/28/2026  9:22:12.84 (RC_WEB=1 RC_WMB=9) ===== 
