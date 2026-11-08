@@ -38,6 +38,7 @@ if errorlevel 1 (set "R_SAR=fail") else (set "R_SAR=ok")
 set "R_6H=scheduler"
 
 "%PYW%" "%SCRIPT_DIR%push_wmb_data.py" --wmb "%WMB%"
+"%PYW%" "%SCRIPT_DIR%push_web_data.py" --web "%WEB%" --wmb "%WMB%"
 cd /d "%WEB%"
 "%PYW%" "%SCRIPT_DIR%mark_run.py" --done wmb_daily_refresh=%R_WMB% flood_daily_update=%R_FLOOD% data_pipeline=%R_PIPE% reservoir_ledger=%R_RES% sar=%R_SAR%
 git add "01_data/run_state/last_run.json"
