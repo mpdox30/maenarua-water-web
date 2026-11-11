@@ -210,6 +210,15 @@ def build_steps(web, wmb):
          None if has_release else "ข้าม (ต้องรันหลัง reservoir_orchestration)"),
         ("shadow_predict_6h", [sys.executable, "shadow_predict.py"], exp6, 1200, None),
     ]
+    # 2026-11-11: ความลึกน้ำท่วมต่ออาคาร (แผนที่ 3 มิติ) -- อ่าน footprint+ความสูงจากไฟล์เว็บเดิม แล้วเขียนทับด้วยความลึกล่าสุด
+    bdir = f"{wmb}/09_live/output"; wdata = f"{web}/03_website/assets/data"
+    need = [f"{bdir}/paddy_ponding_depth_forecast_d{d}.tif" for d in range(1, 8)] + [
+        f"{wdata}/buildings_flood_risk.geojson", f"{wdata}/flood_risk_p95.png", f"{wdata}/flood_depth_yagi2024.png"]
+    miss = [os.path.basename(x) for x in need if not os.path.exists(x)]
+    steps.append(("buildings_flood_risk", [sys.executable, "gen_buildings_flood_risk.py"], f"{wmb}/06_scripts/phase5_outputs", 900,
+                  None if not miss else "ข้าม (ไม่มีไฟล์: " + ", ".join(miss[:3]) + ")",
+                  {"WEB_DATA_DIR": wdata, "BUILDINGS_IN": f"{wdata}/buildings_flood_risk.geojson",
+                   "OUT_PATH_OVERRIDE": f"{wdata}/buildings_flood_risk.geojson"}))
     # candidate 6h shadow (cand_norain/cand_imerg) -- ต้องมี Colab Secret EARTHDATA_USERNAME / EARTHDATA_PASSWORD
     cand = f"{web}/01_data/experiments/sixhourly_candidate_20261008"
     no_ed = None if os.environ.get("EARTHDATA_USERNAME") else "ไม่มี env EARTHDATA_USERNAME/PASSWORD (ตั้งเป็น Colab Secret)"
