@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-09T02:40:39.820549+00:00",
+ "generated_at": "2026-11-11T02:40:46.312437+00:00",
  "unit_note": "Water Level = MSL (m); Volume/Inflow/O/Spill/Runoff/Evap/Infiltration/DeltaS = m3 (ยกเว้น rain_24h_mm = mm)",
  "source_note": "ดึงจาก D:\\WMB_Phayao\\01_raw_data\\Reservoirs\\บัญชีน้ำ\\<year>_<Month>_MNR.xlsx ('ฉบับสูตรสปิลเวย์แก้ไข' -- เขียนโดย recompute_corrected_ledger.py, ไม่ใช่ไฟล์ทางการ production) ด้วย build_water_ledger_json.py",
  "formula_note": "Spill คำนวณด้วย critical-flow + Manning friction model (n=0.017) แทนสูตร Q=1.82*L*H^1.5 เดิม -- ใช้เฉพาะหน้า water-balance.html เท่านั้น ไม่กระทบไฟล์ทางการ/โมเดล ML ใน production ดูคอลัมน์ note ต่อแถวว่าวันนั้นคำนวณด้วยสูตรใหม่จริง หรือ fallback ใช้ค่าเดิม",
@@ -8528,7 +8528,7 @@
    "day": 9,
    "water_level_m": 489.088,
    "water_volume_m3": 1489280.5058131,
-   "inflow_m3": 34724.65576578919,
+   "inflow_m3": 34724.6557657892,
    "outlet_release_m3": 0,
    "spill_m3": 0,
    "rain_24h_mm": 4.4,
@@ -8536,10 +8536,44 @@
    "evap_m3": 689.5042300326533,
    "infiltration_m3": 296.16772282991,
    "delta_s_m3": 35025.43664009986,
-   "note": "ใช้ค่าเดิม (ไม่มี telemetry รายชั่วโมงครบ 20ชม. ช่วงนี้)",
+   "note": "critical-flow + Manning friction (n=0.017)",
    "year": 2026,
    "month": 11,
    "date": "2026-11-09"
+  },
+  {
+   "day": 10,
+   "water_level_m": 489.166,
+   "water_volume_m3": 1512698.4514312,
+   "inflow_m3": 23233.73813333127,
+   "outlet_release_m3": 0,
+   "spill_m3": 0,
+   "rain_24h_mm": 4,
+   "runoff_m3": 1172.28456770248,
+   "evap_m3": 691.1444137519242,
+   "infiltration_m3": 296.93266918183,
+   "delta_s_m3": 23417.9456181,
+   "note": "critical-flow + Manning friction (n=0.017)",
+   "year": 2026,
+   "month": 11,
+   "date": "2026-11-10"
+  },
+  {
+   "day": 11,
+   "water_level_m": 489.199,
+   "water_volume_m3": 1521494.7669134,
+   "inflow_m3": 9785.334006323505,
+   "outlet_release_m3": 0,
+   "spill_m3": 0,
+   "rain_24h_mm": 0,
+   "runoff_m3": 0,
+   "evap_m3": 691.7876550106015,
+   "infiltration_m3": 297.2308691127801,
+   "delta_s_m3": 8796.315482200123,
+   "note": "critical-flow + Manning friction (n=0.017)",
+   "year": 2026,
+   "month": 11,
+   "date": "2026-11-11"
   }
  ]
 }
