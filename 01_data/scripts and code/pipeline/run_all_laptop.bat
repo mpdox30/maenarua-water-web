@@ -11,7 +11,7 @@ set "PYW=%SCRIPT_DIR%..\..\..\.venv\Scripts\python.exe"
 if not exist "%PYW%" set "PYW=C:\Python314\python.exe"
 set "PYM=%WMB%\.venv\Scripts\python.exe"
 if not exist "%PYM%" set "PYM=%PYW%"
-set "R_WMB=?" & set "R_FLOOD=?" & set "R_PIPE=?" & set "R_MON=?" & set "R_RES=?" & set "R_SAR=?" & set "R_6H=?"
+set "R_WMB=?" & set "R_FLOOD=?" & set "R_PIPE=?" & set "R_MON=?" & set "R_RES=?" & set "R_SAR=?" & set "R_6H=?" & set "R_BLD=?"
 
 cd /d "%WEB%" & "%PYW%" "%SCRIPT_DIR%mark_run.py" --check
 git -C "%WEB%" pull --no-rebase --no-edit origin master
@@ -22,6 +22,10 @@ if errorlevel 1 (set "R_WMB=fail") else (set "R_WMB=ok")
 
 cd /d "%WMB%" & python 09_live\daily_update.py >> 09_live\logs\daily.log 2>&1
 if errorlevel 1 (set "R_FLOOD=fail") else (set "R_FLOOD=ok")
+
+REM 2026-11-11: per-building flood depth (7-day forecast) for the 3D map -> web geojson. Not part of last_run state (Colab does not run it).
+cd /d "%WMB%\06_scripts\phase5_outputs" & python gen_buildings_flood_risk.py >> "%WMB%\09_live\logs\buildings.log" 2>&1
+if errorlevel 1 (set "R_BLD=fail") else (copy /Y "%WMB%\09_live\output\buildings_flood_risk.geojson" "%WEB%\03_website\assets\data\buildings_flood_risk.geojson" >nul & set "R_BLD=ok")
 
 call "%SCRIPT_DIR%run_pipeline.bat"
 if errorlevel 1 (set "R_PIPE=fail") else (set "R_PIPE=ok")
@@ -45,6 +49,6 @@ git add "01_data/run_state/last_run.json"
 git commit -m "Auto-update: run state (laptop) %DATE% %TIME%" >nul 2>&1
 git pull --no-rebase --no-edit origin master
 git push origin HEAD:master
-echo [DONE] run_all_laptop finished. wmb=%R_WMB% flood=%R_FLOOD% pipe=%R_PIPE% mon=%R_MON% res=%R_RES% sar=%R_SAR% 6h=%R_6H%
+echo [DONE] run_all_laptop finished. wmb=%R_WMB% flood=%R_FLOOD% pipe=%R_PIPE% mon=%R_MON% res=%R_RES% sar=%R_SAR% 6h=%R_6H% bld=%R_BLD%
 endlocal
 exit /b 0
