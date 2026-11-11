@@ -1,7 +1,7 @@
 {
   "meta": {
     "source": "สถานีโทรมาตร สสน. (API) ผ่าน Google Sheet wide_log (poll ทุก 10 นาที) + HII open data (tiservice.hii.or.th, รายชั่วโมงผ่าน QC, เดือนที่ปิดแล้ว) + 01_data/Reservoirs/reference (rating curve ต่ออ่าง)",
-    "updated": "2026-11-11T22:40:00",
+    "updated": "2026-11-11T23:00:00",
     "data_connected": true
   },
   "stations": [
@@ -10,17 +10,17 @@
       "name_th": "อ่างเก็บน้ำแม่นาเรือ",
       "name_en": "Mae Na Rua Reservoir",
       "spillway_msl": 489.54,
-      "water_level": 489.252,
-      "rainfall_1h": 1.2,
-      "temperature": 17.27,
-      "humidity": 99.11,
-      "pressure": 964.65,
+      "water_level": 489.258,
+      "rainfall_1h": 1.6,
+      "temperature": 17.38,
+      "humidity": 99.13,
+      "pressure": 964.6,
       "solar": 0.0,
-      "measure_datetime": "2026-11-11T22:40:00",
-      "storage_m3": 1539729.2,
+      "measure_datetime": "2026-11-11T23:00:00",
+      "storage_m3": 1541497.1,
       "storage_max_m3": 1625463.8,
-      "capacity_pct": 94.7,
-      "distance_to_spillway_m": -0.288,
+      "capacity_pct": 94.8,
+      "distance_to_spillway_m": -0.282,
       "history": [
         {
           "t": "2026-10-28T23:00:00",
@@ -1365,6 +1365,10 @@
         {
           "t": "2026-11-11T22:00:00",
           "level": 489.252
+        },
+        {
+          "t": "2026-11-11T23:00:00",
+          "level": 489.258
         }
       ],
       "rainfall_hourly": [
@@ -7190,7 +7194,11 @@
         },
         {
           "t": "2026-11-11T22:00:00",
-          "rain_mm": 1.2
+          "rain_mm": 1.4
+        },
+        {
+          "t": "2026-11-11T23:00:00",
+          "rain_mm": 1.6
         }
       ]
     },
@@ -7200,12 +7208,12 @@
       "name_en": "Phayao C.A.T. Reservoir",
       "spillway_msl": 457.07,
       "water_level": 456.313,
-      "rainfall_1h": 1.0,
-      "temperature": 17.2,
+      "rainfall_1h": 1.6,
+      "temperature": 16.94,
       "humidity": 97.6,
-      "pressure": 968.45,
-      "solar": 0.2,
-      "measure_datetime": "2026-11-11T22:40:00",
+      "pressure": 968.44,
+      "solar": 0.1,
+      "measure_datetime": "2026-11-11T23:00:00",
       "storage_m3": 306426.2,
       "storage_max_m3": 347778.7,
       "capacity_pct": 88.1,
@@ -8553,6 +8561,10 @@
         },
         {
           "t": "2026-11-11T22:00:00",
+          "level": 456.313
+        },
+        {
+          "t": "2026-11-11T23:00:00",
           "level": 456.313
         }
       ],
@@ -14387,7 +14399,11 @@
         },
         {
           "t": "2026-11-11T22:00:00",
-          "rain_mm": 1.0
+          "rain_mm": 1.4
+        },
+        {
+          "t": "2026-11-11T23:00:00",
+          "rain_mm": 1.6
         }
       ]
     },
@@ -14397,12 +14413,12 @@
       "name_en": "Huai Tham Reservoir",
       "spillway_msl": 478.1,
       "water_level": 478.71,
-      "rainfall_1h": 0.4,
+      "rainfall_1h": 1.0,
       "temperature": 17.6,
       "humidity": 99.0,
       "pressure": 963.4,
       "solar": 0.2,
-      "measure_datetime": "2026-11-11T22:30:00",
+      "measure_datetime": "2026-11-11T23:00:00",
       "storage_m3": 551313.5,
       "storage_max_m3": 495467.8,
       "capacity_pct": 111.3,
@@ -15750,6 +15766,10 @@
         },
         {
           "t": "2026-11-11T22:00:00",
+          "level": 478.71
+        },
+        {
+          "t": "2026-11-11T23:00:00",
           "level": 478.71
         }
       ],
@@ -21509,6 +21529,10 @@
         {
           "t": "2026-11-11T22:00:00",
           "rain_mm": 0.4
+        },
+        {
+          "t": "2026-11-11T23:00:00",
+          "rain_mm": 1.0
         }
       ]
     },
@@ -21518,12 +21542,12 @@
       "name_en": "Huai So Reservoir",
       "spillway_msl": 508.1,
       "water_level": 508.052,
-      "rainfall_1h": 0.4,
-      "temperature": 16.51,
+      "rainfall_1h": 0.8,
+      "temperature": 16.53,
       "humidity": 100.0,
-      "pressure": 962.58,
+      "pressure": 962.61,
       "solar": 0.0,
-      "measure_datetime": "2026-11-11T22:40:00",
+      "measure_datetime": "2026-11-11T23:00:00",
       "storage_m3": 120793.2,
       "storage_max_m3": 122441.9,
       "capacity_pct": 98.7,
@@ -22871,6 +22895,10 @@
         },
         {
           "t": "2026-11-11T22:00:00",
+          "level": 508.052
+        },
+        {
+          "t": "2026-11-11T23:00:00",
           "level": 508.052
         }
       ],
@@ -28705,7 +28733,11 @@
         },
         {
           "t": "2026-11-11T22:00:00",
-          "rain_mm": 0.4
+          "rain_mm": 0.6
+        },
+        {
+          "t": "2026-11-11T23:00:00",
+          "rain_mm": 0.8
         }
       ]
     }
