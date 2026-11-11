@@ -926,7 +926,10 @@ function drawMap(d) {
       id: 'flood-buildings',
       data: buildingsData || [],
       extruded: true, filled: true, stroked: true,
-      getElevation: f => buildingHeightForDepth(depthForSource3D(f.properties, source, dayN), source),
+      // 2026-11-11: ความสูงอาคาร = ความสูงจริงจาก DSM (h_m); สีอาคารยังสื่อความเสี่ยงน้ำท่วมตามเดิม
+      // (ไฟล์เก่าที่ไม่มี h_m ถอยกลับไปใช้ความสูงแบบสเกลตามความลึกน้ำเหมือนเดิม)
+      getElevation: f => (f.properties && typeof f.properties.h_m === 'number') ? f.properties.h_m
+        : buildingHeightForDepth(depthForSource3D(f.properties, source, dayN), source),
       getFillColor: f => buildingColorForDepth(depthForSource3D(f.properties, source, dayN), source),
       getLineColor: [255, 255, 255, 50], lineWidthMinPixels: 1,
       pickable: true, autoHighlight: true, highlightColor: [255, 255, 255, 130],
