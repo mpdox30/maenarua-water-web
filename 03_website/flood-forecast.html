@@ -943,7 +943,10 @@ function drawMap(d) {
   let is3DActive = false;
   let terrainEnabled = true;
   let colorBasemapEnabled = false;
-  const TERRAIN_EXAGGERATION = 1.3;
+  // 2026-11-12: ปรับทดลองผ่าน URL ได้ ?exag=1.0 (ความเกินจริงของภูมิประเทศ) &demmax=14 (ล็อกความละเอียดไทล์ DEM สูงสุด) -- ใช้เทียบอาการอาคารลอย/ภูมิประเทศกระตุกตามระดับซูม
+  const _QP = new URLSearchParams(location.search);
+  const TERRAIN_EXAGGERATION = (parseFloat(_QP.get('exag')) > 0) ? parseFloat(_QP.get('exag')) : 1.3;
+  const DEM_MAXZOOM = [13, 14, 15].includes(parseInt(_QP.get('demmax'), 10)) ? parseInt(_QP.get('demmax'), 10) : 15;
   function updateDaySliderVisibility() {
     const seriesOn = map.hasLayer(seriesLayer);
     const need3DSlider = is3DActive && current3DSource === 'forecast';
@@ -1024,7 +1027,7 @@ function drawMap(d) {
               // (300-1600+ม.) ในไทล์เดียวกัน กลายเป็นหน้าผาปลอมขนาดใหญ่ (bug ที่ทำให้แผนที่ดู "ฉีกขาด"
               // เป็นแผ่นๆ ตอน deploy ครั้งที่ 1-2) -- บังคับใช้ z13+ เสมอ (ครอบคลุมเต็มพื้นที่ศึกษาจริง
               // ไม่มีรอยต่อ) แก้ปัญหานี้ได้แบบตรงจุดกว่าการเพิ่ม buffer เพียงอย่างเดียว
-              minzoom: 13, maxzoom: 15,
+              minzoom: 13, maxzoom: DEM_MAXZOOM,
               bounds: TERRAIN_BOUNDS,
             },
           },
