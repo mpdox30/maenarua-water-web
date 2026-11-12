@@ -108,6 +108,42 @@ function tour() {
    จึงตัดภาพ PNG เป็นไทล์ XYZ ในเบราว์เซอร์ตามที่ขอ แล้วใช้เป็น raster source */
 var IMG = {}, protoOn = false, imgSeq = 0;
 function mY(lat) { return Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)); }
+/* 2026-11-12 โหมด "น้ำ": PNG ต้นฉบับเป็นสีรุ้ง (turbo) -> ถอดกลับเป็นค่าความลึกสัมพัทธ์ t (0..1) แล้ววาดใหม่เป็นโทนน้ำ (ฟ้าอ่อน -> น้ำเงินเข้ม)
+   พร้อมความโปร่งใสที่ไล่ตามความลึก และสุ่มค่าแบบ bilinear ถ่วงด้วย alpha (ขอบเรียบ ไม่เป็นบล็อก ไม่มีสีรุ้งปนกัน) */
+var TURBO9 = [[48, 18, 59], [70, 107, 227], [40, 187, 235], [50, 241, 151], [164, 252, 59], [237, 207, 57], [250, 125, 32], [208, 47, 4], [122, 4, 2]];
+var TLUT = null, TKEY = {};
+function turboT(r, g, b) {
+  if (!TLUT) { TLUT = []; for (var i = 0; i <= 255; i++) { var f = i / 255 * 8, k = Math.min(7, Math.floor(f)), w = f - k, a = TURBO9[k], c = TURBO9[k + 1]; TLUT.push([a[0] + (c[0] - a[0]) * w, a[1] + (c[1] - a[1]) * w, a[2] + (c[2] - a[2]) * w]); } }
+  var key = (r >> 2) << 12 | (g >> 2) << 6 | (b >> 2), v = TKEY[key]; if (v !== undefined) return v;
+  var best = 0, bd = 1e9; for (var j = 0; j < 256; j++) { var l = TLUT[j], d = (l[0] - r) * (l[0] - r) + (l[1] - g) * (l[1] - g) + (l[2] - b) * (l[2] - b); if (d < bd) { bd = d; best = j; } }
+  return (TKEY[key] = best / 255);
+}
+var WRAMP = [[0, [196, 236, 248]], [.2, [125, 208, 236]], [.4, [56, 167, 221]], [.6, [34, 120, 192]], [.8, [28, 76, 160]], [1, [18, 36, 104]]];
+function waterRGB(t) { for (var i = 0; i < WRAMP.length - 1; i++) { var a = WRAMP[i], b = WRAMP[i + 1]; if (t <= b[0]) { var w = (t - a[0]) / (b[0] - a[0]); return [a[1][0] + (b[1][0] - a[1][0]) * w, a[1][1] + (b[1][1] - a[1][1]) * w, a[1][2] + (b[1][2] - a[1][2]) * w]; } } return WRAMP[WRAMP.length - 1][1]; }
+function sstep(a, b, x) { var t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
+function decodeField(bmp) {
+  var W = bmp.width, H = bmp.height, cv = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(W, H) : Object.assign(document.createElement('canvas'), { width: W, height: H }), cx = cv.getContext('2d', { willReadFrequently: true });
+  cx.drawImage(bmp, 0, 0); var px = cx.getImageData(0, 0, W, H).data, T = new Float32Array(W * H), A = new Float32Array(W * H);
+  for (var i = 0, n = W * H; i < n; i++) { var a = px[i * 4 + 3]; if (a > 0) { A[i] = a / 255; T[i] = turboT(px[i * 4], px[i * 4 + 1], px[i * 4 + 2]); } }
+  return { W: W, H: H, T: T, A: A };
+}
+function waterTile(F, u0, u1, v0, v1) {
+  var out = new Uint8ClampedArray(256 * 256 * 4), W = F.W, H = F.H, T = F.T, A = F.A;
+  for (var py = 0; py < 256; py++) {
+    var v = v0 + (py + .5) / 256 * (v1 - v0); if (v < 0 || v > 1) continue; var sy = v * H - .5, y0 = Math.floor(sy), fy = sy - y0;
+    for (var pxl = 0; pxl < 256; pxl++) {
+      var u = u0 + (pxl + .5) / 256 * (u1 - u0); if (u < 0 || u > 1) continue; var sx = u * W - .5, x0 = Math.floor(sx), fx = sx - x0;
+      var cov = 0, ts = 0;
+      for (var k = 0; k < 4; k++) {
+        var xx = x0 + (k & 1), yy = y0 + (k >> 1), w = ((k & 1) ? fx : 1 - fx) * ((k >> 1) ? fy : 1 - fy);
+        if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue; var idx = yy * W + xx, a = A[idx] * w; cov += a; ts += a * T[idx];
+      }
+      if (cov < .02) continue; var t = ts / cov, c = waterRGB(t), al = (.32 + .55 * sstep(0, .45, t)) * sstep(.12, .85, cov), o = (py * 256 + pxl) * 4;
+      out[o] = c[0]; out[o + 1] = c[1]; out[o + 2] = c[2]; out[o + 3] = al * 255;
+    }
+  }
+  return out;
+}
 function ensureProto() {
   if (protoOn) return; protoOn = true;
   maplibregl.addProtocol('ukimg', function (params) {
@@ -118,15 +154,18 @@ function ensureProto() {
       var cv = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(256, 256) : Object.assign(document.createElement('canvas'), { width: 256, height: 256 }), cx = cv.getContext('2d');
       var lon0 = x / n * 360 - 180, lon1 = (x + 1) / n * 360 - 180, u0 = (lon0 - b.w) / (b.e - b.w), u1 = (lon1 - b.w) / (b.e - b.w);
       var YN = .5 - mY(b.n) / (2 * Math.PI), YS = .5 - mY(b.s) / (2 * Math.PI), v0 = (y / n - YN) / (YS - YN), v1 = ((y + 1) / n - YN) / (YS - YN);
-      if (u1 > 0 && u0 < 1 && v1 > 0 && v0 < 1) { cx.imageSmoothingEnabled = true; cx.drawImage(bmp, u0 * bmp.width, v0 * bmp.height, (u1 - u0) * bmp.width, (v1 - v0) * bmp.height, 0, 0, 256, 256); }
+      if (u1 > 0 && u0 < 1 && v1 > 0 && v0 < 1) {
+        if (rec.water) { if (!rec.field) rec.field = decodeField(bmp); var im = cx.createImageData(256, 256); im.data.set(waterTile(rec.field, u0, u1, v0, v1)); cx.putImageData(im, 0, 0); }
+        else { cx.imageSmoothingEnabled = true; cx.drawImage(bmp, u0 * bmp.width, v0 * bmp.height, (u1 - u0) * bmp.width, (v1 - v0) * bmp.height, 0, 0, 256, 256); }
+      }
       return (cv.convertToBlob ? cv.convertToBlob({ type: 'image/png' }) : new Promise(function (r) { cv.toBlob(r, 'image/png'); })).then(function (bl) { return bl.arrayBuffer(); }).then(function (ab) { return { data: ab }; });
     });
   });
 }
 /* เพิ่มภาพเป็นชั้น raster ทาบภูมิประเทศ: คืน id ชั้น (ลบด้วย removeImg) */
-function addImg(map, key, url, b, opacity, before) {
+function addImg(map, key, url, b, opacity, before, opts) {
   ensureProto(); var id = key + '-' + (++imgSeq);
-  IMG[id] = { b: b, bmp: fetch(url).then(function (r) { return r.blob(); }).then(function (bl) { return createImageBitmap(bl); }) };
+  IMG[id] = { b: b, water: !!(opts && opts.water), bmp: fetch(url).then(function (r) { return r.blob(); }).then(function (bl) { return createImageBitmap(bl); }) };
   map.addSource('uki-' + id, { type: 'raster', tiles: ['ukimg://' + id + '/{z}/{x}/{y}'], tileSize: 256, minzoom: 8, maxzoom: 18, bounds: [b.w, b.s, b.e, b.n] });
   map.addLayer({ id: 'uki-' + id, type: 'raster', source: 'uki-' + id, layout: { visibility: 'visible' }, paint: { 'raster-opacity': opacity, 'raster-fade-duration': 0 } }, before);
   return 'uki-' + id;
@@ -152,7 +191,7 @@ var fmtD = function (v) { return v >= 1 ? v.toFixed(1) : v >= 0.01 ? v.toFixed(3
 var dLayers = {}, DBB = { w: DB.w, s: DB.s, e: DB.e, n: DB.n };
 function depthUpdate() {
   if (!M) return; var d = dInfo(), before = M.getLayer('reservoirs-fill') ? 'reservoirs-fill' : undefined;
-  if (!dLayers[d.id]) dLayers[d.id] = addImg(M, 'depth', d.url, DBB, d.op, before);
+  if (!dLayers[d.id]) dLayers[d.id] = addImg(M, 'depth', d.url, DBB, .95, before, { water: true });
   Object.keys(dLayers).forEach(function (k) { M.setLayoutProperty(dLayers[k], 'visibility', dOn && k === d.id ? 'visible' : 'none'); });
   var dl = panel.querySelector('.f3-dl'); dl.style.display = dOn ? 'block' : 'none';
   var q = dl.querySelector('.dq'); if (!q) { q = document.createElement('div'); q.className = 'dq'; dl.appendChild(q); } q.textContent = d.note || ''; q.style.display = d.note ? 'block' : 'none';
@@ -253,17 +292,24 @@ function start() {
     if (!L || !L.props || !L.props.data || !L.props.data.length) return;
     var D = L.props.data;
     if (D !== bldData) { bldData = D; bldRaw = D.map(function (f) { return { type: 'Feature', properties: f.properties, geometry: { type: f.geometry.type, coordinates: strip2(f.geometry.coordinates) } }; }); }
+    var kd = bldKD();
     var feats = bldRaw.map(function (f, i) {
-      var src = D[i], c = L.props.getFillColor(src), h = L.props.getElevation(src);
-      return { type: 'Feature', properties: { h: h, col: 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + ((c[3] == null ? 255 : c[3]) / 255).toFixed(2) + ')', i: i }, geometry: f.geometry };
+      var src = D[i], c = L.props.getFillColor(src), h = L.props.getElevation(src), wd = bldDepthOf(src.properties, kd);
+      return { type: 'Feature', properties: { h: h, wd: wd, col: 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + ((c[3] == null ? 255 : c[3]) / 255).toFixed(2) + ')', i: i }, geometry: f.geometry };
     });
     var fc = { type: 'FeatureCollection', features: feats };
     if (M.getSource('f3-bld')) M.getSource('f3-bld').setData(fc);
     else {
       M.addSource('f3-bld', { type: 'geojson', data: fc });
-      M.addLayer({ id: 'f3-bld', type: 'fill-extrusion', source: 'f3-bld', paint: { 'fill-extrusion-height': ['get', 'h'], 'fill-extrusion-base': 0, 'fill-extrusion-color': ['get', 'col'], 'fill-extrusion-opacity': .95 } });
+      M.addLayer({ id: 'f3-bld', type: 'fill-extrusion', source: 'f3-bld', paint: { 'fill-extrusion-height': ['get', 'h'], 'fill-extrusion-base': ['case', ['>', ['get', 'wd'], 0.05], ['min', ['get', 'wd'], ['get', 'h']], 0], 'fill-extrusion-color': ['get', 'col'], 'fill-extrusion-opacity': .95 } });
+      M.addLayer({ id: 'f3-bld-wet', type: 'fill-extrusion', source: 'f3-bld', filter: ['>', ['get', 'wd'], 0.05], paint: { 'fill-extrusion-height': ['min', ['get', 'wd'], ['get', 'h']], 'fill-extrusion-base': 0, 'fill-extrusion-color': '#2a7fc0', 'fill-extrusion-opacity': .9 } });
     }
   }
+  function bldKD() {
+    var k = 0, tg = document.getElementById('map3dSourceToggle'); if (tg) { var b = tg.querySelectorAll('button'); for (var i = 0; i < b.length; i++) if (b[i].classList.contains('active')) k = i; }
+    var r = document.getElementById('dayRange'); return [k, r ? parseInt(r.value, 10) || 1 : 1];
+  }
+  function bldDepthOf(p, kd) { p = p || {}; return kd[0] === 1 ? (p.depth_p95 || 0) : kd[0] === 2 ? (p.depth_yagi2024 || 0) : ((p.depths || [])[kd[1] - 1] || 0); }
   function bldDepth(p) {
     var k = 0, tg = document.getElementById('map3dSourceToggle'); if (tg) { var b = tg.querySelectorAll('button'); for (var i = 0; i < b.length; i++) if (b[i].classList.contains('active')) k = i; }
     var r = document.getElementById('dayRange'), d = r ? parseInt(r.value, 10) || 1 : 1;
@@ -283,11 +329,12 @@ function start() {
     orig({ layers: [] });
     bldTip = document.createElement('div'); bldTip.style.cssText = 'position:absolute;z-index:6;pointer-events:none;display:none;background:#081e26;color:#eef6f4;font-size:12px;border-radius:6px;padding:6px 10px;max-width:240px'; host.appendChild(bldTip);
     M.on('mousemove', function (e) {
-      var fs = M.getLayer('f3-bld') ? M.queryRenderedFeatures(e.point, { layers: ['f3-bld'] }) : [];
+      var fs = M.getLayer('f3-bld') ? M.queryRenderedFeatures(e.point, { layers: ['f3-bld', 'f3-bld-wet'] }) : [];
       if (!fs.length) { bldTip.style.display = 'none'; M.getCanvas().style.cursor = ''; return; }
       var p = fs[0].properties, pr = typeof p.depth_p95 !== 'undefined' ? p : (bldRaw && bldRaw[p.i] ? bldRaw[p.i].properties : {});
       var d = bldDepth(pr), nm = pr.name_th || 'อาคาร';
-      bldTip.innerHTML = '<b>' + nm + '</b><br>' + (d > 0 ? 'ความลึกน้ำท่วม: ' + (d >= .1 ? d.toFixed(2) + ' ม.' : (d * 100).toFixed(2) + ' ซม.') : 'ไม่คาดว่าจะได้รับผลกระทบ');
+      var hb = typeof pr.h_m === 'number' ? pr.h_m : null, rel = (d > 0 && hb) ? (d >= hb ? ' · น้ำท่วมถึงหลังคา (อาคารสูง ~' + hb.toFixed(1) + ' ม.)' : ' · น้ำสูง ~' + Math.round(d / hb * 100) + '% ของตัวอาคาร (สูง ~' + hb.toFixed(1) + ' ม.)') : (hb ? '<br><span style="opacity:.7">อาคารสูง ~' + hb.toFixed(1) + ' ม.</span>' : '');
+      bldTip.innerHTML = '<b>' + nm + '</b><br>' + (d > 0 ? 'ความลึกน้ำท่วม: ' + (d >= .1 ? d.toFixed(2) + ' ม.' : (d * 100).toFixed(2) + ' ซม.') + rel : 'ไม่คาดว่าจะได้รับผลกระทบ' + rel);
       bldTip.style.left = (e.point.x + 14) + 'px'; bldTip.style.top = (e.point.y + 14) + 'px'; bldTip.style.display = 'block';
     });
   }
