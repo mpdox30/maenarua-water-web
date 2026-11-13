@@ -1,5 +1,5 @@
 /* sw.js — service worker แม่นาเรือ (สร้างโดย make_pwa_assets.py) */
-const VER = 'mnr-v1', STATIC = VER + '-static', PAGES = VER + '-pages';
+const VER = 'mnr-v2', STATIC = VER + '-static', PAGES = VER + '-pages';
 self.addEventListener('install', e => { self.skipWaiting(); });
 self.addEventListener('activate', e => e.waitUntil((async () => {
   for (const k of await caches.keys()) if (!k.startsWith(VER + '-')) await caches.delete(k);

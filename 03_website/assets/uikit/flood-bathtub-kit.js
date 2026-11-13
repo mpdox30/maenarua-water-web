@@ -161,9 +161,10 @@ function start3d() {
 window.__ukBath = { get villages() { return VIL; }, get last() { return last; } };
 fetch('assets/data/flood_latest.json').then(function (r) { return r.json(); }).then(function (j) { D = j; }).catch(function () {});
 var t2 = 0, i2 = setInterval(function () { t2++; if (M && D) { clearInterval(i2); try { start2d(); } catch (e) { console.warn('bathtub 2d', e); } } else if (t2 > 80) clearInterval(i2); }, 300);
+function whenMapReady(m, go) { var done = false, fire = function () { if (done) return; done = true; clearInterval(p); go(); }, p = setInterval(function () { if (m.__ready || (m.isStyleLoaded && m.isStyleLoaded())) fire(); }, 250); if (m.__ready) fire(); else m.once('load', fire); }
 var i3 = setInterval(function () {
   if (!host3 || !D || !window.__wmbMap3d || typeof maplibregl === 'undefined') return;
   clearInterval(i3); M3 = window.__wmbMap3d; var go = function () { try { start3d(); } catch (e) { console.warn('bathtub 3d', e); } };
-  if (M3.isStyleLoaded && M3.isStyleLoaded()) go(); else M3.once('load', go);
+  whenMapReady(M3, go);
 }, 700);
 })();

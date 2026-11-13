@@ -463,10 +463,11 @@ function start() {
 /* ลิงก์แชร์ #v3=… → เปิดโหมด 3 มิติให้อัตโนมัติ (kit จะย้ายกล้องเองเมื่อแผนที่พร้อม) */
 if (/v3=/.test(location.hash)) { var ob3 = document.getElementById('view3dBtn'); if (ob3) setTimeout(function () { if (!M) ob3.click(); }, 800); }
 fetch('assets/data/flood_latest.json').then(function (r) { return r.json(); }).then(function (j) { D = j; }).catch(function () {});
+function whenMapReady(m, go) { var done = false, fire = function () { if (done) return; done = true; clearInterval(p); go(); }, p = setInterval(function () { if (m.__ready || (m.isStyleLoaded && m.isStyleLoaded())) fire(); }, 250); if (m.__ready) fire(); else m.once('load', fire); }
 var iv = setInterval(function () {
   if (!D || !window.__wmbMap3d || typeof maplibregl === 'undefined') return;
   clearInterval(iv); M = window.__wmbMap3d;
   var go = function () { try { start(); } catch (e) { console.warn('flood-3d-kit', e); } };
-  if (M.loaded && M.isStyleLoaded && M.isStyleLoaded()) go(); else M.once('load', go);
+  whenMapReady(M, go);
 }, 600);
 })();
