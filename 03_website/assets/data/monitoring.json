@@ -1,7 +1,7 @@
 {
   "meta": {
     "source": "สถานีโทรมาตร สสน. (API) ผ่าน Google Sheet wide_log (poll ทุก 10 นาที) + HII open data (tiservice.hii.or.th, รายชั่วโมงผ่าน QC, เดือนที่ปิดแล้ว) + 01_data/Reservoirs/reference (rating curve ต่ออ่าง)",
-    "updated": "2026-11-18T08:00:00",
+    "updated": "2026-11-18T08:10:00",
     "data_connected": true
   },
   "stations": [
@@ -7149,20 +7149,16 @@
       "spillway_msl": 457.07,
       "water_level": 456.252,
       "rainfall_1h": 0.0,
-      "temperature": 24.3,
-      "humidity": 94.05,
-      "pressure": 966.73,
-      "solar": 258.0,
-      "measure_datetime": "2026-11-18T08:00:00",
+      "temperature": 24.82,
+      "humidity": 92.92,
+      "pressure": 966.94,
+      "solar": 178.4,
+      "measure_datetime": "2026-11-18T08:10:00",
       "storage_m3": 303218.7,
       "storage_max_m3": 347778.7,
       "capacity_pct": 87.2,
       "distance_to_spillway_m": -0.818,
       "history": [
-        {
-          "t": "2026-11-04T08:00:00",
-          "level": 456.337
-        },
         {
           "t": "2026-11-04T09:00:00",
           "level": 456.33
@@ -21363,20 +21359,16 @@
       "spillway_msl": 508.1,
       "water_level": 508.05,
       "rainfall_1h": 0.0,
-      "temperature": 25.38,
-      "humidity": 89.12,
-      "pressure": 961.17,
-      "solar": 183.9,
-      "measure_datetime": "2026-11-18T08:00:00",
+      "temperature": 25.21,
+      "humidity": 85.06,
+      "pressure": 961.24,
+      "solar": 183.4,
+      "measure_datetime": "2026-11-18T08:10:00",
       "storage_m3": 120724.5,
       "storage_max_m3": 122441.9,
       "capacity_pct": 98.6,
       "distance_to_spillway_m": -0.05,
       "history": [
-        {
-          "t": "2026-11-04T08:00:00",
-          "level": 508.044
-        },
         {
           "t": "2026-11-04T09:00:00",
           "level": 508.062
