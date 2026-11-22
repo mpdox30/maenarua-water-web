@@ -121,8 +121,7 @@ body.show-ui .ctl{opacity:1}
       <div class="pnl"><h3>แยกรายสถานี<small>มม.</small></h3><table class="tbl" id="rainTbl"></table><div class="note" id="s3note"></div></div></div></section>
     <!-- 4 ระดับน้ำกว๊านพะเยา -->
     <section class="scene" data-n="ระดับน้ำกว๊านพะเยา"><h1>ระดับน้ำกว๊านพะเยา<small id="s3ksub"></small></h1><div class="chips" id="s3kchips"></div>
-      <div class="pnl" style="flex:1"><h3>ระดับน้ำย้อนหลังและพยากรณ์ 7 วัน<small>ม.รทก. · แถบ = ช่วง P10–P90</small></h3><svg id="kwanSvg" viewBox="0 0 1500 340" preserveAspectRatio="xMidYMid meet"></svg></div>
-      <div class="msgs" id="s3msgs"></div></section>
+      <div class="pnl" style="flex:1"><h3>ระดับน้ำย้อนหลังและพยากรณ์ 7 วัน<small>ม.รทก. · แถบ = ช่วง P10–P90</small></h3><svg id="kwanSvg" viewBox="0 0 1500 470" preserveAspectRatio="xMidYMid meet"></svg></div></section>
     <!-- 5 น้ำไหลลงอ่างแม่นาเรือ -->
     <section class="scene" data-n="น้ำไหลลงอ่างแม่นาเรือ"><h1>พยากรณ์น้ำไหลลงอ่างเก็บน้ำแม่นาเรือ<small id="s4sub"></small></h1><div class="chips" id="s4chips"></div>
       <div class="g2"><div class="pnl"><h3>ปริมาณน้ำไหลเข้าล่วงหน้า 7 วัน<small>ลบ.ม./วัน · CatBoost</small></h3><svg id="inSvg" viewBox="0 0 800 380" preserveAspectRatio="xMidYMid meet"></svg><div class="leg"><span><i style="background:#38bdf8"></i>ความเชื่อมั่นพอใช้</span><span><i style="background:#38bdf8;opacity:.4"></i>ความเชื่อมั่นต่ำ</span></div></div>
@@ -342,11 +341,11 @@ function s3(){
 function s3k(){
   var f=D.fl;if(!f)return;var fl=f.flags||{},col=fl.overall==='critical'?ST.critical.c:fl.overall==='watch'?ST.warning.c:ST.safe.c,lab=fl.overall==='critical'?'วิกฤต':fl.overall==='watch'?'เฝ้าระวัง':'ปกติ';
   $('#s3ksub').textContent='ออกประมาณการ '+fd(f.base_date,true);
+  var KF=f.kwan_forecast||[],kn0=f.kwan_now||{},dTr=(KF.length&&kn0.level!=null)?KF[KF.length-1].level-kn0.level:null,tr=dTr==null?0:dTr>.02?1:dTr<-.02?-1:0,tc=tr>0?'#f97316':tr<0?'#38bdf8':'#94a3b8',tl=dTr==null?'—':(tr>0?'เพิ่มขึ้น ▲ ':tr<0?'ลดลง ▼ ':'คงที่ ▬ ')+(dTr>=0?'+':'−')+Math.abs(dTr).toFixed(2)+' ม.';
   var kn=f.kwan_now||{},rf=(f.rain_forward||[]).reduce(function(a,r){return a+r.mm},0);
-  $('#s3kchips').innerHTML='<span class="chip" style="color:'+col+';border-color:'+col+'">สถานะโมเดลกว๊านพะเยา: '+lab+'</span><span class="chip" style="color:#7dd3fc;border-color:#7dd3fc">ระดับตอนนี้ '+(kn.level!=null?kn.level.toFixed(2):'—')+' ม.รทก.'+(kn.change_3d!=null?' ('+(kn.change_3d>=0?'▲ +':'▼ ')+Math.abs(kn.change_3d).toFixed(2)+' ม. ใน 3 วัน)':'')+'</span><span class="chip" style="color:#a5b4fc;border-color:#a5b4fc">ฝนล่วงหน้า 7 วัน '+rf.toFixed(1)+' มม.</span><span class="chip" style="color:#a5b4fc;border-color:#a5b4fc">น้ำล้นสะสม 7 วัน '+(f.overflow_total_7d!=null?f.overflow_total_7d.toFixed(3):'—')+' ล้าน ลบ.ม.</span>';
-  $('#s3msgs').innerHTML=String(fl.message||'').split(' | ').filter(Boolean).slice(0,4).map(function(m){return '<div>'+esc(m)+'</div>'}).join('');
+  $('#s3kchips').innerHTML='<span class="chip" style="color:'+tc+';border-color:'+tc+'">แนวโน้มพยากรณ์ 7 วัน: '+tl+'</span><span class="chip" style="color:#7dd3fc;border-color:#7dd3fc">ระดับตอนนี้ '+(kn.level!=null?kn.level.toFixed(2):'—')+' ม.รทก.'+(kn.change_3d!=null?' ('+(kn.change_3d>=0?'▲ +':'▼ ')+Math.abs(kn.change_3d).toFixed(2)+' ม. ใน 3 วัน)':'')+'</span><span class="chip" style="color:#a5b4fc;border-color:#a5b4fc">ฝนล่วงหน้า 7 วัน '+rf.toFixed(1)+' มม.</span><span class="chip" style="color:#a5b4fc;border-color:#a5b4fc">น้ำล้นสะสม 7 วัน '+(f.overflow_total_7d!=null?f.overflow_total_7d.toFixed(3):'—')+' ล้าน ลบ.ม.</span>';
   /* กว๊าน */
-  var K=f.kwan_forecast||[];if(!K.length)return;var H=340,b=48,t=24;var obs=(f.kwan_observed_30d||[]).slice(-14),banks=f.banks||{},W2=1500,l2=70,r2=20,all=K.map(function(k){return k.p10}).concat(K.map(function(k){return k.p90}),obs.map(function(o){return o.level}));
+  var K=f.kwan_forecast||[];if(!K.length)return;var H=470,b=48,t=24;var obs=(f.kwan_observed_30d||[]).slice(-14),banks=f.banks||{},W2=1500,l2=70,r2=20,all=K.map(function(k){return k.p10}).concat(K.map(function(k){return k.p90}),obs.map(function(o){return o.level}));
   var lo=Math.min.apply(null,all),hi=Math.max.apply(null,all),bl=[['Mae_Main1','ตลิ่งห้วยแม่นาเรือ','#ef4444'],['Mae_Main2','ตลิ่งห้วยจุ๋มปี๋','#f97316'],['RongHai','ตลิ่งห้วยร่องไฮ','#eab308']].filter(function(x){return banks[x[0]]!=null});
   bl.forEach(function(x){var v=banks[x[0]];if(v>lo-.6&&v<hi+.6){lo=Math.min(lo,v);hi=Math.max(hi,v)}});lo-=.08;hi+=.08;
   var n=obs.length+K.length,X=function(i){return l2+(W2-l2-r2)*i/Math.max(1,n-1)},Y=function(v){return H-b-(H-b-t)*(v-lo)/(hi-lo)},s2='';
