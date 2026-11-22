@@ -1,7 +1,7 @@
 {
   "meta": {
     "source": "สถานีโทรมาตร สสน. (API) ผ่าน Google Sheet wide_log (poll ทุก 10 นาที) + HII open data (tiservice.hii.or.th, รายชั่วโมงผ่าน QC, เดือนที่ปิดแล้ว) + 01_data/Reservoirs/reference (rating curve ต่ออ่าง)",
-    "updated": "2026-11-22T16:50:00",
+    "updated": "2026-11-22T17:10:00",
     "data_connected": true
   },
   "stations": [
@@ -10,22 +10,18 @@
       "name_th": "อ่างเก็บน้ำแม่นาเรือ",
       "name_en": "Mae Na Rua Reservoir",
       "spillway_msl": 489.54,
-      "water_level": 489.712,
+      "water_level": 489.7,
       "rainfall_1h": 0.0,
-      "temperature": 28.75,
-      "humidity": 77.08,
-      "pressure": 960.27,
-      "solar": 102.3,
-      "measure_datetime": "2026-11-22T16:50:00",
-      "storage_m3": 1677499.7,
+      "temperature": 26.13,
+      "humidity": 85.79,
+      "pressure": 960.28,
+      "solar": 25.6,
+      "measure_datetime": "2026-11-22T17:10:00",
+      "storage_m3": 1673851.7,
       "storage_max_m3": 1625463.8,
-      "capacity_pct": 103.2,
-      "distance_to_spillway_m": 0.172,
+      "capacity_pct": 103.0,
+      "distance_to_spillway_m": 0.16,
       "history": [
-        {
-          "t": "2026-11-08T17:00:00",
-          "level": 489.056
-        },
         {
           "t": "2026-11-08T18:00:00",
           "level": 489.062
@@ -1364,6 +1360,10 @@
         },
         {
           "t": "2026-11-22T16:00:00",
+          "level": 489.712
+        },
+        {
+          "t": "2026-11-22T17:00:00",
           "level": 489.712
         }
       ],
@@ -7171,6 +7171,10 @@
         {
           "t": "2026-11-22T16:00:00",
           "rain_mm": 0.0
+        },
+        {
+          "t": "2026-11-22T17:00:00",
+          "rain_mm": 0.0
         }
       ]
     },
@@ -7181,20 +7185,16 @@
       "spillway_msl": 457.07,
       "water_level": 456.22,
       "rainfall_1h": 0.0,
-      "temperature": 32.56,
-      "humidity": 65.26,
-      "pressure": 963.43,
-      "solar": 105.5,
-      "measure_datetime": "2026-11-22T16:50:00",
+      "temperature": 29.81,
+      "humidity": 71.3,
+      "pressure": 963.54,
+      "solar": 32.3,
+      "measure_datetime": "2026-11-22T17:10:00",
       "storage_m3": 301546.0,
       "storage_max_m3": 347778.7,
       "capacity_pct": 86.7,
       "distance_to_spillway_m": -0.85,
       "history": [
-        {
-          "t": "2026-11-08T17:00:00",
-          "level": 456.311
-        },
         {
           "t": "2026-11-08T18:00:00",
           "level": 456.312
@@ -8533,6 +8533,10 @@
         },
         {
           "t": "2026-11-22T16:00:00",
+          "level": 456.22
+        },
+        {
+          "t": "2026-11-22T17:00:00",
           "level": 456.22
         }
       ],
@@ -14344,6 +14348,10 @@
         {
           "t": "2026-11-22T16:00:00",
           "rain_mm": 0.0
+        },
+        {
+          "t": "2026-11-22T17:00:00",
+          "rain_mm": 0.0
         }
       ]
     },
@@ -14354,11 +14362,11 @@
       "spillway_msl": 478.1,
       "water_level": 478.7,
       "rainfall_1h": 0.0,
-      "temperature": 31.9,
-      "humidity": 83.1,
-      "pressure": 960.8,
-      "solar": 66.4,
-      "measure_datetime": "2026-11-22T16:30:00",
+      "temperature": 30.4,
+      "humidity": 93.3,
+      "pressure": 961.0,
+      "solar": 24.5,
+      "measure_datetime": "2026-11-22T17:00:00",
       "storage_m3": 550358.4,
       "storage_max_m3": 495467.8,
       "capacity_pct": 111.1,
@@ -15706,6 +15714,10 @@
         },
         {
           "t": "2026-11-22T16:00:00",
+          "level": 478.7
+        },
+        {
+          "t": "2026-11-22T17:00:00",
           "level": 478.7
         }
       ],
@@ -21441,6 +21453,10 @@
         {
           "t": "2026-11-22T16:00:00",
           "rain_mm": 0.0
+        },
+        {
+          "t": "2026-11-22T17:00:00",
+          "rain_mm": 0.0
         }
       ]
     },
@@ -21451,20 +21467,16 @@
       "spillway_msl": 508.1,
       "water_level": 508.05,
       "rainfall_1h": 0.0,
-      "temperature": 24.82,
-      "humidity": 93.17,
-      "pressure": 958.22,
-      "solar": 35.5,
-      "measure_datetime": "2026-11-22T16:50:00",
+      "temperature": 24.36,
+      "humidity": 95.24,
+      "pressure": 958.37,
+      "solar": 17.4,
+      "measure_datetime": "2026-11-22T17:10:00",
       "storage_m3": 120724.5,
       "storage_max_m3": 122441.9,
       "capacity_pct": 98.6,
       "distance_to_spillway_m": -0.05,
       "history": [
-        {
-          "t": "2026-11-08T17:00:00",
-          "level": 508.063
-        },
         {
           "t": "2026-11-08T18:00:00",
           "level": 508.051
@@ -22804,6 +22816,10 @@
         {
           "t": "2026-11-22T16:00:00",
           "level": 508.055
+        },
+        {
+          "t": "2026-11-22T17:00:00",
+          "level": 508.05
         }
       ],
       "rainfall_hourly": [
@@ -28613,6 +28629,10 @@
         },
         {
           "t": "2026-11-22T16:00:00",
+          "rain_mm": 0.0
+        },
+        {
+          "t": "2026-11-22T17:00:00",
           "rain_mm": 0.0
         }
       ]
