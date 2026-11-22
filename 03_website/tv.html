@@ -31,6 +31,7 @@ footer{padding:calc(var(--u)*.6) calc(var(--u)*2.4) calc(var(--u)*.8);min-width:
 .prog{flex:1;height:calc(var(--u)*.5);background:var(--line);border-radius:9px;overflow:hidden}.prog i{display:block;height:100%;width:0;background:var(--sky)}
 .ctl{position:fixed;top:calc(var(--u)*.8);left:50%;transform:translateX(-50%);display:flex;gap:6px;opacity:0;transition:opacity .3s;z-index:20}
 body.show-ui .ctl{opacity:1}
+.ctl a{text-decoration:none;background:#123246;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:.5em .9em;font:inherit;font-size:calc(var(--u)*1.4);cursor:pointer}
 .ctl button{background:#123246;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:.5em .9em;font:inherit;font-size:calc(var(--u)*1.4);cursor:pointer}
 /* scene 1 */
 .cards{flex:1;min-height:0;display:grid;grid-template-columns:repeat(var(--cols,4),1fr);grid-auto-rows:1fr;gap:calc(var(--u)*1.1)}
@@ -43,7 +44,7 @@ body.show-ui .ctl{opacity:1}
 .tag{font-size:calc(var(--u)*1.2);font-weight:700;border-radius:99px;padding:.05em .7em;display:inline-block}
 /* ===== ฉากอ่างเก็บน้ำรายอ่าง (พอร์ตจากหน้า monitoring) ===== */
 .rs-head{display:flex;align-items:baseline;gap:calc(var(--u)*1.2);flex-wrap:wrap}.rs-head h1{font-size:calc(var(--u)*2.2)}
-.rs-grid{flex:1;min-height:0;min-width:0;display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:calc(var(--u)*1.2)}.rs-grid>*{min-width:0;min-height:0}
+.rs-grid{flex:1;min-height:0;min-width:0;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:calc(var(--u)*1.2)}.rs-grid>*{min-width:0;min-height:0}
 .rs-left{display:grid;grid-template-rows:minmax(0,1.4fr) minmax(0,1fr);gap:calc(var(--u)*.9);min-height:0}.rs-left>*{min-height:0;min-width:0}
 .rs-right{display:grid;grid-template-rows:auto minmax(0,1fr);gap:calc(var(--u)*.9);min-height:0}
 .rs-scene{position:relative;border-radius:calc(var(--u)*1.4);overflow:hidden;border:2px solid var(--line);min-height:0;
@@ -73,7 +74,8 @@ body.show-ui .ctl{opacity:1}
 .rs-read .t{font-size:calc(var(--u)*1.3);color:var(--mut)}.rs-read .nm{font-size:calc(var(--u)*2.3);font-weight:800;line-height:1.15}.rs-read .lv{font-size:calc(var(--u)*3.2);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}.rs-read .lv small{font-size:.38em;font-weight:500;color:var(--mut);margin-left:.4em}
 .rs-read .dl{font-size:calc(var(--u)*1.8);font-weight:700}.rs-read .pc2{font-size:calc(var(--u)*4.2);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}.rs-read .pc2 small{font-size:.32em;font-weight:500;color:var(--mut);margin-left:.4em}
 .cap{position:relative;height:calc(var(--u)*1.5);border-radius:99px;background:#1b3342;overflow:hidden}.cap i{position:absolute;top:0;bottom:0;left:0;border-radius:99px}.cap b{position:absolute;top:-2px;bottom:-2px;width:3px;background:#e8f1f6}
-.tiles{min-height:0;display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:calc(var(--u)*.9)}
+.rs-read{display:grid!important;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:calc(var(--u)*1.1)!important}.rd-l{display:flex;flex-direction:column;gap:calc(var(--u)*.4);min-width:0}
+.tiles{min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:calc(var(--u)*.9)}
 .tile{overflow:hidden;background:var(--panel);border:2px solid var(--line);border-radius:calc(var(--u)*1.2);padding:calc(var(--u)*.6) calc(var(--u)*1.1);display:flex;flex-direction:column;justify-content:space-between;min-height:0}
 .tile .tl{font-size:calc(var(--u)*1.1);color:var(--mut);white-space:nowrap}.tile .tv{font-size:calc(var(--u)*2);white-space:nowrap;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}.tile .tv small{font-size:.42em;font-weight:500;color:var(--mut);margin-left:.3em}
 .tbar{height:calc(var(--u)*.6);border-radius:9px;background:#1b3342;overflow:hidden}.tbar i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,#1f6f9a,#e0a94f)}
@@ -137,7 +139,7 @@ body.show-ui .ctl{opacity:1}
   <footer><div class="dots" id="dots"></div><div class="prog"><i id="prog"></i></div><div id="upd" style="white-space:nowrap">กำลังโหลดข้อมูล…</div><div style="white-space:nowrap">ไม่ใช่ประกาศทางการ</div></footer>
 </div>
 <div id="err" style="display:none;position:fixed;inset:0;z-index:50;background:rgba(7,18,25,.96);align-items:center;justify-content:center;text-align:center;padding:5vw;font-size:calc(var(--u)*2.4);line-height:1.6"><div><b style="font-size:1.4em;color:#fbbf24">โหลดข้อมูลไม่สำเร็จ</b><br>ถ้าเปิดจากไฟล์ในเครื่อง (file:///…) เบราว์เซอร์จะบล็อกการอ่านข้อมูล<br>ให้รันเซิร์ฟเวอร์ในโฟลเดอร์ 03_website แล้วเปิด http://localhost:8000/tv.html<br><code style="color:#7dd3fc;font-size:.8em">python -m http.server 8000</code></div></div>
-<div class="ctl"><button id="bPrev">◀</button><button id="bPlay">⏸ หยุดหมุน</button><button id="bNext">▶</button><button id="bFs">⛶ เต็มจอ</button></div>
+<div class="ctl"><a href="index.html" title="กลับหน้าแรก">⌂ หน้าแรก</a><button id="bPrev">◀</button><button id="bPlay">⏸ หยุดหมุน</button><button id="bNext">▶</button><button id="bFs">⛶ เต็มจอ</button></div>
 
 <script src="assets/vendor/cytoscape/cytoscape.min.js"></script>
 <script>
@@ -201,21 +203,21 @@ function resScene(st){
   var cloud='<ellipse cx="0" cy="0" rx="46" ry="15"/><ellipse cx="-30" cy="6" rx="28" ry="11"/><ellipse cx="32" cy="7" rx="30" ry="11"/><ellipse cx="6" cy="-12" rx="26" ry="14"/>';
   var ticks='';for(var e=Math.ceil(E0*2)/2;e<=E1+.001;e+=.5){var y=yOf(e);ticks+='<line x1="352" x2="'+(e%1===0?368:362)+'" y1="'+y+'" y2="'+y+'" style="stroke:var(--faint)" stroke-width="1.5"/><text class="tick-lbl" x="346" y="'+(y+4)+'" text-anchor="end">'+e.toFixed(1)+'</text>'}
   var ph=phaseNow(),raining=(st.rainfall_hourly||[]).slice(-2).some(function(r){return r.rain_mm>0}),sp=over>.003,t=clampN(over*90,3,24);
-  var svg='<svg viewBox="0 0 900 420" preserveAspectRatio="xMidYMid slice"><defs>'+
+  var svg='<svg viewBox="0 0 900 560" preserveAspectRatio="xMidYMid slice"><defs>'+
   '<linearGradient id="gSky'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sky-1)"/><stop offset="1" style="stop-color:var(--sky-2)"/></linearGradient>'+
   '<linearGradient id="gW'+id+'" gradientUnits="userSpaceOnUse" x1="0" y1="'+Yb+'" x2="0" y2="'+(Yb+230)+'"><stop offset="0" style="stop-color:var(--water-1)"/><stop offset="1" style="stop-color:var(--water-2)"/></linearGradient>'+
-  '<radialGradient id="gO'+id+'"><stop offset="0" style="stop-color:var(--orb-glow)"/><stop offset="1" style="stop-color:var(--orb-glow);stop-opacity:0"/></radialGradient><clipPath id="bc'+id+'"><rect x="0" y="0" width="700" height="420"/></clipPath></defs>'+
-  '<rect width="900" height="420" fill="url(#gSky'+id+')"/>'+stars+
+  '<radialGradient id="gO'+id+'"><stop offset="0" style="stop-color:var(--orb-glow)"/><stop offset="1" style="stop-color:var(--orb-glow);stop-opacity:0"/></radialGradient><clipPath id="bc'+id+'"><rect x="0" y="0" width="700" height="560"/></clipPath></defs>'+
+  '<rect width="900" height="560" fill="url(#gSky'+id+')"/>'+stars+
   '<g style="transform:translate('+ph.x.toFixed(0)+'px,'+ph.y.toFixed(0)+'px)"><circle class="sun-glow" r="74" fill="url(#gO'+id+')"/><circle r="22" style="fill:var(--orb)"/></g>'+
-  '<path d="M0,230 C80,170 160,190 240,215 C320,240 400,160 520,180 C640,200 740,150 900,210 L900,420 L0,420Z" style="fill:var(--hill-far)"/>'+
-  '<path d="M0,272 C100,232 200,262 300,287 C420,312 520,250 640,262 C740,272 820,242 900,264 L900,420 L0,420Z" style="fill:var(--hill-near)"/>'+
+  '<path d="M0,230 C80,170 160,190 240,215 C320,240 400,160 520,180 C640,200 740,150 900,210 L900,560 L0,560Z" style="fill:var(--hill-far)"/>'+
+  '<path d="M0,272 C100,232 200,262 300,287 C420,312 520,250 640,262 C740,272 820,242 900,264 L900,560 L0,560Z" style="fill:var(--hill-near)"/>'+
   '<g transform="translate(0,66)"><g class="cloud" style="fill:var(--core);opacity:.6">'+cloud+'</g></g><g transform="translate(0,128)"><g class="cloud c2" style="fill:var(--core);opacity:.45">'+cloud+'</g></g>'+
   '<g clip-path="url(#bc'+id+')"><g class="water-g" style="transform:translateY('+(yl-Yb)+'px)">'+
     '<path class="wave-b" d="'+waveP(Yb-3,9,200,700,40)+'" style="fill:var(--water-1);opacity:.7"/>'+
     '<g transform="translate(212,'+Yb+')"><g class="boat"><path d="M-27,-3 L27,-3 L18,10 L-18,10Z" style="fill:var(--accent-2)"/><line x1="0" y1="-3" x2="0" y2="-44" style="stroke:var(--strong)" stroke-width="2"/><path d="M3,-42 L3,-9 L26,-9Z" style="fill:var(--core);stroke:var(--strong)" stroke-width="1.2"/><path d="M-3,-34 L-3,-9 L-17,-9Z" style="fill:var(--accent);opacity:.85"/></g></g>'+
     '<path class="wave-a" d="'+waveP(Yb,6,100,700,0)+'" fill="url(#gW'+id+')"/></g></g>'+
-  '<path d="M0,420 L0,182 C60,178 112,238 190,300 C250,346 340,382 440,394 L440,420Z" style="fill:var(--land)"/><path d="M0,420 L0,246 C70,252 130,306 200,340 C270,372 350,396 440,404 L440,420Z" style="fill:var(--land-2);opacity:.7"/>'+
-  '<path d="M430,398 L520,120 L580,120 L580,'+yc+' L700,'+yc+' L790,330 L900,330 L900,420 L430,420Z" style="fill:var(--land-2)"/><path d="M430,398 L520,120 L580,120 L580,'+yc+'" fill="none" style="stroke:var(--strong);opacity:.18" stroke-width="2"/>'+
+  '<path d="M0,560 L0,182 C60,178 112,238 190,300 C250,346 340,382 440,394 L440,560Z" style="fill:var(--land)"/><path d="M0,560 L0,246 C70,252 130,306 200,340 C270,372 350,396 440,404 L440,560Z" style="fill:var(--land-2);opacity:.7"/>'+
+  '<path d="M430,398 L520,120 L580,120 L580,'+yc+' L700,'+yc+' L790,330 L900,330 L900,560 L430,560Z" style="fill:var(--land-2)"/><path d="M430,398 L520,120 L580,120 L580,'+yc+'" fill="none" style="stroke:var(--strong);opacity:.18" stroke-width="2"/>'+
   '<rect x="520" y="116" width="60" height="7" rx="3" style="fill:var(--core);stroke:var(--line-2)"/><rect x="580" y="'+(yc-1)+'" width="120" height="7" rx="3" style="fill:var(--core);stroke:var(--line-2)"/>'+
   '<path d="M700,'+(yc+3)+' L790,333 L800,333 L710,'+(yc+3)+'Z" style="fill:var(--core);opacity:.85"/>'+
   '<g><path d="'+(sp?'M700,'+(yc-t)+' L790,'+(330-t)+' L790,330 L700,'+yc+'Z':'')+'" style="fill:var(--water-1);opacity:.9"/><path class="foam" d="M706,'+(yc-3)+' L792,326"/><path class="foam" style="animation-delay:-.4s" d="M712,'+(yc-9)+' L796,321"/></g>'+
@@ -254,11 +256,11 @@ function renderRes(){
     var sc=resScene(s),over=s.water_level-s.spillway_msl,k=over>.003?'crit':over>-.10?'warn':'ok',col={crit:'#ef4444',warn:'#e0a94f',ok:'#22c55e'}[k],d6=delta6(s),pct=s.capacity_pct,mx=Math.max(110,Math.ceil(pct/10)*10+5),
       dl=over>.003?'สูงกว่าสันสปิลเวย์ '+over.toFixed(3)+' ม.':over>-.10?'ต่ำกว่าสันสปิลเวย์ '+(-over).toFixed(3)+' ม. · ใกล้ล้น':'ต่ำกว่าสันสปิลเวย์ '+(-over).toFixed(3)+' ม.',
       tr=(d6>.004?'ระดับขึ้น':d6<-.004?'ระดับลด':'ทรงตัว')+' '+sgn(d6)+' ม.',t=(s.measure_datetime||'').slice(11,16);
-    sec.innerHTML='<div class="rs-grid"><div class="rs-left"><div class="rs-scene '+sc.cls+'">'+sc.svg+'</div><div class="rs-chart"><h3>ระดับน้ำย้อนหลังเทียบสันสปิลเวย์ · '+esc(s.name_th.replace('อ่างเก็บน้ำ',''))+'</h3>'+resChart(s)+'</div></div>'+
-    '<div class="rs-right"><div class="rs-read"><div class="nm">'+esc(s.name_th)+'</div><div class="t" style="margin-bottom:.3em">'+esc(s.station_code)+' · <span style="color:#4ade80">● สด '+esc(t)+' น.</span></div><div class="t">ระดับน้ำปัจจุบัน</div><div class="lv">'+s.water_level.toFixed(3)+'<small>ม.รทก.</small></div><div class="dl" style="color:'+col+'">'+dl+'</div><div class="t">6 ชั่วโมงที่ผ่านมา '+tr+'</div>'+
+    sec.innerHTML='<div class="rs-grid"><div class="rs-scene '+sc.cls+'">'+sc.svg+'</div>'+
+    '<div class="rs-right"><div class="rs-read"><div class="rd-l"><div class="nm">'+esc(s.name_th)+'</div><div class="t" style="margin-bottom:.3em">'+esc(s.station_code)+' · <span style="color:#4ade80">● สด '+esc(t)+' น.</span></div><div class="t">ระดับน้ำปัจจุบัน</div><div class="lv">'+s.water_level.toFixed(3)+'<small>ม.รทก.</small></div><div class="dl" style="color:'+col+'">'+dl+'</div><div class="t">6 ชั่วโมงที่ผ่านมา '+tr+'</div>'+
       '<div class="pc2" style="color:'+col+'">'+pct.toFixed(1)+'<small>% ของความจุ</small></div><div class="cap"><i style="width:'+(Math.min(pct,100)/mx*100).toFixed(1)+'%;background:'+(pct>100?'#22c55e':col)+'"></i>'+(pct>100?'<i style="left:'+(100/mx*100).toFixed(1)+'%;width:'+((pct-100)/mx*100).toFixed(1)+'%;background:#ef4444;border-radius:0 99px 99px 0"></i>':'')+'<b style="left:'+(100/mx*100).toFixed(1)+'%"></b></div>'+
       '<div class="t">ปริมาตร <b style="color:#e8f1f6">'+fmt(s.storage_m3)+'</b> / '+fmt(s.storage_max_m3)+' ลบ.ม. · ฝน 24 ชม. <b style="color:#e8f1f6">'+rain24(s).toFixed(1)+'</b> มม.</div></div>'+
-      '<div class="tiles">'+tile('ฝน 1 ชม.',nv(s.rainfall_1h,1),'มม.',(s.rainfall_1h||0)/20)+tile('อุณหภูมิ',nv(s.temperature,1),'°C',((s.temperature||15)-15)/30)+tile('ความชื้น',nv(s.humidity,1),'%',(s.humidity||0)/100)+tile('ความกดอากาศ',nv(s.pressure,1),'hPa',((s.pressure||940)-940)/80)+tile('รังสีอาทิตย์',nv(s.solar,1),'W/m²',(s.solar||0)/1000)+tile('ห่างจากสันสปิลเวย์',(over>=0?'+':'')+nv(s.distance_to_spillway_m!=null?s.distance_to_spillway_m:over,2),'ม.',(over+2)/3)+'</div></div></div>';
+      '<div class="tiles">'+tile('ฝน 1 ชม.',nv(s.rainfall_1h,1),'มม.',(s.rainfall_1h||0)/20)+tile('อุณหภูมิ',nv(s.temperature,1),'°C',((s.temperature||15)-15)/30)+tile('ความชื้น',nv(s.humidity,1),'%',(s.humidity||0)/100)+tile('ความกดอากาศ',nv(s.pressure,1),'hPa',((s.pressure||940)-940)/80)+tile('รังสีอาทิตย์',nv(s.solar,1),'W/m²',(s.solar||0)/1000)+tile('ห่างจากสันสปิลเวย์',(over>=0?'+':'')+nv(s.distance_to_spillway_m!=null?s.distance_to_spillway_m:over,2),'ม.',(over+2)/3)+'</div></div>'+'<div class="rs-chart"><h3>ระดับน้ำย้อนหลังเทียบสันสปิลเวย์ · '+esc(s.name_th.replace('อ่างเก็บน้ำ',''))+'</h3>'+resChart(s)+'</div></div></div>';
   });
 }
 
