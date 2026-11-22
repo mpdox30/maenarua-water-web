@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071219">
+<title>โหมดจอทีวี · น้ำตำบลแม่นาเรือ</title>
+<link href="assets/vendor/fonts/fonts.css" rel="stylesheet">
+<style>
+:root{--bg:#071219;--panel:#0d202c;--line:#1c3646;--text:#e8f1f6;--mut:#8fa9b8;--navy:#0c4a6e;--sky:#38bdf8;
+  --critical:#ef4444;--warning:#f97316;--medium:#eab308;--safe:#22c55e;--unknown:#94a3b8;--u:min(1vw,1.78vh)}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans Thai','Sarabun','Tahoma',sans-serif;overflow:hidden;cursor:none}
+body.show-ui{cursor:default}
+.app{height:100vh;width:100vw;overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr) auto;grid-template-columns:minmax(0,1fr)}
+header{display:flex;align-items:center;justify-content:space-between;padding:calc(var(--u)*.9) calc(var(--u)*2.4);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:calc(var(--u)*1.2)}
+.logo{width:calc(var(--u)*3.2);height:calc(var(--u)*3.2);border-radius:30%;background:linear-gradient(135deg,#0ea5e9,#0c4a6e);display:grid;place-items:center;font-size:calc(var(--u)*2.2)}
+.brand b{font-size:calc(var(--u)*2.1);display:block;line-height:1.1}.brand small{font-size:calc(var(--u)*1.3);color:var(--mut)}
+.live{display:inline-flex;align-items:center;gap:.5em;background:#0b2a1b;color:#4ade80;border:1px solid #14532d;border-radius:99px;padding:.15em .8em;font-size:calc(var(--u)*1.3);font-weight:700;margin-left:calc(var(--u)*1)}
+.live i{width:.6em;height:.6em;border-radius:50%;background:#4ade80;animation:pl 1.6s infinite}@keyframes pl{50%{opacity:.25}}
+.clock{text-align:right}.clock b{font-size:calc(var(--u)*3);font-variant-numeric:tabular-nums;line-height:1}.clock small{display:block;font-size:calc(var(--u)*1.3);color:var(--mut)}
+main{position:relative;min-height:0}
+.scene{position:absolute;inset:0;overflow:hidden;padding:calc(var(--u)*1.1) calc(var(--u)*2.4);opacity:0;visibility:hidden;transition:opacity .7s;display:flex;flex-direction:column;gap:calc(var(--u)*1.2)}
+.scene.on{opacity:1;visibility:visible}
+h1{font-size:calc(var(--u)*2.6);line-height:1.15}h1 small{font-size:.5em;color:var(--mut);font-weight:400;margin-left:.6em}
+.chips{display:flex;gap:calc(var(--u)*1);flex-wrap:wrap}
+.chip{border-radius:99px;padding:.2em .9em;font-size:calc(var(--u)*1.6);font-weight:700;border:2px solid;display:inline-flex;gap:.4em;align-items:center}
+footer{padding:calc(var(--u)*.6) calc(var(--u)*2.4) calc(var(--u)*.8);min-width:0;border-top:1px solid var(--line);display:flex;align-items:center;gap:calc(var(--u)*2);font-size:calc(var(--u)*1.25);color:var(--mut)}
+.dots{display:flex;gap:calc(var(--u)*.5);flex:0 1 auto;min-width:0}.dots span{padding:.15em .6em;border-radius:99px;border:1px solid var(--line);cursor:pointer;white-space:nowrap}.dots span .nm{display:none}.dots span.on .nm{display:inline}.dots span.on{background:var(--sky);color:#04202e;border-color:var(--sky);font-weight:700}
+.prog{flex:1;height:calc(var(--u)*.5);background:var(--line);border-radius:9px;overflow:hidden}.prog i{display:block;height:100%;width:0;background:var(--sky)}
+.ctl{position:fixed;top:calc(var(--u)*.8);left:50%;transform:translateX(-50%);display:flex;gap:6px;opacity:0;transition:opacity .3s;z-index:20}
+body.show-ui .ctl{opacity:1}
+.ctl button{background:#123246;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:.5em .9em;font:inherit;font-size:calc(var(--u)*1.4);cursor:pointer}
+/* scene 1 */
+.cards{flex:1;min-height:0;display:grid;grid-template-columns:repeat(var(--cols,4),1fr);grid-auto-rows:1fr;gap:calc(var(--u)*1.1)}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:calc(var(--u)*1.2);padding:calc(var(--u)*1.2) calc(var(--u)*1.4);display:flex;flex-direction:column;justify-content:space-between;min-height:0}
+.card .nm{font-size:calc(var(--u)*1.9);font-weight:700;line-height:1.2}.card .sb{font-size:calc(var(--u)*1.2);color:var(--mut)}
+.card .pc{font-size:calc(var(--u)*6);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}.card .pc small{font-size:.4em;font-weight:600}
+.bar{height:calc(var(--u)*1);border-radius:9px;background:#1b3342;overflow:hidden}.bar i{display:block;height:100%;border-radius:9px}
+.card .vl{font-size:calc(var(--u)*1.3);color:var(--mut);display:flex;justify-content:space-between;gap:.5em}
+.kv{display:flex;justify-content:space-between;font-size:calc(var(--u)*1.35);color:var(--mut)}.kv b{color:var(--text);font-weight:600}.spk{height:calc(var(--u)*4);width:100%}
+.tag{font-size:calc(var(--u)*1.2);font-weight:700;border-radius:99px;padding:.05em .7em;display:inline-block}
+/* ===== ฉากอ่างเก็บน้ำรายอ่าง (พอร์ตจากหน้า monitoring) ===== */
+.rs-head{display:flex;align-items:baseline;gap:calc(var(--u)*1.2);flex-wrap:wrap}.rs-head h1{font-size:calc(var(--u)*2.2)}
+.rs-grid{flex:1;min-height:0;min-width:0;display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:calc(var(--u)*1.2)}.rs-grid>*{min-width:0;min-height:0}
+.rs-left{display:grid;grid-template-rows:minmax(0,1.4fr) minmax(0,1fr);gap:calc(var(--u)*.9);min-height:0}.rs-left>*{min-height:0;min-width:0}
+.rs-right{display:grid;grid-template-rows:auto minmax(0,1fr);gap:calc(var(--u)*.9);min-height:0}
+.rs-scene{position:relative;border-radius:calc(var(--u)*1.4);overflow:hidden;border:2px solid var(--line);min-height:0;
+  --accent:#1f6f9a;--accent-2:#e0a94f;--ok:#2a9d7f;--warn:#e0a94f;--crit:#d6453d;--rain:#4c5fd5;--bank:#c9945f;
+  --sky-1:color-mix(in srgb,var(--accent) 30%,#fff);--sky-2:color-mix(in srgb,var(--accent) 7%,#fff);--water-1:color-mix(in srgb,var(--accent) 65%,#fff);--water-2:color-mix(in srgb,var(--accent) 100%,#000 18%);
+  --hill-far:color-mix(in srgb,var(--accent) 16%,var(--sky-2));--hill-near:color-mix(in srgb,var(--accent) 30%,var(--sky-2));--land:color-mix(in srgb,var(--accent) 28%,#7a8a6a);--land-2:color-mix(in srgb,var(--accent) 22%,#5f6f55);
+  --orb:#ffe29a;--orb-glow:rgba(255,214,130,.55);--core:#fbfdfe;--strong:#0b1c27;--muted:#5a7384;--faint:#6f8696;--line-2:rgba(18,52,70,.2)}
+.rs-scene.night{--sky-1:color-mix(in srgb,var(--accent) 36%,#040b12);--sky-2:color-mix(in srgb,var(--accent) 13%,#0a1a26);--water-1:var(--accent);--water-2:color-mix(in srgb,var(--accent) 100%,#000 50%);
+  --hill-far:color-mix(in srgb,var(--accent) 20%,#07131b);--hill-near:color-mix(in srgb,var(--accent) 28%,#06111a);--land:color-mix(in srgb,var(--accent) 22%,#1c261f);--land-2:color-mix(in srgb,var(--accent) 18%,#141c17);
+  --orb:#e6eeff;--orb-glow:rgba(190,210,255,.4);--core:#0d1e29;--strong:#eef8fa;--muted:#a9c0c8;--faint:#9fb5bd}
+.rs-scene.dusk{--sky-1:color-mix(in srgb,#ff8f5e 55%,#3a4a7a);--sky-2:color-mix(in srgb,#ffd7a1 82%,var(--accent));--water-1:color-mix(in srgb,var(--accent) 62%,#ffb98a);--water-2:color-mix(in srgb,var(--accent) 100%,#1a1030 35%);
+  --hill-far:color-mix(in srgb,#a45a6a 38%,var(--sky-2));--hill-near:color-mix(in srgb,#5a4a6a 55%,var(--sky-2));--land:color-mix(in srgb,var(--accent) 20%,#3b3a3a);--land-2:color-mix(in srgb,var(--accent) 16%,#2c2b2e);
+  --orb:#ffc98a;--orb-glow:rgba(255,160,90,.6);--core:#fbf3ea;--strong:#2a1a24;--muted:#6a5a60;--faint:#7a6a70}
+.rs-scene svg{display:block;width:100%;height:100%;position:absolute;inset:0}
+.rs-scene .lbl{font-family:inherit;font-size:19px;font-weight:700;fill:var(--strong);paint-order:stroke;stroke:var(--core);stroke-width:5px;stroke-linejoin:round}
+.rs-scene .lbl.s{font-size:15px;font-weight:600}.rs-scene .tick-lbl{font-family:inherit;font-size:14px;fill:var(--faint)}
+.wave-a{animation:waveX 9s linear infinite}.wave-b{animation:waveX 14s linear infinite reverse}.water-g{transition:transform 1.1s}
+.boat{animation:bob 3.6s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+.cloud{animation:drift 70s linear infinite}.cloud.c2{animation-duration:110s;animation-delay:-40s}
+.drop{stroke:var(--rain);stroke-width:2;stroke-linecap:round;opacity:0}.raining .drop{opacity:.7;animation:fall .9s linear infinite}
+.star{fill:#fff;opacity:0}.night .star{animation:twinkle 3s ease-in-out infinite}
+.foam{stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-dasharray:14 12;opacity:0}.spilling .foam{opacity:.9;animation:flow .9s linear infinite}
+.sun-glow{animation:glow 6s ease-in-out infinite}.sonar{transform-box:fill-box;transform-origin:center;animation:sonar 2s ease-out infinite}
+@keyframes waveX{to{transform:translateX(-200px)}}@keyframes bob{50%{transform:translateY(-4px) rotate(2.2deg)}}@keyframes drift{from{transform:translateX(-160px)}to{transform:translateX(1320px)}}
+@keyframes fall{from{transform:translateY(-50px)}to{transform:translateY(300px)}}@keyframes twinkle{50%{opacity:.9}}@keyframes flow{to{stroke-dashoffset:-26}}@keyframes glow{50%{opacity:.7}}@keyframes sonar{from{transform:scale(.7);opacity:.9}to{transform:scale(2.6);opacity:0}}
+.rs-read{background:var(--panel);border:2px solid var(--line);border-radius:calc(var(--u)*1.4);padding:calc(var(--u)*1.1) calc(var(--u)*1.5);display:flex;flex-direction:column;gap:calc(var(--u)*.4)}
+.rs-read .t{font-size:calc(var(--u)*1.3);color:var(--mut)}.rs-read .lv{font-size:calc(var(--u)*3.2);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}.rs-read .lv small{font-size:.38em;font-weight:500;color:var(--mut);margin-left:.4em}
+.rs-read .dl{font-size:calc(var(--u)*1.8);font-weight:700}.rs-read .pc2{font-size:calc(var(--u)*4.2);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}.rs-read .pc2 small{font-size:.32em;font-weight:500;color:var(--mut);margin-left:.4em}
+.cap{position:relative;height:calc(var(--u)*1.5);border-radius:99px;background:#1b3342;overflow:hidden}.cap i{position:absolute;top:0;bottom:0;left:0;border-radius:99px}.cap b{position:absolute;top:-2px;bottom:-2px;width:3px;background:#e8f1f6}
+.tiles{min-height:0;display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:calc(var(--u)*.9)}
+.tile{overflow:hidden;background:var(--panel);border:2px solid var(--line);border-radius:calc(var(--u)*1.2);padding:calc(var(--u)*.6) calc(var(--u)*1.1);display:flex;flex-direction:column;justify-content:space-between;min-height:0}
+.tile .tl{font-size:calc(var(--u)*1.1);color:var(--mut);white-space:nowrap}.tile .tv{font-size:calc(var(--u)*2);white-space:nowrap;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}.tile .tv small{font-size:.42em;font-weight:500;color:var(--mut);margin-left:.3em}
+.tbar{height:calc(var(--u)*.6);border-radius:9px;background:#1b3342;overflow:hidden}.tbar i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,#1f6f9a,#e0a94f)}
+.rs-chart{overflow:hidden;background:var(--panel);border:2px solid var(--line);border-radius:calc(var(--u)*1.4);padding:calc(var(--u)*.8) calc(var(--u)*1.2);display:flex;flex-direction:column;min-height:0}
+.rs-chart h3{font-size:calc(var(--u)*1.4);margin-bottom:2px}.rs-chart svg{flex:1;min-height:0;min-width:0;width:100%;height:100%}
+/* scene 2 */
+.dgm{flex:1;min-height:0;position:relative;border-radius:calc(var(--u)*1.2);overflow:hidden;border:2px solid var(--line);background:linear-gradient(160deg,#f4faff,#e6f1fa 55%,#f1f6ec)}
+#cy{position:absolute;inset:0}
+.dleg{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.93);color:#0f172a;border-radius:10px;padding:8px 14px;font-size:calc(var(--u)*1.15);display:grid;grid-template-columns:auto auto;gap:6px 18px;box-shadow:0 1px 6px rgba(0,0,0,.15)}
+.dleg>div{display:flex;align-items:center;gap:7px}.dleg .li{width:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.dleg2{position:absolute;right:12px;bottom:12px;background:rgba(255,255,255,.93);color:#0f172a;border-radius:10px;padding:8px 14px;font-size:calc(var(--u)*1.15);display:flex;gap:14px;flex-wrap:wrap;justify-content:flex-end;max-width:36%;box-shadow:0 1px 6px rgba(0,0,0,.15)}
+.dleg2 i{display:inline-block;width:16px;height:10px;border-radius:2px;margin-right:6px}
+/* scene 3 */
+.g3{flex:1;min-height:0;display:grid;grid-template-columns:2.2fr 1fr;gap:calc(var(--u)*1.4)}
+.pnl{background:var(--panel);border:2px solid var(--line);border-radius:calc(var(--u)*1.2);padding:calc(var(--u)*1.2) calc(var(--u)*1.5);display:flex;flex-direction:column;min-height:0}
+.pnl h3{font-size:calc(var(--u)*1.9);margin-bottom:calc(var(--u)*.5)}.pnl h3 small{color:var(--mut);font-weight:400;font-size:.65em;margin-left:.5em}
+.pnl svg{flex:1;min-height:0;width:100%}
+.msgs{margin-top:calc(var(--u)*.2);display:grid;grid-template-columns:1fr 1fr;gap:calc(var(--u)*.5);font-size:calc(var(--u)*1.35)}
+.msgs div{padding:.3em .7em;border-radius:8px;background:#122c3c}
+.tbl{width:100%;border-collapse:collapse;font-size:calc(var(--u)*1.5)}.tbl th{color:var(--mut);font-weight:400;text-align:right;padding:.3em .4em;border-bottom:1px solid var(--line)}.tbl th:first-child,.tbl td:first-child{text-align:left}.tbl td{text-align:right;padding:.45em .4em;border-bottom:1px solid #12293a;font-variant-numeric:tabular-nums}.tbl tr.tot td{font-weight:700;color:#7dd3fc}
+/* scene 4/5 */
+.g2{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:calc(var(--u)*1.4)}
+.note{font-size:calc(var(--u)*1.4);color:var(--mut);line-height:1.45}
+.leg{display:flex;gap:calc(var(--u)*2);font-size:calc(var(--u)*1.3);color:var(--mut);flex-wrap:wrap}.leg i{display:inline-block;width:1em;height:.8em;border-radius:3px;margin-right:.4em;vertical-align:-.05em}
+/* scene 5 */
+.qrw{flex:1;display:flex;align-items:center;justify-content:center;gap:calc(var(--u)*6)}
+.qr{background:#fff;border-radius:calc(var(--u)*1.6);padding:calc(var(--u)*1.6);width:calc(var(--u)*30);height:calc(var(--u)*30)}.qr svg{width:100%;height:100%;display:block}
+.qrt h2{font-size:calc(var(--u)*5);line-height:1.15;margin-bottom:.4em}.qrt p{font-size:calc(var(--u)*2.2);color:var(--mut);line-height:1.5}.qrt .u{margin-top:.8em;color:var(--sky);font-size:calc(var(--u)*2);word-break:break-all}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><div class="logo">💧</div><div><b>สถานการณ์น้ำตำบลแม่นาเรือ <span class="live"><i></i>สด</span></b><small>อ.เมืองพะเยา จ.พะเยา · จอแสดงสถานการณ์น้ำ</small></div></div>
+    <div class="clock"><b id="clk">--:--</b><small id="dt">เวลาไทย</small></div>
+  </header>
+  <main id="stage">
+    <!-- ฉากอ่างเก็บน้ำรายอ่างถูกสร้างด้วย JS (renderRes) -->
+    <!-- 2 ผังน้ำ -->
+    <section class="scene" data-n="ผังน้ำ"><h1>ผังน้ำตำบลแม่นาเรือ<small>เส้นประสว่าง = ทิศทางน้ำไหลบนคลองหลัก</small></h1>
+      <div class="dgm"><div id="cy"></div><div class="dleg" id="dleg"></div><div class="dleg2" id="dleg2"></div></div></section>
+    <!-- 3 ฝนย้อนหลังรายวัน -->
+    <section class="scene" data-n="ฝนย้อนหลังรายวัน"><h1>ฝนย้อนหลังรายวัน<small id="s3sub"></small></h1><div class="chips" id="s3chips"></div>
+      <div class="g3"><div class="pnl"><h3>ปริมาณฝนเฉลี่ยรายวัน 30 วันล่าสุด<small>มม./วัน · เฉลี่ยจากสถานีโทรมาตร</small></h3><svg id="rainSvg" viewBox="0 0 1100 380" preserveAspectRatio="xMidYMid meet"></svg></div>
+      <div class="pnl"><h3>แยกรายสถานี<small>มม.</small></h3><table class="tbl" id="rainTbl"></table><div class="note" id="s3note"></div></div></div></section>
+    <!-- 4 ระดับน้ำกว๊านพะเยา -->
+    <section class="scene" data-n="ระดับน้ำกว๊านพะเยา"><h1>ระดับน้ำกว๊านพะเยา<small id="s3ksub"></small></h1><div class="chips" id="s3kchips"></div>
+      <div class="pnl" style="flex:1"><h3>ระดับน้ำย้อนหลังและพยากรณ์ 7 วัน<small>ม.รทก. · แถบ = ช่วง P10–P90</small></h3><svg id="kwanSvg" viewBox="0 0 1500 340" preserveAspectRatio="xMidYMid meet"></svg></div>
+      <div class="msgs" id="s3msgs"></div></section>
+    <!-- 5 น้ำไหลลงอ่างแม่นาเรือ -->
+    <section class="scene" data-n="น้ำไหลลงอ่างแม่นาเรือ"><h1>พยากรณ์น้ำไหลลงอ่างเก็บน้ำแม่นาเรือ<small id="s4sub"></small></h1><div class="chips" id="s4chips"></div>
+      <div class="g2"><div class="pnl"><h3>ปริมาณน้ำไหลเข้าล่วงหน้า 7 วัน<small>ลบ.ม./วัน · CatBoost</small></h3><svg id="inSvg" viewBox="0 0 800 380" preserveAspectRatio="xMidYMid meet"></svg><div class="leg"><span><i style="background:#38bdf8"></i>ความเชื่อมั่นพอใช้</span><span><i style="background:#38bdf8;opacity:.4"></i>ความเชื่อมั่นต่ำ</span></div></div>
+      <div class="pnl"><h3>น้ำไหลเข้าที่ประมาณได้ ย้อนหลัง 84 ชม.<small>ลบ.ม. ต่อช่วง 6 ชม. · จากสมดุลน้ำ</small></h3><svg id="in6Svg" viewBox="0 0 800 380" preserveAspectRatio="xMidYMid meet"></svg><div class="note" id="s4note"></div></div></div></section>
+    <!-- 6 ความต้องการใช้น้ำ -->
+    <section class="scene" data-n="ความต้องการใช้น้ำ"><h1>คาดการณ์ความต้องการใช้น้ำล่วงหน้า 12 สัปดาห์<small id="s5sub"></small></h1><div class="chips" id="s5chips"></div>
+      <div class="g2"><div class="pnl"><h3>Zone A · เกษตรน้ำฝน<small>ลบ.ม./สัปดาห์</small></h3><svg id="dmA" viewBox="0 0 800 380" preserveAspectRatio="xMidYMid meet"></svg></div>
+      <div class="pnl"><h3>Zone B · พื้นที่ชลประทาน<small>ลบ.ม./สัปดาห์</small></h3><svg id="dmB" viewBox="0 0 800 380" preserveAspectRatio="xMidYMid meet"></svg></div></div>
+      <div class="note" id="s5note"></div></section>
+    <!-- 7 QR -->
+    <section class="scene" data-n="QR ดูต่อบนมือถือ"><div class="qrw"><div class="qr"><svg viewBox="0 0 35 35" shape-rendering="crispEdges" class="segno"><path fill="#fff" d="M0 0h35v35h-35z"/><path class="qrline" stroke="#0b1d2a" d="M1 1.5h7m2 0h1m1 0h1m2 0h2m1 0h8m1 0h7m-33 1h1m5 0h1m1 0h1m1 0h3m1 0h2m2 0h1m4 0h1m2 0h1m5 0h1m-33 1h1m1 0h3m1 0h1m1 0h2m3 0h1m1 0h2m1 0h3m5 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m3 0h1m4 0h2m1 0h1m3 0h3m1 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m2 0h1m4 0h1m2 0h1m1 0h2m1 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-33 1h1m5 0h1m3 0h1m2 0h1m1 0h1m1 0h1m1 0h1m1 0h2m1 0h1m1 0h1m5 0h1m-33 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-17 1h2m1 0h2m1 0h1m1 0h1m-24 1h3m1 0h2m2 0h2m3 0h2m1 0h1m1 0h4m1 0h1m5 0h2m-31 1h1m2 0h1m2 0h2m1 0h1m2 0h4m1 0h6m2 0h2m1 0h2m1 0h1m-31 1h1m2 0h3m1 0h2m3 0h2m1 0h1m2 0h1m1 0h3m1 0h4m2 0h1m-33 1h3m1 0h1m3 0h1m1 0h1m2 0h1m2 0h1m2 0h1m2 0h3m2 0h1m1 0h1m2 0h1m-33 1h5m1 0h3m3 0h3m1 0h1m1 0h2m2 0h2m1 0h1m1 0h3m1 0h2m-33 1h2m3 0h1m3 0h3m1 0h3m1 0h1m1 0h1m4 0h2m1 0h1m2 0h2m-32 1h5m1 0h1m1 0h6m2 0h1m2 0h2m1 0h1m1 0h1m1 0h1m2 0h2m-29 1h2m1 0h1m4 0h1m4 0h1m4 0h2m3 0h2m1 0h3m-31 1h1m3 0h1m1 0h1m1 0h2m1 0h4m1 0h2m2 0h2m3 0h2m1 0h3m-31 1h1m2 0h3m1 0h4m1 0h2m2 0h1m1 0h1m1 0h1m1 0h5m1 0h2m1 0h2m-31 1h1m3 0h4m1 0h1m3 0h2m4 0h2m1 0h1m2 0h2m1 0h2m-32 1h3m1 0h2m2 0h1m1 0h4m4 0h1m3 0h3m3 0h1m2 0h2m-31 1h2m2 0h6m1 0h1m5 0h1m1 0h1m7 0h4m-33 1h2m3 0h1m1 0h1m3 0h1m2 0h1m1 0h5m1 0h5m2 0h1m2 0h1m-31 1h1m3 0h2m3 0h2m1 0h1m3 0h1m2 0h5m1 0h1m3 0h2m-32 1h2m1 0h2m1 0h3m2 0h3m3 0h1m1 0h1m1 0h1m4 0h3m-30 1h1m2 0h2m1 0h2m1 0h6m3 0h1m1 0h1m1 0h1m1 0h5m2 0h2m-25 1h1m3 0h1m1 0h1m1 0h4m3 0h2m3 0h2m-30 1h7m2 0h1m1 0h4m1 0h1m1 0h7m1 0h1m1 0h1m-29 1h1m5 0h1m1 0h1m2 0h2m1 0h2m1 0h2m2 0h1m1 0h2m3 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m3 0h3m1 0h1m2 0h3m1 0h1m1 0h6m1 0h2m-32 1h1m1 0h3m1 0h1m1 0h1m2 0h2m1 0h2m1 0h2m1 0h1m1 0h1m4 0h1m3 0h2m-33 1h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h3m2 0h1m1 0h1m1 0h1m1 0h4m1 0h2m-31 1h1m5 0h1m1 0h1m2 0h2m3 0h1m5 0h7m3 0h1m-33 1h7m2 0h1m1 0h1m2 0h4m3 0h1m1 0h1m4 0h1m1 0h1"/></svg></div><div class="qrt"><h2>สแกนดูต่อบนมือถือ</h2><p>ดูระดับน้ำอ่างเก็บน้ำ ผังน้ำ พยากรณ์ฝนและน้ำท่วม แบบละเอียดได้ที่เว็บน้ำตำบลแม่นาเรือ</p><div class="u">mpdox30.github.io/maenarua-water-web</div></div></div></section>
+  </main>
+  <footer><div class="dots" id="dots"></div><div class="prog"><i id="prog"></i></div><div id="upd" style="white-space:nowrap">กำลังโหลดข้อมูล…</div><div style="white-space:nowrap">ไม่ใช่ประกาศทางการ</div></footer>
+</div>
+<div id="err" style="display:none;position:fixed;inset:0;z-index:50;background:rgba(7,18,25,.96);align-items:center;justify-content:center;text-align:center;padding:5vw;font-size:calc(var(--u)*2.4);line-height:1.6"><div><b style="font-size:1.4em;color:#fbbf24">โหลดข้อมูลไม่สำเร็จ</b><br>ถ้าเปิดจากไฟล์ในเครื่อง (file:///…) เบราว์เซอร์จะบล็อกการอ่านข้อมูล<br>ให้รันเซิร์ฟเวอร์ในโฟลเดอร์ 03_website แล้วเปิด http://localhost:8000/tv.html<br><code style="color:#7dd3fc;font-size:.8em">python -m http.server 8000</code></div></div>
+<div class="ctl"><button id="bPrev">◀</button><button id="bPlay">⏸ หยุดหมุน</button><button id="bNext">▶</button><button id="bFs">⛶ เต็มจอ</button></div>
+
+<script src="assets/vendor/cytoscape/cytoscape.min.js"></script>
+<script>
+(function(){
+'use strict';
+var Q=new URLSearchParams(location.search), DWELL=(+Q.get('sec')||20)*1000, REFRESH=5*60e3, RELOAD=3600e3;
+var $=function(s){return document.querySelector(s)}, $$=function(s){return [].slice.call(document.querySelectorAll(s))};
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+var MO=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'], DN=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+function fd(iso,short){var m=/(\d{4})-(\d\d)-(\d\d)/.exec(iso||'');if(!m)return '—';return +m[3]+' '+MO[m[2]-1]+(short?'':' '+(+m[1]+543))}
+function fmt(n){return n==null||isNaN(n)?'—':Math.round(n).toLocaleString('th-TH')}
+var ST={critical:{l:'วิกฤต',c:'#ef4444'},warning:{l:'เฝ้าระวัง',c:'#f97316'},medium:{l:'ปานกลาง',c:'#eab308'},safe:{l:'ปลอดภัย',c:'#22c55e'},unknown:{l:'ไม่มีข้อมูล',c:'#94a3b8'}};
+function stat(p){return p==null?'unknown':p<20?'critical':p<40?'warning':p<60?'medium':'safe'}
+function J(p){return fetch(p+(p.indexOf('?')<0?'?':'&')+'t='+Date.now(),{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.json()}).catch(function(){return null})}
+
+/* ---------- นาฬิกา ---------- */
+function tick(){var d=new Date();$('#clk').textContent=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);$('#dt').textContent='วัน'+DN[d.getDay()]+'ที่ '+d.getDate()+' '+MO[d.getMonth()]+' '+(d.getFullYear()+543)}
+tick();setInterval(tick,10000);
+
+/* ---------- ข้อมูล ---------- */
+var D={mon:null,fl:null,net:null,lat:null,in6:null}, FB={'MNR-01':'RES002','MNR-02':'RES004','MNR-03':'RES005','MNR-04':'RES006'};
+function load(){
+  return Promise.all([J('assets/data/monitoring.json'),J('assets/data/flood_latest.json'),J('assets/data/water_network.json'),J('assets/data/latest.json'),J('assets/data/inflow_6h_display.json')]).then(function(r){
+    if(r[0])D.mon=r[0];if(r[1])D.fl=r[1];if(r[2])D.net=r[2];if(r[3])D.lat=r[3];if(r[4])D.in6=r[4];
+    renderAll();
+    var bad=!D.mon&&!D.net;$('#err').style.display=bad?'flex':'none';
+    var t=D.mon&&D.mon.meta&&D.mon.meta.updated;$('#upd').textContent='ข้อมูลโทรมาตรล่าสุด '+(t?fd(t.slice(0,10),true)+' '+t.slice(11,16)+' น.':'—');
+  });
+}
+function renderAll(){renderRes();s3();s3k();s4();s5();cyLabels()}
+
+/* ---------- ฉาก 1: สถานะอ่าง ---------- */
+function stations(){return D.mon?D.mon.stations||[]:[]}
+function srcsAll(){
+  if(!D.net)return [];
+  return D.net.sources.filter(function(s){return s.role==='storage'&&s.ref}).map(function(s){
+    var st=FB[s.ref]&&stations().filter(function(x){return x.station_code===FB[s.ref]})[0], o={ref:s.ref,name:s.name,pond:s.type==='pond',max:s.maxM3,pct:s.pct,m3:s.m3,live:false,t:s.currentDate,moo:s.moo,st:null};
+    if(st&&st.capacity_pct!=null){o.pct=Math.round(st.capacity_pct*10)/10;o.m3=st.storage_m3;o.max=st.storage_max_m3||o.max;o.live=true;o.t=st.measure_datetime;o.st=st}
+    return o})}
+function srcs(){return srcsAll().filter(function(s){return s.live}).sort(function(a,b){return a.pct-b.pct})}   /* เฉพาะอ่างที่มีสถานีโทรมาตร */
+function spark(st,c){var H=(st&&st.history)||[];if(H.length<3)return '';var last=new Date(H[H.length-1].t).getTime(),A=H.filter(function(h){return new Date(h.t).getTime()>=last-7*864e5});if(A.length<3)A=H;
+  var lv=A.map(function(h){return h.level}),lo=Math.min.apply(null,lv),hi=Math.max.apply(null,lv),sp=Math.max(.02,hi-lo),W=300,Hh=60,pts=A.map(function(h,i){return (i?'L':'M')+(W*i/(A.length-1)).toFixed(1)+' '+(Hh-4-(Hh-8)*(h.level-lo)/sp).toFixed(1)}).join('');
+  return '<svg class="spk" viewBox="0 0 '+W+' '+Hh+'" preserveAspectRatio="none"><path d="'+pts+'" fill="none" stroke="'+c+'" stroke-width="3" vector-effect="non-scaling-stroke"/></svg>'}
+/* ---------- ฉากอ่างเก็บน้ำรายอ่าง: ภาพตัดอ่าง + มาตรวัด + กราฟย้อนหลัง (พอร์ตจาก ukm.js) ---------- */
+var resBuilt={},MON3=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+function clampN(v,a,b){return Math.max(a,Math.min(b,v))}
+function phaseNow(){var d=new Date(),h=d.getHours()+d.getMinutes()/60,day=h>=6.5&&h<17.5,dusk=(h>=5.5&&h<6.5)||(h>=17.5&&h<18.5),sun=h>=5.5&&h<18.5,fr=sun?(h-5.5)/13:((h<5.5?h+24:h)-18.5)/11;
+  return {cls:day?'day':dusk?'dusk':'night',x:110+clampN(fr,0,1)*680,y:345-Math.sin(Math.PI*clampN(fr,0,1))*295}}
+function waveP(y,amp,len,w,ph){var d='M'+(-200+(ph||0))+','+y;for(var x=-200+(ph||0);x<w+420;x+=len)d+=' q'+len/4+','+(-amp)+' '+len/2+',0 t'+len/2+',0';return d+' L'+(w+440)+','+(y+700)+' L-220,'+(y+700)+' Z'}
+function delta6(st){var h=st.history||[];if(!h.length)return 0;var last=h[h.length-1],t=new Date(last.t).getTime()-6*3600e3,ref=h[0];for(var i=h.length-1;i>=0;i--){if(new Date(h[i].t).getTime()<=t){ref=h[i];break}}return last.level-ref.level}
+function rain24(st){var r=(st.rainfall_hourly||[]).slice(-24);return r.reduce(function(a,x){return a+(x.rain_mm||0)},0)}
+function sgn(v,d){return (v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(d==null?3:d)}
+function smooth(pts){if(pts.length<2)return '';var d='M'+pts[0][0].toFixed(1)+','+pts[0][1].toFixed(1);for(var i=0;i<pts.length-1;i++){var p0=pts[i-1]||pts[i],p1=pts[i],p2=pts[i+1],p3=pts[i+2]||p2;
+  d+=' C'+(p1[0]+(p2[0]-p0[0])/6).toFixed(1)+','+(p1[1]+(p2[1]-p0[1])/6).toFixed(1)+' '+(p2[0]-(p3[0]-p1[0])/6).toFixed(1)+','+(p2[1]-(p3[1]-p1[1])/6).toFixed(1)+' '+p2[0].toFixed(1)+','+p2[1].toFixed(1)}return d}
+function resScene(st){
+  var id=st.station_code,crest=st.spillway_msl,hs=(st.history||[]).map(function(h){return h.level}).concat([st.water_level]),E0=Math.min(crest-2.045,Math.min.apply(null,hs)-.3),E1=Math.max(crest+1.455,Math.max.apply(null,hs)+.4),mxL=Math.max.apply(null,hs),
+    Y0=380,Y1=80,yOf=function(e){return Y0-(e-E0)/(E1-E0)*(Y0-Y1)},Yb=yOf(crest-.045),yc=yOf(crest),yw=yOf(crest-.10),ym=yOf(mxL),yl=yOf(st.water_level),over=st.water_level-crest,
+    seed=7,pr=function(){return (seed=(seed*16807)%2147483647)/2147483647};
+  var stars='';for(var i=0;i<18;i++)stars+='<circle class="star" cx="'+(pr()*880+10).toFixed(0)+'" cy="'+(pr()*150+8).toFixed(0)+'" r="'+(pr()*1.4+.6).toFixed(1)+'" style="animation-delay:'+(-pr()*3).toFixed(1)+'s"/>';
+  var drops='';for(i=0;i<34;i++){var x=(pr()*900).toFixed(0);drops+='<line class="drop" x1="'+x+'" y1="0" x2="'+(x-5)+'" y2="15" style="animation-duration:'+(.7+pr()*.5).toFixed(2)+'s;animation-delay:'+(-pr()*1.2).toFixed(2)+'s"/>'}
+  var cloud='<ellipse cx="0" cy="0" rx="46" ry="15"/><ellipse cx="-30" cy="6" rx="28" ry="11"/><ellipse cx="32" cy="7" rx="30" ry="11"/><ellipse cx="6" cy="-12" rx="26" ry="14"/>';
+  var ticks='';for(var e=Math.ceil(E0*2)/2;e<=E1+.001;e+=.5){var y=yOf(e);ticks+='<line x1="352" x2="'+(e%1===0?368:362)+'" y1="'+y+'" y2="'+y+'" style="stroke:var(--faint)" stroke-width="1.5"/><text class="tick-lbl" x="346" y="'+(y+4)+'" text-anchor="end">'+e.toFixed(1)+'</text>'}
+  var ph=phaseNow(),raining=(st.rainfall_hourly||[]).slice(-2).some(function(r){return r.rain_mm>0}),sp=over>.003,t=clampN(over*90,3,24);
+  var svg='<svg viewBox="0 0 900 420" preserveAspectRatio="xMidYMid slice"><defs>'+
+  '<linearGradient id="gSky'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sky-1)"/><stop offset="1" style="stop-color:var(--sky-2)"/></linearGradient>'+
+  '<linearGradient id="gW'+id+'" gradientUnits="userSpaceOnUse" x1="0" y1="'+Yb+'" x2="0" y2="'+(Yb+230)+'"><stop offset="0" style="stop-color:var(--water-1)"/><stop offset="1" style="stop-color:var(--water-2)"/></linearGradient>'+
+  '<radialGradient id="gO'+id+'"><stop offset="0" style="stop-color:var(--orb-glow)"/><stop offset="1" style="stop-color:var(--orb-glow);stop-opacity:0"/></radialGradient><clipPath id="bc'+id+'"><rect x="0" y="0" width="700" height="420"/></clipPath></defs>'+
+  '<rect width="900" height="420" fill="url(#gSky'+id+')"/>'+stars+
+  '<g style="transform:translate('+ph.x.toFixed(0)+'px,'+ph.y.toFixed(0)+'px)"><circle class="sun-glow" r="74" fill="url(#gO'+id+')"/><circle r="22" style="fill:var(--orb)"/></g>'+
+  '<path d="M0,230 C80,170 160,190 240,215 C320,240 400,160 520,180 C640,200 740,150 900,210 L900,420 L0,420Z" style="fill:var(--hill-far)"/>'+
+  '<path d="M0,272 C100,232 200,262 300,287 C420,312 520,250 640,262 C740,272 820,242 900,264 L900,420 L0,420Z" style="fill:var(--hill-near)"/>'+
+  '<g transform="translate(0,66)"><g class="cloud" style="fill:var(--core);opacity:.6">'+cloud+'</g></g><g transform="translate(0,128)"><g class="cloud c2" style="fill:var(--core);opacity:.45">'+cloud+'</g></g>'+
+  '<g clip-path="url(#bc'+id+')"><g class="water-g" style="transform:translateY('+(yl-Yb)+'px)">'+
+    '<path class="wave-b" d="'+waveP(Yb-3,9,200,700,40)+'" style="fill:var(--water-1);opacity:.7"/>'+
+    '<g transform="translate(212,'+Yb+')"><g class="boat"><path d="M-27,-3 L27,-3 L18,10 L-18,10Z" style="fill:var(--accent-2)"/><line x1="0" y1="-3" x2="0" y2="-44" style="stroke:var(--strong)" stroke-width="2"/><path d="M3,-42 L3,-9 L26,-9Z" style="fill:var(--core);stroke:var(--strong)" stroke-width="1.2"/><path d="M-3,-34 L-3,-9 L-17,-9Z" style="fill:var(--accent);opacity:.85"/></g></g>'+
+    '<path class="wave-a" d="'+waveP(Yb,6,100,700,0)+'" fill="url(#gW'+id+')"/></g></g>'+
+  '<path d="M0,420 L0,182 C60,178 112,238 190,300 C250,346 340,382 440,394 L440,420Z" style="fill:var(--land)"/><path d="M0,420 L0,246 C70,252 130,306 200,340 C270,372 350,396 440,404 L440,420Z" style="fill:var(--land-2);opacity:.7"/>'+
+  '<path d="M430,398 L520,120 L580,120 L580,'+yc+' L700,'+yc+' L790,330 L900,330 L900,420 L430,420Z" style="fill:var(--land-2)"/><path d="M430,398 L520,120 L580,120 L580,'+yc+'" fill="none" style="stroke:var(--strong);opacity:.18" stroke-width="2"/>'+
+  '<rect x="520" y="116" width="60" height="7" rx="3" style="fill:var(--core);stroke:var(--line-2)"/><rect x="580" y="'+(yc-1)+'" width="120" height="7" rx="3" style="fill:var(--core);stroke:var(--line-2)"/>'+
+  '<path d="M700,'+(yc+3)+' L790,333 L800,333 L710,'+(yc+3)+'Z" style="fill:var(--core);opacity:.85"/>'+
+  '<g><path d="'+(sp?'M700,'+(yc-t)+' L790,'+(330-t)+' L790,330 L700,'+yc+'Z':'')+'" style="fill:var(--water-1);opacity:.9"/><path class="foam" d="M706,'+(yc-3)+' L792,326"/><path class="foam" style="animation-delay:-.4s" d="M712,'+(yc-9)+' L796,321"/></g>'+
+  '<rect x="790" y="330" width="110" height="15" rx="6" style="fill:var(--water-1);opacity:.75"/>'+
+  '<text class="lbl s" x="522" y="108" text-anchor="middle">สันอ่าง (ภาพประกอบ)</text>'+
+  '<line x1="0" x2="700" y1="'+yc+'" y2="'+yc+'" style="stroke:var(--crit)" stroke-width="2" stroke-dasharray="9 6"/><text class="lbl s" x="14" y="'+(yc-6)+'">สันสปิลเวย์ '+crest.toFixed(3)+' ม.</text>'+
+  '<line x1="0" x2="700" y1="'+yw+'" y2="'+yw+'" style="stroke:var(--warn)" stroke-width="1.8" stroke-dasharray="2 6" stroke-linecap="round"/><text class="lbl s" x="14" y="'+(yw+17)+'">เฝ้าระวัง '+(crest-.1).toFixed(3)+' ม.</text>'+
+  '<line x1="0" x2="330" y1="'+ym+'" y2="'+ym+'" style="stroke:var(--faint)" stroke-width="1.2" stroke-dasharray="1 5" stroke-linecap="round"/><text class="lbl s" x="14" y="'+Math.min(ym-6,yc-28)+'" style="fill:var(--muted)">สูงสุดในช่วงข้อมูลที่มี '+mxL.toFixed(3)+' ม.</text>'+
+  '<line x1="360" x2="360" y1="'+(Y1-6)+'" y2="'+(Y0+6)+'" style="stroke:var(--faint)" stroke-width="3" stroke-linecap="round"/>'+ticks+
+  '<g style="transform:translateY('+yl+'px)"><path d="M360,0 l12,-12 h72 a6,6 0 0 1 6,6 v12 a6,6 0 0 1 -6,6 h-72z" style="fill:var(--accent)"/><text x="384" y="5" style="fill:#fff;font-weight:700;font-size:16px;font-family:inherit">'+st.water_level.toFixed(3)+'</text></g>'+
+  '<g class="'+(raining?'raining':'')+'" style="pointer-events:none">'+drops+'</g></svg>';
+  return {svg:svg,cls:ph.cls+(sp?' spilling':'')+(raining?' raining':'')}
+}
+function resChart(st){
+  var H=st.history||[];if(H.length<3)return '';var crest=st.spillway_msl,W=1100,HT=300,xL=70,xR=1080,yT=30,yB=255,vals=H.map(function(h){return h.level}),lo0=Math.min(Math.min.apply(null,vals),crest),hi0=Math.max(Math.max.apply(null,vals),crest),pad=(hi0-lo0)*.18||.05,lo=lo0-pad,hi=hi0+pad,
+    yv=function(v){return yB-(v-lo)/(hi-lo)*(yB-yT)},t0=new Date(H[0].t).getTime(),t1=new Date(H[H.length-1].t).getTime(),xt=function(t){return xL+(t-t0)/(t1-t0)*(xR-xL)},
+    pts=H.map(function(h){return [xt(new Date(h.t).getTime()),yv(h.level)]}),yc=yv(crest),line=smooth(pts),area=line+' L'+pts[pts.length-1][0].toFixed(1)+','+yc.toFixed(1)+' L'+pts[0][0].toFixed(1)+','+yc.toFixed(1)+'Z',gr='',ax='';
+  for(var i=0;i<=4;i++){var v=lo+(hi-lo)*i/4,y=yv(v);gr+='<line x1="'+xL+'" x2="'+xR+'" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="#1c3646"/>';ax+='<text x="'+(xL-10)+'" y="'+(y+5).toFixed(1)+'" text-anchor="end" font-size="16" fill="#8fa9b8">'+v.toFixed(2)+'</text>'}
+  for(var t=new Date(t0);t.getTime()<=t1;t=new Date(t.getTime()+3600e3)){if(t.getHours()===0){var x=xt(t.getTime());gr+='<line x1="'+x.toFixed(1)+'" x2="'+x.toFixed(1)+'" y1="'+yT+'" y2="'+yB+'" stroke="#1c3646" stroke-dasharray="2 5"/>';ax+='<text x="'+x.toFixed(1)+'" y="'+(yB+24)+'" text-anchor="middle" font-size="16" fill="#8fa9b8">'+t.getDate()+' '+MON3[t.getMonth()]+'</text>'}}
+  var last=pts[pts.length-1],ov=st.water_level-crest,col=ov>.003?'#ef4444':ov>-.10?'#e0a94f':'#2a9d7f',imax=0;vals.forEach(function(v,i){if(v>vals[imax])imax=i});var nearMax=Math.abs(pts[imax][0]-last[0])<190;
+  return '<svg viewBox="0 0 '+W+' '+HT+'" preserveAspectRatio="xMidYMid meet"><defs><clipPath id="ab'+st.station_code+'"><rect x="0" y="0" width="'+W+'" height="'+yc.toFixed(1)+'"/></clipPath><clipPath id="be'+st.station_code+'"><rect x="0" y="'+yc.toFixed(1)+'" width="'+W+'" height="'+HT+'"/></clipPath></defs>'+gr+ax+
+  '<g clip-path="url(#ab'+st.station_code+')"><path d="'+area+'" fill="#d6453d" opacity=".3"/></g><g clip-path="url(#be'+st.station_code+')"><path d="'+area+'" fill="#1f6f9a" opacity=".28"/></g>'+
+  '<path d="'+line+'" fill="none" stroke="#5fb4e6" stroke-width="3.5" stroke-dasharray="1 7" stroke-linecap="round"/>'+
+  '<path d="M'+xL+','+yc.toFixed(1)+' L'+xR+','+yc.toFixed(1)+'" fill="none" stroke="#c9945f" stroke-width="3.5" stroke-linecap="round"/>'+
+  '<text x="'+(xL+10)+'" y="'+(yc+22).toFixed(1)+'" text-anchor="start" font-size="17" font-weight="700" fill="#c9945f" paint-order="stroke" stroke="#0d202c" stroke-width="5">สันสปิลเวย์ '+crest.toFixed(3)+' ม.</text>'+
+  '<circle class="sonar" cx="'+last[0]+'" cy="'+last[1].toFixed(1)+'" r="9" fill="none" stroke="'+col+'" stroke-width="2"/><circle cx="'+last[0]+'" cy="'+last[1].toFixed(1)+'" r="8" fill="'+col+'" stroke="#0d202c" stroke-width="3"/>'+
+  '<text x="'+(last[0]-16).toFixed(1)+'" y="'+(nearMax?Math.min(yB-6,last[1]+32):last[1]-16).toFixed(1)+'" text-anchor="end" font-size="19" font-weight="700" fill="'+col+'" paint-order="stroke" stroke="#0d202c" stroke-width="5">'+st.water_level.toFixed(3)+' ('+sgn(ov,2)+')</text>'+
+  '<circle cx="'+pts[imax][0].toFixed(1)+'" cy="'+pts[imax][1].toFixed(1)+'" r="6" fill="#0d202c" stroke="#5fb4e6" stroke-width="3"/>'+
+  '<text x="'+clampN(pts[imax][0],xL+50,xR-100).toFixed(1)+'" y="'+(pts[imax][1]-14).toFixed(1)+'" text-anchor="middle" font-size="16" font-weight="600" fill="#e8f1f6" paint-order="stroke" stroke="#0d202c" stroke-width="5">สูงสุด '+vals[imax].toFixed(3)+'</text></svg>'}
+function tile(l,v,u,p){return '<div class="tile"><div class="tl">'+l+'</div><div class="tv">'+v+'<small>'+u+'</small></div><div class="tbar"><i style="width:'+clampN(p*100,2,100).toFixed(0)+'%"></i></div></div>'}
+function nv(x,d){return x!=null&&!isNaN(x)?(+x).toFixed(d):'—'}
+function renderRes(){
+  var st=stations().filter(function(x){return x.capacity_pct!=null&&x.spillway_msl!=null&&x.water_level!=null}),stage=$('#stage'),first=stage.firstElementChild;
+  st.forEach(function(s){
+    var sec=resBuilt[s.station_code];if(!sec){sec=document.createElement('section');sec.className='scene rs';sec.setAttribute('data-n',s.name_th.replace('อ่างเก็บน้ำ','อ่าง'));sec.setAttribute('data-res',s.station_code);sec.setAttribute('data-sec','18');stage.insertBefore(sec,first);resBuilt[s.station_code]=sec}
+    var sc=resScene(s),over=s.water_level-s.spillway_msl,k=over>.003?'crit':over>-.10?'warn':'ok',col={crit:'#ef4444',warn:'#e0a94f',ok:'#22c55e'}[k],d6=delta6(s),pct=s.capacity_pct,mx=Math.max(110,Math.ceil(pct/10)*10+5),
+      dl=over>.003?'สูงกว่าสันสปิลเวย์ '+over.toFixed(3)+' ม.':over>-.10?'ต่ำกว่าสันสปิลเวย์ '+(-over).toFixed(3)+' ม. · ใกล้ล้น':'ต่ำกว่าสันสปิลเวย์ '+(-over).toFixed(3)+' ม.',
+      tr=(d6>.004?'ระดับขึ้น':d6<-.004?'ระดับลด':'ทรงตัว')+' '+sgn(d6)+' ม.',t=(s.measure_datetime||'').slice(11,16);
+    sec.innerHTML='<div class="rs-head"><h1>'+esc(s.name_th)+'<small>'+esc(s.station_code)+' · <span style="color:#4ade80">● สด '+esc(t)+' น.</span></small></h1></div>'+
+    '<div class="rs-grid"><div class="rs-left"><div class="rs-scene '+sc.cls+'">'+sc.svg+'</div><div class="rs-chart"><h3>ระดับน้ำย้อนหลังเทียบสันสปิลเวย์ · '+esc(s.name_th.replace('อ่างเก็บน้ำ',''))+'</h3>'+resChart(s)+'</div></div>'+
+    '<div class="rs-right"><div class="rs-read"><div class="t">ระดับน้ำปัจจุบัน</div><div class="lv">'+s.water_level.toFixed(3)+'<small>ม.รทก.</small></div><div class="dl" style="color:'+col+'">'+dl+'</div><div class="t">6 ชั่วโมงที่ผ่านมา '+tr+'</div>'+
+      '<div class="pc2" style="color:'+col+'">'+pct.toFixed(1)+'<small>% ของความจุ</small></div><div class="cap"><i style="width:'+(Math.min(pct,100)/mx*100).toFixed(1)+'%;background:'+(pct>100?'#22c55e':col)+'"></i>'+(pct>100?'<i style="left:'+(100/mx*100).toFixed(1)+'%;width:'+((pct-100)/mx*100).toFixed(1)+'%;background:#ef4444;border-radius:0 99px 99px 0"></i>':'')+'<b style="left:'+(100/mx*100).toFixed(1)+'%"></b></div>'+
+      '<div class="t">ปริมาตร <b style="color:#e8f1f6">'+fmt(s.storage_m3)+'</b> / '+fmt(s.storage_max_m3)+' ลบ.ม. · ฝน 24 ชม. <b style="color:#e8f1f6">'+rain24(s).toFixed(1)+'</b> มม.</div></div>'+
+      '<div class="tiles">'+tile('ฝน 1 ชม.',nv(s.rainfall_1h,1),'มม.',(s.rainfall_1h||0)/20)+tile('อุณหภูมิ',nv(s.temperature,1),'°C',((s.temperature||15)-15)/30)+tile('ความชื้น',nv(s.humidity,1),'%',(s.humidity||0)/100)+tile('ความกดอากาศ',nv(s.pressure,1),'hPa',((s.pressure||940)-940)/80)+tile('รังสีอาทิตย์',nv(s.solar,1),'W/m²',(s.solar||0)/1000)+tile('ห่างจากสันสปิลเวย์',(over>=0?'+':'')+nv(s.distance_to_spillway_m!=null?s.distance_to_spillway_m:over,2),'ม.',(over+2)/3)+'</div></div></div>';
+  });
+}
+
+/* ---------- ฉาก 2: ผังน้ำ ---------- */
+var cy=null,flowE=null,flowOff=0,fitT=null,cyOn=false;
+var li=function(sh,l){return '<div><span class="li">'+sh+'</span><span>'+l+'</span></div>'};
+$('#dleg').innerHTML=li('<i style="width:20px;height:3px;background:#4da6ff;display:block"></i>','แม่น้ำ/คลอง')+li('<i style="width:12px;height:12px;background:#000;transform:rotate(45deg);display:block"></i>','ปตร.')+
+  li('<i style="width:15px;height:14px;background:#000;clip-path:polygon(50% 0,100% 100%,0 100%);display:block"></i>','อ่างเก็บน้ำ')+li('<i style="width:18px;height:6px;background:#000;display:block"></i>','ฝาย')+
+  li('<i style="width:13px;height:13px;border-radius:50%;border:3px solid #000;background:#fff;display:block"></i>','โทรมาตร')+li('<i style="width:13px;height:13px;border-radius:50%;border:2px solid #000;background:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;font-style:normal">P</i>','ระบบสูบน้ำ')+
+  li('<span style="font-size:15px">☁</span>','รับน้ำจากฝนเท่านั้น')+li('<i style="width:18px;height:12px;background:#bfe0ff;border:2px dashed #0b4a99;border-radius:3px;display:block"></i>','กว๊านพะเยา');
+$('#dleg2').innerHTML=['critical','warning','medium','safe','unknown'].map(function(k){return '<span><i style="background:'+ST[k].c+'"></i>'+ST[k].l+'</span>'}).join('');
+function cyStyle(){var F="'IBM Plex Sans Thai','Sarabun',sans-serif",FS=17,TB={'text-background-color':'#fff','text-background-opacity':.8,'text-background-padding':'2px','text-background-shape':'roundrectangle'};
+  return [
+  {selector:'node',style:Object.assign({'background-color':'#adb5bd',width:10,height:10,label:'data(label)','font-family':F,'font-size':FS+'px','text-valign':'top','text-margin-y':-6,'text-wrap':'wrap','text-max-width':'170px','text-rotation':function(e){return (e.data('rotation')||0)+'deg'},color:'#0f172a'},TB)},
+  {selector:'node[sourceRef != ""]',style:{'font-size':'34px','font-weight':'bold','text-max-width':'320px','z-index':50,'text-background-opacity':.9}},
+  {selector:'node[type = "generic_node"]',style:{'background-color':'#6c757d',width:12,height:12}},
+  {selector:'node[type = "text_box"]',style:{shape:'rectangle','background-opacity':0,width:1,height:1,color:'#d9534f','font-weight':'bold','text-valign':'center','text-halign':'center','text-background-opacity':0}},
+  {selector:'edge',style:Object.assign({width:6,'line-color':'#58a8f5','target-arrow-color':'#58a8f5','target-arrow-shape':'triangle','curve-style':'taxi','taxi-direction':'downward',label:'data(label)','font-size':(FS-3)+'px','text-rotation':'0deg','text-margin-y':-10,'arrow-scale':1.4},TB)},
+  {selector:'edge[type = "main"]',style:{width:12,'line-color':'#1565c0','target-arrow-color':'#0b4a99','underlay-color':'#0a3a78','underlay-opacity':.5,'underlay-padding':5}},
+  {selector:'edge[?engineStraight]',style:{'curve-style':'straight'}},
+  {selector:'edge[?engineBend]',style:{'curve-style':'segments','segment-distances':'data(segDist)','segment-weights':'data(segWeight)'}},
+  {selector:'node[type = "gate"]',style:{shape:'diamond','background-color':'black',width:28,height:28,'text-margin-y':-16}},
+  {selector:'node[type = "weir"]',style:{shape:'rectangle','background-color':'black',width:38,height:14,'text-margin-y':-10}},
+  {selector:'node[type = "weir"][dir = "v"]',style:{width:14,height:38}},
+  {selector:'node[type = "reservoir"]',style:{shape:'triangle','background-color':'black',width:36,height:36,'text-margin-y':-18}},
+  {selector:'node[type = "gate_plan"]',style:{shape:'diamond','background-color':'white','border-width':2,'border-color':'black',width:28,height:28}},
+  {selector:'node[type = "weir_plan"]',style:{shape:'rectangle','background-color':'white','border-width':2,'border-color':'black',width:38,height:14}},
+  {selector:'node[type = "telemetry"]',style:{shape:'ellipse','background-color':'white','border-width':4,'border-color':'black',width:22,height:22}},
+  {selector:'node[type = "pump"]',style:{shape:'ellipse','background-color':'white','border-width':2,'border-color':'black',width:26,height:26,label:'P','text-valign':'center','text-halign':'center','font-weight':'bold'}},
+  {selector:'node[type = "waterbody"]',style:{shape:'round-rectangle','background-color':'#99ccff','border-width':1,'border-color':'#0056b3',width:84,height:42,'text-valign':'center','text-margin-y':0,color:'#003366','font-weight':'bold'}},
+  {selector:'node[?hasStatus]',style:{'background-color':'data(statusColor)','border-color':'data(statusColor)'}},
+  {selector:'node.halo-critical',style:{'underlay-color':'#ef4444','underlay-opacity':.3,'underlay-padding':12}},
+  {selector:'node.halo-warning',style:{'underlay-color':'#f97316','underlay-opacity':.28,'underlay-padding':12}},
+  {selector:'node[type = "kwan_band"]',style:{shape:'round-rectangle',width:'data(w)',height:'data(h)','background-color':'#bfe0ff','background-opacity':.7,'border-width':2,'border-style':'dashed','border-color':'#0b4a99','border-opacity':.8,label:'data(label)',color:'#0a3a78','font-size':'40px','font-weight':'bold','text-valign':'center','text-halign':'center','text-margin-y':0,'text-rotation':'-90deg','text-wrap':'wrap','text-max-width':'700px','text-background-opacity':0,events:'no'}},
+  {selector:'edge.flowline',style:{width:9,'line-color':'#e3f4ff','line-style':'dashed','line-dash-pattern':[9,15],'line-cap':'round','target-arrow-shape':'none',label:'',events:'no',opacity:.95,'z-index':20}}];}
+function cyInit(){
+  if(cy||!D.net||!window.cytoscape)return;
+  var els=D.net.nodes.map(function(r){return{data:{id:r.node_key,label:r.label||'',type:r.node_type||undefined,rotation:r.rotation||0,dir:r.dir||'h',sourceRef:r.source_ref||''},position:{x:r.pos_x,y:r.pos_y}}})
+    .concat((D.net.edges||[]).map(function(r){var d={id:r.edge_key,source:r.source_node_key,target:r.target_node_key,label:r.label||'',type:r.edge_type||undefined};if(r.engine_straight)d.engineStraight=true;if(r.engine_bend){d.engineBend=true;d.segDist=r.seg_dist;d.segWeight=r.seg_weight}return{data:d}}));
+  (function(){var xs=D.net.nodes.map(function(r){return r.pos_x}),ys=D.net.nodes.map(function(r){return r.pos_y});if(!xs.length)return;
+    var x1=Math.max.apply(null,xs),y1=Math.min.apply(null,ys),y2=Math.max.apply(null,ys),w=Math.max(90,(x1-Math.min.apply(null,xs))*.06),h=y2-y1+80;
+    els.unshift({data:{id:'__kwan',label:'กว๊านพะเยา\n(ปลายทางของน้ำทุกสาย)',type:'kwan_band',w:w,h:h,rotation:0},position:{x:x1+40+w/2,y:(y1+y2)/2},selectable:false,grabbable:false})})();
+  cy=cytoscape({container:$('#cy'),elements:els,layout:{name:'preset'},style:cyStyle(),userZoomingEnabled:false,userPanningEnabled:false,boxSelectionEnabled:false,autoungrabify:true});
+  var comps=cy.elements().components(),main=cy.elements();
+  if(comps.length>1){var big=comps.reduce(function(a,b){return a.length>=b.length?a:b});main=big.union(cy.elements().filter(function(e){return e.isEdge()||e.data('sourceRef')||(e.data('label')&&String(e.data('label')).trim())}))}
+  fitT=main;
+  var arr=[];cy.edges('[type = "main"]').forEach(function(e){var d=e.data(),nd={id:'fl-'+d.id,source:d.source,target:d.target,label:'',type:'flow'};['engineStraight','engineBend','segDist','segWeight'].forEach(function(k){if(d[k]!==undefined)nd[k]=d[k]});arr.push({group:'edges',data:nd,classes:'flowline'})});
+  flowE=arr.length?cy.add(arr):null;
+  cyLabels();
+}
+function cyLabels(){
+  if(!cy)return;var by={};srcsAll().forEach(function(s){by[s.ref]=s});
+  cy.nodes().forEach(function(n){var ref=n.data('sourceRef'),s=ref&&by[ref];if(!s)return;if(n.data('origLabel')===undefined)n.data('origLabel',n.data('label')||ref);
+    var k=stat(s.pct);n.data({hasStatus:true,statusColor:ST[k].c});n.data('label',n.data('origLabel')+'\n'+(s.pct!=null?Math.round(s.pct)+'%':'—'));
+    n.removeClass('halo-critical halo-warning');if(k==='critical')n.addClass('halo-critical');else if(k==='warning')n.addClass('halo-warning')})}
+function cyFit(){if(!cy)return;cy.resize();cy.fit(fitT||undefined,14)}
+var rafId=0,lastT=0;
+function flowLoop(ts){rafId=requestAnimationFrame(flowLoop);if(!cyOn||!cy||!flowE||document.hidden||ts-lastT<40)return;var dt=Math.min(.1,(ts-lastT)/1000);lastT=ts;flowOff-=45*dt;flowE.style('line-dash-offset',flowOff)}
+rafId=requestAnimationFrame(flowLoop);
+
+/* ---------- ฉาก 3: ฝนย้อนหลังรายวัน ---------- */
+function s3(){
+  var st=stations();if(!st.length)return;var byDay={},perSt={},lastT='',days=[];
+  st.forEach(function(x){var d={};(x.rainfall_hourly||[]).forEach(function(h){var k=h.t.slice(0,10);d[k]=(d[k]||0)+(h.rain_mm||0);byDay[k]=byDay[k]||{};(byDay[k][x.station_code]=1);if(h.t>lastT)lastT=h.t});perSt[x.station_code]={name:x.name_th,d:d}});
+  Object.keys(byDay).sort().forEach(function(k){days.push(k)});days=days.slice(-30);
+  var vals=days.map(function(k){var a=Object.keys(perSt).map(function(c){return perSt[c].d[k]}).filter(function(v){return v!=null});return a.length?a.reduce(function(x,y){return x+y},0)/a.length:0});
+  var today=lastT.slice(0,10),n7=days.slice(-7),sum=function(a){return a.reduce(function(x,y){return x+y},0)};
+  var tot7=sum(vals.slice(-7)),tot30=sum(vals),rainy=vals.filter(function(v){return v>=1}).length,mi=vals.indexOf(Math.max.apply(null,vals));
+  $('#s3sub').textContent='ข้อมูลถึง '+fd(today,true)+' '+lastT.slice(11,16)+' น.';
+  $('#s3chips').innerHTML='<span class="chip" style="color:#7dd3fc;border-color:#7dd3fc">7 วันล่าสุด '+tot7.toFixed(1)+' มม.</span><span class="chip" style="color:#a5b4fc;border-color:#a5b4fc">30 วันล่าสุด '+tot30.toFixed(1)+' มม.</span><span class="chip" style="color:#4ade80;border-color:#4ade80">วันฝนตก (≥1 มม.) '+rainy+' วัน</span>'+(vals[mi]>0?'<span class="chip" style="color:#fbbf24;border-color:#fbbf24">ฝนสูงสุด '+vals[mi].toFixed(1)+' มม. ('+(+days[mi].slice(8))+' '+MO[+days[mi].slice(5,7)-1]+')</span>':'');
+  bars($('#rainSvg'),days.map(function(k,i){return {v:vals[i],l1:String(+k.slice(8)),l2:(+k.slice(8)===1||i===0)?MO[+k.slice(5,7)-1]:'',faded:k===today}}),{color:'#38bdf8',f:function(v){return v.toFixed(1)},hideZero:true,W:1100,H:380});
+  var rows='<tr><th>สถานี</th><th>วันนี้</th><th>7 วัน</th><th>30 วัน</th></tr>';
+  Object.keys(perSt).forEach(function(c){var d=perSt[c].d,s7=sum(days.slice(-7).map(function(k){return d[k]||0})),s30=sum(days.map(function(k){return d[k]||0}));rows+='<tr><td>'+esc(perSt[c].name.replace('อ่างเก็บน้ำ',''))+'</td><td>'+(d[today]||0).toFixed(1)+'</td><td>'+s7.toFixed(1)+'</td><td>'+s30.toFixed(1)+'</td></tr>'});
+  $('#rainTbl').innerHTML=rows;
+  $('#s3note').textContent='แท่งจางคือวันนี้ (ยังไม่ครบวัน) · วันที่ไม่มีข้อมูลบางสถานีใช้ค่าเฉลี่ยจากสถานีที่มี';
+}
+
+/* ---------- ฉาก 4: ระดับน้ำกว๊านพะเยา ---------- */
+function s3k(){
+  var f=D.fl;if(!f)return;var fl=f.flags||{},col=fl.overall==='critical'?ST.critical.c:fl.overall==='watch'?ST.warning.c:ST.safe.c,lab=fl.overall==='critical'?'วิกฤต':fl.overall==='watch'?'เฝ้าระวัง':'ปกติ';
+  $('#s3ksub').textContent='ออกประมาณการ '+fd(f.base_date,true);
+  var kn=f.kwan_now||{},rf=(f.rain_forward||[]).reduce(function(a,r){return a+r.mm},0);
+  $('#s3kchips').innerHTML='<span class="chip" style="color:'+col+';border-color:'+col+'">สถานะโมเดลกว๊านพะเยา: '+lab+'</span><span class="chip" style="color:#7dd3fc;border-color:#7dd3fc">ระดับตอนนี้ '+(kn.level!=null?kn.level.toFixed(2):'—')+' ม.รทก.'+(kn.change_3d!=null?' ('+(kn.change_3d>=0?'▲ +':'▼ ')+Math.abs(kn.change_3d).toFixed(2)+' ม. ใน 3 วัน)':'')+'</span><span class="chip" style="color:#a5b4fc;border-color:#a5b4fc">ฝนล่วงหน้า 7 วัน '+rf.toFixed(1)+' มม.</span><span class="chip" style="color:#a5b4fc;border-color:#a5b4fc">น้ำล้นสะสม 7 วัน '+(f.overflow_total_7d!=null?f.overflow_total_7d.toFixed(3):'—')+' ล้าน ลบ.ม.</span>';
+  $('#s3msgs').innerHTML=String(fl.message||'').split(' | ').filter(Boolean).slice(0,4).map(function(m){return '<div>'+esc(m)+'</div>'}).join('');
+  /* กว๊าน */
+  var K=f.kwan_forecast||[];if(!K.length)return;var H=340,b=48,t=24;var obs=(f.kwan_observed_30d||[]).slice(-14),banks=f.banks||{},W2=1500,l2=70,r2=20,all=K.map(function(k){return k.p10}).concat(K.map(function(k){return k.p90}),obs.map(function(o){return o.level}));
+  var lo=Math.min.apply(null,all),hi=Math.max.apply(null,all),bl=[['Mae_Main1','ตลิ่งห้วยแม่นาเรือ','#ef4444'],['Mae_Main2','ตลิ่งห้วยจุ๋มปี๋','#f97316'],['RongHai','ตลิ่งห้วยร่องไฮ','#eab308']].filter(function(x){return banks[x[0]]!=null});
+  bl.forEach(function(x){var v=banks[x[0]];if(v>lo-.6&&v<hi+.6){lo=Math.min(lo,v);hi=Math.max(hi,v)}});lo-=.08;hi+=.08;
+  var n=obs.length+K.length,X=function(i){return l2+(W2-l2-r2)*i/Math.max(1,n-1)},Y=function(v){return H-b-(H-b-t)*(v-lo)/(hi-lo)},s2='';
+  for(var q=0;q<=4;q++){var v=lo+(hi-lo)*q/4,y=Y(v);s2+='<line x1="'+l2+'" x2="'+(W2-r2)+'" y1="'+y+'" y2="'+y+'" stroke="#1c3646"/><text x="'+(l2-8)+'" y="'+(y+5)+'" text-anchor="end" font-size="16" fill="#8fa9b8">'+v.toFixed(2)+'</text>'}
+  bl.forEach(function(x){var v=banks[x[0]];if(v<lo||v>hi)return;var y=Y(v);s2+='<line x1="'+l2+'" x2="'+(W2-r2)+'" y1="'+y+'" y2="'+y+'" stroke="'+x[2]+'" stroke-dasharray="7 6" stroke-width="2"/><text x="'+(W2-r2-4)+'" y="'+(y-6)+'" text-anchor="end" font-size="15" fill="'+x[2]+'">'+x[1]+' '+v.toFixed(2)+'</text>'});
+  var up=K.map(function(k,i){return (i?'L':'M')+X(obs.length+i).toFixed(1)+' '+Y(k.p90).toFixed(1)}).join(''),dn=K.slice().reverse().map(function(k,i){return 'L'+X(obs.length+K.length-1-i).toFixed(1)+' '+Y(k.p10).toFixed(1)}).join('');
+  s2+='<path d="'+up+dn+'Z" fill="#38bdf8" opacity=".22"/>';
+  if(obs.length)s2+='<path d="'+obs.map(function(o,i){return (i?'L':'M')+X(i).toFixed(1)+' '+Y(o.level).toFixed(1)}).join('')+'" fill="none" stroke="#e8f1f6" stroke-width="4"/>';
+  var lp=(obs.length?'M'+X(obs.length-1).toFixed(1)+' '+Y(obs[obs.length-1].level).toFixed(1):'')+K.map(function(k,i){return (i||obs.length?'L':'M')+X(obs.length+i).toFixed(1)+' '+Y(k.level).toFixed(1)}).join('');
+  s2+='<path d="'+lp+'" fill="none" stroke="#38bdf8" stroke-width="5" stroke-linejoin="round"/>';
+  K.forEach(function(k,i){s2+='<circle cx="'+X(obs.length+i)+'" cy="'+Y(k.level)+'" r="5" fill="#38bdf8"/><text x="'+X(obs.length+i)+'" y="'+(H-b+22)+'" text-anchor="middle" font-size="15" fill="#8fa9b8">'+(+k.date.slice(8))+' '+MO[+k.date.slice(5,7)-1]+'</text>'});
+  obs.forEach(function(o,i){if(i%2===0)s2+='<text x="'+X(i)+'" y="'+(H-b+22)+'" text-anchor="middle" font-size="15" fill="#6b8696">'+(+o.date.slice(8))+' '+MO[+o.date.slice(5,7)-1]+'</text>'});
+  s2+='<text x="'+l2+'" y="14" font-size="14" fill="#8fa9b8">เส้นขาว = ระดับที่วัดจริง · เส้นฟ้า = พยากรณ์</text>';
+  $('#kwanSvg').innerHTML=s2;
+}
+
+/* ---------- กราฟแท่งทั่วไป ---------- */
+function bars(el,items,o){
+  var F=o.f||fmt,W=o.W||800,H=o.H||380,l=70,r=10,t=34,b=62,mx=Math.max(1,Math.max.apply(null,items.map(function(i){return i.v})))*1.18,bw=(W-l-r)/items.length,sv='';
+  [0,.5,1].forEach(function(p){var y=H-b-(H-b-t)*p;sv+='<line x1="'+l+'" x2="'+(W-r)+'" y1="'+y+'" y2="'+y+'" stroke="#1c3646"/><text x="'+(l-8)+'" y="'+(y+5)+'" text-anchor="end" font-size="16" fill="#8fa9b8">'+F(mx*p)+'</text>'});
+  items.forEach(function(it,i){var h=(H-b-t)*it.v/mx,x=l+i*bw+bw*.14,w=bw*.72;
+    sv+='<rect x="'+x+'" y="'+(H-b-h)+'" width="'+w+'" height="'+Math.max(2,h)+'" rx="4" fill="'+(o.color||'#38bdf8')+'" opacity="'+(it.faded?.4:1)+'"/>'+
+    (o.hideZero&&!it.v?'':'<text x="'+(x+w/2)+'" y="'+(H-b-h-8)+'" text-anchor="middle" font-size="'+(items.length>8?15:18)+'" font-weight="700" fill="#e8f1f6">'+F(it.v)+'</text>')+
+    '<text x="'+(x+w/2)+'" y="'+(H-b+22)+'" text-anchor="middle" font-size="'+(items.length>8?14:16)+'" fill="#8fa9b8">'+esc(it.l1)+'</text>'+
+    (it.l2?'<text x="'+(x+w/2)+'" y="'+(H-b+42)+'" text-anchor="middle" font-size="15" fill="#8fa9b8">'+esc(it.l2)+'</text>':'')});
+  el.innerHTML=sv}
+function addDays(iso,n){var d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+
+/* ---------- ฉาก 4: น้ำไหลลงอ่างแม่นาเรือ ---------- */
+function s4(){
+  var f=D.lat&&D.lat.forecasts&&D.lat.forecasts.inflow&&D.lat.forecasts.inflow.forecast;if(!f||!f.horizons)return;
+  var items=[],tot=0,low=0;Object.keys(f.horizons).sort(function(a,b){return +a.slice(1)-+b.slice(1)}).forEach(function(k){var h=f.horizons[k],n=+k.slice(1),d=addDays(f.as_of_date,n);tot+=h.prediction_m3_per_day||0;if(h.low_confidence)low++;
+    items.push({v:Math.max(0,h.prediction_m3_per_day||0),l1:(+d.slice(8))+' '+MO[+d.slice(5,7)-1],l2:'+'+n+' วัน',faded:!!h.low_confidence})});
+  $('#s4sub').textContent='ข้อมูล ณ '+fd(f.as_of_date,true);
+  $('#s4chips').innerHTML='<span class="chip" style="color:#7dd3fc;border-color:#7dd3fc">ไหลเข้าล่าสุด '+fmt(f.current_qin_m3_per_day)+' ลบ.ม./วัน</span><span class="chip" style="color:#a5b4fc;border-color:#a5b4fc">รวม 7 วัน '+fmt(tot)+' ลบ.ม.</span>'+(low?'<span class="chip" style="color:#fbbf24;border-color:#fbbf24">ความเชื่อมั่นต่ำ '+low+' จาก '+items.length+' วัน</span>':'');
+  bars($('#inSvg'),items,{});
+  /* ย้อนหลัง 6 ชม. */
+  var w=D.in6&&D.in6.windows;if(w&&w.length>1){var W=800,H=380,l=70,r=14,t=24,b=56,mx=Math.max(1,Math.max.apply(null,w.map(function(x){return x.q_in_6h_m3})))*1.12,X=function(i){return l+(W-l-r)*i/(w.length-1)},Y=function(v){return H-b-(H-b-t)*v/mx},sv='';
+    [0,.5,1].forEach(function(p){var y=Y(mx/1.12*p*1.12);sv+='<line x1="'+l+'" x2="'+(W-r)+'" y1="'+y+'" y2="'+y+'" stroke="#1c3646"/><text x="'+(l-8)+'" y="'+(y+5)+'" text-anchor="end" font-size="16" fill="#8fa9b8">'+fmt(mx*p)+'</text>'});
+    sv+='<path d="M'+X(0)+' '+Y(0)+w.map(function(x,i){return 'L'+X(i).toFixed(1)+' '+Y(x.q_in_6h_m3).toFixed(1)}).join('')+'L'+X(w.length-1)+' '+Y(0)+'Z" fill="#38bdf8" opacity=".25"/><path d="'+w.map(function(x,i){return (i?'L':'M')+X(i).toFixed(1)+' '+Y(x.q_in_6h_m3).toFixed(1)}).join('')+'" fill="none" stroke="#38bdf8" stroke-width="4"/>';
+    [0,Math.round((w.length-1)/2),w.length-1].forEach(function(i){var e=w[i].window_end;sv+='<text x="'+X(i)+'" y="'+(H-b+24)+'" text-anchor="'+(i===0?'start':i===w.length-1?'end':'middle')+'" font-size="15" fill="#8fa9b8">'+(+e.slice(8,10))+' '+MO[+e.slice(5,7)-1]+' '+e.slice(11,16)+'</text>'});
+    $('#in6Svg').innerHTML=sv;var pk=D.in6.peak_window;
+    $('#s4note').textContent='ประมาณการเพื่อแสดงผลเท่านั้น (ไม่ใช่ค่าวัดตรง)'+(pk?' · ช่วงสูงสุด '+fmt(pk.q_in_6h_m3)+' ลบ.ม. ('+(+pk.window_start.slice(8,10))+' '+MO[+pk.window_start.slice(5,7)-1]+' '+pk.window_start.slice(11,16)+'–'+pk.window_end.slice(11,16)+' น.)':'')}
+}
+
+/* ---------- ฉาก 5: ความต้องการใช้น้ำล่วงหน้า ---------- */
+function s5(){
+  var F=D.lat&&D.lat.forecasts;if(!F)return;var z=[['dmA',F.demand_zone_a,'#22c55e','A'],['dmB',F.demand_zone_b,'#f59e0b','B']],chips='',asof=null;
+  z.forEach(function(zz){var d=zz[1];if(!d||!d.horizons)return;asof=asof||d.as_of;var it=[],tot=0;Object.keys(d.horizons).sort(function(a,b){return +a.slice(1)-+b.slice(1)}).forEach(function(k){var h=d.horizons[k],n=+k.slice(1);tot+=h.final_m3||0;it.push({v:Math.max(0,h.final_m3||0),l1:'+'+n,l2:Math.round((h.probability_active||0)*100)+'%'})});
+    bars($('#'+zz[0]),it,{color:zz[2]});chips+='<span class="chip" style="color:'+zz[2]+';border-color:'+zz[2]+'">Zone '+zz[3]+' รวม 12 สัปดาห์ '+fmt(tot)+' ลบ.ม.</span>'});
+  $('#s5chips').innerHTML=chips;$('#s5sub').textContent=asof?'ข้อมูล ปี '+(asof.year+543)+' สัปดาห์ที่ '+asof.week:'';
+  $('#s5note').textContent='ใต้แท่ง: +n = อีก n สัปดาห์ข้างหน้า และ % = โอกาสที่จะมีการใช้น้ำ · ตัวเลขเป็นค่ากลางของโมเดล ช่วงเชื่อมั่น 90% กว้างมาก (ดูได้ในเว็บ) จึงควรใช้เป็นแนวโน้ม ไม่ใช่ตัวเลขแม่นยำ';
+}
+
+/* ---------- หมุนฉาก ---------- */
+var scenes=[],order=[],pos=0,playing=true,t0=0,rid=0,FIXED=!!Q.get('sec');
+function initScenes(){scenes=$$('.scene');order=(Q.get('scenes')?Q.get('scenes').split(',').map(function(x){return +x-1}):scenes.map(function(_,i){return i})).filter(function(i){return scenes[i]});
+$('#dots').innerHTML=order.map(function(i,k){return '<span data-k="'+k+'">'+(k+1)+'<i class="nm" style="font-style:normal">. '+scenes[i].getAttribute('data-n')+'</i></span>'}).join('')}
+function enter(k){
+  pos=((k%order.length)+order.length)%order.length;var idx=order[pos];
+  scenes.forEach(function(s,i){s.classList.toggle('on',i===idx)});
+  $$('#dots span').forEach(function(s,i){s.classList.toggle('on',i===pos)});
+  var isD=scenes[idx].getAttribute('data-n')==='ผังน้ำ';cyOn=isD;
+  if(isD){cyInit();setTimeout(cyFit,60);setTimeout(cyFit,500)}
+  t0=performance.now();
+}
+function loop(ts){rid=requestAnimationFrame(loop);var dw=FIXED?DWELL:(+scenes[order[pos]].getAttribute('data-sec')*1000||DWELL),p=playing?Math.min(1,(ts-t0)/dw):0;$('#prog').style.width=(playing?p*100:100)+'%';if(playing&&ts-t0>=dw)enter(pos+1)}
+$('#bNext').onclick=function(){enter(pos+1)};$('#bPrev').onclick=function(){enter(pos-1)};
+$('#bPlay').onclick=function(){playing=!playing;this.textContent=playing?'⏸ หยุดหมุน':'▶ หมุนต่อ';t0=performance.now()};
+$('#bFs').onclick=function(){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()};
+$('#dots').onclick=function(e){var s=e.target.closest('[data-k]');if(s)enter(+s.getAttribute('data-k'))};
+document.addEventListener('keydown',function(e){if(e.key==='ArrowRight')enter(pos+1);else if(e.key==='ArrowLeft')enter(pos-1);else if(e.key===' '){e.preventDefault();$('#bPlay').click()}else if(e.key==='f'||e.key==='F')$('#bFs').click()});
+var uiT;function showUi(){document.body.classList.add('show-ui');clearTimeout(uiT);uiT=setTimeout(function(){document.body.classList.remove('show-ui')},4000)}
+['mousemove','touchstart','click'].forEach(function(ev){document.addEventListener(ev,showUi,{passive:true})});
+window.addEventListener('resize',function(){if(cyOn)cyFit()});
+
+/* ---------- กันจอดับ + รีเฟรช ---------- */
+var wl=null;function wake(){if(navigator.wakeLock&&navigator.wakeLock.request)navigator.wakeLock.request('screen').then(function(l){wl=l}).catch(function(){})}
+document.addEventListener('visibilitychange',function(){if(!document.hidden)wake()});wake();
+setInterval(load,REFRESH);setTimeout(function(){location.reload()},RELOAD);
+
+load().then(function(){initScenes();enter(0);rid=requestAnimationFrame(loop)});
+})();
+</script>
+</body>
+</html>
