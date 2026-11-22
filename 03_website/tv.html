@@ -46,7 +46,7 @@ body.show-ui .ctl{opacity:1}
 .rs-head{display:flex;align-items:baseline;gap:calc(var(--u)*1.2);flex-wrap:wrap}.rs-head h1{font-size:calc(var(--u)*2.2)}
 .rs-grid{flex:1;min-height:0;min-width:0;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:calc(var(--u)*1.2)}.rs-grid>*{min-width:0;min-height:0}
 .rs-left{display:grid;grid-template-rows:minmax(0,1.4fr) minmax(0,1fr);gap:calc(var(--u)*.9);min-height:0}.rs-left>*{min-height:0;min-width:0}
-.rs-right{display:grid;grid-template-rows:auto minmax(0,1fr);gap:calc(var(--u)*.9);min-height:0}
+.rs-right{display:grid;grid-template-rows:minmax(0,1.45fr) minmax(0,1fr);gap:calc(var(--u)*.9);min-height:0}
 .rs-scene{position:relative;border-radius:calc(var(--u)*1.4);overflow:hidden;border:2px solid var(--line);min-height:0;
   --accent:#1f6f9a;--accent-2:#e0a94f;--ok:#2a9d7f;--warn:#e0a94f;--crit:#d6453d;--rain:#4c5fd5;--bank:#c9945f;
   --sky-1:color-mix(in srgb,var(--accent) 30%,#fff);--sky-2:color-mix(in srgb,var(--accent) 7%,#fff);--water-1:color-mix(in srgb,var(--accent) 65%,#fff);--water-2:color-mix(in srgb,var(--accent) 100%,#000 18%);
@@ -71,16 +71,16 @@ body.show-ui .ctl{opacity:1}
 @keyframes waveX{to{transform:translateX(-200px)}}@keyframes bob{50%{transform:translateY(-4px) rotate(2.2deg)}}@keyframes drift{from{transform:translateX(-160px)}to{transform:translateX(1320px)}}
 @keyframes fall{from{transform:translateY(-50px)}to{transform:translateY(300px)}}@keyframes twinkle{50%{opacity:.9}}@keyframes flow{to{stroke-dashoffset:-26}}@keyframes glow{50%{opacity:.7}}@keyframes sonar{from{transform:scale(.7);opacity:.9}to{transform:scale(2.6);opacity:0}}
 .rs-read{background:var(--panel);border:2px solid var(--line);border-radius:calc(var(--u)*1.4);padding:calc(var(--u)*1.1) calc(var(--u)*1.5);display:flex;flex-direction:column;gap:calc(var(--u)*.4)}
-.rs-read .t{font-size:calc(var(--u)*1.3);color:var(--mut)}.rs-read .nm{font-size:calc(var(--u)*2.1);font-weight:800;line-height:1.15}.rs-read .lv{font-size:calc(var(--u)*2.9);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}.rs-read .lv small{font-size:.38em;font-weight:500;color:var(--mut);margin-left:.4em}
-.rs-read .dl{font-size:calc(var(--u)*1.6);font-weight:700}.rs-read .pc2{font-size:calc(var(--u)*3.4);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}.rs-read .pc2 small{font-size:.32em;font-weight:500;color:var(--mut);margin-left:.4em}
+.rs-read{line-height:1.25}.rs-read .t{font-size:calc(var(--u)*1.1);color:var(--mut)}.rs-read .nm{font-size:calc(var(--u)*1.8);font-weight:800;line-height:1.15}.rs-read .lv{font-size:calc(var(--u)*2.6);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}.rs-read .lv small{font-size:.38em;font-weight:500;color:var(--mut);margin-left:.4em}
+.rs-read .dl{font-size:calc(var(--u)*1.35);font-weight:700}.rs-read .pc2{font-size:calc(var(--u)*3);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}.rs-read .pc2 small{font-size:.32em;font-weight:500;color:var(--mut);margin-left:.4em}
 .cap{position:relative;height:calc(var(--u)*1.5);border-radius:99px;background:#1b3342;overflow:hidden}.cap i{position:absolute;top:0;bottom:0;left:0;border-radius:99px}.cap b{position:absolute;top:-2px;bottom:-2px;width:3px;background:#e8f1f6}
-.rs-read{display:grid!important;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:calc(var(--u)*1.1)!important}.rd-l{display:flex;flex-direction:column;gap:calc(var(--u)*.4);min-width:0}
+.rs-read{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:calc(var(--u)*1)!important;padding:calc(var(--u)*.8) calc(var(--u)*1.2)!important;min-height:0;overflow:hidden}.rd-l{display:flex;flex-direction:column;gap:calc(var(--u)*.4);min-width:0}
 .tiles{min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:calc(var(--u)*.9)}
-.tile{overflow:hidden;background:var(--panel);border:2px solid var(--line);border-radius:calc(var(--u)*1.2);padding:calc(var(--u)*.6) calc(var(--u)*1.1);display:flex;flex-direction:column;justify-content:space-between;min-height:0}
-.tile .tl{font-size:calc(var(--u)*1.1);color:var(--mut);white-space:nowrap}.tile .tv{font-size:calc(var(--u)*2);white-space:nowrap;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}.tile .tv small{font-size:.42em;font-weight:500;color:var(--mut);margin-left:.3em}
+.tile{overflow:hidden;background:var(--panel);border:2px solid var(--line);border-radius:calc(var(--u)*1.2);padding:calc(var(--u)*.5) calc(var(--u)*.8);display:flex;flex-direction:column;justify-content:space-between;min-height:0}
+.tile .tl{font-size:calc(var(--u)*1);color:var(--mut);white-space:nowrap}.tile .tv{font-size:calc(var(--u)*1.7);white-space:nowrap;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}.tile .tv small{font-size:.42em;font-weight:500;color:var(--mut);margin-left:.3em}
 .tbar{height:calc(var(--u)*.6);border-radius:9px;background:#1b3342;overflow:hidden}.tbar i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,#1f6f9a,#e0a94f)}
-.rs-chart{flex-direction:row!important;align-items:center;gap:calc(var(--u)*.8);overflow:hidden;background:var(--panel);border:2px solid var(--line);border-radius:calc(var(--u)*1.4);padding:calc(var(--u)*.8) calc(var(--u)*1.2);display:flex;flex-direction:column;min-height:0}
-.rs-chart h3{font-size:calc(var(--u)*1.4);line-height:1.35;text-align:left;white-space:nowrap;flex:none}.rs-chart h3 span{color:var(--mut);font-weight:500}.rs-chart svg{flex:1;min-height:0;min-width:0;width:100%;height:100%}
+.rs-chart{flex-direction:row!important;align-items:center;gap:calc(var(--u)*.8);overflow:hidden;background:var(--panel);border:2px solid var(--line);border-radius:calc(var(--u)*1.4);padding:calc(var(--u)*.6) calc(var(--u)*1);display:flex;flex-direction:column;min-height:0}
+.rs-chart h3{font-size:calc(var(--u)*1.25);line-height:1.35;text-align:left;white-space:nowrap;flex:none}.rs-chart h3 span{color:var(--mut);font-weight:500}.rs-chart svg{flex:1;min-height:0;min-width:0;width:100%;height:100%}
 /* scene 2 */
 .dgm{flex:1;min-height:0;position:relative;border-radius:calc(var(--u)*1.2);overflow:hidden;border:2px solid var(--line);background:linear-gradient(160deg,#f4faff,#e6f1fa 55%,#f1f6ec)}
 #cy{position:absolute;inset:0}
@@ -203,7 +203,7 @@ function resScene(st){
   var cloud='<ellipse cx="0" cy="0" rx="46" ry="15"/><ellipse cx="-30" cy="6" rx="28" ry="11"/><ellipse cx="32" cy="7" rx="30" ry="11"/><ellipse cx="6" cy="-12" rx="26" ry="14"/>';
   var ticks='';for(var e=Math.ceil(E0*2)/2;e<=E1+.001;e+=.5){var y=yOf(e);ticks+='<line x1="352" x2="'+(e%1===0?368:362)+'" y1="'+y+'" y2="'+y+'" style="stroke:var(--faint)" stroke-width="1.5"/><text class="tick-lbl" x="346" y="'+(y+4)+'" text-anchor="end">'+e.toFixed(1)+'</text>'}
   var ph=phaseNow(),raining=(st.rainfall_hourly||[]).slice(-2).some(function(r){return r.rain_mm>0}),sp=over>.003,t=clampN(over*90,3,24);
-  var svg='<svg viewBox="0 0 900 560" preserveAspectRatio="xMidYMid slice"><defs>'+
+  var svg='<svg viewBox="0 0 900 560" preserveAspectRatio="xMinYMid slice"><defs>'+
   '<linearGradient id="gSky'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sky-1)"/><stop offset="1" style="stop-color:var(--sky-2)"/></linearGradient>'+
   '<linearGradient id="gW'+id+'" gradientUnits="userSpaceOnUse" x1="0" y1="'+Yb+'" x2="0" y2="'+(Yb+230)+'"><stop offset="0" style="stop-color:var(--water-1)"/><stop offset="1" style="stop-color:var(--water-2)"/></linearGradient>'+
   '<radialGradient id="gO'+id+'"><stop offset="0" style="stop-color:var(--orb-glow)"/><stop offset="1" style="stop-color:var(--orb-glow);stop-opacity:0"/></radialGradient><clipPath id="bc'+id+'"><rect x="0" y="0" width="700" height="560"/></clipPath></defs>'+
@@ -232,7 +232,7 @@ function resScene(st){
   return {svg:svg,cls:ph.cls+(sp?' spilling':'')+(raining?' raining':'')}
 }
 function resChart(st){
-  var H=st.history||[];if(H.length<3)return '';var crest=st.spillway_msl,W=800,HT=300,xL=62,xR=785,yT=28,yB=266,vals=H.map(function(h){return h.level}),lo0=Math.min(Math.min.apply(null,vals),crest),hi0=Math.max(Math.max.apply(null,vals),crest),pad=(hi0-lo0)*.18||.05,lo=lo0-pad,hi=hi0+pad,
+  var H=st.history||[];if(H.length<3)return '';var crest=st.spillway_msl,W=700,HT=330,xL=64,xR=688,yT=30,yB=296,vals=H.map(function(h){return h.level}),lo0=Math.min(Math.min.apply(null,vals),crest),hi0=Math.max(Math.max.apply(null,vals),crest),pad=(hi0-lo0)*.18||.05,lo=lo0-pad,hi=hi0+pad,
     yv=function(v){return yB-(v-lo)/(hi-lo)*(yB-yT)},t0=new Date(H[0].t).getTime(),t1=new Date(H[H.length-1].t).getTime(),xt=function(t){return xL+(t-t0)/(t1-t0)*(xR-xL)},
     pts=H.map(function(h){return [xt(new Date(h.t).getTime()),yv(h.level)]}),yc=yv(crest),line=smooth(pts),area=line+' L'+pts[pts.length-1][0].toFixed(1)+','+yc.toFixed(1)+' L'+pts[0][0].toFixed(1)+','+yc.toFixed(1)+'Z',gr='',ax='';
   for(var i=0;i<=4;i++){var v=lo+(hi-lo)*i/4,y=yv(v);gr+='<line x1="'+xL+'" x2="'+xR+'" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="#1c3646"/>';ax+='<text x="'+(xL-10)+'" y="'+(y+5).toFixed(1)+'" text-anchor="end" font-size="19" fill="#8fa9b8">'+v.toFixed(2)+'</text>'}
@@ -257,10 +257,10 @@ function renderRes(){
       dl=over>.003?'สูงกว่าสันสปิลเวย์ '+over.toFixed(3)+' ม.':over>-.10?'ต่ำกว่าสันสปิลเวย์ '+(-over).toFixed(3)+' ม. · ใกล้ล้น':'ต่ำกว่าสันสปิลเวย์ '+(-over).toFixed(3)+' ม.',
       tr=(d6>.004?'ระดับขึ้น':d6<-.004?'ระดับลด':'ทรงตัว')+' '+sgn(d6)+' ม.',t=(s.measure_datetime||'').slice(11,16);
     sec.innerHTML='<div class="rs-grid"><div class="rs-scene '+sc.cls+'">'+sc.svg+'</div>'+
-    '<div class="rs-right"><div class="rs-read"><div class="rd-l"><div class="nm">'+esc(s.name_th)+'</div><div class="t" style="margin-bottom:.3em">'+esc(s.station_code)+' · <span style="color:#4ade80">● สด '+esc(t)+' น.</span></div><div class="t">ระดับน้ำปัจจุบัน</div><div class="lv">'+s.water_level.toFixed(3)+'<small>ม.รทก.</small></div><div class="dl" style="color:'+col+'">'+dl+'</div><div class="t">6 ชั่วโมงที่ผ่านมา '+tr+'</div>'+
+    '<div class="rs-right"><div class="rs-read"><div class="rd-l"><div class="nm">'+esc(s.name_th)+'</div><div class="t" style="margin-bottom:.3em">'+esc(s.station_code)+' · <span style="color:#4ade80">● สด '+esc(t)+' น.</span></div><div class="t">ระดับน้ำปัจจุบัน</div><div class="lv">'+s.water_level.toFixed(3)+'<small>ม.รทก.</small></div><div class="dl" style="color:'+col+'">'+dl+'</div><div class="t">6 ชม. ล่าสุด: '+tr+'</div>'+
       '<div class="pc2" style="color:'+col+'">'+pct.toFixed(1)+'<small>% ของความจุ</small></div><div class="cap"><i style="width:'+(Math.min(pct,100)/mx*100).toFixed(1)+'%;background:'+(pct>100?'#22c55e':col)+'"></i>'+(pct>100?'<i style="left:'+(100/mx*100).toFixed(1)+'%;width:'+((pct-100)/mx*100).toFixed(1)+'%;background:#ef4444;border-radius:0 99px 99px 0"></i>':'')+'<b style="left:'+(100/mx*100).toFixed(1)+'%"></b></div>'+
       '<div class="t">ปริมาตร <b style="color:#e8f1f6">'+fmt(s.storage_m3)+'</b> / '+fmt(s.storage_max_m3)+' ลบ.ม. · ฝน 24 ชม. <b style="color:#e8f1f6">'+rain24(s).toFixed(1)+'</b> มม.</div></div>'+
-      '<div class="tiles">'+tile('ฝน 1 ชม.',nv(s.rainfall_1h,1),'มม.',(s.rainfall_1h||0)/20)+tile('อุณหภูมิ',nv(s.temperature,1),'°C',((s.temperature||15)-15)/30)+tile('ความชื้น',nv(s.humidity,1),'%',(s.humidity||0)/100)+tile('ความกดอากาศ',nv(s.pressure,1),'hPa',((s.pressure||940)-940)/80)+tile('รังสีอาทิตย์',nv(s.solar,1),'W/m²',(s.solar||0)/1000)+tile('ห่างจากสันสปิลเวย์',(over>=0?'+':'')+nv(s.distance_to_spillway_m!=null?s.distance_to_spillway_m:over,2),'ม.',(over+2)/3)+'</div></div>'+'<div class="rs-chart"><h3>ระดับน้ำย้อนหลัง<br>เทียบสันสปิลเวย์<br><span>'+esc(s.name_th.replace('อ่างเก็บน้ำ',''))+'</span></h3>'+resChart(s)+'</div></div></div>';
+      '<div class="tiles">'+tile('ฝน 1 ชม.',nv(s.rainfall_1h,1),'มม.',(s.rainfall_1h||0)/20)+tile('อุณหภูมิ',nv(s.temperature,1),'°C',((s.temperature||15)-15)/30)+tile('ความชื้น',nv(s.humidity,1),'%',(s.humidity||0)/100)+tile('ความกดอากาศ',nv(s.pressure,1),'hPa',((s.pressure||940)-940)/80)+tile('รังสีอาทิตย์',nv(s.solar,1),'W/m²',(s.solar||0)/1000)+tile('ห่างสันสปิลเวย์',(over>=0?'+':'')+nv(s.distance_to_spillway_m!=null?s.distance_to_spillway_m:over,2),'ม.',(over+2)/3)+'</div></div>'+'<div class="rs-chart"><h3>ระดับน้ำย้อนหลัง<br>เทียบสันสปิลเวย์<br><span>'+esc(s.name_th.replace('อ่างเก็บน้ำ',''))+'</span></h3>'+resChart(s)+'</div></div></div>';
   });
 }
 
