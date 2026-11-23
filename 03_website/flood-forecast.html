@@ -7,7 +7,7 @@
 <link href="assets/vendor/fonts/fonts.css" rel="stylesheet">
 <link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css" />
 <script src="assets/vendor/leaflet/leaflet.js"></script>
-<script src="assets/js/chart.umd.min.js"></script><script src="assets/uikit/chart-kit.js?v=202610221441"></script>
+<script src="assets/js/chart.umd.min.js"></script><script src="assets/uikit/chart-kit.js?v=202611131100"></script>
 <script src="assets/vendor/hammerjs/hammer.min.js"></script>
 <script src="assets/vendor/chartjs-plugin-zoom/chartjs-plugin-zoom.min.js"></script>
 <style>
@@ -926,7 +926,10 @@ function drawMap(d) {
       id: 'flood-buildings',
       data: buildingsData || [],
       extruded: true, filled: true, stroked: true,
-      getElevation: f => buildingHeightForDepth(depthForSource3D(f.properties, source, dayN), source),
+      // 2026-11-11: ความสูงอาคาร = ความสูงจริงจาก DSM (h_m); สีอาคารยังสื่อความเสี่ยงน้ำท่วมตามเดิม
+      // (ไฟล์เก่าที่ไม่มี h_m ถอยกลับไปใช้ความสูงแบบสเกลตามความลึกน้ำเหมือนเดิม)
+      getElevation: f => (f.properties && typeof f.properties.h_m === 'number') ? f.properties.h_m
+        : buildingHeightForDepth(depthForSource3D(f.properties, source, dayN), source),
       getFillColor: f => buildingColorForDepth(depthForSource3D(f.properties, source, dayN), source),
       getLineColor: [255, 255, 255, 50], lineWidthMinPixels: 1,
       pickable: true, autoHighlight: true, highlightColor: [255, 255, 255, 130],
@@ -940,7 +943,10 @@ function drawMap(d) {
   let is3DActive = false;
   let terrainEnabled = true;
   let colorBasemapEnabled = false;
-  const TERRAIN_EXAGGERATION = 1.3;
+  // 2026-11-12: ปรับทดลองผ่าน URL ได้ ?exag=1.0 (ความเกินจริงของภูมิประเทศ) &demmax=14 (ล็อกความละเอียดไทล์ DEM สูงสุด) -- ใช้เทียบอาการอาคารลอย/ภูมิประเทศกระตุกตามระดับซูม
+  const _QP = new URLSearchParams(location.search);
+  const TERRAIN_EXAGGERATION = (parseFloat(_QP.get('exag')) > 0) ? parseFloat(_QP.get('exag')) : 1.3;
+  const DEM_MAXZOOM = [13, 14, 15].includes(parseInt(_QP.get('demmax'), 10)) ? parseInt(_QP.get('demmax'), 10) : 15;
   function updateDaySliderVisibility() {
     const seriesOn = map.hasLayer(seriesLayer);
     const need3DSlider = is3DActive && current3DSource === 'forecast';
@@ -1021,7 +1027,10 @@ function drawMap(d) {
               // (300-1600+ม.) ในไทล์เดียวกัน กลายเป็นหน้าผาปลอมขนาดใหญ่ (bug ที่ทำให้แผนที่ดู "ฉีกขาด"
               // เป็นแผ่นๆ ตอน deploy ครั้งที่ 1-2) -- บังคับใช้ z13+ เสมอ (ครอบคลุมเต็มพื้นที่ศึกษาจริง
               // ไม่มีรอยต่อ) แก้ปัญหานี้ได้แบบตรงจุดกว่าการเพิ่ม buffer เพียงอย่างเดียว
-              minzoom: 13, maxzoom: 15,
+              // 2026-11-12 แก้: วัดจากหน้าจริงพบว่า terrain ใช้ไทล์ DEM ที่ระดับ (ซูมแผนที่ - 1) ดังนั้น minzoom 13 ทำให้ภูมิประเทศ
+              // "แบน = 0 ม." ทุกครั้งที่ซูมต่ำกว่า 14 (รวมมุมมองเริ่มต้น 13.2) แล้วกระโดดเป็น ~400 ม. x เกินจริง ตอนซูมถึง 14
+              // -> ภูมิประเทศกระตุก/อาคารลอยชั่วคราว ตั้ง minzoom 12 (ไทล์ z12 ปลอดภัย: ขยายขอบ 8 กม. แล้ว + จำกัดด้วย bounds ด้านล่าง)
+              minzoom: 12, maxzoom: DEM_MAXZOOM,
               bounds: TERRAIN_BOUNDS,
             },
           },
@@ -1073,6 +1082,7 @@ function drawMap(d) {
         map3d.once('idle', () => retryInjectTerrainZ(8));
         setTimeout(forcePitch, 1200);
         map3d.on('load', () => {
+          map3d.__ready = true;
           forcePitch();
           if (terrainEnabled) map3d.setTerrain({ source: 'terrain-dem', exaggeration: TERRAIN_EXAGGERATION });
           if (colorBasemapEnabled) {
@@ -1422,5 +1432,5 @@ fetch(WMB_MODEL_ENDPOINT)
   });
 </script>
 
-<link rel="stylesheet" href="assets/uikit/theme-kit.css?v=202610221441"><script src="assets/uikit/theme-kit.js?v=202610221441"></script><script src="assets/uikit/page-kit.js?v=202610221441"></script><script src="assets/uikit/kwan-kit.js?v=202610221441"></script><script src="assets/uikit/hero-bg.js?v=202610221441"></script><script src="assets/uikit/inflow-kit.js?v=202610221441"></script><script src="assets/uikit/map-kit.js?v=202610221441"></script><script src="assets/uikit/flood-map-kit.js?v=202610221441"></script><script src="assets/uikit/flood-flow-kit.js?v=202610221441"></script><script src="assets/uikit/flood-3d-kit.js?v=202610221441"></script><script src="assets/uikit/flood-bathtub-kit.js?v=202610221441"></script><script src="assets/uikit/reliability-kit.js?v=202610221441"></script><script src="assets/uikit/flood-hero-kit.js?v=202610221441"></script><script src="assets/uikit/freshness-kit.js?v=202610221441"></script><script src="assets/uikit/i18n-kit.js?v=202610221441"></script><script src="assets/uikit/table-kit.js?v=202610221441"></script><script src="assets/uikit/plain-kit.js?v=202610221441"></script><script src="assets/uikit/csv-kit.js?v=202610221441"></script><script src="assets/uikit/pwa-kit.js?v=202610221441"></script><script src="assets/uikit/report-kit.js?v=202610221441"></script><script src="assets/uikit/diagram-kit.js?v=202610221441"></script><script src="assets/uikit/ukm.js?v=202610221441"></script></body>
+<link rel="stylesheet" href="assets/uikit/theme-kit.css?v=202611131100"><script src="assets/uikit/theme-kit.js?v=202611131100"></script><script src="assets/uikit/page-kit.js?v=202611131100"></script><script src="assets/uikit/kwan-kit.js?v=202611131100"></script><script src="assets/uikit/hero-bg.js?v=202611131100"></script><script src="assets/uikit/inflow-kit.js?v=202611131100"></script><script src="assets/uikit/map-kit.js?v=202611131100"></script><script src="assets/uikit/flood-map-kit.js?v=202611131100"></script><script src="assets/uikit/flood-flow-kit.js?v=202611131100"></script><script src="assets/uikit/flood-3d-kit.js?v=202611131100"></script><script src="assets/uikit/flood-bathtub-kit.js?v=202611131100"></script><script src="assets/uikit/reliability-kit.js?v=202611131100"></script><script src="assets/uikit/flood-hero-kit.js?v=202611131100"></script><script src="assets/uikit/freshness-kit.js?v=202611131100"></script><script src="assets/uikit/i18n-kit.js?v=202611131100"></script><script src="assets/uikit/table-kit.js?v=202611131100"></script><script src="assets/uikit/plain-kit.js?v=202611131100"></script><script src="assets/uikit/csv-kit.js?v=202611131100"></script><script src="assets/uikit/pwa-kit.js?v=202611131100"></script><script src="assets/uikit/report-kit.js?v=202611131100"></script><script src="assets/uikit/diagram-kit.js?v=202611131100"></script><script src="assets/uikit/ukm.js?v=202611131100"></script></body>
 </html>

@@ -472,7 +472,7 @@ path.fft-flow{animation:fft-dash 1.4s linear infinite}@keyframes fft-dash{to{str
 .f3-panel .dp.on{background:var(--teal-400);color:#06161c;font-weight:700}
 .f3-dl{padding:7px 10px;border-radius:10px;background:rgba(8,30,38,.88);color:#eef6f4;font-size:10.5px;line-height:1.4}
 .f3-dl .dn{margin-bottom:4px;font-weight:600}
-.f3-dl .db{height:9px;border-radius:4px;background:linear-gradient(90deg,#30123b 0%,#466be3 12.5%,#28bbeb 25%,#32f197 37.5%,#a4fc3b 50%,#edcf39 62.5%,#fa7d20 75%,#d02f04 87.5%,#7a0402 100%)}
+.f3-dl .db{height:9px;border-radius:4px;background:linear-gradient(90deg,#c4ecf8 0%,#7dd0ec 20%,#38a7dd 40%,#2278c0 60%,#1c4ca0 80%,#122468 100%)}
 .f3-dl .ds{display:flex;justify-content:space-between;opacity:.75;margin-top:2px;font-size:9.5px}
 
 /* ===== map-kit: แผงชั้นข้อมูลตอนแผนที่เต็มจอ (ลบบล็อกท้าย map-kit.js เพื่อกลับแบบเดิม) ===== */

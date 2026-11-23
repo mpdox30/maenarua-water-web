@@ -34,7 +34,9 @@ import openpyxl
 # 2026-10-01 แก้ -- hardcode absolute path ข้าม drive (D:\WMB_Phayao คนละ drive กับ repo นี้
 # D:\maenaruea-water-web ใช้ path สัมพัทธ์ข้าม drive ไม่ได้)
 ROOT = Path(__file__).resolve().parents[3]
-INFLOW_DIR = Path(r"D:\WMB_Phayao\01_raw_data\Reservoirs\บัญชีน้ำ")
+# 2026-11-07: root ของ WMB_Phayao จาก env WMB_ROOT (Colab) ไม่ตั้ง = path เดิมของเครื่อง Windows
+import os as _os
+INFLOW_DIR = Path(_os.environ.get("WMB_ROOT", r"D:\WMB_Phayao")) / "01_raw_data" / "Reservoirs" / "บัญชีน้ำ"
 OUT_PATH = ROOT / "03_website" / "assets" / "data" / "water_ledger.json"
 
 THAI_MONTH = {

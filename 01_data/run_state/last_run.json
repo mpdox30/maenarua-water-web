@@ -1,0 +1,14 @@
+{
+ "host": "laptop",
+ "finished_bkk": "2026-11-22T10:04:03+07:00",
+ "complete": true,
+ "steps": {
+  "wmb_daily_refresh": "ok",
+  "flood_daily_update": "ok",
+  "data_pipeline": "ok",
+  "reservoir_ledger": "ok",
+  "sar": "ok"
+ },
+ "last_complete_bkk": "2026-11-22T10:04:03+07:00",
+ "last_complete_host": "laptop"
+}

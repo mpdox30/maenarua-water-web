@@ -4,3 +4,12 @@ candidate_scoring_report.csv
 imerg_early_halfhourly_main1.csv
 test_log.csv
 __pycache__/
+
+# per-machine run files
+heartbeat_*.csv
+candidate_log_*.csv
+last_run_*.log
+
+# Colab เป็น "เครื่องที่ 3": log ของ Colab เก็บใน colab_sync/ และต้อง track (merge_logs.py colab_sync)
+!colab_sync/
+!colab_sync/candidate_log_COLAB.csv

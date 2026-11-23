@@ -1,0 +1,65 @@
+{
+  "worker_script": "era5t_worker.py",
+  "run_at": "2026-10-24T03:17:28.810156Z",
+  "mode": "weekly",
+  "requested_date": null,
+  "as_of_date": "2026-10-24",
+  "dataset": "reanalysis-era5-single-levels",
+  "time_utc_used": "12:00",
+  "grib_source": "cds_live_week:['D:\\\\maenaruea-water-web\\\\01_data\\\\scripts and code\\\\pipeline\\\\era5t_output\\\\era5t_week_202610_19-23.grib'] + rolling:['D:\\\\maenaruea-water-web\\\\01_data\\\\scripts and code\\\\pipeline\\\\era5t_output\\\\era5t_week_202610_17-23.grib']",
+  "fetch_elapsed_sec": null,
+  "grib_size_bytes": null,
+  "variables": null,
+  "valid_time": null,
+  "latitude": null,
+  "longitude": null,
+  "n_grib_datasets": null,
+  "missing_variables": null,
+  "iso_year": 2026,
+  "iso_week": 43,
+  "candidate_days": [
+    "2026-10-19",
+    "2026-10-20",
+    "2026-10-21",
+    "2026-10-22",
+    "2026-10-23"
+  ],
+  "n_days_in_week": 2,
+  "daily_breakdown": [
+    {
+      "ETo_mm_day": 3.096179210351734,
+      "T_c": 27.793786621093773,
+      "RH_pct": 76.64562177185938,
+      "VPD_kPa": 0.8722349878509097,
+      "u2_ms": 0.2647023380177134,
+      "Rn_MJ": 9.55322492,
+      "date": "2026-10-17"
+    },
+    {
+      "ETo_mm_day": 3.198110264884709,
+      "T_c": 26.882623291015648,
+      "RH_pct": 78.90134587685567,
+      "VPD_kPa": 0.747074257299646,
+      "u2_ms": 0.4589625459699212,
+      "Rn_MJ": 9.8842473175,
+      "date": "2026-10-18"
+    }
+  ],
+  "ET0_mm_week": 22.03,
+  "T_mean": 27.3382,
+  "RH_pct": 77.7735,
+  "VPD_kPa": 0.8097,
+  "u2_ms": 0.3618,
+  "Rn_MJ": 9.7187,
+  "is_rolling_estimate": true,
+  "rolling_window": {
+    "start": "2026-10-17",
+    "end": "2026-10-23"
+  },
+  "warnings": [
+    "สัปดาห์ปฏิทิน ISO (2026-W43) ไม่มีข้อมูล จริงเลยสักวัน — ใช้ rolling 7-day window แทน (2026-10-17 ถึง 2026-10-23, 2 วันที่มีข้อมูลจริงในช่วงนั้น) เป็นค่าประมาณการ (is_rolling_estimate=true — ไม่ใช่ผลรวมของสัปดาห์ปฏิทินจริง ห้ามป้อนเข้าโมเดลตรงๆ)"
+  ],
+  "fetch_error": null,
+  "ET0_mm_sum_available": 6.2943,
+  "et0_scaled_to_7d": true
+}
