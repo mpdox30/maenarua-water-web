@@ -236,18 +236,46 @@ if errorlevel 1 (
 
 echo.
 echo [INFO] sync กับ remote ก่อน push (merge จริง ไม่ใช่ ff-only -- ปลอดภัยคนละแบบกับ rebase) ...
-git pull --no-rebase --no-edit -X ours origin master
-if errorlevel 1 (
-    echo [WARN] git pull --no-rebase ไม่สำเร็จ ^(merge conflict จริง หรือเน็ตหลุด^) -- ข้ามขั้นตอน push รอบนี้ ^(ไม่ force/resolve เอง^) commit ของรอบนี้ ^(ถ้ามี^) ยังอยู่ใน local รอ push รอบถัดไปหลังแก้ conflict ถ้าเจอ .git/MERGE_HEAD ค้าง guard ด้านบนจะจับได้เองรอบถัดไป
-    goto :GIT_DONE
-)
+REM 2026-11-23 แก้: เครื่อง 2 push ไม่ผ่านตั้งแต่ ~11 พ.ย. เพราะ pull ล้มเงียบๆ (ไฟล์ untracked ชนกับ origin)
+REM เพิ่ม 1) log ลง logs\git_sync_log.txt ทุกรอบ (ผล pull/push/autofix) 2) git_pull_autofix.py ย้ายไฟล์ untracked
+REM ที่ชนไปสำรองนอก repo / stash ไฟล์ที่แก้ค้าง แล้วลอง pull ใหม่ 1 ครั้ง (ไม่ลบ ไม่ force)
+set "GITLOGDIR=%SCRIPT_DIR%logs"
+if not exist "%GITLOGDIR%" mkdir "%GITLOGDIR%"
+set "GITLOG=%GITLOGDIR%\git_sync_log.txt"
+set "GITTMP=%GITLOGDIR%\_last_pull.txt"
+set "PULL_TRY=1"
 
-git push origin master
-if errorlevel 1 (
-    echo [WARN] push ไม่สำเร็จ ^(เน็ตหลุด หรือ remote ไปไกลกว่าที่มี^) -- จะลองใหม่รอบถัดไปอัตโนมัติ ^(ไม่ pull/rebase เอง^)
-) else (
-    echo [OK] push สำเร็จ
-)
+:DO_PULL
+git pull --no-rebase --no-edit -X ours origin master > "%GITTMP%" 2>&1
+set "PULL_RC=!ERRORLEVEL!"
+type "%GITTMP%"
+if "!PULL_RC!"=="0" goto :PULL_OK
+echo [%DATE% %TIME%] PULL FAIL rc=!PULL_RC! try=!PULL_TRY! >> "%GITLOG%"
+type "%GITTMP%" >> "%GITLOG%"
+if not "!PULL_TRY!"=="1" goto :PULL_GIVEUP
+"%VENV_PYTHON%" "%SCRIPT_DIR%git_pull_autofix.py" "%GITTMP%" >> "%GITLOG%" 2>&1
+if errorlevel 1 goto :PULL_GIVEUP
+set "PULL_TRY=2"
+echo [INFO] autofix ทำงานแล้ว -- ลอง pull ใหม่อีกครั้ง
+goto :DO_PULL
+
+:PULL_GIVEUP
+echo [WARN] git pull --no-rebase ไม่สำเร็จ ^(merge conflict จริง หรือเน็ตหลุด^) -- ข้ามขั้นตอน push รอบนี้ ^(ไม่ force/resolve เอง^) ดูสาเหตุใน %GITLOG%
+goto :GIT_DONE
+
+:PULL_OK
+git push origin master > "%GITTMP%" 2>&1
+set "PUSH_RC=!ERRORLEVEL!"
+type "%GITTMP%"
+if "!PUSH_RC!"=="0" goto :PUSH_OK
+echo [WARN] push ไม่สำเร็จ ^(เน็ตหลุด สิทธิ์ หรือ remote ไปไกลกว่าที่มี^) -- จะลองใหม่รอบถัดไป ดูสาเหตุใน %GITLOG%
+echo [%DATE% %TIME%] PUSH FAIL rc=!PUSH_RC! >> "%GITLOG%"
+type "%GITTMP%" >> "%GITLOG%"
+goto :GIT_DONE
+
+:PUSH_OK
+echo [OK] push สำเร็จ
+echo [%DATE% %TIME%] push OK >> "%GITLOG%"
 goto :GIT_DONE
 
 :GIT_BUSY
