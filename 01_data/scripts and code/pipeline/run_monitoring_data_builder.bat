@@ -255,6 +255,16 @@ set "GITLOG=%GITLOGDIR%\git_sync_log.txt"
 set "GITTMP=%GITLOGDIR%\_last_pull.txt"
 set "PULL_TRY=1"
 
+REM 2026-11-24 เพิ่ม: shadow_predict.py (เรียกจาก inflow_outlook_7d.py) เขียน 2 ไฟล์ที่ git ติดตามอยู่ (และเครื่องหลัก
+REM push วันละครั้งผ่าน push_web_data.py) -> ทำให้ pull ชน "local changes would be overwritten" ทุกรอบบนเครื่องที่รันโมเดล
+REM แก้โดย: สำรอง 2 ไฟล์นี้ไว้ -> git checkout ทิ้ง -> pull/push -> คืนไฟล์สำรองกลับที่ :GIT_DONE (ไม่เสียข้อมูล)
+set "KEPT=0"
+set "SHDIR=01_data\experiments\sixhourly_refresh_20260918"
+set "KEEPDIR=%GITLOGDIR%\_keep"
+if not exist "%KEEPDIR%" mkdir "%KEEPDIR%"
+copy /y "%SHDIR%\shadow_gdrive_raw_store.csv" "%KEEPDIR%\" >nul 2>&1 && copy /y "%SHDIR%\shadow_predictions_log.csv" "%KEEPDIR%\" >nul 2>&1 && set "KEPT=1"
+if "!KEPT!"=="1" git checkout -- "01_data/experiments/sixhourly_refresh_20260918/shadow_gdrive_raw_store.csv" "01_data/experiments/sixhourly_refresh_20260918/shadow_predictions_log.csv" 2>nul
+
 :DO_PULL
 git pull --no-rebase --no-edit -X ours origin master > "%GITTMP%" 2>&1
 set "PULL_RC=!ERRORLEVEL!"
@@ -292,6 +302,10 @@ goto :GIT_DONE
 echo [WARN] เจอ rebase/merge ค้างอยู่ใน git -- ข้ามขั้นตอน push รอบนี้ทั้งหมด ^(ไปแก้ conflict มือก่อน แล้วรอบถัดไปจะกลับมา push ปกติเอง^)
 
 :GIT_DONE
+if "!KEPT!"=="1" (
+    copy /y "%KEEPDIR%\shadow_gdrive_raw_store.csv" "%SHDIR%\" >nul 2>&1
+    copy /y "%KEEPDIR%\shadow_predictions_log.csv" "%SHDIR%\" >nul 2>&1
+)
 popd
 
 :SKIP_GIT_PUSH
