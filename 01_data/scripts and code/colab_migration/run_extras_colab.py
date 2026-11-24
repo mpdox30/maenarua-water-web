@@ -209,6 +209,9 @@ def build_steps(web, wmb):
         ("ledger_json", [sys.executable, "build_water_ledger_json.py"], pipe, 300,
          None if has_release else "ข้าม (ต้องรันหลัง reservoir_orchestration)"),
         ("shadow_predict_6h", [sys.executable, "shadow_predict.py"], exp6, 1200, None),
+        # 2026-11-24: พยากรณ์น้ำไหลเข้า 72 ชม. (GBM 12 ช่วง) -> 03_website/assets/data/inflow_outlook_7d.json (อยู่ใต้ WEB_PREFIXES แล้ว จะถูก push)
+        # ต้องรันหลัง shadow_predict_6h (อ่านแถวล่าสุดจาก shadow_predictions_log.csv + latest.json) ; ล้ม/ล็อกเก่า = ไม่ทับไฟล์เดิม
+        ("inflow_outlook_7d", [sys.executable, "inflow_outlook_7d.py"], pipe, 300, None),
     ]
     # 2026-11-11: ความลึกน้ำท่วมต่ออาคาร (แผนที่ 3 มิติ) -- อ่าน footprint+ความสูงจากไฟล์เว็บเดิม แล้วเขียนทับด้วยความลึกล่าสุด
     bdir = f"{wmb}/09_live/output"; wdata = f"{web}/03_website/assets/data"
