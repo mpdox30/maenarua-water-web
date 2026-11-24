@@ -43,7 +43,7 @@ jobs:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment2.outputs.page_url || steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -78,6 +78,20 @@ jobs:
         with:
           path: "./03_website"
 
+      # 2026-11-24 เพิ่ม -- เจอปัญหาจริง (fail ซ้ำทุก 1-2 ชม. ตั้งแต่ 23 พ.ย.): ขั้น Upload สำเร็จ
+      # (summary ขึ้น Artifacts = 1) แต่ deploy-pages@v4 ถามหา artifact แล้วได้ "Found 0 artifact(s)" ->
+      # "No artifacts named github-pages were found for this workflow run" ภายใน 0 วินาที เป็นอาการของ
+      # artifact API ฝั่ง GitHub ที่ยังไม่ index ทัน (eventual consistency) ไม่ใช่บั๊กในไฟล์เว็บ
+      # แก้โดยรอก่อน deploy และลอง deploy ซ้ำอีก 1 ครั้งถ้าครั้งแรกล้ม (รันซ้ำ step เดิมใน job เดียวกันได้)
+      - name: Wait for the Pages artifact to be indexed
+        run: sleep 20
+
       - name: Deploy to GitHub Pages
         id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+
+      - name: Retry deploy (artifact not indexed yet)
+        id: deployment2
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v4
