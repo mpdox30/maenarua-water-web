@@ -126,7 +126,7 @@ body.show-ui .ctl{opacity:1}
       <div class="pnl" style="flex:1"><h3>ระดับน้ำย้อนหลังและพยากรณ์ 7 วัน<small>ม.รทก. · แถบ = ช่วง P10–P90</small></h3><svg id="kwanSvg" viewBox="0 0 1500 470" preserveAspectRatio="xMidYMid meet"></svg></div></section>
     <!-- 5 น้ำไหลลงอ่างแม่นาเรือ -->
     <section class="scene" data-n="น้ำไหลลงอ่างแม่นาเรือ"><h1>พยากรณ์น้ำไหลลงอ่างเก็บน้ำแม่นาเรือ<small id="s4sub"></small></h1><div class="chips" id="s4chips"></div>
-      <div class="g2"><div class="pnl"><h3>ปริมาณน้ำไหลเข้าล่วงหน้า 7 วัน<small>ลบ.ม./วัน · CatBoost</small></h3><svg id="inSvg" viewBox="0 0 800 380" preserveAspectRatio="xMidYMid meet"></svg><div class="leg"><span><i style="background:#38bdf8"></i>ความเชื่อมั่นพอใช้</span><span><i style="background:#38bdf8;opacity:.4"></i>ความเชื่อมั่นต่ำ</span></div></div>
+      <div class="g2"><div class="pnl"><h3 id="inT">ปริมาณน้ำไหลเข้าล่วงหน้า 7 วัน<small>ลบ.ม./วัน · CatBoost</small></h3><svg id="inSvg" viewBox="0 0 800 380" preserveAspectRatio="xMidYMid meet"></svg><div class="leg"><span><i style="background:#38bdf8"></i>ความเชื่อมั่นพอใช้</span><span><i style="background:#38bdf8;opacity:.4"></i>ความเชื่อมั่นต่ำ</span></div></div>
       <div class="pnl"><h3>น้ำไหลเข้าที่ประมาณได้ ย้อนหลัง 84 ชม.<small>ลบ.ม. ต่อช่วง 6 ชม. · จากสมดุลน้ำ</small></h3><svg id="in6Svg" viewBox="0 0 800 380" preserveAspectRatio="xMidYMid meet"></svg><div class="note" id="s4note"></div></div></div></section>
     <!-- 6 ความต้องการใช้น้ำ -->
     <section class="scene" data-n="ความต้องการใช้น้ำ"><h1>คาดการณ์ความต้องการใช้น้ำล่วงหน้า 12 สัปดาห์<small id="s5sub"></small></h1><div class="chips" id="s5chips"></div>
@@ -160,10 +160,10 @@ function tick(){var d=new Date();$('#clk').textContent=('0'+d.getHours()).slice(
 tick();setInterval(tick,10000);
 
 /* ---------- ข้อมูล ---------- */
-var D={mon:null,fl:null,net:null,lat:null,in6:null}, FB={'MNR-01':'RES002','MNR-02':'RES004','MNR-03':'RES005','MNR-04':'RES006'};
+var D={mon:null,fl:null,net:null,lat:null,in6:null,ol:null}, FB={'MNR-01':'RES002','MNR-02':'RES004','MNR-03':'RES005','MNR-04':'RES006'};
 function load(){
-  return Promise.all([J('assets/data/monitoring.json'),J('assets/data/flood_latest.json'),J('assets/data/water_network.json'),J('assets/data/latest.json'),J('assets/data/inflow_6h_display.json')]).then(function(r){
-    if(r[0])D.mon=r[0];if(r[1])D.fl=r[1];if(r[2])D.net=r[2];if(r[3])D.lat=r[3];if(r[4])D.in6=r[4];
+  return Promise.all([J('assets/data/monitoring.json'),J('assets/data/flood_latest.json'),J('assets/data/water_network.json'),J('assets/data/latest.json'),J('assets/data/inflow_6h_display.json'),J('assets/data/inflow_outlook_7d.json')]).then(function(r){
+    if(r[0])D.mon=r[0];if(r[1])D.fl=r[1];if(r[2])D.net=r[2];if(r[3])D.lat=r[3];if(r[4])D.in6=r[4];D.ol=r[5]||null;
     renderAll();
     var bad=!D.mon&&!D.net;$('#err').style.display=bad?'flex':'none';
     var t=D.mon&&D.mon.meta&&D.mon.meta.updated;$('#upd').textContent='ข้อมูลโทรมาตรล่าสุด '+(t?fd(t.slice(0,10),true)+' '+t.slice(11,16)+' น.':'—');
@@ -378,13 +378,31 @@ function bars(el,items,o){
 function addDays(iso,n){var d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
 
 /* ---------- ฉาก 4: น้ำไหลลงอ่างแม่นาเรือ ---------- */
+function olOK(o){if(!o||!o.gbm||o.gbm.length!==12||!o.now||!o.issued_at)return false;var m=String(o.issued_at).match(/(\d+)-(\d+)-(\d+)T(\d+):(\d+)/);if(!m)return false;var age=(Date.now()+7*36e5-Date.UTC(+m[1],m[2]-1,+m[3],+m[4],+m[5]))/36e5;return age>=-1&&age<=30}
 function s4(){
-  var f=D.lat&&D.lat.forecasts&&D.lat.forecasts.inflow&&D.lat.forecasts.inflow.forecast;if(!f||!f.horizons)return;
+  var O=D.ol,f=D.lat&&D.lat.forecasts&&D.lat.forecasts.inflow&&D.lat.forecasts.inflow.forecast;
+  if(olOK(O)){ /* 72 ชม. ข้างหน้า = โมเดล 6 ชม. 12 ช่วง */
+    var it=[],tot=0,low=0,pd=null;O.gbm.forEach(function(g){var m=String(g.window_end).match(/(\d+)-(\d+)-(\d+)T(\d+):(\d+)/),dd=m[1]+m[2]+m[3];tot+=g.q_6h_m3||0;if(g.low_confidence)low++;
+      it.push({v:Math.max(0,g.q_6h_m3||0),l1:m[4]+':'+m[5],l2:dd!==pd?(+m[3])+' '+MO[+m[2]-1]:'',faded:!!g.low_confidence});pd=dd});
+    var im=String(O.issued_at).match(/(\d+)-(\d+)-(\d+)T(\d+):(\d+)/);
+    $('#inT').innerHTML='ปริมาณน้ำไหลเข้าล่วงหน้า 72 ชม.<small>ลบ.ม./6 ชม. · โมเดล 6 ชม.</small>';
+    $('#s4sub').textContent='รอบพยากรณ์ '+im[4]+':'+im[5]+' น. '+(+im[3])+' '+MO[+im[2]-1];
+    $('#s4chips').innerHTML='<span class="chip" style="color:#7dd3fc;border-color:#7dd3fc">ไหลเข้าล่าสุด '+fmt(O.now.q_6h_m3)+' ลบ.ม./6 ชม.</span><span class="chip" style="color:#a5b4fc;border-color:#a5b4fc">รวม 72 ชม. '+fmt(tot)+' ลบ.ม.</span>'+(low?'<span class="chip" style="color:#fbbf24;border-color:#fbbf24">ความเชื่อมั่นต่ำ '+low+' จาก '+it.length+' ช่วง</span>':'');
+    bars($('#inSvg'),it,{});
+  } else if(f&&f.horizons){
+    $('#inT').innerHTML='ปริมาณน้ำไหลเข้าล่วงหน้า 7 วัน<small>ลบ.ม./วัน · CatBoost</small>';
+    s4daily(f);
+  }
+  s4back();
+}
+function s4daily(f){
   var items=[],tot=0,low=0;Object.keys(f.horizons).sort(function(a,b){return +a.slice(1)-+b.slice(1)}).forEach(function(k){var h=f.horizons[k],n=+k.slice(1),d=addDays(f.as_of_date,n);tot+=h.prediction_m3_per_day||0;if(h.low_confidence)low++;
     items.push({v:Math.max(0,h.prediction_m3_per_day||0),l1:(+d.slice(8))+' '+MO[+d.slice(5,7)-1],l2:'+'+n+' วัน',faded:!!h.low_confidence})});
   $('#s4sub').textContent='ข้อมูล ณ '+fd(f.as_of_date,true);
   $('#s4chips').innerHTML='<span class="chip" style="color:#7dd3fc;border-color:#7dd3fc">ไหลเข้าล่าสุด '+fmt(f.current_qin_m3_per_day)+' ลบ.ม./วัน</span><span class="chip" style="color:#a5b4fc;border-color:#a5b4fc">รวม 7 วัน '+fmt(tot)+' ลบ.ม.</span>'+(low?'<span class="chip" style="color:#fbbf24;border-color:#fbbf24">ความเชื่อมั่นต่ำ '+low+' จาก '+items.length+' วัน</span>':'');
   bars($('#inSvg'),items,{});
+}
+function s4back(){
   /* ย้อนหลัง 6 ชม. */
   var w=D.in6&&D.in6.windows;if(w&&w.length>1){var W=800,H=380,l=70,r=14,t=24,b=56,mx=Math.max(1,Math.max.apply(null,w.map(function(x){return x.q_in_6h_m3})))*1.12,X=function(i){return l+(W-l-r)*i/(w.length-1)},Y=function(v){return H-b-(H-b-t)*v/mx},sv='';
     [0,.5,1].forEach(function(p){var y=Y(mx/1.12*p*1.12);sv+='<line x1="'+l+'" x2="'+(W-r)+'" y1="'+y+'" y2="'+y+'" stroke="#1c3646"/><text x="'+(l-8)+'" y="'+(y+5)+'" text-anchor="end" font-size="19" fill="#8fa9b8">'+fmt(mx*p)+'</text>'});
