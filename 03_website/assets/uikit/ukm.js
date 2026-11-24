@@ -17,8 +17,8 @@ var TPL = {"hero": "<header class=\"hero\" id=\"top\">\n  <div class=\"wrap\">\n
 var NULL = new Proxy(function () {}, { get: function (t, k) { return k === Symbol.toPrimitive ? function () { return ''; } : k === 'length' ? 0 : NULL; }, set: function () { return true; }, apply: function () { return NULL; } });
 var g = function (n) { return fetch('assets/data/' + n + '.json', { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(n + ' ' + r.status); return r.json(); }); };
 function loadData() {
-  return Promise.all(['monitoring', 'water_ledger', 'inflow_6h_display', 'latest', 'flood_latest'].map(g)).then(function (a) {
-    var mon = a[0], led = a[1], w6 = a[2], lat = a[3], fl = a[4];
+  return Promise.all(['monitoring', 'water_ledger', 'inflow_6h_display', 'latest', 'flood_latest'].map(g).concat([g('inflow_outlook_7d').catch(function () { return null; })])).then(function (a) {
+    var mon = a[0], led = a[1], w6 = a[2], lat = a[3], fl = a[4], ol = a[5];
     var stations = mon.stations.map(function (s) { var o = {}; ['station_code', 'name_th', 'spillway_msl', 'water_level', 'rainfall_1h', 'measure_datetime', 'storage_m3', 'storage_max_m3', 'capacity_pct', 'name_en', 'temperature', 'humidity', 'pressure', 'solar', 'distance_to_spillway_m'].forEach(function (k) { o[k] = s[k]; }); o.history = (s.history || []); o.rain = (s.rainfall_hourly || []).slice(-72); return o; });
     var ledger = led.rows.slice(-45).map(function (r) { return { date: r.date, level: r.water_level_m, volume: r.water_volume_m3, inflow: r.inflow_m3, release: (r.outlet_release_m3 || 0) + (r.spill_m3 || 0), spill: r.spill_m3 || 0, rain: r.rain_24h_mm || 0 }; });
     var allrows = led.rows.map(function (r) { return { date: r.date, year: r.year, month: r.month, level: r.water_level_m, volume: r.water_volume_m3, inflow: r.inflow_m3, outlet: r.outlet_release_m3 || 0, spill: r.spill_m3 || 0, rain: r.rain_24h_mm || 0, evap: r.evap_m3, infil: r.infiltration_m3, dS: r.delta_s_m3 }; });
@@ -26,7 +26,7 @@ function loadData() {
     var fc = [{ date: day(0), h: 0, v: inf.current_qin_m3_per_day }];
     for (var h = 1; h <= 7; h++) { var p = inf.horizons['h' + h]; if (p) fc.push({ date: day(h), h: h, v: p.prediction_m3_per_day, low: !!p.low_confidence }); }
     return { snapshot: new Date().toISOString(), monitoring_updated: mon.meta.updated, capacity_m3: 1625000, crest: 489.545, max_level_seen: Math.max.apply(null, led.rows.map(function (r) { return r.water_level_m; })),
-      stations: stations, reservoirs: mon.reservoirs || [], ledger: ledger, allrows: allrows, windows: w6.windows, forecast: fc,
+      stations: stations, reservoirs: mon.reservoirs || [], ledger: ledger, allrows: allrows, windows: w6.windows, forecast: fc, outlook: ol,
       kwan: { level: fl.kwan_now.level, change_3d: fl.kwan_now.change_3d, bank: fl.banks.Mae_Main1, bank_ronghai: fl.banks.RongHai, flag: fl.flags.overall, generated_at: (function (s) { var t = Date.parse(String(s).replace(' ', 'T') + (/[zZ]|[+-]\d\d:?\d\d$/.test(s) ? '' : 'Z')); if (isNaN(t)) return s; var i = new Date(t + 7 * 36e5).toISOString(); return i.slice(0, 10) + ' ' + i.slice(11, 16) + ' น.'; })(fl.generated_at) } };
   });
 }
@@ -350,7 +350,68 @@ function renderDaily(k) {
 function dailyIn() { dailyStarted = true; renderDaily(dailyKey); }
 
 /* =============== FORECAST (cosine-interpolated curve) =============== */
+/* ---- พยากรณ์ 7 วัน: 3 วันแรก = โมเดล 6 ชม. (GBM, 12 ช่วง) + วันที่ 4–7 = โมเดลรายวัน (inflow_outlook_7d.json) ---- */
+const _P = s => { const m = String(s).match(/(\d+)-(\d+)-(\d+)T(\d+):(\d+)/); return Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5]); };  // เวลาไทยแบบ naive -> ไม่ขึ้นกับ timezone เครื่อง
+const _pad = n => String(n).padStart(2, '0');
+function outlookOK(o) {
+  if (!o || !Array.isArray(o.gbm) || o.gbm.length !== 12 || !o.now || !o.issued_at) return false;
+  const nowTH = Date.now() + 7 * 36e5, age = (nowTH - _P(o.issued_at)) / 36e5;
+  return age >= -1 && age <= 30;  // ล็อกเก่ากว่า 30 ชม. -> fallback กราฟรายวันเดิม
+}
+function buildOutlook() {
+  const O = D.outlook, W = 900, H = 340, x0 = 66, x1 = 850, yb = 266, yt = 60, DAY = 864e5;
+  const tNow = _P(O.issued_at), G = O.gbm.map(g => ({ ...g, t: _P(g.window_end), ts: _P(g.window_start) })), tG = G[G.length - 1].t;
+  const days = [];  // วันที่ 4–7 แสดงในกราฟรายวันแยกต่างหากแล้ว -> กราฟนี้แสดงเฉพาะ 12 ช่วง 6 ชม. (3 วัน)
+  const t1 = days.length ? days[days.length - 1].t0 + DAY : tG;
+  const x = t => x0 + (t - tNow) / (t1 - tNow) * (x1 - x0);
+  const vals = [O.now.q_6h_m3, ...G.map(g => g.q_6h_m3), ...days.map(d => d.q_6h_avg_m3)], mx = Math.max(...vals, 1) * 1.18, y = v => yb - v / mx * (yb - yt);
+  const dFmt = t => { const d = new Date(t); return `${d.getUTCDate()} ${MON[d.getUTCMonth()]}`; }, hFmt = t => { const d = new Date(t); return `${_pad(d.getUTCHours())}:${_pad(d.getUTCMinutes())}`; };
+  let grid = '<g class="grid">'; for (let i = 0; i <= 4; i++) { const v = mx * i / 4; grid += `<line x1="${x0 - 12}" x2="${x1 + 8}" y1="${y(v)}" y2="${y(v)}"/>`; }
+  grid += '</g><g class="ax">'; for (let i = 0; i <= 4; i++) { const v = mx * i / 4; grid += `<text x="${x0 - 18}" y="${y(v) + 4}" text-anchor="end">${fmtK(v)}</text>`; } grid += '</g>';
+  // เส้นแบ่งวัน (เที่ยงคืน) + ป้ายวันที่
+  let ticks = '', first = new Date(tNow); first = Date.UTC(first.getUTCFullYear(), first.getUTCMonth(), first.getUTCDate()) + DAY;
+  for (let t = first; t <= t1 + 1; t += DAY) {
+    const cx = x(t), last = t >= t1 - 1;
+    ticks += `<line x1="${cx.toFixed(1)}" x2="${cx.toFixed(1)}" y1="${yt - 8}" y2="${yb}" style="stroke:var(--line-2)" stroke-dasharray="2 5"/>`;
+    if (!last) ticks += `<text class="ax" x="${(x(t + DAY / 2 > t1 ? t + (t1 - t) / 2 : t + DAY / 2)).toFixed(1)}" y="${yb + 36}" text-anchor="middle">${dFmt(t)}</text>`;
+  }
+  if (first - tNow > 5 * 36e5) ticks += `<text class="ax" x="${((x(first) + x(tNow)) / 2).toFixed(1)}" y="${yb + 36}" text-anchor="middle">${dFmt(tNow)}</text>`;
+  // ช่วงรายวัน (วันที่ 4–7) = แท่งค่าเฉลี่ยต่อ 6 ชม.
+  let bars = '';
+  days.forEach(d => {
+    const xs = x(Math.max(d.t0, tG)), xe = x(d.t0 + DAY), v = d.q_6h_avg_m3, yy = y(v), tip = `<b>${dFmt(d.t0)} (วันที่ ${d.h})</b><br>โมเดลรายวัน ${fmt(d.q_day_m3)} ลบ.ม./วัน<br>เฉลี่ย <b>${fmt(v)}</b> ลบ.ม./6 ชม.<br>${d.low_confidence ? 'ความเชื่อมั่นต่ำ' : 'ความเชื่อมั่นปกติ'}`;
+    bars += `<g data-tip="${tip}"><rect class="fadein" x="${(xs + 2).toFixed(1)}" y="${(v > 0 ? yy : yb - 2).toFixed(1)}" width="${Math.max(2, xe - xs - 4).toFixed(1)}" height="${(v > 0 ? yb - yy : 2).toFixed(1)}" rx="6" style="fill:var(--accent);fill-opacity:.2;stroke:var(--accent)" stroke-width="1.6" ${d.low_confidence ? 'stroke-dasharray="4 3"' : ''}/>
+      <text class="bar-lbl fadein" x="${((xs + xe) / 2).toFixed(1)}" y="${(Math.min(yy, yb - 2) - 8).toFixed(1)}">${fmtK(v)}</text><rect x="${xs.toFixed(1)}" y="${yt - 8}" width="${(xe - xs).toFixed(1)}" height="${yb - yt + 8}" fill="transparent"/></g>`;
+  });
+  // เส้น/พื้นที่ GBM
+  const pts = [[x(tNow), y(O.now.q_6h_m3)], ...G.map(g => [x(g.t), y(g.q_6h_m3)])];
+  const line = 'M' + pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' L'), area = line + ` L${pts[pts.length - 1][0].toFixed(1)},${yb} L${pts[0][0].toFixed(1)},${yb}Z`;
+  const gmax = G.reduce((a, g) => g.q_6h_m3 > a.q_6h_m3 ? g : a, G[0]);
+  const dots = [{ now: true, t: tNow, v: O.now.q_6h_m3 }, ...G].map((g, i) => {
+    const now = !!g.now, t = now ? tNow : g.t, v = now ? g.v : g.q_6h_m3, cx = x(t), cy = y(v), low = !now && g.low_confidence;
+    const tip = now ? `<b>ตอนนี้</b> (ช่วงก่อน ${dFmt(t)} ${hFmt(t)} น.)<br>น้ำไหลเข้าจริง ${fmt(v)} ลบ.ม./6 ชม.<br>จากข้อมูลโทรมาตรล่าสุด`
+      : `<b>${dFmt(t)} ${hFmt(g.ts)}–${hFmt(t)} น.</b> (+${g.h * 6} ชม.)<br>พยากรณ์ <b>${fmt(v)}</b> ลบ.ม./6 ชม.<br>${low ? 'ความเชื่อมั่นต่ำ' : 'โมเดล 6 ชม.'} · ${g.family || ''}`;
+    const showLbl = now || g === gmax || g.h === 1 || g.h === 12 || g.h % 3 === 0;
+    return `<g data-tip="${tip}">${now ? `<circle class="sonar" cx="${cx}" cy="${cy}" r="8" fill="none" style="stroke:var(--accent)" stroke-width="2"/>` : ''}
+      <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${now ? 7 : 4.5}" style="fill:${low ? 'var(--core)' : 'var(--accent)'};stroke:${now ? 'var(--accent-2)' : 'var(--accent)'}" stroke-width="${now ? 3 : 2.4}" ${low ? 'stroke-dasharray="2.5 2"' : ''} class="fadein"/>
+      <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="14" fill="transparent"/>${showLbl ? `<text class="bar-lbl fadein" x="${cx.toFixed(1)}" y="${(cy - 11).toFixed(1)}">${fmtK(v)}</text>` : ''}</g>`;
+  }).join('');
+  const xg = x(tG);
+  $('#fcBox').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="กราฟพยากรณ์น้ำไหลเข้าอ่าง 3 วันข้างหน้า ราย 6 ชั่วโมง">
+  <defs><linearGradient id="gFc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.35"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></linearGradient></defs>
+  ${grid}${ticks}
+  <line x1="${x(tNow)}" x2="${x(tNow)}" y1="${yt - 18}" y2="${yb}" style="stroke:var(--accent-2)" stroke-width="1.6" stroke-dasharray="5 5"/>
+  <text class="ax" x="${x(tNow) + 8}" y="${yt - 24}" style="fill:var(--accent-2);font-weight:700">ตอนนี้ (${hFmt(tNow)} น.)</text>
+  ${days.length ? `<line x1="${xg.toFixed(1)}" x2="${xg.toFixed(1)}" y1="${yt - 18}" y2="${yb}" style="stroke:var(--faint)" stroke-width="1.4" stroke-dasharray="3 4"/><text class="ax" x="${(xg + 8).toFixed(1)}" y="${yt - 24}" style="font-weight:700">โมเดลรายวัน (เฉลี่ยต่อ 6 ชม.)</text>` : ''}
+  ${bars}<path class="fadein" d="${area}" fill="url(#gFc)"/><path class="draw" d="${line}" fill="none" style="stroke:var(--accent)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  ${dots}</svg><div class="tt" id="fcTT"></div>`;
+  const nLow = G.filter(g => g.low_confidence).length, upd = new Date(tNow);
+  $('#fcNote').textContent = `หน่วย ลบ.ม./6 ชม. · โมเดล 6 ชม. (GBM) 12 ช่วง = 72 ชม. อัปเดตทุก 6 ชม. (รอบ ${hFmt(tNow)} น.) · วงโปร่ง = ความเชื่อมั่นต่ำ (${nLow} ช่วง คือ 54–72 ชม.) · แนวโน้ม 7 วันดูได้ในกราฟรายวันด้านบน/ถัดไป (โมเดลรายวัน หน่วยต่างกัน เทียบตรงๆ ไม่ได้) · ไม่ใช่ประกาศทางการ`;
+  const p = $('#forecast .sec-head p'); if (p) p.textContent = 'จุดบนกราฟแต่ละจุด = น้ำไหลเข้าสะสมในช่วง 6 ชม. ที่สิ้นสุด ณ เวลานั้น · เส้นประ "ตอนนี้" คือค่าจริงล่าสุดจากข้อมูลโทรมาตร';
+  const h2 = $('#forecast .sec-head h2'); if (h2) h2.textContent = '72 ชั่วโมงข้างหน้า (ราย 6 ชม.)';
+}
 function buildForecast() {
+  if (outlookOK(D.outlook)) { try { return buildOutlook(); } catch (e) { console.warn('outlook chart failed, fallback', e); } }
   const F = D.forecast, W = 900, H = 340, x0 = 70, x1 = 830, yb = 270, yt = 56;
   const mx = Math.max(...F.map(f => f.v)) * 1.12, y = v => yb - v / mx * (yb - yt), x = i => x0 + i * (x1 - x0) / (F.length - 1);
   const pts = []; for (let i = 0; i < F.length - 1; i++) for (let s = 0; s < 20; s++) { const t = s / 20, w = (1 - Math.cos(Math.PI * t)) / 2; pts.push([x(i + t), y(F[i].v + (F[i + 1].v - F[i].v) * w)]); }

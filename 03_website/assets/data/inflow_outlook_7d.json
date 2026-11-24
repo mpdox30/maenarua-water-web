@@ -1,0 +1,151 @@
+{
+ "generated_at": "2026-11-24T16:18:12",
+ "issued_at": "2026-11-24T13:00:00",
+ "run_at": "2026-11-24T14:39:25.917106",
+ "unit": "m3_per_6h",
+ "now": {
+  "time": "2026-11-24T13:00:00",
+  "q_6h_m3": 7443.2
+ },
+ "gbm": [
+  {
+   "h": 1,
+   "window_start": "2026-11-24T13:00:00",
+   "window_end": "2026-11-24T19:00:00",
+   "q_6h_m3": 5931.4,
+   "family": "CatBoost_hurdle",
+   "low_confidence": false
+  },
+  {
+   "h": 2,
+   "window_start": "2026-11-24T19:00:00",
+   "window_end": "2026-11-25T01:00:00",
+   "q_6h_m3": 4616.9,
+   "family": "CatBoost_hurdle",
+   "low_confidence": false
+  },
+  {
+   "h": 3,
+   "window_start": "2026-11-25T01:00:00",
+   "window_end": "2026-11-25T07:00:00",
+   "q_6h_m3": 8660.6,
+   "family": "LightGBM",
+   "low_confidence": false
+  },
+  {
+   "h": 4,
+   "window_start": "2026-11-25T07:00:00",
+   "window_end": "2026-11-25T13:00:00",
+   "q_6h_m3": 7209.2,
+   "family": "LightGBM",
+   "low_confidence": false
+  },
+  {
+   "h": 5,
+   "window_start": "2026-11-25T13:00:00",
+   "window_end": "2026-11-25T19:00:00",
+   "q_6h_m3": 4767.2,
+   "family": "LightGBM",
+   "low_confidence": false
+  },
+  {
+   "h": 6,
+   "window_start": "2026-11-25T19:00:00",
+   "window_end": "2026-11-26T01:00:00",
+   "q_6h_m3": 5737.8,
+   "family": "CatBoost_hurdle",
+   "low_confidence": false
+  },
+  {
+   "h": 7,
+   "window_start": "2026-11-26T01:00:00",
+   "window_end": "2026-11-26T07:00:00",
+   "q_6h_m3": 6713.2,
+   "family": "XGBoost",
+   "low_confidence": false
+  },
+  {
+   "h": 8,
+   "window_start": "2026-11-26T07:00:00",
+   "window_end": "2026-11-26T13:00:00",
+   "q_6h_m3": 7522.1,
+   "family": "XGBoost",
+   "low_confidence": false
+  },
+  {
+   "h": 9,
+   "window_start": "2026-11-26T13:00:00",
+   "window_end": "2026-11-26T19:00:00",
+   "q_6h_m3": 7608.1,
+   "family": "XGBoost",
+   "low_confidence": true
+  },
+  {
+   "h": 10,
+   "window_start": "2026-11-26T19:00:00",
+   "window_end": "2026-11-27T01:00:00",
+   "q_6h_m3": 7815.6,
+   "family": "CatBoost_hurdle",
+   "low_confidence": true
+  },
+  {
+   "h": 11,
+   "window_start": "2026-11-27T01:00:00",
+   "window_end": "2026-11-27T07:00:00",
+   "q_6h_m3": 11490.2,
+   "family": "CatBoost_hurdle",
+   "low_confidence": true
+  },
+  {
+   "h": 12,
+   "window_start": "2026-11-27T07:00:00",
+   "window_end": "2026-11-27T13:00:00",
+   "q_6h_m3": 11747.2,
+   "family": "XGBoost",
+   "low_confidence": true
+  }
+ ],
+ "daily": {
+  "as_of_date": "2026-11-23",
+  "days": [
+   {
+    "h": 4,
+    "date": "2026-11-27",
+    "q_day_m3": 0.0,
+    "q_6h_avg_m3": 0.0,
+    "low_confidence": true,
+    "model": "CatBoost"
+   },
+   {
+    "h": 5,
+    "date": "2026-11-28",
+    "q_day_m3": 0.0,
+    "q_6h_avg_m3": 0.0,
+    "low_confidence": true,
+    "model": "CatBoost"
+   },
+   {
+    "h": 6,
+    "date": "2026-11-29",
+    "q_day_m3": 0.0,
+    "q_6h_avg_m3": 0.0,
+    "low_confidence": true,
+    "model": "CatBoost"
+   },
+   {
+    "h": 7,
+    "date": "2026-11-30",
+    "q_day_m3": 0.0,
+    "q_6h_avg_m3": 0.0,
+    "low_confidence": true,
+    "model": "CatBoost"
+   }
+  ],
+  "status": "ok",
+  "staleness_status": "ok"
+ },
+ "notes": [
+  "3 วันแรก: โมเดล 6 ชม. (GBM) รายช่วง 6 ชม. 12 ช่วง · วันที่ 4–7: โมเดลรายวันเดิม แสดงเป็นค่าเฉลี่ยต่อ 6 ชม. (ค่าต่อวัน ÷ 4)",
+  "ช่วงที่ 9–12 (54–72 ชม.) ความแม่นยำลดลง/ไม่นิ่ง ติดป้ายความเชื่อมั่นต่ำ · ใช้เป็นแนวโน้ม ไม่ใช่ประกาศทางการ"
+ ]
+}

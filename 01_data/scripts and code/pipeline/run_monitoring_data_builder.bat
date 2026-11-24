@@ -221,9 +221,19 @@ REM --no-ff ตรงๆ เจอ error "would be overwritten by merge" ไม�
 REM ทำให้ค้างถาวรไม่มีทางหลุดเอง หลังจาก GitHub Actions monitoring-builder.yml เริ่ม push ไฟล์เดียวกัน
 REM คู่ขนานด้วย) commit ก่อนแล้ว pull จะเจอ merge conflict จริง (มี MERGE_HEAD ให้ guard จับได้ตามที่
 REM ตั้งใจไว้แต่แรก) ไม่ใช่ถูกปฏิเสธเงียบๆ
+REM 2026-11-24 เพิ่ม: พยากรณ์น้ำไหลเข้า 7 วัน (3 วันแรก = โมเดล 6 ชม. GBM, วันที่ 4-7 = โมเดลรายวัน)
+REM inflow_outlook_7d.py --run-model-if-due : ถ้า mark 6 ชม. (01/07/13/19 น.+30 นาที) ยังไม่มีในล็อก จะรัน
+REM shadow_predict.py ให้เอง (ไม่ต้องมี Scheduled Task แยก) แล้วเขียน 03_website/assets/data/inflow_outlook_7d.json
+REM ล้มเหลว/ล็อกเก่าเกิน = ไม่ทับไฟล์เดิม ไม่กระทบขั้นตอนอื่น (หน้าเว็บ fallback เป็นกราฟรายวันเดิมเอง)
+set "OUTLOOK_RC=1"
+if not exist "%SCRIPT_DIR%logs" mkdir "%SCRIPT_DIR%logs"
+"%VENV_PYTHON%" "%SCRIPT_DIR%inflow_outlook_7d.py" --run-model-if-due >> "%SCRIPT_DIR%logs\outlook_log.txt" 2>&1
+set "OUTLOOK_RC=!ERRORLEVEL!"
+
 echo.
 echo [INFO] กำลัง add/commit ไฟล์ที่อัปเดตสำเร็จก่อน pull ...
 if "%BUILDER_EXIT_CODE%"=="0" git add "03_website/assets/data/monitoring.json"
+if "!OUTLOOK_RC!"=="0" git add "03_website/assets/data/inflow_outlook_7d.json"
 if "%INFLOW_EXIT_CODE%"=="0" git add "03_website/assets/data/inflow_6h_display.json"
 if "%LOGGER_EXIT_CODE%"=="0" git add "01_data/forecasting_results/Reservoir_inflow/forecast_accuracy_log.csv"
 if "%LOGGER_EXIT_CODE%"=="0" git add "03_website/assets/data/forecast_accuracy_log.csv"
