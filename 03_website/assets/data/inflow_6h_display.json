@@ -1,34 +1,12 @@
 {
-  "computed_at": "2026-11-25T22:55:11.004890",
-  "reference_now": "2026-11-25T22:55:09.068519",
+  "computed_at": "2026-11-26T00:10:14.162350",
+  "reference_now": "2026-11-26T00:10:10.713782",
   "target_reservoir": "อ่างเก็บน้ำแม่นาเรือ (Mae Na Rua Reservoir)",
   "method": "display-only water-balance estimate ที่ resolution 6 ชม. (สไลด์ทีละ 1 ชม. ย้อนหลัง 84 ชม.) reuse สูตร/ค่าคงที่ตรงจาก reservoir_water_balance.py (rating curve, spillway weir, evap/infiltration รายเดือน หาร 4) -- ไม่ใช่ค่าที่โมเดล พยากรณ์ CatBoost ใช้ ใช้แสดงผลเสริมบนเว็บเท่านั้น (ดู docstring หัวไฟล์ script นี้)",
   "lookback_hours": 84,
   "window_hours": 6,
   "n_windows_computed": 72,
   "windows": [
-    {
-      "window_start": "2026-11-22T10:00:00",
-      "window_end": "2026-11-22T16:00:00",
-      "q_in_6h_m3": 7051.1,
-      "water_level_start_m": 489.7,
-      "water_level_end_m": 489.712,
-      "rain_6h_mm": 0.0,
-      "release_6h_m3": 3754.8,
-      "spill_6h_m3": 0.2,
-      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
-    },
-    {
-      "window_start": "2026-11-22T11:00:00",
-      "window_end": "2026-11-22T17:00:00",
-      "q_in_6h_m3": 13126.0,
-      "water_level_start_m": 489.681,
-      "water_level_end_m": 489.712,
-      "rain_6h_mm": 0.0,
-      "release_6h_m3": 3754.8,
-      "spill_6h_m3": 0.2,
-      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
-    },
     {
       "window_start": "2026-11-22T12:00:00",
       "window_end": "2026-11-22T18:00:00",
@@ -797,6 +775,28 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 3754.8,
       "spill_6h_m3": 16714.8,
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
+    },
+    {
+      "window_start": "2026-11-25T17:00:00",
+      "window_end": "2026-11-25T23:00:00",
+      "q_in_6h_m3": 32188.9,
+      "water_level_start_m": 489.79,
+      "water_level_end_m": 489.823,
+      "rain_6h_mm": 0.0,
+      "release_6h_m3": 3754.8,
+      "spill_6h_m3": 18986.9,
+      "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
+    },
+    {
+      "window_start": "2026-11-25T18:00:00",
+      "window_end": "2026-11-26T00:00:00",
+      "q_in_6h_m3": 26947.0,
+      "water_level_start_m": 489.79,
+      "water_level_end_m": 489.804,
+      "rain_6h_mm": 0.0,
+      "release_6h_m3": 3754.8,
+      "spill_6h_m3": 19879.5,
       "release_note": "event#13(6.0h@5572.8m3/d, ยังไม่ปิด); event#14(6.0h@9446.4m3/d, ยังไม่ปิด)"
     }
   ],
