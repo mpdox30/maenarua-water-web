@@ -402,39 +402,6 @@
     <div class="wrap">
       <div class="section-head">
         <div>
-          <div class="eyebrow">รายละเอียดต่อ Horizon</div>
-          <h2>ค่าพยากรณ์และความเชื่อมั่นรายวัน</h2>
-        </div>
-        <p>โมเดลทำนายค่าน้ำไหลเข้าโดยตรง (direct delta regression)</p>
-      </div>
-      <div class="table-card">
-        <table class="data-table">
-          <thead>
-            <tr><th>Horizon</th><th>พยากรณ์ (ม³/วัน)</th><th>โมเดล</th><th>NSE (walk-forward CV)</th><th>ความเชื่อมั่น</th></tr>
-          </thead>
-          <tbody id="horizonTableBody">
-            <tr><td colspan="5">กำลังโหลดข้อมูล…</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="disclaimer-box" id="thresholdInstabilityBox" style="display:none; border-left:3px solid var(--amber-400);">
-        <h4>⚠ ทำไม NSE / ความเชื่อมั่นต่อ horizon ถึงแกว่งได้มาก</h4>
-        <p id="thresholdInstabilityDesc"></p>
-        <p id="thresholdInstabilityImpl"></p>
-      </div>
-      <div class="disclaimer-box">
-        <h4>⚠ ข้อจำกัดของโมเดล และความเบี่ยงเบนจากสูตรต้นฉบับ (known_limitations / known_deviations)</h4>
-        <ul id="limitationsList">
-          <li>กำลังโหลดข้อมูล…</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="wrap">
-      <div class="section-head">
-        <div>
           <div class="eyebrow">WMB Model · น้ำท่า 5 อ่าง</div>
           <h2>ภาพรวมน้ำท่าไหลลงอ่างเก็บน้ำ ตำบลแม่นาเรือและบ้านตุ่น</h2>
         </div>
@@ -537,6 +504,9 @@
 </footer>
 
 <script>
+// ส่วนตารางรายละเอียดต่อ Horizon ถูกถอดออกจากหน้าแล้ว — element ที่หายไปให้คืน div ว่างแทนเพื่อไม่ให้สคริปต์ error
+const _el = id => document.getElementById(id) || document.createElement('div');
+
 // ดึงข้อมูลพยากรณ์ล่าสุดจาก latest.json (เขียนโดย data_pipeline.py ทุกครั้งที่รัน pipeline
 // — เป็นสำเนาของ 01_data/forecasting_results/latest.json ที่ save_results() คัดลอกมาไว้ที่นี่
 // ด้วย เพื่อให้เว็บที่ deploy บน GitHub Pages เข้าถึงได้โดยไม่ต้อง fetch ข้าม path ออกนอก 03_website)
@@ -631,7 +601,7 @@ function renderInflow(json) {
     const status = inflow ? inflow.status : 'ไม่ทราบสถานะ';
     if (statusText) statusText.textContent = 'ยังไม่มีผลพยากรณ์ในขณะนี้ (สถานะ: ' + status + ') — โมเดลอาจกำลังรอ retrain หรือหาไฟล์ไม่พบ';
     document.getElementById('heroTags').innerHTML = '<span class="tag">ไม่มีข้อมูลพยากรณ์ในขณะนี้</span>';
-    document.getElementById('horizonTableBody').innerHTML = '<tr><td colspan="5">ไม่มีข้อมูลพยากรณ์</td></tr>';
+    _el('horizonTableBody').innerHTML = '<tr><td colspan="5">ไม่มีข้อมูลพยากรณ์</td></tr>';
     renderStaleBanner({});
     return;
   }
@@ -687,15 +657,15 @@ function renderInflow(json) {
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
-    document.getElementById('horizonTableBody').innerHTML =
+    _el('horizonTableBody').innerHTML =
       '<tr><td colspan="5">ไม่มีผลพยากรณ์ — ข้อมูลเก่าเกินเกณฑ์ (ดูคำเตือนด้านบน)</td></tr>';
-    const list = document.getElementById('limitationsList');
+    const list = _el('limitationsList');
     const items = (f.known_limitations || []).map(t => `<li>${t}</li>`);
     (f.known_deviations_from_original_template || []).forEach(d => {
       items.push(`<li><strong>${d.issue || ''}</strong>: ${d.description || ''}</li>`);
     });
     list.innerHTML = items.length ? items.join('') : '<li>ไม่มีข้อจำกัดที่บันทึกไว้</li>';
-    const tiBox0 = document.getElementById('thresholdInstabilityBox');
+    const tiBox0 = _el('thresholdInstabilityBox');
     if (tiBox0) tiBox0.style.display = 'none';  // ไม่มี horizon ให้แสดงในสถานะ blocked จึงไม่ต้องโชว์กล่องนี้
     return;
   }
@@ -749,7 +719,7 @@ function renderInflow(json) {
     },
   });
 
-  const tbody = document.getElementById('horizonTableBody');
+  const tbody = _el('horizonTableBody');
   tbody.innerHTML = horizonData.map((h, i) => {
     const badge = lowConf[i]
       ? '<span class="badge badge-low">⚠ ความเชื่อมั่นต่ำ</span>'
@@ -769,7 +739,7 @@ function renderInflow(json) {
     </tr>`;
   }).join('');
 
-  const list = document.getElementById('limitationsList');
+  const list = _el('limitationsList');
   const items = (f.known_limitations || []).map(t => `<li>${t}</li>`);
   if (f.api_t_deviation && f.api_t_deviation.deviates_from_original_excel_formula) {
     items.push('<li>API_t (ดัชนีฝนสะสมย้อนหลัง) บางวันคำนวณด้วย fallback logic ที่ไม่ตรงสูตร Excel ต้นฉบับ เนื่องจากข้อมูลฝนขาดหายในบางช่วง — ดูรายละเอียดใน model_metadata.json &gt; known_deviations_from_original_template</li>');
@@ -779,12 +749,12 @@ function renderInflow(json) {
   });
   list.innerHTML = items.length ? items.join('') : '<li>ไม่มีข้อจำกัดที่บันทึกไว้</li>';
 
-  const tiBox = document.getElementById('thresholdInstabilityBox');
+  const tiBox = _el('thresholdInstabilityBox');
   const ti = f.threshold_instability_from_correction;
   if (tiBox) {
     if (ti) {
-      document.getElementById('thresholdInstabilityDesc').textContent = ti.description || '';
-      document.getElementById('thresholdInstabilityImpl').textContent = ti.implication || '';
+      _el('thresholdInstabilityDesc').textContent = ti.description || '';
+      _el('thresholdInstabilityImpl').textContent = ti.implication || '';
       tiBox.style.display = '';
     } else {
       tiBox.style.display = 'none';
@@ -1182,7 +1152,7 @@ function loadInflowForecast() {
       console.error('โหลดข้อมูลไม่สำเร็จ:', err);
       const statusText = document.getElementById('statusText');
       if (statusText) statusText.textContent = 'ไม่สามารถโหลดข้อมูลจาก ' + DATA_ENDPOINT + ' ได้';
-      document.getElementById('horizonTableBody').innerHTML =
+      _el('horizonTableBody').innerHTML =
         '<tr><td colspan="5">ไม่สามารถโหลดข้อมูลจาก ' + DATA_ENDPOINT + ' ได้</td></tr>';
     });
 }
