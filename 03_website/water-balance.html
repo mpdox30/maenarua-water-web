@@ -272,7 +272,7 @@
         </div>
         <div class="kpi-card accent-amber">
           <div class="kpi-icon">🗂️</div>
-          <div class="kpi-label">ช่วงข้อมูลที่มี</div>
+          <div class="kpi-label" id="kpiRangeLabel">ช่วงข้อมูลที่มี</div>
           <div class="kpi-value" id="kpiMonthsCount" style="font-size:22px;">—</div>
           <div class="kpi-note" id="kpiMonthsRange">—</div>
         </div>
@@ -476,11 +476,25 @@ function renderKPIs() {
   document.getElementById('kpiLatestVolumeNote').textContent = latest ? `ปริมาตรน้ำ: ${fmtInt(latest.water_volume_m3)} ลบ.ม.` : '—';
   document.getElementById('kpiLatestInflow').innerHTML = latest ? `${fmtInt(latest.inflow_m3)}<span class="kpi-unit">ลบ.ม./วัน</span>` : '—';
   document.getElementById('kpiLatestSpillNote').textContent = latest ? `ล้นทางระบายน้ำล้น: ${fmtInt(latest.spill_m3)} ลบ.ม.` : '—';
-  document.getElementById('kpiMonthsCount').textContent = `${ledger.months_available.length} เดือน`;
-  if (ledger.months_available.length) {
-    const first = ledger.months_available[0];
-    const last = ledger.months_available[ledger.months_available.length - 1];
-    document.getElementById('kpiMonthsRange').textContent = `${thaiMonthLabel(first)} ถึง ${thaiMonthLabel(last)}`;
+  // 2026-11-25: กล่องนี้แสดง "สถิติระดับน้ำของปีปฏิทินปัจจุบัน" (สูงสุด/ต่ำสุด + วันที่) จากค่ารายวันในบัญชีน้ำ -- ไม่ใช่ระดับรายชั่วโมง
+  const yr = latest ? Number(latest.date.slice(0, 4)) : null;
+  const yRows = yr ? rows.filter(r => r.water_level_m != null && Number(r.date.slice(0, 4)) === yr) : [];
+  if (yRows.length) {
+    let mx = yRows[0], mn = yRows[0];
+    yRows.forEach(r => { if (r.water_level_m > mx.water_level_m) mx = r; if (r.water_level_m < mn.water_level_m) mn = r; });
+    const TH_ABBR = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    const sd = iso => { const [y, m, d] = iso.split('-').map(Number); return `${d} ${IS_EN ? mShort(m) : TH_ABBR[m - 1]} ${IS_EN ? y : y + 543}`; };
+    const line = (lbl, r) => `<div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;line-height:1.35"><span style="font-size:12.5px;font-weight:500;color:var(--text-500)">${lbl}</span><span>${fmtLevel(r.water_level_m)}<span class="kpi-unit">${IS_EN ? 'm MSL' : 'ม.'}</span></span><span style="font-size:12px;font-weight:500;color:var(--text-500)">${sd(r.date)}</span></div>`;
+    document.getElementById('kpiRangeLabel').textContent = IS_EN ? `Water-level extremes ${yr}` : `ระดับน้ำสูงสุด–ต่ำสุด ปี ${yr + 543}`;
+    document.getElementById('kpiMonthsCount').innerHTML = line(IS_EN ? 'High' : 'สูงสุด', mx) + line(IS_EN ? 'Low' : 'ต่ำสุด', mn);
+    const first = ledger.months_available[0], last = ledger.months_available[ledger.months_available.length - 1];
+    document.getElementById('kpiMonthsRange').textContent = (IS_EN ? 'Daily values from the water ledger · data ' : 'ค่ารายวันจากบัญชีน้ำ · ข้อมูล ') + `${thaiMonthLabel(first)} – ${thaiMonthLabel(last)}`;
+  } else {
+    document.getElementById('kpiMonthsCount').textContent = `${ledger.months_available.length} เดือน`;
+    if (ledger.months_available.length) {
+      const first = ledger.months_available[0], last = ledger.months_available[ledger.months_available.length - 1];
+      document.getElementById('kpiMonthsRange').textContent = `${thaiMonthLabel(first)} ถึง ${thaiMonthLabel(last)}`;
+    }
   }
 }
 
