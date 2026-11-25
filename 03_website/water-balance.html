@@ -96,6 +96,19 @@
   .kpi-value { font-family: "Space Grotesk", sans-serif; font-size: 27px; font-weight: 600; color: var(--text-100); }
   .kpi-unit { font-size: 12px; color: var(--text-500); margin-left: 5px; font-weight: 400; }
   .kpi-note { font-size: 11.5px; color: var(--text-600); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  /* 2026-11-25: การ์ด "สถานะอ่างเก็บน้ำ" -- กราฟจิ๋ว + ลูกศรเทียบวันก่อน + สถานะเทียบสันสปิลเวย์ */
+  .kpi-viz { margin-top: 10px; }
+  .kpi-viz svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .kpi-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 2px; }
+  .kpi-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: rgba(111,168,196,.16); color: #5b8fb0; white-space: nowrap; }
+  .kpi-chip.up { background: rgba(217,96,79,.14); color: #d9604f; }
+  .kpi-chip.down { background: rgba(42,157,127,.15); color: #2a9d7f; }
+  .kpi-chip.ok { background: rgba(42,157,127,.15); color: #2a9d7f; }
+  .kpi-chip.warn { background: rgba(224,169,79,.2); color: #b9822a; }
+  .kpi-chip.crit { background: rgba(214,69,61,.14); color: #d6453d; }
+  .kd-num { display: block; font-size: 46px; line-height: 1; font-weight: 700; color: var(--teal-400); letter-spacing: -.02em; }
+  .kd-txt { display: block; font-size: 15px; font-weight: 500; margin-top: 4px; color: var(--text-100); }
+  .kpi-viz .vz-lbl { font-size: 10.5px; fill: var(--text-500); font-family: inherit; }
 
   .filter-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
   .filter-bar label { font-size: 12.5px; color: var(--text-500); font-weight: 600; }
@@ -253,26 +266,22 @@
       </div>
       <div class="kpi-grid">
         <div class="kpi-card">
-          <div class="kpi-icon">📅</div>
           <div class="kpi-label">วันที่ล่าสุดในบัญชี</div>
           <div class="kpi-value" id="kpiLatestDate">—</div>
           <div class="kpi-note">แถวล่าสุดที่มีค่าระดับน้ำบันทึกไว้ในไฟล์บัญชีน้ำ</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-icon">🌊</div>
           <div class="kpi-label">ระดับน้ำ</div>
           <div class="kpi-value" id="kpiLatestLevel">—<span class="kpi-unit">ม.รทก.</span></div>
           <div class="kpi-note" id="kpiLatestVolumeNote">ปริมาตรน้ำ: —</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-icon">💧</div>
           <div class="kpi-label">น้ำไหลเข้า (วันล่าสุด)</div>
           <div class="kpi-value" id="kpiLatestInflow">—<span class="kpi-unit">ลบ.ม./วัน</span></div>
           <div class="kpi-note" id="kpiLatestSpillNote">ล้นทางระบายน้ำล้น: —</div>
         </div>
         <div class="kpi-card accent-amber">
-          <div class="kpi-icon">🗂️</div>
-          <div class="kpi-label">ช่วงข้อมูลที่มี</div>
+          <div class="kpi-label" id="kpiRangeLabel">ช่วงข้อมูลที่มี</div>
           <div class="kpi-value" id="kpiMonthsCount" style="font-size:22px;">—</div>
           <div class="kpi-note" id="kpiMonthsRange">—</div>
         </div>
@@ -476,11 +485,93 @@ function renderKPIs() {
   document.getElementById('kpiLatestVolumeNote').textContent = latest ? `ปริมาตรน้ำ: ${fmtInt(latest.water_volume_m3)} ลบ.ม.` : '—';
   document.getElementById('kpiLatestInflow').innerHTML = latest ? `${fmtInt(latest.inflow_m3)}<span class="kpi-unit">ลบ.ม./วัน</span>` : '—';
   document.getElementById('kpiLatestSpillNote').textContent = latest ? `ล้นทางระบายน้ำล้น: ${fmtInt(latest.spill_m3)} ลบ.ม.` : '—';
-  document.getElementById('kpiMonthsCount').textContent = `${ledger.months_available.length} เดือน`;
-  if (ledger.months_available.length) {
-    const first = ledger.months_available[0];
-    const last = ledger.months_available[ledger.months_available.length - 1];
-    document.getElementById('kpiMonthsRange').textContent = `${thaiMonthLabel(first)} ถึง ${thaiMonthLabel(last)}`;
+  // 2026-11-25: กล่องนี้แสดง "สถิติระดับน้ำของปีปฏิทินปัจจุบัน" (สูงสุด/ต่ำสุด + วันที่) จากค่ารายวันในบัญชีน้ำ -- ไม่ใช่ระดับรายชั่วโมง
+  const yr = latest ? Number(latest.date.slice(0, 4)) : null;
+  const yRows = yr ? rows.filter(r => r.water_level_m != null && Number(r.date.slice(0, 4)) === yr) : [];
+  if (yRows.length) {
+    let mx = yRows[0], mn = yRows[0];
+    yRows.forEach(r => { if (r.water_level_m > mx.water_level_m) mx = r; if (r.water_level_m < mn.water_level_m) mn = r; });
+    const TH_ABBR = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    const sd = iso => { const [y, m, d] = iso.split('-').map(Number); return `${d} ${IS_EN ? mShort(m) : TH_ABBR[m - 1]} ${IS_EN ? y : y + 543}`; };
+    const line = (lbl, r) => `<div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;line-height:1.35"><span style="font-size:12.5px;font-weight:500;color:var(--text-500)">${lbl}</span><span>${fmtLevel(r.water_level_m)}<span class="kpi-unit">${IS_EN ? 'm MSL' : 'ม.'}</span></span><span style="font-size:12px;font-weight:500;color:var(--text-500)">${sd(r.date)}</span></div>`;
+    document.getElementById('kpiRangeLabel').textContent = IS_EN ? `Water-level extremes ${yr}` : `ระดับน้ำสูงสุด–ต่ำสุด ปี ${yr + 543}`;
+    document.getElementById('kpiMonthsCount').innerHTML = line(IS_EN ? 'High' : 'สูงสุด', mx) + line(IS_EN ? 'Low' : 'ต่ำสุด', mn);
+    const first = ledger.months_available[0], last = ledger.months_available[ledger.months_available.length - 1];
+    document.getElementById('kpiMonthsRange').textContent = (IS_EN ? 'Daily values from the water ledger · data ' : 'ค่ารายวันจากบัญชีน้ำ · ข้อมูล ') + `${thaiMonthLabel(first)} – ${thaiMonthLabel(last)}`;
+  } else {
+    document.getElementById('kpiMonthsCount').textContent = `${ledger.months_available.length} เดือน`;
+    if (ledger.months_available.length) {
+      const first = ledger.months_available[0], last = ledger.months_available[ledger.months_available.length - 1];
+      document.getElementById('kpiMonthsRange').textContent = `${thaiMonthLabel(first)} ถึง ${thaiMonthLabel(last)}`;
+    }
+  }
+  try { renderKpiViz(rows, latest); } catch (e) { console.warn('kpi viz failed', e); }
+}
+
+// ---- 2026-11-25: กราฟจิ๋ว/ลูกศร/สถานะในการ์ด "สถานะอ่างเก็บน้ำ" (ค่ารายวันจากบัญชีน้ำ 14 วันล่าสุด) ----
+const KPI_CREST = 489.545;  // ระดับสันสปิลเวย์อ่างแม่นาเรือ (ตรงกับค่าที่ใช้คำนวณน้ำล้นในบัญชีน้ำ)
+function kpiViz(cardChild, html) {
+  const card = cardChild.closest('.kpi-card'); if (!card) return;
+  card.querySelectorAll('.kpi-viz').forEach(e => e.remove());
+  const el = document.createElement('div'); el.className = 'kpi-viz'; el.innerHTML = html;
+  const note = card.querySelector('.kpi-note'); card.insertBefore(el, note);
+}
+function kpiSpark(vals, o) {
+  const W = 220, H = 56, px = 4, py = 8, n = vals.length; if (n < 2) return '';
+  let lo = Math.min(...vals), hi = Math.max(...vals); if (o.ref != null) { lo = Math.min(lo, o.ref); hi = Math.max(hi, o.ref); }
+  const rg = (hi - lo) || 1, X = i => px + (W - 2 * px) * i / (n - 1), Y = v => H - py - (H - 2 * py) * (v - lo) / rg;
+  const pts = vals.map((v, i) => [X(i), Y(v)]);
+  let g = '';
+  if (o.type === 'bars') {
+    const bw = (W - 2 * px) / n * 0.64, mx = Math.max(...vals, 1);
+    g = vals.map((v, i) => { const h = Math.max(2, (H - py - 4) * v / mx), x = px + (W - 2 * px) * i / n + ((W - 2 * px) / n - bw) / 2, last = i === n - 1;
+      return `<rect x="${x.toFixed(1)}" y="${(H - py - h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="2.5" fill="var(--teal-400)" opacity="${last ? 1 : 0.38}"/>`; }).join('');
+  } else {
+    const line = 'M' + pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' L');
+    g = (o.ref != null ? `<line x1="${px}" x2="${W - px}" y1="${Y(o.ref).toFixed(1)}" y2="${Y(o.ref).toFixed(1)}" stroke="#d6453d" stroke-width="1.2" stroke-dasharray="4 3" opacity=".75"/><text class="vz-lbl" x="${px}" y="${(Y(o.ref) - 4).toFixed(1)}" text-anchor="start">${o.refLbl || ''}</text>` : '') +
+      `<defs><linearGradient id="kvg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--teal-400)" stop-opacity=".35"/><stop offset="1" stop-color="var(--teal-400)" stop-opacity="0"/></linearGradient></defs>` +
+      `<path d="${line} L${pts[n - 1][0].toFixed(1)},${H - py} L${pts[0][0].toFixed(1)},${H - py}Z" fill="url(#kvg)"/><path d="${line}" fill="none" stroke="var(--teal-400)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>` +
+      `<circle cx="${pts[n - 1][0].toFixed(1)}" cy="${pts[n - 1][1].toFixed(1)}" r="4.5" fill="var(--teal-400)" stroke="#fff" stroke-width="2"/>`;
+  }
+  return `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true">${g}</svg>`;
+}
+function renderKpiViz(rows, latest) {
+  const ok = rows.filter(r => r.water_level_m != null); if (!latest || ok.length < 2) return;
+  const last14 = ok.slice(-14), cur = ok[ok.length - 1], prev = ok[ok.length - 2];
+  // 1) วันที่: ตัวเลขวันใหญ่ + เดือนปี + ความสดของข้อมูล
+  const [yy, mm, dd] = cur.date.split('-').map(Number), el1 = document.getElementById('kpiLatestDate');
+  el1.innerHTML = `<span class="kd-num">${dd}</span><span class="kd-txt">${IS_EN ? EN_MONTH_FULL[mm - 1] + ' ' + yy : THAI_MONTH[mm - 1] + ' ' + (yy + 543)}</span>`;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const age = Math.round((today - new Date(yy, mm - 1, dd)) / 864e5);
+  const fresh = age <= 0 ? `<span class="kpi-chip ok">● ${IS_EN ? 'Today' : 'ข้อมูลของวันนี้'}</span>` : age === 1 ? `<span class="kpi-chip ok">● ${IS_EN ? 'Yesterday' : 'ข้อมูลเมื่อวาน'}</span>` : `<span class="kpi-chip warn">${IS_EN ? age + ' days old' : 'ข้อมูลเก่า ' + age + ' วัน'}</span>`;
+  const strip = ok.slice(-14).map((r, i, a) => `<circle cx="${(8 + i * 15.5).toFixed(1)}" cy="10" r="${i === a.length - 1 ? 5 : 3.4}" fill="var(--teal-400)" opacity="${i === a.length - 1 ? 1 : 0.45}"/>`).join('');
+  kpiViz(el1, `<div class="kpi-chips">${fresh}</div><svg viewBox="0 0 220 20" aria-hidden="true">${strip}</svg><div class="vz-cap" style="font-size:10.5px;color:var(--text-500)">${IS_EN ? 'Last 14 days with data' : 'บัญชีน้ำ 14 วันล่าสุดที่มีข้อมูล'}</div>`);
+  // 2) ระดับน้ำ: ลูกศรเทียบวันก่อน + สถานะเทียบสันสปิลเวย์ + เส้นระดับ 14 วัน
+  const dL = cur.water_level_m - prev.water_level_m, over = cur.water_level_m - KPI_CREST;
+  const dirL = Math.abs(dL) < 0.0005 ? 'flat' : dL > 0 ? 'up' : 'down', arrow = { up: '▲', down: '▼', flat: '●' }[dirL];
+  const sg = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(3);
+  const stK = over > 0.003 ? 'crit' : over > -0.10 ? 'warn' : 'ok';
+  const stTxt = over > 0.003 ? (IS_EN ? `${over.toFixed(3)} m above spillway` : `สูงกว่าสันสปิลเวย์ ${over.toFixed(3)} ม.`) : (IS_EN ? `${(-over).toFixed(3)} m below spillway` : `ต่ำกว่าสันสปิลเวย์ ${(-over).toFixed(3)} ม.`);
+  const lv = document.getElementById('kpiLatestLevel');
+  kpiViz(lv, `<div class="kpi-chips"><span class="kpi-chip ${dirL}">${arrow} ${dirL === 'flat' ? (IS_EN ? 'Unchanged' : 'เท่าวันก่อน') : sg(dL) + (IS_EN ? ' m vs prev. day' : ' ม. จากวันก่อน')}</span><span class="kpi-chip ${stK}">${stTxt}</span></div>` +
+    kpiSpark(last14.map(r => r.water_level_m), { ref: KPI_CREST, refLbl: IS_EN ? 'spillway' : 'สันสปิลเวย์' }));
+  // 3) น้ำไหลเข้า: ลูกศร % เทียบวันก่อน + แท่ง 14 วัน
+  const iC = cur.inflow_m3 || 0, iP = prev.inflow_m3 || 0, dI = iC - iP, pct = iP > 0 ? dI / iP * 100 : null;
+  const dirI = pct == null ? (dI > 0 ? 'up' : 'flat') : Math.abs(pct) < 1 ? 'flat' : dI > 0 ? 'up' : 'down';
+  const iTxt = dirI === 'flat' ? (IS_EN ? 'About the same' : 'ใกล้เคียงวันก่อน') : `${{ up: '▲', down: '▼' }[dirI]} ${dI > 0 ? '+' : '−'}${fmtInt(Math.abs(dI))}${pct != null ? ` (${Math.abs(pct).toFixed(0)}%)` : ''}`;
+  kpiViz(document.getElementById('kpiLatestInflow'), `<div class="kpi-chips"><span class="kpi-chip ${dirI}">${iTxt}</span></div>` + kpiSpark(last14.map(r => r.inflow_m3 || 0), { type: 'bars' }));
+  // 4) สถิติปี: แถบช่วงต่ำสุด–สูงสุดของปี พร้อมจุดระดับปัจจุบัน
+  const yrRows = ok.filter(r => r.date.slice(0, 4) === cur.date.slice(0, 4));
+  if (yrRows.length >= 2) {
+    const mxv = Math.max(...yrRows.map(r => r.water_level_m)), mnv = Math.min(...yrRows.map(r => r.water_level_m)), rg = (mxv - mnv) || 1;
+    const x0 = 12, x1 = 208, cx = x0 + (x1 - x0) * (cur.water_level_m - mnv) / rg, pc = Math.round((cur.water_level_m - mnv) / rg * 100);
+    const lab = cx > 150 ? 'end' : cx < 70 ? 'start' : 'middle';
+    kpiViz(document.getElementById('kpiMonthsCount'), `<svg viewBox="0 0 220 50" aria-hidden="true"><defs><linearGradient id="kvr" x1="0" x2="1"><stop offset="0" stop-color="#2a9d7f"/><stop offset=".55" stop-color="#e0a94f"/><stop offset="1" stop-color="#d6453d"/></linearGradient></defs>` +
+      `<rect x="${x0}" y="22" width="${x1 - x0}" height="8" rx="4" fill="url(#kvr)" opacity=".85"/><circle cx="${x0}" cy="26" r="4" fill="#2a9d7f"/><circle cx="${x1}" cy="26" r="4" fill="#d6453d"/>` +
+      `<circle cx="${cx.toFixed(1)}" cy="26" r="7" fill="#fff" stroke="var(--teal-500)" stroke-width="3.2"/>` +
+      `<text class="vz-lbl" x="${cx.toFixed(1)}" y="12" text-anchor="${lab}" style="font-weight:700;fill:var(--text-100)">${IS_EN ? 'Now' : 'ตอนนี้'} ${fmtLevel(cur.water_level_m)}</text>` +
+      `<text class="vz-lbl" x="${x0}" y="46" text-anchor="start">${IS_EN ? 'low' : 'ต่ำสุด'}</text><text class="vz-lbl" x="${x1}" y="46" text-anchor="end">${IS_EN ? 'high' : 'สูงสุด'}</text></svg>` +
+      `<div style="font-size:10.5px;color:var(--text-500)">${IS_EN ? 'Now at ' + pc + '% of this year\'s range' : 'ตอนนี้อยู่ที่ ' + pc + '% ของช่วงสูงสุด–ต่ำสุดของปี'}</div>`);
   }
 }
 

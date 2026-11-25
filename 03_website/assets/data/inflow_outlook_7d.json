@@ -106,27 +106,27 @@
   }
  ],
  "daily": {
-  "as_of_date": "2026-11-23",
+  "as_of_date": "2026-11-24",
   "days": [
    {
     "h": 4,
-    "date": "2026-11-27",
-    "q_day_m3": 0.0,
-    "q_6h_avg_m3": 0.0,
+    "date": "2026-11-28",
+    "q_day_m3": 10150.0,
+    "q_6h_avg_m3": 2537.5,
     "low_confidence": true,
     "model": "CatBoost"
    },
    {
     "h": 5,
-    "date": "2026-11-28",
-    "q_day_m3": 0.0,
-    "q_6h_avg_m3": 0.0,
+    "date": "2026-11-29",
+    "q_day_m3": 485.8,
+    "q_6h_avg_m3": 121.4,
     "low_confidence": true,
     "model": "CatBoost"
    },
    {
     "h": 6,
-    "date": "2026-11-29",
+    "date": "2026-11-30",
     "q_day_m3": 0.0,
     "q_6h_avg_m3": 0.0,
     "low_confidence": true,
@@ -134,7 +134,7 @@
    },
    {
     "h": 7,
-    "date": "2026-11-30",
+    "date": "2026-12-01",
     "q_day_m3": 0.0,
     "q_6h_avg_m3": 0.0,
     "low_confidence": true,
