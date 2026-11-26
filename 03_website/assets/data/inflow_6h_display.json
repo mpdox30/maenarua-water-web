@@ -1,23 +1,12 @@
 {
-  "computed_at": "2026-11-26T16:47:25.475235",
-  "reference_now": "2026-11-26T16:47:15.585544",
+  "computed_at": "2026-11-26T17:02:18.285633",
+  "reference_now": "2026-11-26T17:02:15.215688",
   "target_reservoir": "อ่างเก็บน้ำแม่นาเรือ (Mae Na Rua Reservoir)",
   "method": "display-only water-balance estimate ที่ resolution 6 ชม. (สไลด์ทีละ 1 ชม. ย้อนหลัง 84 ชม.) reuse สูตร/ค่าคงที่ตรงจาก reservoir_water_balance.py (rating curve, spillway weir, evap/infiltration รายเดือน หาร 4) -- ไม่ใช่ค่าที่โมเดล พยากรณ์ CatBoost ใช้ ใช้แสดงผลเสริมบนเว็บเท่านั้น (ดู docstring หัวไฟล์ script นี้)",
   "lookback_hours": 84,
   "window_hours": 6,
   "n_windows_computed": 72,
   "windows": [
-    {
-      "window_start": "2026-11-23T04:00:00",
-      "window_end": "2026-11-23T10:00:00",
-      "q_in_6h_m3": 3954.2,
-      "water_level_start_m": 489.726,
-      "water_level_end_m": 489.731,
-      "rain_6h_mm": 0.0,
-      "release_6h_m3": 0.0,
-      "spill_6h_m3": 654.8,
-      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
-    },
     {
       "window_start": "2026-11-23T05:00:00",
       "window_end": "2026-11-23T11:00:00",
@@ -797,6 +786,17 @@
       "rain_6h_mm": 0.0,
       "release_6h_m3": 0.0,
       "spill_6h_m3": 22020.1,
+      "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
+    },
+    {
+      "window_start": "2026-11-26T11:00:00",
+      "window_end": "2026-11-26T17:00:00",
+      "q_in_6h_m3": 29706.5,
+      "water_level_start_m": 489.803,
+      "water_level_end_m": 489.821,
+      "rain_6h_mm": 0.0,
+      "release_6h_m3": 0.0,
+      "spill_6h_m3": 23313.5,
       "release_note": "ไม่มีเหตุการณ์ปล่อยน้ำในหน้าต่างนี้ (O=0)"
     }
   ],
