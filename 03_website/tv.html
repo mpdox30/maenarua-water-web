@@ -142,21 +142,61 @@ body.show-ui .ctl{opacity:1}
 <div class="ctl"><a href="index.html" title="กลับหน้าแรก">⌂ หน้าแรก</a><button id="bPrev">◀</button><button id="bPlay">⏸ หยุดหมุน</button><button id="bNext">▶</button><button id="bFs">⛶ เต็มจอ</button></div>
 
 <script src="assets/vendor/cytoscape/cytoscape.min.js"></script>
+<script>window.__cf=[CanvasRenderingContext2D.prototype.fillText,CanvasRenderingContext2D.prototype.strokeText]</script>
+<script src="assets/uikit/i18n-kit.js?v=202611131100"></script>
+<script>CanvasRenderingContext2D.prototype.fillText=window.__cf[0];CanvasRenderingContext2D.prototype.strokeText=window.__cf[1]</script>
+<script>
+/* tv-i18n: ให้หน้า TV อ่านภาษาจากหน้าหลัก (localStorage uk_lang) — ไม่มีปุ่มสลับในหน้านี้ · แปลข้อความไทยที่ JS/HTML สร้างขึ้นเป็นอังกฤษ */
+(function(){
+var EN=false;try{EN=localStorage.getItem('uk_lang')==='en'}catch(e){}
+window.TVT={en:EN,tr:function(s){return s}};
+if(!EN)return;
+document.documentElement.lang='en';
+var TH=/[฀-๿]/;
+var EXACT={"สด": "LIVE", "เวลาไทย": "Thai time", "ผังน้ำ": "Water network", "มม.": "mm", "ม.": "m", "สถานี": "Station", "วันนี้": "Today", "อ่างเก็บน้ำ": "Reservoir", "ฝาย": "Weir", "ปตร.": "Gate", "โทรมาตร": "Telemetry", "ระบบสูบน้ำ": "Pump", "ปกติ": "Normal", "เตือนภัยระดับสูง": "High warning", "เฝ้าระวัง": "Watch", "ปานกลาง": "Moderate", "ปลอดภัย": "Safe", "ไม่มีข้อมูล": "No data", "แม่น้ำ/คลอง": "River/canal", "หน้าแรก": "Home", "⌂ หน้าแรก": "⌂ Home", "⏸ หยุดหมุน": "⏸ Pause", "▶ หมุนต่อ": "▶ Resume", "⛶ เต็มจอ": "⛶ Fullscreen", "กลับหน้าแรก": "Back to home", "สูงสุด": "Max", "ฝน": "Rain"};
+var SUB=[["โหมดจอทีวี · น้ำตำบลแม่นาเรือ", "TV mode · Mae Na Rua water"], ["สถานการณ์น้ำตำบลแม่นาเรือ", "Mae Na Rua Water Situation"], ["อ.เมืองพะเยา จ.พะเยา · จอแสดงสถานการณ์น้ำ", "Mueang Phayao, Phayao · Water situation display"], ["ผังน้ำตำบลแม่นาเรือ", "Mae Na Rua Water Network"], ["เส้นประสว่าง = ทิศทางน้ำไหลบนคลองหลัก", "Bright dashes = flow direction on the main canal"], ["ฝนย้อนหลังรายวัน", "Daily rainfall (past)"], ["ปริมาณฝนเฉลี่ยรายวัน 30 วันล่าสุด", "Mean daily rainfall, last 30 days"], ["มม./วัน · เฉลี่ยจากสถานีโทรมาตร", "mm/day · mean of telemetry stations"], ["แยกรายสถานี", "By station"], ["ระดับน้ำกว๊านพะเยา", "Kwan Phayao water level"], ["ระดับน้ำย้อนหลังและพยากรณ์ 7 วัน", "Water level: past & 7-day forecast"], ["ม.รทก. · แถบ = ช่วง P10–P90", "m MSL · band = P10–P90 range"], ["พยากรณ์น้ำไหลลงอ่างเก็บน้ำแม่นาเรือ", "Mae Na Rua Reservoir inflow forecast"], ["น้ำไหลลงอ่างแม่นาเรือ", "Inflow to Mae Na Rua reservoir"], ["ปริมาณน้ำไหลเข้าล่วงหน้า 72 ชม.", "Inflow forecast, next 72 h"], ["ปริมาณน้ำไหลเข้าล่วงหน้า 7 วัน", "Inflow forecast, next 7 days"], ["ลบ.ม./6 ชม. · โมเดล 6 ชม.", "m³/6 h · 6-h model"], ["ลบ.ม./วัน · CatBoost", "m³/day · CatBoost"], ["ความเชื่อมั่นพอใช้", "Fair confidence"], ["ความเชื่อมั่นต่ำ ", "Low confidence "], ["ความเชื่อมั่นต่ำ", "Low confidence"], ["น้ำไหลเข้าที่ประมาณได้ ย้อนหลัง 84 ชม.", "Estimated inflow, past 84 h"], ["ลบ.ม. ต่อช่วง 6 ชม. · จากสมดุลน้ำ", "m³ per 6 h · from water balance"], ["คาดการณ์ความต้องการใช้น้ำล่วงหน้า 12 สัปดาห์", "Water demand forecast, next 12 weeks"], ["ความต้องการใช้น้ำ", "Water demand"], ["เกษตรน้ำฝน", "Rain-fed agriculture"], ["พื้นที่ชลประทาน", "Irrigated area"], ["ลบ.ม./สัปดาห์", "m³/week"], ["QR ดูต่อบนมือถือ", "QR · Continue on mobile"], ["สแกนดูต่อบนมือถือ", "Scan to continue on mobile"], ["ดูระดับน้ำอ่างเก็บน้ำ ผังน้ำ พยากรณ์ฝนและน้ำท่วม แบบละเอียดได้ที่เว็บน้ำตำบลแม่นาเรือ", "See reservoir levels, the water network, and rain and flood forecasts in detail on the Mae Na Rua water website"], ["กำลังโหลดข้อมูล…", "Loading data…"], ["ไม่ใช่ประกาศทางการ", "Not an official announcement"], ["โหลดข้อมูลไม่สำเร็จ", "Failed to load data"], ["ถ้าเปิดจากไฟล์ในเครื่อง (file:///…) เบราว์เซอร์จะบล็อกการอ่านข้อมูล", "If opened from a local file (file:///…) the browser blocks data loading"], ["ให้รันเซิร์ฟเวอร์ในโฟลเดอร์ 03_website แล้วเปิด", "Run a server in the 03_website folder, then open"], ["ข้อมูลโทรมาตรล่าสุด ", "Latest telemetry "], ["สันอ่าง (ภาพประกอบ)", "Dam crest (illustrative)"], ["สูงสุดในช่วงข้อมูลที่มี ", "Max in available data "], ["สูงกว่าสันสปิลเวย์ ", "Above spillway crest by "], ["ต่ำกว่าสันสปิลเวย์ ", "Below spillway crest by "], ["ห่างสันสปิลเวย์", "From crest"], ["เทียบสันสปิลเวย์", "vs spillway crest"], ["สันสปิลเวย์ ", "Spillway crest "], ["สันสปิลเวย์", "Spillway crest"], [" · ใกล้ล้น", " · near overflow"], ["ระดับน้ำปัจจุบัน", "Current water level"], ["ระดับน้ำย้อนหลัง", "Water level, past"], ["ระดับขึ้น", "Rising"], ["ระดับลด", "Falling"], ["ทรงตัว", "Steady"], ["● สด ", "● LIVE "], ["6 ชม. ล่าสุด: ", "Last 6 h: "], ["% ของความจุ", "% of capacity"], ["ปริมาตร ", "Volume "], [" ลบ.ม. · ฝน 24 ชม. ", " m³ · Rain 24 h "], ["ฝน 1 ชม.", "Rain 1 h"], ["อุณหภูมิ", "Temp."], ["ความชื้น", "Humidity"], ["ความกดอากาศ", "Pressure"], ["รังสีอาทิตย์", "Solar rad."], ["รับน้ำจากฝนเท่านั้น", "Rain-fed only"], ["ปลายทางของน้ำทุกสาย", "final destination of all streams"], ["กว๊านพะเยา", "Kwan Phayao"], ["ข้อมูลถึง ", "Data to "], ["7 วันล่าสุด ", "Last 7 d "], ["30 วันล่าสุด ", "Last 30 d "], ["วันฝนตก (≥1 มม.) ", "Rain days (≥1 mm) "], ["ฝนสูงสุด ", "Max rain "], ["แท่งจางคือวันนี้ (ยังไม่ครบวัน) · วันที่ไม่มีข้อมูลบางสถานีใช้ค่าเฉลี่ยจากสถานีที่มี", "Faded bar = today (day incomplete) · days with no data at some stations use the mean of the stations that have data"], ["ออกประมาณการ ", "Issued "], ["เพิ่มขึ้น ▲ ", "Rising ▲ "], ["ลดลง ▼ ", "Falling ▼ "], ["คงที่ ▬ ", "Steady ▬ "], ["แนวโน้มพยากรณ์ 7 วัน: ", "7-day forecast trend: "], ["ระดับตอนนี้ ", "Level now "], [" ม.รทก.", " m MSL"], [" ม. ใน 3 วัน)", " m in 3 d)"], ["ฝนล่วงหน้า 7 วัน ", "Forecast rain, 7 d "], ["น้ำล้นสะสม 7 วัน ", "Cumulative overflow, 7 d "], [" ล้าน ลบ.ม.", " million m³"], ["ตลิ่งห้วยแม่นาเรือ", "Mae Na Rua stream bank"], ["ตลิ่งห้วยจุ๋มปี๋", "Chum Pi stream bank"], ["ตลิ่งห้วยร่องไฮ", "Rong Hai stream bank"], ["เส้นขาว = ระดับที่วัดจริง · เส้นฟ้า = พยากรณ์", "White line = measured level · Blue line = forecast"], ["รอบพยากรณ์ ", "Forecast run "], ["ไหลเข้าล่าสุด ", "Latest inflow "], ["รวม 72 ชม. ", "Total 72 h "], ["รวม 7 วัน ", "Total 7 d "], [" ลบ.ม./6 ชม.", " m³/6 h"], [" ลบ.ม./วัน", " m³/day"], [" จาก ", " of "], ["ข้อมูล ณ ", "Data as of "], ["ประมาณการเพื่อแสดงผลเท่านั้น (ไม่ใช่ค่าวัดตรง)", "Estimate for display only (not a direct measurement)"], [" · ช่วงสูงสุด ", " · Peak window "], [" ลบ.ม. (", " m³ ("], [" รวม 12 สัปดาห์ ", " total 12 weeks "], ["ข้อมูล ปี ", "Data year "], [" สัปดาห์ที่ ", " week "], ["ใต้แท่ง: +n = อีก n สัปดาห์ข้างหน้า และ % = โอกาสที่จะมีการใช้น้ำ · ตัวเลขเป็นค่ากลางของโมเดล ช่วงเชื่อมั่น 90% กว้างมาก (ดูได้ในเว็บ) จึงควรใช้เป็นแนวโน้ม ไม่ใช่ตัวเลขแม่นยำ", "Below bars: +n = n weeks ahead, and % = probability of water use · Values are the model median; the 90% interval is very wide (see the website), so use as a trend, not a precise figure"], [" ลบ.ม.", " m³"], [" มม.", " mm"], ["สูงสุด ", "Max "], ["เฝ้าระวัง ", "Watch "], ["ผังน้ำ", "Water network"], ["ม.รทก.", "m MSL"], ["อ่างเก็บน้ำแม่นาเรือ", "Mae Na Rua Reservoir"], ["อ่างเก็บน้ำวิทยาลัยเกษตร", "College of Agriculture Reservoir"], ["อ่างเก็บน้ำห้วยถ้ำ", "Huai Tham Reservoir"], ["อ่างเก็บน้ำห้วยโซ้", "Huai So Reservoir"], ["อ่างเก็บน้ำห้วยจำตุ้ม", "Huai Jamtom Reservoir"], ["วิทยาลัยเกษตร", "College of Agriculture"], ["ห้วยถ้ำ", "Huai Tham"], ["ห้วยโซ้", "Huai So"], ["ห้วยแม่นาเรือ", "Huai Mae Na Rua"], ["ห้วยจำตุ้ม", "Huai Jamtom"], ["แม่นาเรือ", "Mae Na Rua"], ["อ่างแม่นาเรือ", "Mae Na Rua"], ["อ่างวิทยาลัยเกษตร", "College of Agriculture"], ["อ่างห้วยถ้ำ", "Huai Tham"], ["อ่างห้วยโซ้", "Huai So"], ["อ่างเก็บน้ำห้วยผาจ้อม", "Huai Pha Chom Reservoir"], ["อ่างเก็บน้ำห้วยต้นผึ้ง", "Huai Ton Phueng Reservoir"], ["ร.ร.แม่นาเรือใต้", "Mae Na Rua School (South)"], ["ร.ร.แม่นาเรือ", "Mae Na Rua School"], ["แก้มลิงโป่งหินน้อย", "Pong Hin Noi Retention Pond"], ["แก้มลิงห้วยน้ำขาว", "Huai Nam Khao Retention Pond"], ["แก้มลิงร่องซุ้ม", "Rong Sum Retention Pond"], ["น้ำล้นห้วยดินแดง", "Huai Din Daeng Spillway"], ["น้ำล้นบวกห้า", "Bua Ha Spillway"], ["น้ำล้นบวกแฝก", "Bua Faek Spillway"], ["น้ำล้น ", "Spillway "], ["น้ำล้น", "Spillway"], ["วนอุทยานร่องคำหลวง", "Rong Kham Luang Forest Park"], ["ห้วยร่องคำ", "Huai Rong Kham"], ["ห้วยผาจ้อม", "Huai Pha Chom"], ["ห้วยน้ำจำ", "Huai Nam Cham"], ["ห้วยปู่สิงห์", "Huai Pu Sing"], ["ห้วยโป่งหิน", "Huai Pong Hin"], ["ห้วยผักหละ", "Huai Phak La"], ["ห้วยน้ำขาว", "Huai Nam Khao"], ["ห้วยเครือบ้า", "Huai Khrue Ba"], ["ห้วยเคียน", "Huai Khian"], ["ห้วยต้นผึ้ง", "Huai Ton Phueng"], ["ห้วยสีงาม", "Huai Si Ngam"], ["ห้วยน้ำอุ่น", "Huai Nam Un"], ["ห้วยแข้", "Huai Khae"], ["โป่งหินน้อย", "Pong Hin Noi"], ["น้ำแม่ใส", "Nam Mae Sai"], ["ร่องคำน้อย", "Rong Kham Noi"], ["ร่องซุ้ม", "Rong Sum"], ["ร่องไผ่", "Rong Phai"], ["เหมืองจุ๋มปี", "Mueang Chum Pi"], ["เหมืองจำปี", "Mueang Cham Pi"], ["เหมืองขมุ", "Mueang Khamu"], ["น้ำจำ", "Nam Cham"], ["ฮ่องแล้ง", "Hong Laeng"], ["พ่อหลวงพร", "Pho Luang Phon"], ["พ่อน้อยหยุน", "Pho Noi Yun"], ["พ่อใหญ่", "Pho Yai"], ["พระครูหลี", "Phra Khru Li"], ["ฝามหอม", "Fa Ma Hom"], ["วังตาก", "Wang Tak"], ["ยายเปลี่ยน", "Yai Plian"], ["ซีเมนต์", "Cement"], ["สมหมาย", "Sommai"], ["หัวทุ่ง", "Hua Thung"], ["ปงป่างิ้ว", "Pong Pa Ngio"], ["ปงผักหม", "Pong Phak Mom"], ["จำตอง", "Cham Tong"], ["ทุ่งอ้อย", "Thung Oi"]];
+SUB.sort(function(a,b){return b[0].length-a[0].length});
+var PATS=[[/(\d{1,2}:\d{2})\s*น\./g,'$1'],[/(\d)\s*วัน(?![฀-๿])/g,'$1 d'],[/(\d)\s*ช่วง(?![฀-๿])/g,'$1 steps'],[/(\d)\s*ชม\./g,'$1 h'],[/(\d)\s*สัปดาห์/g,'$1 wk'],[/(\d)\s*ม\.(?![฀-๿])/g,'$1 m'],[/(\d)\s*มม\./g,'$1 mm'],[/\s*น\.\)/g,')']];
+function tr(s){
+  if(typeof s!=='string'||!TH.test(s))return s;
+  var m=/^(\s*)([\s\S]*?)(\s*)$/.exec(s),c=m[2],o;
+  if(EXACT[c]!=null)return m[1]+EXACT[c]+m[3];
+  o=s;SUB.forEach(function(p){if(o.indexOf(p[0])>=0)o=o.split(p[0]).join(p[1])});
+  PATS.forEach(function(p){o=o.replace(p[0],p[1])});
+  if(TH.test(o)&&window.UKI18N)o=window.UKI18N.tr(o);
+  return o;
+}
+window.TVT.tr=tr;
+function doText(n){var v=n.nodeValue;if(v&&TH.test(v)){var t=tr(v);if(t!==v)n.nodeValue=t}}
+function doAttr(el){['title','aria-label'].forEach(function(a){var v=el.getAttribute&&el.getAttribute(a);if(v&&TH.test(v)){var t=tr(v);if(t!==v)el.setAttribute(a,t)}})}
+function walk(root){
+  if(root.nodeType===3){doText(root);return}
+  if(root.nodeType!==1)return;
+  var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),n;while((n=w.nextNode()))if(!/^(SCRIPT|STYLE)$/.test(n.parentNode.nodeName))doText(n);
+  doAttr(root);root.querySelectorAll&&root.querySelectorAll('[title],[aria-label]').forEach(doAttr);
+}
+document.title=tr(document.title);
+var mo=new MutationObserver(function(ms){ms.forEach(function(m){if(m.type==='characterData')doText(m.target);else if(m.type==='attributes')doAttr(m.target);else m.addedNodes.forEach(walk)})});
+walk(document.body);
+mo.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['title','aria-label']});
+})();
+</script>
 <script>
 (function(){
 'use strict';
 var Q=new URLSearchParams(location.search), DWELL=(+Q.get('sec')||20)*1000, REFRESH=5*60e3, RELOAD=3600e3;
 var $=function(s){return document.querySelector(s)}, $$=function(s){return [].slice.call(document.querySelectorAll(s))};
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-var MO=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'], DN=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
-function fd(iso,short){var m=/(\d{4})-(\d\d)-(\d\d)/.exec(iso||'');if(!m)return '—';return +m[3]+' '+MO[m[2]-1]+(short?'':' '+(+m[1]+543))}
-function fmt(n){return n==null||isNaN(n)?'—':Math.round(n).toLocaleString('th-TH')}
-var ST={critical:{l:'วิกฤต',c:'#ef4444'},warning:{l:'เฝ้าระวัง',c:'#f97316'},medium:{l:'ปานกลาง',c:'#eab308'},safe:{l:'ปลอดภัย',c:'#22c55e'},unknown:{l:'ไม่มีข้อมูล',c:'#94a3b8'}};
+var EN=!!(window.TVT&&window.TVT.en), YO=EN?0:543;
+var MO=EN?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']:['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'], DN=EN?['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']:['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+function fd(iso,short){var m=/(\d{4})-(\d\d)-(\d\d)/.exec(iso||'');if(!m)return '—';return +m[3]+' '+MO[m[2]-1]+(short?'':' '+(+m[1]+YO))}
+function fmt(n){return n==null||isNaN(n)?'—':Math.round(n).toLocaleString(EN?'en-US':'th-TH')}
+var ST={critical:{l:'เตือนภัยระดับสูง',c:'#ef4444'},warning:{l:'เฝ้าระวัง',c:'#f97316'},medium:{l:'ปานกลาง',c:'#eab308'},safe:{l:'ปลอดภัย',c:'#22c55e'},unknown:{l:'ไม่มีข้อมูล',c:'#94a3b8'}};
 function stat(p){return p==null?'unknown':p<20?'critical':p<40?'warning':p<60?'medium':'safe'}
 function J(p){return fetch(p+(p.indexOf('?')<0?'?':'&')+'t='+Date.now(),{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.json()}).catch(function(){return null})}
 
 /* ---------- นาฬิกา ---------- */
-function tick(){var d=new Date();$('#clk').textContent=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);$('#dt').textContent='วัน'+DN[d.getDay()]+'ที่ '+d.getDate()+' '+MO[d.getMonth()]+' '+(d.getFullYear()+543)}
+function tick(){var d=new Date();$('#clk').textContent=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);$('#dt').textContent=(EN?DN[d.getDay()]+', ':'วัน'+DN[d.getDay()]+'ที่ ')+d.getDate()+' '+MO[d.getMonth()]+' '+(d.getFullYear()+YO)}
 tick();setInterval(tick,10000);
 
 /* ---------- ข้อมูล ---------- */
@@ -184,7 +224,7 @@ function spark(st,c){var H=(st&&st.history)||[];if(H.length<3)return '';var last
   var lv=A.map(function(h){return h.level}),lo=Math.min.apply(null,lv),hi=Math.max.apply(null,lv),sp=Math.max(.02,hi-lo),W=300,Hh=60,pts=A.map(function(h,i){return (i?'L':'M')+(W*i/(A.length-1)).toFixed(1)+' '+(Hh-4-(Hh-8)*(h.level-lo)/sp).toFixed(1)}).join('');
   return '<svg class="spk" viewBox="0 0 '+W+' '+Hh+'" preserveAspectRatio="none"><path d="'+pts+'" fill="none" stroke="'+c+'" stroke-width="3" vector-effect="non-scaling-stroke"/></svg>'}
 /* ---------- ฉากอ่างเก็บน้ำรายอ่าง: ภาพตัดอ่าง + มาตรวัด + กราฟย้อนหลัง (พอร์ตจาก ukm.js) ---------- */
-var resBuilt={},MON3=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+var resBuilt={},MON3=MO;
 function clampN(v,a,b){return Math.max(a,Math.min(b,v))}
 function phaseNow(){var d=new Date(),h=d.getHours()+d.getMinutes()/60,day=h>=6.5&&h<17.5,dusk=(h>=5.5&&h<6.5)||(h>=17.5&&h<18.5),sun=h>=5.5&&h<18.5,fr=sun?(h-5.5)/13:((h<5.5?h+24:h)-18.5)/11;
   return {cls:day?'day':dusk?'dusk':'night',x:110+clampN(fr,0,1)*680,y:345-Math.sin(Math.PI*clampN(fr,0,1))*295}}
@@ -304,7 +344,7 @@ function cyInit(){
     .concat((D.net.edges||[]).map(function(r){var d={id:r.edge_key,source:r.source_node_key,target:r.target_node_key,label:r.label||'',type:r.edge_type||undefined};if(r.engine_straight)d.engineStraight=true;if(r.engine_bend){d.engineBend=true;d.segDist=r.seg_dist;d.segWeight=r.seg_weight}return{data:d}}));
   (function(){var xs=D.net.nodes.map(function(r){return r.pos_x}),ys=D.net.nodes.map(function(r){return r.pos_y});if(!xs.length)return;
     var x1=Math.max.apply(null,xs),y1=Math.min.apply(null,ys),y2=Math.max.apply(null,ys),w=Math.max(90,(x1-Math.min.apply(null,xs))*.06),h=y2-y1+80;
-    els.unshift({data:{id:'__kwan',label:'กว๊านพะเยา\n(ปลายทางของน้ำทุกสาย)',type:'kwan_band',w:w,h:h,rotation:0},position:{x:x1+40+w/2,y:(y1+y2)/2},selectable:false,grabbable:false})})();
+    els.unshift({data:{id:'__kwan',label:(window.TVT?window.TVT.tr('กว๊านพะเยา\n(ปลายทางของน้ำทุกสาย)'):'กว๊านพะเยา\n(ปลายทางของน้ำทุกสาย)'),type:'kwan_band',w:w,h:h,rotation:0},position:{x:x1+40+w/2,y:(y1+y2)/2},selectable:false,grabbable:false})})();
   cy=cytoscape({container:$('#cy'),elements:els,layout:{name:'preset'},style:cyStyle(),userZoomingEnabled:false,userPanningEnabled:false,boxSelectionEnabled:false,autoungrabify:true});
   var comps=cy.elements().components(),main=cy.elements();
   if(comps.length>1){var big=comps.reduce(function(a,b){return a.length>=b.length?a:b});main=big.union(cy.elements().filter(function(e){return e.isEdge()||e.data('sourceRef')||(e.data('label')&&String(e.data('label')).trim())}))}
@@ -342,7 +382,7 @@ function s3(){
 
 /* ---------- ฉาก 4: ระดับน้ำกว๊านพะเยา ---------- */
 function s3k(){
-  var f=D.fl;if(!f)return;var fl=f.flags||{},col=fl.overall==='critical'?ST.critical.c:fl.overall==='watch'?ST.warning.c:ST.safe.c,lab=fl.overall==='critical'?'วิกฤต':fl.overall==='watch'?'เฝ้าระวัง':'ปกติ';
+  var f=D.fl;if(!f)return;var fl=f.flags||{},col=fl.overall==='critical'?ST.critical.c:fl.overall==='watch'?ST.warning.c:ST.safe.c,lab=fl.overall==='critical'?'เตือนภัยระดับสูง':fl.overall==='watch'?'เฝ้าระวัง':'ปกติ';
   $('#s3ksub').textContent='ออกประมาณการ '+fd(f.base_date,true);
   var KF=f.kwan_forecast||[],kn0=f.kwan_now||{},dTr=(KF.length&&kn0.level!=null)?KF[KF.length-1].level-kn0.level:null,tr=dTr==null?0:dTr>.02?1:dTr<-.02?-1:0,tc=tr>0?'#f97316':tr<0?'#38bdf8':'#94a3b8',tl=dTr==null?'—':(tr>0?'เพิ่มขึ้น ▲ ':tr<0?'ลดลง ▼ ':'คงที่ ▬ ')+(dTr>=0?'+':'−')+Math.abs(dTr).toFixed(2)+' ม.';
   var kn=f.kwan_now||{},rf=(f.rain_forward||[]).reduce(function(a,r){return a+r.mm},0);
@@ -417,7 +457,7 @@ function s5(){
   var F=D.lat&&D.lat.forecasts;if(!F)return;var z=[['dmA',F.demand_zone_a,'#22c55e','A'],['dmB',F.demand_zone_b,'#f59e0b','B']],chips='',asof=null;
   z.forEach(function(zz){var d=zz[1];if(!d||!d.horizons)return;asof=asof||d.as_of;var it=[],tot=0;Object.keys(d.horizons).sort(function(a,b){return +a.slice(1)-+b.slice(1)}).forEach(function(k){var h=d.horizons[k],n=+k.slice(1);tot+=h.final_m3||0;it.push({v:Math.max(0,h.final_m3||0),l1:'+'+n,l2:Math.round((h.probability_active||0)*100)+'%'})});
     bars($('#'+zz[0]),it,{color:zz[2]});chips+='<span class="chip" style="color:'+zz[2]+';border-color:'+zz[2]+'">Zone '+zz[3]+' รวม 12 สัปดาห์ '+fmt(tot)+' ลบ.ม.</span>'});
-  $('#s5chips').innerHTML=chips;$('#s5sub').textContent=asof?'ข้อมูล ปี '+(asof.year+543)+' สัปดาห์ที่ '+asof.week:'';
+  $('#s5chips').innerHTML=chips;$('#s5sub').textContent=asof?'ข้อมูล ปี '+(asof.year+YO)+' สัปดาห์ที่ '+asof.week:'';
   $('#s5note').textContent='ใต้แท่ง: +n = อีก n สัปดาห์ข้างหน้า และ % = โอกาสที่จะมีการใช้น้ำ · ตัวเลขเป็นค่ากลางของโมเดล ช่วงเชื่อมั่น 90% กว้างมาก (ดูได้ในเว็บ) จึงควรใช้เป็นแนวโน้ม ไม่ใช่ตัวเลขแม่นยำ';
 }
 

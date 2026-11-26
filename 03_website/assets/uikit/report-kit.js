@@ -19,7 +19,7 @@
   var LV = ['normal', 'watch', 'warning', 'critical'];
   var HEX = { normal: '#2a9d8f', watch: '#e0a94f', warning: '#e0763f', critical: '#e05252' };            // เจ้าหน้าที่: ชื่อ/สีเดียวกับเว็บ
   var VHEX = { normal: '#35c2a8', watch: '#f0c24b', warning: '#f39a3d', critical: '#f27b4a' };              // ประชาชน: โทนอุ่น ไม่ใช้แดงเข้ม
-  function lvName(l) { return { normal: T('ปกติ', 'Normal'), watch: T('เฝ้าระวัง', 'Watch'), warning: T('เตือนภัย', 'Warning'), critical: T('วิกฤต', 'Critical') }[l]; }
+  function lvName(l) { return { normal: T('ปกติ', 'Normal'), watch: T('เฝ้าระวัง', 'Watch'), warning: T('เตือนภัย', 'Warning'), critical: T('เตือนภัยระดับสูง', 'High warning') }[l]; }
   function vName(l) { return { normal: T('ปกติ', 'Normal'), watch: T('เฝ้าระวัง', 'Watch'), warning: T('เฝ้าระวังใกล้ชิด', 'Stay alert'), critical: T('เตรียมความพร้อม', 'Be prepared') }[l]; }
   function vLevel(d) { return d >= .5 ? 'critical' : d >= .1 ? 'warning' : d >= .01 ? 'watch' : 'normal'; }   // เกณฑ์ความลึกน้ำท่วมอาคาร (เหมือนแผนที่ 3 มิติ)
   function fillWord(p) { return p >= 100 ? T('เต็มอ่าง', 'Full') : p >= 80 ? T('ค่อนข้างเต็ม', 'Nearly full') : p >= 50 ? T('ปานกลาง', 'Moderate') : p >= 25 ? T('ค่อนข้างน้อย', 'Low') : T('น้อย', 'Very low'); }
@@ -39,10 +39,10 @@
   function inGeom(g, x, y) { var polys = g.type === 'Polygon' ? [g.coordinates] : g.coordinates; return polys.some(function (p) { return inRing(x, y, p[0]); }); }
   function ctr(c) { var r = c; while (typeof r[0][0] !== 'number') r = r[0]; var sx = 0, sy = 0; r.forEach(function (p) { sx += p[0]; sy += p[1]; }); return [sx / r.length, sy / r.length]; }
   function load() {
-    return Promise.all([J('flood_latest.json'), J('monitoring.json'), J('villages.geojson.json'), J('buildings_flood_risk.geojson'), J('latest.json'), J('water_ledger.json')]).then(function (a) {
-      var fl = a[0], mo = a[1], vg = a[2], bg = a[3], lt = a[4], wl = a[5];
+    return Promise.all([J('flood_latest.json'), J('monitoring.json'), J('villages.geojson.json'), J('buildings_flood_risk.geojson'), J('latest.json'), J('water_ledger.json'), J('inflow_outlook_7d.json')]).then(function (a) {
+      var fl = a[0], mo = a[1], vg = a[2], bg = a[3], lt = a[4], wl = a[5], ol = a[6];
       if (!fl) throw new Error('flood_latest');
-      var m = { fl: fl, lt: lt, gen: thaiDT(fl.generated_at), level: fl.flags && fl.flags.overall || 'normal', kwan: fl.kwan_now.level, d3: fl.kwan_now.change_3d,
+      var m = { fl: fl, lt: lt, ol: ol, gen: thaiDT(fl.generated_at), level: fl.flags && fl.flags.overall || 'normal', kwan: fl.kwan_now.level, d3: fl.kwan_now.change_3d,
         bankMain: fl.banks.Mae_Main1, bankRH: fl.banks.RongHai, fc: fl.kwan_forecast || [], obs: fl.kwan_observed_30d || [], rain: fl.rain_7d || {}, res: [], vil: [], streams: [], ledger: [] };
       if (LV.indexOf(m.level) < 0) m.level = 'normal';
       m.res = ((mo && mo.stations) || []).map(function (s) { return { name: s.name_th, en: s.name_en, pct: s.capacity_pct, v: s.storage_m3 / 1e6, mx: s.storage_max_m3 / 1e6, lv: s.water_level, spill: s.distance_to_spillway_m, t: s.measure_datetime }; });
@@ -209,6 +209,31 @@
       '<line x1="' + X(ob.length - 1) + '" x2="' + X(ob.length - 1) + '" y1="' + t + '" y2="' + (H - b) + '" stroke="#456" stroke-dasharray="2 3"/><circle cx="' + X(ob.length - 1) + '" cy="' + Y(m.kwan) + '" r="4" fill="#1d6a87" stroke="#fff" stroke-width="1.5"/>' +
       '<text x="' + l + '" y="' + (H - 9) + '" font-size="9" fill="#6b7f7c">' + fDate(ob.length ? ob[0].date : '', 1) + '</text><text x="' + X(ob.length - 1) + '" y="' + (H - 9) + '" font-size="9" text-anchor="middle" fill="#1d6a87" font-weight="700">' + T('วันนี้', 'Today') + ' ' + f2(m.kwan) + '</text><text x="' + (W - r) + '" y="' + (H - 9) + '" font-size="9" text-anchor="end" fill="#6b7f7c">' + (fc.length ? fDate(fc[fc.length - 1].date, 1) : '') + '</text></svg>';
   }
+  // กราฟน้ำไหลลงอ่าง 72 ชม. (โมเดล 6 ชม. GBM 12 ช่วง) — อ่านจาก inflow_outlook_7d.json เหมือนหน้าเว็บ
+  function olOK(o) { return !!(o && o.now && o.gbm && o.gbm.length >= 6 && o.issued_at); }
+  function hm(s) { var q = pd(s); return q ? q.h + ':' + q.mi : ''; }
+  function svgOutlook(o) {
+    var P = [{ s: o.now.time || o.issued_at, v: o.now.q_6h_m3, now: true }].concat(o.gbm.map(function (g) { return { s: g.window_end, v: g.q_6h_m3, low: !!g.low_confidence }; }));
+    var W = 330, H = 162, l = 34, r = 12, t = 20, b = 36, n = P.length, mx = Math.max.apply(null, P.map(function (q) { return q.v; })) * 1.15 || 1;
+    function X(i) { return l + (W - l - r) * i / (n - 1); } function Y(v) { return H - b - (H - b - t) * v / mx; }
+    var line = P.map(function (q, i) { return (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(q.v).toFixed(1); }).join('');
+    var area = line + 'L' + X(n - 1).toFixed(1) + ' ' + (H - b) + 'L' + X(0).toFixed(1) + ' ' + (H - b) + 'Z';
+    var grid = [0, .5, 1].map(function (q) { var v = mx * q; return '<line x1="' + l + '" x2="' + (W - r) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="#e3ecea"/><text x="' + (l - 4) + '" y="' + (Y(v) + 3) + '" font-size="8.5" text-anchor="end" fill="#6b7f7c">' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v.toFixed(0)) + '</text>'; }).join('');
+    var ax = '';   // ป้ายเวลาทุก 24 ชม. (ทุก 4 จุด) พร้อมเส้นประแนวตั้ง
+    for (var i = 0; i < n; i += 4) {
+      var x = X(i), an = i + 4 >= n ? 'end' : 'middle';
+      ax += '<line x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="' + t + '" y2="' + (H - b) + '" stroke="#cdd9d6" stroke-dasharray="2 4"/>' +
+        '<text x="' + x.toFixed(1) + '" y="' + (H - 19) + '" font-size="8.5" text-anchor="' + an + '" fill="#456">' + esc(fDate(P[i].s, 1)) + '</text>' +
+        '<text x="' + x.toFixed(1) + '" y="' + (H - 8) + '" font-size="8" text-anchor="' + an + '" fill="#6b7f7c">' + hm(P[i].s) + '</text>';
+    }
+    var pts = P.map(function (q, i) {
+      var cx = X(i).toFixed(1), cy = Y(q.v).toFixed(1), show = q.now || i % 3 === 0 || i === n - 1;
+      var lbl = show ? '<text x="' + cx + '" y="' + (Y(q.v) - 8).toFixed(1) + '" font-size="8.5" text-anchor="middle" fill="#123" font-weight="700">' + (q.v / 1000).toFixed(1) + 'k</text>' : '';
+      if (q.now) return '<circle cx="' + cx + '" cy="' + cy + '" r="5.5" fill="#1d6a87" stroke="#e0a94f" stroke-width="2.4"/>' + lbl;
+      return (q.low ? '<circle cx="' + cx + '" cy="' + cy + '" r="3.8" fill="#fff" stroke="#d98a12" stroke-width="1.8"/>' : '<circle cx="' + cx + '" cy="' + cy + '" r="3.6" fill="#1d6a87"/>') + lbl;
+    }).join('');
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block"><rect width="' + W + '" height="' + H + '" rx="8" fill="#f7fbfa"/>' + grid + ax + '<path d="' + area + '" fill="#1d6a87" opacity=".10"/><path d="' + line + '" fill="none" stroke="#1d6a87" stroke-width="2" stroke-linejoin="round"/>' + pts + '</svg>';
+  }
   function svgInflow(hz) {
     var W = 330, H = 150, l = 34, r = 8, t = 18, b = 24, n = hz.length, mx = Math.max.apply(null, hz.map(function (h) { return h.p; })) * 1.12 || 1;
     function X(i) { return l + (W - l - r) * (i + .5) / n; } function Y(v) { return H - b - (H - b - t) * v / mx; }
@@ -237,11 +262,16 @@
     var msgs = String(fl.flags && fl.flags.message || '').split(' | ').filter(Boolean).slice(0, 4);
     var vtxt = m.wet.length ? T(m.wet.length + ' หมู่บ้านมีน้ำถึงอาคาร (ลึกสุด ' + (m.wet[0].mx * 100).toFixed(1) + ' ซม. ที่หมู่ ' + m.wet[0].moo + ')', m.wet.length + ' village(s) with water at buildings (max ' + (m.wet[0].mx * 100).toFixed(1) + ' cm, Moo ' + m.wet[0].moo + ')') : T('ไม่พบหมู่บ้านที่น้ำถึงอาคาร ใน 7 วัน (ลึกสุด < 1 มม.)', 'No village with water at buildings within 7 days (max < 1 mm)');
     p1 += sec(1, T('คาดการณ์น้ำท่วม · กว๊านพะเยา', 'Flood forecast · Kwan Phayao'), '<div class="two"><div>' + svgKwan(m) + '<p class="note">' + T('เส้นทึบ = สังเกตการณ์ 30 วัน · เส้นประ/แถบ = พยากรณ์ 7 วัน (P10–P90)', 'Solid = observed 30 d · dashed/band = 7-day forecast (P10–P90)') + '</p></div><div><h3>' + T('ข้อความเตือนจากแบบจำลอง', 'Model messages') + '</h3><ul class="msg">' + msgs.map(function (s) { return '<li>' + esc(tr_(s)) + '</li>'; }).join('') + '</ul><div class="pill">' + esc(vtxt) + '</div></div></div>');
-    var inf = fc.inflow && fc.inflow.forecast, hz = [];
-    if (inf && inf.horizons) hz = Object.keys(inf.horizons).map(function (k) { var x = inf.horizons[k], ns = x.walkforward_cv_nse && x.walkforward_cv_nse.mean; return { p: x.prediction_m3_per_day, nse: ns }; });
-    if (hz.length) {
+    var ol = olOK(m.ol) ? m.ol : null, inf = fc.inflow && fc.inflow.forecast, hz = [];
+    if (!ol && inf && inf.horizons) hz = Object.keys(inf.horizons).map(function (k) { var x = inf.horizons[k], ns = x.walkforward_cv_nse && x.walkforward_cv_nse.mean; return { p: x.prediction_m3_per_day, nse: ns }; }).slice(0, 3);   // สำรอง: โมเดลรายวัน 3 วันแรก ถ้าไม่มี outlook
+    if (ol) {
+      var nLow = ol.gbm.filter(function (g) { return g.low_confidence; }).length, pk = ol.gbm.reduce(function (a, g) { return g.q_6h_m3 > a.q_6h_m3 ? g : a; }, ol.gbm[0]);
+      p1 += sec(2, T('น้ำไหลลงอ่างแม่นาเรือ ล่วงหน้า 72 ชั่วโมง (ราย 6 ชม.)', 'Inflow to Mae Na Rua reservoir, next 72 h (6-hourly)'), '<div class="two"><div>' + svgOutlook(ol) + '<p class="note">' + T('ม³/6 ชม. · ● ตอนนี้ (ค่าจริงล่าสุด) · วงโปร่ง = ความเชื่อมั่นต่ำ', 'm³/6 h · ● now (latest actual) · hollow = low confidence') + '</p></div><div><div class="chips">' +
+        chip(T('ตอนนี้ ', 'Now ') + f2(ol.now.q_6h_m3 / 1000, 1) + 'k', '#1d6a87') + chip(T('สูงสุด ', 'Peak ') + f2(pk.q_6h_m3 / 1000, 1) + 'k · ' + fDate(pk.window_end, 1) + ' ' + hm(pk.window_end), '#2a9d8f') + (nLow ? chip(T('ความเชื่อมั่นต่ำ ' + nLow + ' ช่วง (54–72 ชม.)', 'Low confidence ' + nLow + ' steps (54–72 h)'), '#d98a12') : '') +
+        '</div><p class="warn">' + T('โมเดล 6 ชม. (GBM) 12 ช่วง = 72 ชม. อัปเดตทุก 6 ชม. (รอบ ' + hm(ol.issued_at) + ' น.) — ใช้ดูแนวโน้ม ไม่ใช่ประกาศทางการ', '6-h model (GBM), 12 steps = 72 h, updated every 6 h (' + hm(ol.issued_at) + ' run) — for trend only, not an official announcement.') + '</p></div></div>');
+    } else if (hz.length) {
       var good = hz.filter(function (h) { return h.nse != null && h.nse >= 0; }).length;
-      p1 += sec(2, T('น้ำไหลลงอ่างแม่นาเรือ ล่วงหน้า 7 วัน', 'Inflow to Mae Na Rua reservoir, 7 days'), '<div class="two"><div>' + svgInflow(hz) + '<p class="note">' + T('ม³/วัน · ● ความเชื่อมั่นปกติ · ◆ NSE ติดลบ (ความเชื่อมั่นต่ำ)', 'm³/day · ● normal · ◆ negative NSE (low confidence)') + '</p></div><div><div class="chips">' + hz.map(function (h, i) { var c = h.nse == null ? '#8aa3a0' : h.nse >= .5 ? '#2a9d8f' : h.nse >= 0 ? '#e0a94f' : '#d98a12'; return chip('+' + (i + 1) + ' ' + (h.nse == null ? '—' : h.nse >= .5 ? T('เชื่อถือได้', 'reliable') : h.nse >= 0 ? T('พอใช้', 'fair') : T('ยังไม่แม่น', 'weak')), c); }).join('') + '</div><p class="warn">' + (good ? T('ช่วงที่ผ่านเกณฑ์ ' + good + ' จาก 7 วัน — ', good + ' of 7 days pass — ') : T('ทุกช่วงยังไม่ดีกว่าค่าเฉลี่ย — ', 'No horizon beats the mean yet — ')) + T('ใช้ดูแนวโน้ม ไม่ใช้ตัวเลขจริง และเทียบกับระดับน้ำจริงในอ่างเสมอ', 'use for trend only; always compare with the measured reservoir level.') + '</p></div></div>');
+      p1 += sec(2, T('น้ำไหลลงอ่างแม่นาเรือ ล่วงหน้า 3 วัน', 'Inflow to Mae Na Rua reservoir, 3 days'), '<div class="two"><div>' + svgInflow(hz) + '<p class="note">' + T('ม³/วัน · ● ความเชื่อมั่นปกติ · ◆ NSE ติดลบ (ความเชื่อมั่นต่ำ)', 'm³/day · ● normal · ◆ negative NSE (low confidence)') + '</p></div><div><div class="chips">' + hz.map(function (h, i) { var c = h.nse == null ? '#8aa3a0' : h.nse >= .5 ? '#2a9d8f' : h.nse >= 0 ? '#e0a94f' : '#d98a12'; return chip('+' + (i + 1) + ' ' + (h.nse == null ? '—' : h.nse >= .5 ? T('เชื่อถือได้', 'reliable') : h.nse >= 0 ? T('พอใช้', 'fair') : T('ยังไม่แม่น', 'weak')), c); }).join('') + '</div><p class="warn">' + (good ? T('ช่วงที่ผ่านเกณฑ์ ' + good + ' จาก ' + hz.length + ' วัน — ', good + ' of ' + hz.length + ' days pass — ') : T('ทุกช่วงยังไม่ดีกว่าค่าเฉลี่ย — ', 'No horizon beats the mean yet — ')) + T('ใช้ดูแนวโน้ม ไม่ใช้ตัวเลขจริง และเทียบกับระดับน้ำจริงในอ่างเสมอ', 'use for trend only; always compare with the measured reservoir level.') + '</p></div></div>');
     }
     // หน้า 2
     var rs = m.res.map(function (r) {
@@ -265,7 +295,7 @@
     var L = m.ledger, la = L.length ? L[L.length - 1] : null;
     if (la) p2 += sec(6, T('บัญชีน้ำอ่างเก็บน้ำแม่นาเรือ (30 วันล่าสุด)', 'Mae Na Rua reservoir water ledger (last 30 days)'), '<div class="two"><div class="lk"><div><small>' + T('วันที่', 'Date') + '</small><b>' + esc(fDate(la.date, 1)) + '</b></div><div><small>' + T('ปริมาณน้ำ', 'Volume') + '</small><b>' + fN(la.water_volume_m3) + ' m³</b></div><div><small>' + T('น้ำไหลเข้า', 'Inflow') + '</small><b>' + fN(la.inflow_m3) + '</b></div><div><small>' + T('ระบาย', 'Release') + '</small><b>' + fN(la.outlet_release_m3) + '</b></div><div><small>' + T('ล้นสปิลเวย์', 'Spill') + '</small><b>' + fN(la.spill_m3) + '</b></div><div><small>' + T('ฝน 24 ชม.', 'Rain 24 h') + '</small><b>' + f2(la.rain_24h_mm, 1) + ' mm</b></div></div><div>' + svgLedger(L) + '<p class="note">' + T('ปริมาณน้ำในอ่างรายวัน (ม³)', 'Daily storage (m³)') + '</p></div></div>');
     var cav = [];
-    if (hz.length) cav.push(T('พยากรณ์น้ำไหลลงอ่างยังแม่นไม่ถึงเกณฑ์ในหลายช่วง (NSE ติดลบ) — ใช้เป็นแนวโน้ม', 'Inflow forecasts are still below the accuracy bar in most horizons (negative NSE) — trend only.'));
+    if (ol) cav.push(T('พยากรณ์น้ำไหลลงอ่าง 72 ชม. มาจากโมเดล 6 ชม. ช่วง 54–72 ชม. ความเชื่อมั่นต่ำ — ใช้เป็นแนวโน้ม', 'The 72-h inflow forecast comes from a 6-h model; steps at 54–72 h are low confidence — trend only.')); else if (hz.length) cav.push(T('พยากรณ์น้ำไหลลงอ่างยังแม่นไม่ถึงเกณฑ์ในหลายช่วง (NSE ติดลบ) — ใช้เป็นแนวโน้ม', 'Inflow forecasts are still below the accuracy bar in most horizons (negative NSE) — trend only.'));
     cav.push(T('กว๊านพะเยา: พยากรณ์แม่นช่วง 3–5 วัน (ridge, backtest 18 เดือน) — กรอบ P10–P90 กว้างขึ้นตามวัน', 'Kwan Phayao: most accurate at 3–5 days (ridge, 18-month backtest); P10–P90 widens with lead time.'));
     cav.push(T('แผนที่น้ำท่วม: ตรวจสอบกับรอยน้ำ 32 จุด r=0.825; ความลึกในพื้นที่นอกขอบเขต LiDAR มีความไม่แน่นอนสูง', 'Flood map: checked against 32 flood marks (r = 0.825); depths outside the LiDAR footprint are less certain.'));
     p2 += sec(7, T('ข้อควรระวังในการใช้ข้อมูล', 'Caveats'), '<ul class="cv">' + cav.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul>');

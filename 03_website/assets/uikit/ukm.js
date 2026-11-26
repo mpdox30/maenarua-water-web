@@ -358,14 +358,17 @@ function outlookOK(o) {
   const nowTH = Date.now() + 7 * 36e5, age = (nowTH - _P(o.issued_at)) / 36e5;
   return age >= -1 && age <= 30;  // ล็อกเก่ากว่า 30 ชม. -> fallback กราฟรายวันเดิม
 }
+let _EN = safeLS.get('uk_lang') === 'en';
+const MON_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function buildOutlook() {
+  const t_ = (th, en) => _EN ? en : th, U = t_('ลบ.ม./6 ชม.', 'm³/6 h'), MONX = _EN ? MON_EN : MON;
   const O = D.outlook, W = 900, H = 340, x0 = 66, x1 = 850, yb = 266, yt = 60, DAY = 864e5;
   const tNow = _P(O.issued_at), G = O.gbm.map(g => ({ ...g, t: _P(g.window_end), ts: _P(g.window_start) })), tG = G[G.length - 1].t;
   const days = [];  // วันที่ 4–7 แสดงในกราฟรายวันแยกต่างหากแล้ว -> กราฟนี้แสดงเฉพาะ 12 ช่วง 6 ชม. (3 วัน)
   const t1 = days.length ? days[days.length - 1].t0 + DAY : tG;
   const x = t => x0 + (t - tNow) / (t1 - tNow) * (x1 - x0);
   const vals = [O.now.q_6h_m3, ...G.map(g => g.q_6h_m3), ...days.map(d => d.q_6h_avg_m3)], mx = Math.max(...vals, 1) * 1.18, y = v => yb - v / mx * (yb - yt);
-  const dFmt = t => { const d = new Date(t); return `${d.getUTCDate()} ${MON[d.getUTCMonth()]}`; }, hFmt = t => { const d = new Date(t); return `${_pad(d.getUTCHours())}:${_pad(d.getUTCMinutes())}`; };
+  const dFmt = t => { const d = new Date(t); return `${d.getUTCDate()} ${MONX[d.getUTCMonth()]}`; }, hFmt = t => { const d = new Date(t); return `${_pad(d.getUTCHours())}:${_pad(d.getUTCMinutes())}`; };
   let grid = '<g class="grid">'; for (let i = 0; i <= 4; i++) { const v = mx * i / 4; grid += `<line x1="${x0 - 12}" x2="${x1 + 8}" y1="${y(v)}" y2="${y(v)}"/>`; }
   grid += '</g><g class="ax">'; for (let i = 0; i <= 4; i++) { const v = mx * i / 4; grid += `<text x="${x0 - 18}" y="${y(v) + 4}" text-anchor="end">${fmtK(v)}</text>`; } grid += '</g>';
   // เส้นแบ่งวัน (เที่ยงคืน) + ป้ายวันที่
@@ -389,26 +392,28 @@ function buildOutlook() {
   const gmax = G.reduce((a, g) => g.q_6h_m3 > a.q_6h_m3 ? g : a, G[0]);
   const dots = [{ now: true, t: tNow, v: O.now.q_6h_m3 }, ...G].map((g, i) => {
     const now = !!g.now, t = now ? tNow : g.t, v = now ? g.v : g.q_6h_m3, cx = x(t), cy = y(v), low = !now && g.low_confidence;
-    const tip = now ? `<b>ตอนนี้</b> (ช่วงก่อน ${dFmt(t)} ${hFmt(t)} น.)<br>น้ำไหลเข้าจริง ${fmt(v)} ลบ.ม./6 ชม.<br>จากข้อมูลโทรมาตรล่าสุด`
-      : `<b>${dFmt(t)} ${hFmt(g.ts)}–${hFmt(t)} น.</b> (+${g.h * 6} ชม.)<br>พยากรณ์ <b>${fmt(v)}</b> ลบ.ม./6 ชม.<br>${low ? 'ความเชื่อมั่นต่ำ' : 'โมเดล 6 ชม.'} · ${g.family || ''}`;
+    const tip = now ? `<b>${t_('ตอนนี้', 'Now')}</b> (${t_('ช่วงก่อน', 'period ending')} ${dFmt(t)} ${hFmt(t)}${t_(' น.', '')})<br>${t_('น้ำไหลเข้าจริง', 'Actual inflow')} ${fmt(v)} ${U}<br>${t_('จากข้อมูลโทรมาตรล่าสุด', 'from latest telemetry')}`
+      : `<b>${dFmt(t)} ${hFmt(g.ts)}–${hFmt(t)}${t_(' น.', '')}</b> (+${g.h * 6} ${t_('ชม.', 'h')})<br>${t_('พยากรณ์', 'Forecast')} <b>${fmt(v)}</b> ${U}<br>${low ? t_('ความเชื่อมั่นต่ำ', 'Low confidence') : t_('โมเดล 6 ชม.', '6-h model')} · ${g.family || ''}`;
     const showLbl = now || g === gmax || g.h === 1 || g.h === 12 || g.h % 3 === 0;
     return `<g data-tip="${tip}">${now ? `<circle class="sonar" cx="${cx}" cy="${cy}" r="8" fill="none" style="stroke:var(--accent)" stroke-width="2"/>` : ''}
       <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${now ? 7 : 4.5}" style="fill:${low ? 'var(--core)' : 'var(--accent)'};stroke:${now ? 'var(--accent-2)' : 'var(--accent)'}" stroke-width="${now ? 3 : 2.4}" ${low ? 'stroke-dasharray="2.5 2"' : ''} class="fadein"/>
       <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="14" fill="transparent"/>${showLbl ? `<text class="bar-lbl fadein" x="${cx.toFixed(1)}" y="${(cy - 11).toFixed(1)}">${fmtK(v)}</text>` : ''}</g>`;
   }).join('');
   const xg = x(tG);
-  $('#fcBox').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="กราฟพยากรณ์น้ำไหลเข้าอ่าง 3 วันข้างหน้า ราย 6 ชั่วโมง">
+  $('#fcBox').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${t_('กราฟพยากรณ์น้ำไหลเข้าอ่าง 3 วันข้างหน้า ราย 6 ชั่วโมง', 'Reservoir inflow forecast, next 3 days, 6-hourly')}">
   <defs><linearGradient id="gFc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.35"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></linearGradient></defs>
   ${grid}${ticks}
   <line x1="${x(tNow)}" x2="${x(tNow)}" y1="${yt - 18}" y2="${yb}" style="stroke:var(--accent-2)" stroke-width="1.6" stroke-dasharray="5 5"/>
-  <text class="ax" x="${x(tNow) + 8}" y="${yt - 24}" style="fill:var(--accent-2);font-weight:700">ตอนนี้ (${hFmt(tNow)} น.)</text>
+  <text class="ax" x="${x(tNow) + 8}" y="${yt - 24}" style="fill:var(--accent-2);font-weight:700">${t_('ตอนนี้ (' + hFmt(tNow) + ' น.)', 'Now (' + hFmt(tNow) + ')')}</text>
   ${days.length ? `<line x1="${xg.toFixed(1)}" x2="${xg.toFixed(1)}" y1="${yt - 18}" y2="${yb}" style="stroke:var(--faint)" stroke-width="1.4" stroke-dasharray="3 4"/><text class="ax" x="${(xg + 8).toFixed(1)}" y="${yt - 24}" style="font-weight:700">โมเดลรายวัน (เฉลี่ยต่อ 6 ชม.)</text>` : ''}
   ${bars}<path class="fadein" d="${area}" fill="url(#gFc)"/><path class="draw" d="${line}" fill="none" style="stroke:var(--accent)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
   ${dots}</svg><div class="tt" id="fcTT"></div>`;
   const nLow = G.filter(g => g.low_confidence).length, upd = new Date(tNow);
-  $('#fcNote').textContent = `หน่วย ลบ.ม./6 ชม. · โมเดล 6 ชม. (GBM) 12 ช่วง = 72 ชม. อัปเดตทุก 6 ชม. (รอบ ${hFmt(tNow)} น.) · วงโปร่ง = ความเชื่อมั่นต่ำ (${nLow} ช่วง คือ 54–72 ชม.) · แนวโน้ม 7 วันดูได้ในกราฟรายวันด้านบน/ถัดไป (โมเดลรายวัน หน่วยต่างกัน เทียบตรงๆ ไม่ได้) · ไม่ใช่ประกาศทางการ`;
-  const p = $('#forecast .sec-head p'); if (p) p.textContent = 'จุดบนกราฟแต่ละจุด = น้ำไหลเข้าสะสมในช่วง 6 ชม. ที่สิ้นสุด ณ เวลานั้น · เส้นประ "ตอนนี้" คือค่าจริงล่าสุดจากข้อมูลโทรมาตร';
-  const h2 = $('#forecast .sec-head h2'); if (h2) h2.textContent = '72 ชั่วโมงข้างหน้า (ราย 6 ชม.)';
+  $('#fcNote').textContent = _EN
+    ? `Unit: m³/6 h · 6-h model (GBM) 12 steps = 72 h · Updated every 6 h (${hFmt(tNow)} run) · Hollow dot = low confidence (${nLow} steps: 54–72 h) · For the 7-day outlook see the daily chart above/below (daily model uses a different unit, not directly comparable) · Not an official announcement`
+    : `หน่วย ลบ.ม./6 ชม. · โมเดล 6 ชม. (GBM) 12 ช่วง = 72 ชม. อัปเดตทุก 6 ชม. (รอบ ${hFmt(tNow)} น.) · วงโปร่ง = ความเชื่อมั่นต่ำ (${nLow} ช่วง คือ 54–72 ชม.) · แนวโน้ม 7 วันดูได้ในกราฟรายวันด้านบน/ถัดไป (โมเดลรายวัน หน่วยต่างกัน เทียบตรงๆ ไม่ได้) · ไม่ใช่ประกาศทางการ`;
+  const p = $('#forecast .sec-head p'); if (p) p.textContent = _EN ? 'Each point = inflow accumulated over the 6 h ending at that time · Dashed line "Now" = latest actual value from telemetry' : 'จุดบนกราฟแต่ละจุด = น้ำไหลเข้าสะสมในช่วง 6 ชม. ที่สิ้นสุด ณ เวลานั้น · เส้นประ "ตอนนี้" คือค่าจริงล่าสุดจากข้อมูลโทรมาตร';
+  const h2 = $('#forecast .sec-head h2'); if (h2) h2.textContent = _EN ? 'Next 72 hours (6-hourly)' : '72 ชั่วโมงข้างหน้า (ราย 6 ชม.)';
 }
 function buildForecast() {
   if (outlookOK(D.outlook)) { try { return buildOutlook(); } catch (e) { console.warn('outlook chart failed, fallback', e); } }
@@ -692,6 +697,7 @@ function sync() {
 buildScene(); initKPI(); buildLevels(); buildForecast(); buildTable(); buildResTable();
 ROOTS.forEach(r => prepDraw(r));
 bindTips('#dailyBox', '#dailyTT'); bindTips('#fcBox', '#fcTT');
+window.addEventListener('uk-lang', e => { _EN = !!(e.detail && e.detail.lang === 'en'); try { buildForecast(); } catch (err) {} });
 {
   const st = status(R2.water_level, CREST);
   $('#heroState').textContent = st === 'crit' ? 'ล้นสปิลเวย์' : st === 'warn' ? 'ใกล้ล้น' : 'ปกติ';
