@@ -1,6 +1,6 @@
 {
  "host": "laptop",
- "finished_bkk": "2026-11-25T09:40:41+07:00",
+ "finished_bkk": "2026-11-26T09:41:28+07:00",
  "complete": true,
  "steps": {
   "wmb_daily_refresh": "ok",
@@ -9,6 +9,6 @@
   "reservoir_ledger": "ok",
   "sar": "ok"
  },
- "last_complete_bkk": "2026-11-25T09:40:41+07:00",
+ "last_complete_bkk": "2026-11-26T09:41:28+07:00",
  "last_complete_host": "laptop"
 }
